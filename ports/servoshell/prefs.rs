@@ -14,6 +14,7 @@ use log::{error, warn};
 use serde_json::Value;
 use servo::config::opts::{DebugOptions, Opts, OutputOptions};
 use servo::config::prefs::{PrefValue, Preferences};
+use servo::resources::{self, Resource, ResourceReaderMethods};
 use servo::servo_geometry::DeviceIndependentPixel;
 use servo::servo_url::ServoUrl;
 use url::Url;
@@ -126,7 +127,14 @@ fn get_preferences(opts_matches: &Matches, config_dir: &Option<PathBuf>) -> Pref
         .or_else(default_config_dir)
         .map(|path| path.join("prefs.json"))
         .filter(|path| path.exists());
-    let user_prefs_hash = user_prefs_path.map(read_prefs_file).unwrap_or_default();
+
+    let user_prefs_hash = if cfg!(all(target_os = "android", target_env = "ohos")) {
+        // use reader to get the pref file in hab
+        let txt = resources::read_string(Resource::ServoPrefs);
+        read_prefs_map(&txt)
+    } else {
+        user_prefs_path.map(read_prefs_file).unwrap_or_default()
+    };
 
     let apply_preferences =
         |preferences: &mut Preferences, preferences_hash: HashMap<String, PrefValue>| {
