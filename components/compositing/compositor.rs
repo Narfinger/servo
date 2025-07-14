@@ -18,6 +18,7 @@ use bitflags::bitflags;
 use compositing_traits::display_list::{
     CompositorDisplayListInfo, HitTestInfo, ScrollTree, ScrollType,
 };
+use compositing_traits::rendering_context::RenderingContext;
 use compositing_traits::{
     CompositionPipeline, CompositorMsg, ImageUpdate, PipelineExitSource, SendableFrameTree,
     WebViewTrait,
@@ -55,7 +56,7 @@ use webrender_api::{
 
 use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
-use crate::webview_manager::{INITIAL_WEBVIEW_GROUP, WebViewGroupId, WebViewManager};
+use crate::webview_manager::{WebViewGroupId, WebViewManager};
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
 
 #[derive(Debug, PartialEq)]
@@ -1095,12 +1096,19 @@ impl IOCompositor {
         webview: Box<dyn WebViewTrait>,
         viewport_details: ViewportDetails,
     ) {
-        log::error!("adding webview with group {INITIAL_WEBVIEW_GROUP}");
         self.webview_renderers.add_webview(
-            INITIAL_WEBVIEW_GROUP,
+            1,
             webview.id(),
             WebViewRenderer::new(self.global.clone(), webview, viewport_details),
         );
+    }
+
+    pub fn add_webview_new_group(
+        &mut self,
+        webview: Box<dyn WebViewTrait>,
+        rendering_context: Rc<dyn RenderingContext>,
+    ) {
+        panic!("NYI");
     }
 
     fn set_frame_tree_for_webview(&mut self, frame_tree: &SendableFrameTree) {
@@ -1149,7 +1157,7 @@ impl IOCompositor {
         let painting_order_changed = if hide_others {
             let painting_order = self.webview_renderers.painting_order(group_id);
             let result = painting_order.map(|(&id, _)| id).ne(once(webview_id));
-            self.webview_renderers.hide_all();
+            self.webview_renderers.hide_all(group_id);
             self.webview_renderers.show(webview_id)?;
             result
         } else {
@@ -1186,7 +1194,7 @@ impl IOCompositor {
         let painting_order_changed = if hide_others {
             let painting_order = self.webview_renderers.painting_order(group_id);
             let result = painting_order.map(|(&id, _)| id).ne(once(webview_id));
-            self.webview_renderers.hide_all();
+            self.webview_renderers.hide_all(group_id);
             self.webview_renderers.raise_to_top(webview_id)?;
             result
         } else {

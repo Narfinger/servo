@@ -14,7 +14,6 @@ use webrender_api::units::DevicePixel;
 use crate::webview_renderer::UnknownWebView;
 
 pub(crate) type WebViewGroupId = usize;
-pub(crate) const INITIAL_WEBVIEW_GROUP: usize = 1;
 
 pub struct WebViewManager<WebView> {
     /// Our top-level browsing contexts. In the WebRender scene, their pipelines are the children of
@@ -27,6 +26,8 @@ pub struct WebViewManager<WebView> {
 
     /// The order to paint them in, topmost last.
     painting_order: HashMap<WebViewGroupId, Vec<WebViewId>>,
+
+    last_used_id: Option<WebViewGroupId>,
 }
 
 impl<WebView> Default for WebViewManager<WebView> {
@@ -36,6 +37,7 @@ impl<WebView> Default for WebViewManager<WebView> {
             painting_order: Default::default(),
             webview_groups: Default::default(),
             rendering_contexts: Default::default(),
+            last_used_id: None,
         }
     }
 }
@@ -56,9 +58,10 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn add_webview_group(&mut self, rendering_context: Rc<dyn RenderingContext>) {
+        let new_group_id = self.last_used_id.unwrap_or_default() + 1;
         self.rendering_contexts
-            .insert(INITIAL_WEBVIEW_GROUP, rendering_context);
-        self.painting_order.insert(INITIAL_WEBVIEW_GROUP, vec![]);
+            .insert(new_group_id, rendering_context);
+        self.painting_order.insert(new_group_id, vec![]);
     }
 
     pub(crate) fn groups(&self) -> Vec<WebViewGroupId> {
@@ -120,16 +123,14 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     /// Returns true iff the painting order actually changed.
-    pub(crate) fn hide_all(&mut self) -> bool {
-        //todo!("nYI");
-        /*
-        if !self.painting_order.is_empty() {
-            self.painting_order.clear();
+    pub(crate) fn hide_all(&mut self, group_id: WebViewGroupId) -> bool {
+        let v = self.painting_order.get_mut(&group_id);
+        let painting_order = v.unwrap();
+        if !painting_order.is_empty() {
+            painting_order.clear();
             return true;
         }
         false
-        */
-        true
     }
 
     /// Returns true iff the painting order actually changed.
