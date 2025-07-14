@@ -18,7 +18,6 @@ use bitflags::bitflags;
 use compositing_traits::display_list::{
     CompositorDisplayListInfo, HitTestInfo, ScrollTree, ScrollType,
 };
-use compositing_traits::rendering_context::RenderingContext;
 use compositing_traits::{
     CompositionPipeline, CompositorMsg, ImageUpdate, PipelineExitSource, SendableFrameTree,
     WebViewTrait,
@@ -152,7 +151,7 @@ pub struct IOCompositor {
     webrender: Option<webrender::Renderer>,
 
     /// The surfman instance that webrender targets
-    rendering_context: Rc<dyn RenderingContext>,
+    //rendering_context: Rc<dyn RenderingContext>,
 
     /// The number of frames pending to receive from WebRender.
     pending_frames: usize,
@@ -420,6 +419,8 @@ impl IOCompositor {
             state.sender.clone(),
             CompositorMsg::CollectMemoryReport,
         );
+        let mut webview_renderers = WebViewManager::default();
+        webview_renderers.add_webview_group(state.rendering_context);
         let compositor = IOCompositor {
             global: Rc::new(RefCell::new(ServoRenderer {
                 refresh_driver: RefreshDriver::new(
@@ -440,11 +441,11 @@ impl IOCompositor {
                 cursor: Cursor::None,
                 cursor_pos: DevicePoint::new(0.0, 0.0),
             })),
-            webview_renderers: WebViewManager::default(),
+            webview_renderers,
             needs_repaint: Cell::default(),
             ready_to_save_state: ReadyState::Unknown,
             webrender: Some(state.webrender),
-            rendering_context: state.rendering_context,
+            //rendering_context: state.rendering_context,
             pending_frames: 0,
             _mem_profiler_registration: registration,
         };
@@ -459,16 +460,16 @@ impl IOCompositor {
     }
 
     pub fn deinit(&mut self) {
-        if let Err(err) = self.rendering_context.make_current() {
-            warn!("Failed to make the rendering context current: {:?}", err);
-        }
+        //if let Err(err) = self.rendering_context.make_current() {
+        //            warn!("Failed to make the rendering context current: {:?}", err);
+        //        }
         if let Some(webrender) = self.webrender.take() {
             webrender.deinit();
         }
     }
 
     pub fn rendering_context_size(&self) -> Size2D<u32, DevicePixel> {
-        self.rendering_context.size2d()
+        self.webview_renderers.rendering_context_size()
     }
 
     pub fn webxr_running(&self) -> bool {
@@ -995,6 +996,7 @@ impl IOCompositor {
         webview_group_id: WebViewGroupId,
         transaction: &mut Transaction,
     ) {
+        let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
         // Every display list needs a pipeline, but we'd like to choose one that is unlikely
         // to conflict with our content pipelines, which start at (1, 1). (0, 0) is WebRender's
         // dummy pipeline, so we choose (0, 1).
@@ -1006,7 +1008,7 @@ impl IOCompositor {
 
         let root_reference_frame = SpatialId::root_reference_frame(root_pipeline);
 
-        let viewport_size = self.rendering_context.size2d().to_f32().to_untyped();
+        let viewport_size = rendering_context.size2d().to_f32().to_untyped();
         let viewport_rect = LayoutRect::from_origin_and_size(
             LayoutPoint::zero(),
             LayoutSize::from_untyped(viewport_size),
@@ -1237,15 +1239,20 @@ impl IOCompositor {
         self.set_needs_repaint(RepaintReason::Resize);
     }
 
-    pub fn resize_rendering_context(&mut self, new_size: PhysicalSize<u32>) {
+    pub fn resize_rendering_context(
+        &mut self,
+        webview_group_id: WebViewGroupId,
+        new_size: PhysicalSize<u32>,
+    ) {
         if self.global.borrow().shutdown_state() != ShutdownState::NotShuttingDown {
             return;
         }
-        if self.rendering_context.size() == new_size {
+        let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
+        if rendering_context.size() == new_size {
             return;
         }
 
-        self.rendering_context.resize(new_size);
+        rendering_context.resize(new_size);
 
         let mut transaction = Transaction::new();
         let output_region = DeviceIntRect::new(
@@ -1255,7 +1262,7 @@ impl IOCompositor {
         transaction.set_document_view(output_region);
         self.global.borrow_mut().send_transaction(transaction);
 
-        self.send_root_pipeline_display_list();
+        self.send_root_pipeline_display_list(webview_group_id);
         self.set_needs_repaint(RepaintReason::Resize);
     }
 
@@ -1373,14 +1380,19 @@ impl IOCompositor {
     /// Render the WebRender scene to the active `RenderingContext`. If successful, trigger
     /// the next round of animations.
     pub fn render(&mut self) -> bool {
-        self.global
-            .borrow()
-            .refresh_driver
-            .notify_will_paint(self.webview_renderers.iter());
+        let groups = {
+            self.global
+                .borrow()
+                .refresh_driver
+                .notify_will_paint(self.webview_renderers.iter());
 
-        if let Err(error) = self.render_inner() {
-            warn!("Unable to render: {error:?}");
-            return false;
+            self.webview_renderers.groups()
+        };
+        for i in groups {
+            if let Err(error) = self.render_inner(i) {
+                warn!("Unable to render: {error:?}");
+                return false;
+            }
         }
 
         // We've painted the default target, which means that from the embedder's perspective,
@@ -1397,9 +1409,11 @@ impl IOCompositor {
         webview_id: WebViewId,
         page_rect: Option<Rect<f32, CSSPixel>>,
     ) -> Result<Option<RasterImage>, UnableToComposite> {
-        self.render_inner()?;
+        let group_id = self.webview_renderers.group_id(webview_id).unwrap();
+        self.render_inner(group_id)?;
+        let rendering_context = self.webview_renderers.rendering_context(group_id);
 
-        let size = self.rendering_context.size2d().to_i32();
+        let size = rendering_context.size2d().to_i32();
         let rect = if let Some(rect) = page_rect {
             let scale = self
                 .webview_renderers
@@ -1420,8 +1434,7 @@ impl IOCompositor {
             DeviceIntRect::from_origin_and_size(Point2D::origin(), size)
         };
 
-        Ok(self
-            .rendering_context
+        Ok(rendering_context
             .read_to_image(rect)
             .map(|image| RasterImage {
                 metadata: ImageMetadata {
@@ -1442,8 +1455,9 @@ impl IOCompositor {
     }
 
     #[servo_tracing::instrument(skip_all)]
-    fn render_inner(&mut self) -> Result<(), UnableToComposite> {
-        if let Err(err) = self.rendering_context.make_current() {
+    fn render_inner(&mut self, webview_group_id: WebViewGroupId) -> Result<(), UnableToComposite> {
+        let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
+        if let Err(err) = rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
         }
         self.assert_no_gl_error();
@@ -1465,7 +1479,7 @@ impl IOCompositor {
             }
         }
 
-        self.rendering_context.prepare_for_rendering();
+        rendering_context.prepare_for_rendering();
 
         let time_profiler_chan = self.global.borrow().time_profiler_chan.clone();
         time_profile!(
@@ -1479,7 +1493,7 @@ impl IOCompositor {
                 // TODO(gw): Take notice of any errors the renderer returns!
                 self.clear_background();
                 if let Some(webrender) = self.webrender.as_mut() {
-                    let size = self.rendering_context.size2d().to_i32();
+                    let size = rendering_context.size2d().to_i32();
                     webrender.render(size, 0 /* buffer_age */).ok();
                 }
             },
@@ -1637,47 +1651,53 @@ impl IOCompositor {
         if self.global.borrow().shutdown_state() == ShutdownState::FinishedShuttingDown {
             return false;
         }
-
         #[cfg(feature = "webxr")]
         // Run the WebXR main thread
         self.global.borrow_mut().webxr_main_thread.run_one_frame();
 
-        // The WebXR thread may make a different context current
-        if let Err(err) = self.rendering_context.make_current() {
-            warn!("Failed to make the rendering context current: {:?}", err);
-        }
+        let groups = self.webview_renderers.groups();
+        for webview_group_id in groups {
+            let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
 
-        let mut need_zoom = false;
-        let scroll_offset_updates: Vec<_> = self
-            .webview_renderers
-            .iter_mut()
-            .filter_map(|webview_renderer| {
-                let (zoom, scroll_result) =
-                    webview_renderer.process_pending_scroll_and_pinch_zoom_events();
-                need_zoom = need_zoom || (zoom == PinchZoomResult::DidPinchZoom);
-                scroll_result
-            })
-            .collect();
-
-        if need_zoom || !scroll_offset_updates.is_empty() {
-            let mut transaction = Transaction::new();
-            if need_zoom {
-                self.send_root_pipeline_display_list_in_transaction(&mut transaction);
-            }
-            for update in scroll_offset_updates {
-                transaction.set_scroll_offsets(
-                    update.external_scroll_id,
-                    vec![SampledScrollOffset {
-                        offset: update.offset,
-                        generation: 0,
-                    }],
-                );
+            // The WebXR thread may make a different context current
+            if let Err(err) = rendering_context.make_current() {
+                warn!("Failed to make the rendering context current: {:?}", err);
             }
 
-            self.generate_frame(&mut transaction, RenderReasons::APZ);
-            self.global.borrow_mut().send_transaction(transaction);
-        }
+            let mut need_zoom = false;
+            let scroll_offset_updates: Vec<_> = self
+                .webview_renderers
+                .iter_mut()
+                .filter_map(|webview_renderer| {
+                    let (zoom, scroll_result) =
+                        webview_renderer.process_pending_scroll_and_pinch_zoom_events();
+                    need_zoom = need_zoom || (zoom == PinchZoomResult::DidPinchZoom);
+                    scroll_result
+                })
+                .collect();
 
+            if need_zoom || !scroll_offset_updates.is_empty() {
+                let mut transaction = Transaction::new();
+                if need_zoom {
+                    self.send_root_pipeline_display_list_in_transaction(
+                        webview_group_id,
+                        &mut transaction,
+                    );
+                }
+                for update in scroll_offset_updates {
+                    transaction.set_scroll_offsets(
+                        update.external_scroll_id,
+                        vec![SampledScrollOffset {
+                            offset: update.offset,
+                            generation: 0,
+                        }],
+                    );
+                }
+
+                self.generate_frame(&mut transaction, RenderReasons::APZ);
+                self.global.borrow_mut().send_transaction(transaction);
+            }
+        }
         self.global.borrow().shutdown_state() != ShutdownState::FinishedShuttingDown
     }
 

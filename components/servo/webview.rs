@@ -473,10 +473,13 @@ impl WebView {
     }
 
     pub fn resize(&self, new_size: PhysicalSize<u32>) {
+        todo!("NYI");
+        /*
         self.inner()
-            .compositor
-            .borrow_mut()
-            .resize_rendering_context(new_size);
+        .compositor
+        .borrow_mut()
+        .resize_rendering_context(new_size);
+        */
     }
 
     pub fn set_zoom(&self, new_zoom: f32) {

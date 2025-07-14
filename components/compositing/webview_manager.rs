@@ -4,18 +4,23 @@
 
 use std::collections::HashMap;
 use std::collections::hash_map::{Values, ValuesMut};
+use std::rc::Rc;
 
 use base::id::WebViewId;
+use compositing_traits::rendering_context::RenderingContext;
+use euclid::Size2D;
+use webrender_api::units::DevicePixel;
 
 use crate::webview_renderer::UnknownWebView;
 
 pub(crate) type WebViewGroupId = usize;
 
-#[derive(Debug)]
 pub struct WebViewManager<WebView> {
     /// Our top-level browsing contexts. In the WebRender scene, their pipelines are the children of
     /// a single root pipeline that also applies any pinch zoom transformation.
     webviews: HashMap<WebViewId, WebView>,
+
+    rendering_contexts: HashMap<WebViewGroupId, Rc<dyn RenderingContext>>,
 
     webview_groups: HashMap<WebViewId, WebViewGroupId>,
 
@@ -29,6 +34,7 @@ impl<WebView> Default for WebViewManager<WebView> {
             webviews: Default::default(),
             painting_order: Default::default(),
             webview_groups: Default::default(),
+            rendering_contexts: Default::default(),
         }
     }
 }
@@ -42,6 +48,26 @@ impl<WebView> WebViewManager<WebView> {
     fn group_painting_order_mut(&mut self, webview_id: WebViewId) -> &mut Vec<WebViewId> {
         let group_id = self.webview_groups.get(&webview_id).unwrap();
         self.painting_order.get_mut(group_id).unwrap()
+    }
+
+    pub(crate) fn rendering_context(&self, group_id: WebViewGroupId) -> Rc<dyn RenderingContext> {
+        self.rendering_contexts.get(&group_id).unwrap().clone()
+    }
+
+    pub(crate) fn add_webview_group(&mut self, rendering_context: Rc<dyn RenderingContext>) {
+        self.rendering_contexts.insert(0, rendering_context);
+    }
+
+    pub(crate) fn groups(&self) -> Vec<WebViewGroupId> {
+        self.painting_order.keys().cloned().collect()
+    }
+
+    pub(crate) fn rendering_context_size(&self) -> Size2D<u32, DevicePixel> {
+        self.rendering_contexts
+            .values()
+            .next()
+            .expect("NO Context")
+            .size2d()
     }
 
     pub(crate) fn group_id(&self, webview_id: WebViewId) -> Option<WebViewGroupId> {
@@ -122,7 +148,7 @@ impl<WebView> WebViewManager<WebView> {
     ) -> impl Iterator<Item = (&WebViewId, &WebView)> {
         self.painting_order
             .get(&group_id)
-            .unwrap()
+            .expect("Could not find group")
             .iter()
             .flat_map(move |webview_id| self.get(*webview_id).map(|b| (webview_id, b)))
     }
