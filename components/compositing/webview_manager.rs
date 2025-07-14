@@ -3,10 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use std::collections::HashMap;
-use std::collections::hash_map::{Entry, Values, ValuesMut};
+use std::collections::hash_map::{Values, ValuesMut};
 
 use base::id::WebViewId;
-use libc::group;
 
 use crate::webview_renderer::UnknownWebView;
 
@@ -46,7 +45,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn group_id(&self, webview_id: WebViewId) -> Option<WebViewGroupId> {
-        self.webview_groups.get(&webview_id)
+        self.webview_groups.get(&webview_id).cloned()
     }
 
     pub(crate) fn remove(&mut self, webview_id: WebViewId) -> Result<WebView, UnknownWebView> {
@@ -128,8 +127,18 @@ impl<WebView> WebViewManager<WebView> {
             .flat_map(move |webview_id| self.get(*webview_id).map(|b| (webview_id, b)))
     }
 
-    pub(crate) fn entry(&mut self, webview_id: WebViewId) -> Entry<'_, WebViewId, WebView> {
-        self.webviews.entry(webview_id)
+    //pub(crate) fn entry(&mut self, webview_id: WebViewId) -> Entry<'_, WebViewId, WebView> {
+    //    self.webviews.entry(webview_id)
+    //}
+
+    pub(crate) fn add_webview(
+        &mut self,
+        group_id: WebViewGroupId,
+        webview_id: WebViewId,
+        webview: WebView,
+    ) {
+        self.webviews.entry(webview_id).or_insert(webview);
+        self.webview_groups.entry(webview_id).or_insert(group_id);
     }
 
     pub(crate) fn iter(&self) -> Values<'_, WebViewId, WebView> {

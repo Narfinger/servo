@@ -1093,13 +1093,11 @@ impl IOCompositor {
         webview: Box<dyn WebViewTrait>,
         viewport_details: ViewportDetails,
     ) {
-        self.webview_renderers
-            .entry(webview.id())
-            .or_insert(WebViewRenderer::new(
-                self.global.clone(),
-                webview,
-                viewport_details,
-            ));
+        self.webview_renderers.add_webview(
+            1,
+            webview.id(),
+            WebViewRenderer::new(self.global.clone(), webview, viewport_details),
+        );
     }
 
     fn set_frame_tree_for_webview(&mut self, frame_tree: &SendableFrameTree) {
@@ -1141,12 +1139,13 @@ impl IOCompositor {
         hide_others: bool,
     ) -> Result<(), UnknownWebView> {
         debug!("{webview_id}: Showing webview; hide_others={hide_others}");
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("NOT IN GROUP");
         let painting_order_changed = if hide_others {
-            let result = self
-                .webview_renderers
-                .painting_order()
-                .map(|(&id, _)| id)
-                .ne(once(webview_id));
+            let painting_order = self.webview_renderers.painting_order(group_id);
+            let result = painting_order.map(|(&id, _)| id).ne(once(webview_id));
             self.webview_renderers.hide_all();
             self.webview_renderers.show(webview_id)?;
             result
@@ -1154,15 +1153,19 @@ impl IOCompositor {
             self.webview_renderers.show(webview_id)?
         };
         if painting_order_changed {
-            self.send_root_pipeline_display_list();
+            self.send_root_pipeline_display_list(group_id);
         }
         Ok(())
     }
 
     pub fn hide_webview(&mut self, webview_id: WebViewId) -> Result<(), UnknownWebView> {
         debug!("{webview_id}: Hiding webview");
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("No group id");
         if self.webview_renderers.hide(webview_id)? {
-            self.send_root_pipeline_display_list();
+            self.send_root_pipeline_display_list(group_id);
         }
         Ok(())
     }
@@ -1173,12 +1176,13 @@ impl IOCompositor {
         hide_others: bool,
     ) -> Result<(), UnknownWebView> {
         debug!("{webview_id}: Raising webview to top; hide_others={hide_others}");
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
         let painting_order_changed = if hide_others {
-            let result = self
-                .webview_renderers
-                .painting_order()
-                .map(|(&id, _)| id)
-                .ne(once(webview_id));
+            let painting_order = self.webview_renderers.painting_order(group_id);
+            let result = painting_order.map(|(&id, _)| id).ne(once(webview_id));
             self.webview_renderers.hide_all();
             self.webview_renderers.raise_to_top(webview_id)?;
             result
@@ -1186,7 +1190,7 @@ impl IOCompositor {
             self.webview_renderers.raise_to_top(webview_id)?
         };
         if painting_order_changed {
-            self.send_root_pipeline_display_list();
+            self.send_root_pipeline_display_list(group_id);
         }
         Ok(())
     }
@@ -1263,7 +1267,11 @@ impl IOCompositor {
         if let Some(webview_renderer) = self.webview_renderers.get_mut(webview_id) {
             webview_renderer.set_page_zoom(1.0);
         }
-        self.send_root_pipeline_display_list();
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
+        self.send_root_pipeline_display_list(group_id);
     }
 
     pub fn on_zoom_window_event(&mut self, webview_id: WebViewId, magnification: f32) {
@@ -1274,7 +1282,11 @@ impl IOCompositor {
         if let Some(webview_renderer) = self.webview_renderers.get_mut(webview_id) {
             webview_renderer.set_page_zoom(magnification);
         }
-        self.send_root_pipeline_display_list();
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
+        self.send_root_pipeline_display_list(group_id);
     }
 
     fn details_for_pipeline(&self, pipeline_id: PipelineId) -> Option<&PipelineDetails> {
