@@ -45,6 +45,10 @@ impl<WebView> WebViewManager<WebView> {
         self.painting_order.get_mut(group_id).unwrap()
     }
 
+    pub(crate) fn group_id(&self, webview_id: WebViewId) -> Option<WebViewGroupId> {
+        self.webview_groups.get(&webview_id)
+    }
+
     pub(crate) fn remove(&mut self, webview_id: WebViewId) -> Result<WebView, UnknownWebView> {
         let painting_order = self.group_painting_order_mut(webview_id);
         painting_order.retain(|b| *b != webview_id);

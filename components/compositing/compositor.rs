@@ -1114,7 +1114,11 @@ impl IOCompositor {
         };
 
         webview_renderer.set_frame_tree(frame_tree);
-        self.send_root_pipeline_display_list();
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
+        self.send_root_pipeline_display_list(group_id);
     }
 
     fn remove_webview(&mut self, webview_id: WebViewId) {
@@ -1124,7 +1128,11 @@ impl IOCompositor {
             return;
         };
 
-        self.send_root_pipeline_display_list();
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
+        self.send_root_pipeline_display_list(group_id);
     }
 
     pub fn show_webview(
@@ -1194,7 +1202,11 @@ impl IOCompositor {
             return;
         }
 
-        self.send_root_pipeline_display_list();
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
+        self.send_root_pipeline_display_list(group_id);
         self.set_needs_repaint(RepaintReason::Resize);
     }
 
@@ -1213,7 +1225,11 @@ impl IOCompositor {
             return;
         }
 
-        self.send_root_pipeline_display_list();
+        let group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find group id");
+        self.send_root_pipeline_display_list(group_id);
         self.set_needs_repaint(RepaintReason::Resize);
     }
 
