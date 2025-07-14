@@ -56,7 +56,7 @@ use webrender_api::{
 
 use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
-use crate::webview_manager::WebViewManager;
+use crate::webview_manager::{WebViewGroupId, WebViewManager};
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
 
 #[derive(Debug, PartialEq)]
@@ -792,8 +792,8 @@ impl IOCompositor {
                 if details.first_paint_metric == PaintMetricState::Waiting {
                     details.first_paint_metric = PaintMetricState::Seen(epoch, first_reflow);
                 }
-                if details.first_contentful_paint_metric == PaintMetricState::Waiting &&
-                    display_list_info.is_contentful
+                if details.first_contentful_paint_metric == PaintMetricState::Waiting
+                    && display_list_info.is_contentful
                 {
                     details.first_contentful_paint_metric =
                         PaintMetricState::Seen(epoch, first_reflow);
@@ -980,9 +980,9 @@ impl IOCompositor {
     /// Set the root pipeline for our WebRender scene to a display list that consists of an iframe
     /// for each visible top-level browsing context, applying a transformation on the root for
     /// pinch zoom, page zoom, and HiDPI scaling.
-    fn send_root_pipeline_display_list(&mut self) {
+    fn send_root_pipeline_display_list(&mut self, webview_group_id: WebViewGroupId) {
         let mut transaction = Transaction::new();
-        self.send_root_pipeline_display_list_in_transaction(&mut transaction);
+        self.send_root_pipeline_display_list_in_transaction(webview_group_id, &mut transaction);
         self.generate_frame(&mut transaction, RenderReasons::SCENE);
         self.global.borrow_mut().send_transaction(transaction);
     }
@@ -992,6 +992,7 @@ impl IOCompositor {
     /// pinch zoom, page zoom, and HiDPI scaling.
     pub(crate) fn send_root_pipeline_display_list_in_transaction(
         &self,
+        webview_group_id: WebViewGroupId,
         transaction: &mut Transaction,
     ) {
         // Every display list needs a pipeline, but we'd like to choose one that is unlikely
@@ -1013,7 +1014,7 @@ impl IOCompositor {
 
         let root_clip_id = builder.define_clip_rect(root_reference_frame, viewport_rect);
         let clip_chain_id = builder.define_clip_chain(None, [root_clip_id]);
-        for (_, webview_renderer) in self.webview_renderers.painting_order() {
+        for (_, webview_renderer) in self.webview_renderers.painting_order(webview_group_id) {
             let Some(pipeline_id) = webview_renderer.root_pipeline_id else {
                 continue;
             };
@@ -1659,9 +1660,9 @@ impl IOCompositor {
         let mut flags = webrender.get_debug_flags();
         let flag = match option {
             WebRenderDebugOption::Profiler => {
-                webrender::DebugFlags::PROFILER_DBG |
-                    webrender::DebugFlags::GPU_TIME_QUERIES |
-                    webrender::DebugFlags::GPU_SAMPLE_QUERIES
+                webrender::DebugFlags::PROFILER_DBG
+                    | webrender::DebugFlags::GPU_TIME_QUERIES
+                    | webrender::DebugFlags::GPU_SAMPLE_QUERIES
             },
             WebRenderDebugOption::TextureCacheDebug => webrender::DebugFlags::TEXTURE_CACHE_DBG,
             WebRenderDebugOption::RenderTargetDebug => webrender::DebugFlags::RENDER_TARGET_DBG,

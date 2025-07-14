@@ -6,8 +6,11 @@ use std::collections::HashMap;
 use std::collections::hash_map::{Entry, Values, ValuesMut};
 
 use base::id::WebViewId;
+use libc::group;
 
 use crate::webview_renderer::UnknownWebView;
+
+pub(crate) type WebViewGroupId = usize;
 
 #[derive(Debug)]
 pub struct WebViewManager<WebView> {
@@ -15,8 +18,10 @@ pub struct WebViewManager<WebView> {
     /// a single root pipeline that also applies any pinch zoom transformation.
     webviews: HashMap<WebViewId, WebView>,
 
+    webview_groups: HashMap<WebViewId, WebViewGroupId>,
+
     /// The order to paint them in, topmost last.
-    pub(crate) painting_order: Vec<WebViewId>,
+    painting_order: HashMap<WebViewGroupId, Vec<WebViewId>>,
 }
 
 impl<WebView> Default for WebViewManager<WebView> {
@@ -24,65 +29,83 @@ impl<WebView> Default for WebViewManager<WebView> {
         Self {
             webviews: Default::default(),
             painting_order: Default::default(),
+            webview_groups: Default::default(),
         }
     }
 }
 
 impl<WebView> WebViewManager<WebView> {
-    pub fn remove(&mut self, webview_id: WebViewId) -> Result<WebView, UnknownWebView> {
-        self.painting_order.retain(|b| *b != webview_id);
+    fn group_painting_order(&self, webview_id: WebViewId) -> &Vec<WebViewId> {
+        let group_id = self.webview_groups.get(&webview_id).unwrap();
+        &self.painting_order.get(group_id).unwrap()
+    }
+
+    fn group_painting_order_mut(&mut self, webview_id: WebViewId) -> &mut Vec<WebViewId> {
+        let group_id = self.webview_groups.get(&webview_id).unwrap();
+        self.painting_order.get_mut(group_id).unwrap()
+    }
+
+    pub(crate) fn remove(&mut self, webview_id: WebViewId) -> Result<WebView, UnknownWebView> {
+        let painting_order = self.group_painting_order_mut(webview_id);
+        painting_order.retain(|b| *b != webview_id);
         self.webviews
             .remove(&webview_id)
             .ok_or(UnknownWebView(webview_id))
     }
 
-    pub fn get(&self, webview_id: WebViewId) -> Option<&WebView> {
+    pub(crate) fn get(&self, webview_id: WebViewId) -> Option<&WebView> {
         self.webviews.get(&webview_id)
     }
 
-    pub fn get_mut(&mut self, webview_id: WebViewId) -> Option<&mut WebView> {
+    pub(crate) fn get_mut(&mut self, webview_id: WebViewId) -> Option<&mut WebView> {
         self.webviews.get_mut(&webview_id)
     }
 
     /// Returns true iff the painting order actually changed.
-    pub fn show(&mut self, webview_id: WebViewId) -> Result<bool, UnknownWebView> {
+    pub(crate) fn show(&mut self, webview_id: WebViewId) -> Result<bool, UnknownWebView> {
         if !self.webviews.contains_key(&webview_id) {
             return Err(UnknownWebView(webview_id));
         }
-        if !self.painting_order.contains(&webview_id) {
-            self.painting_order.push(webview_id);
+        let painting_order = self.group_painting_order_mut(webview_id);
+        if !painting_order.contains(&webview_id) {
+            painting_order.push(webview_id);
             return Ok(true);
         }
         Ok(false)
     }
 
     /// Returns true iff the painting order actually changed.
-    pub fn hide(&mut self, webview_id: WebViewId) -> Result<bool, UnknownWebView> {
+    pub(crate) fn hide(&mut self, webview_id: WebViewId) -> Result<bool, UnknownWebView> {
         if !self.webviews.contains_key(&webview_id) {
             return Err(UnknownWebView(webview_id));
         }
-        if self.painting_order.contains(&webview_id) {
-            self.painting_order.retain(|b| *b != webview_id);
+        let painting_order = self.group_painting_order_mut(webview_id);
+        if painting_order.contains(&webview_id) {
+            painting_order.retain(|b| *b != webview_id);
             return Ok(true);
         }
         Ok(false)
     }
 
     /// Returns true iff the painting order actually changed.
-    pub fn hide_all(&mut self) -> bool {
+    pub(crate) fn hide_all(&mut self) -> bool {
+        todo!("nYI");
+        /*
         if !self.painting_order.is_empty() {
             self.painting_order.clear();
             return true;
         }
         false
+        */
     }
 
     /// Returns true iff the painting order actually changed.
-    pub fn raise_to_top(&mut self, webview_id: WebViewId) -> Result<bool, UnknownWebView> {
+    pub(crate) fn raise_to_top(&mut self, webview_id: WebViewId) -> Result<bool, UnknownWebView> {
         if !self.webviews.contains_key(&webview_id) {
             return Err(UnknownWebView(webview_id));
         }
-        if self.painting_order.last() != Some(&webview_id) {
+        let painting_order = self.group_painting_order_mut(webview_id);
+        if painting_order.last() != Some(&webview_id) {
             self.hide(webview_id)?;
             self.show(webview_id)?;
             return Ok(true);
@@ -90,21 +113,26 @@ impl<WebView> WebViewManager<WebView> {
         Ok(false)
     }
 
-    pub fn painting_order(&self) -> impl Iterator<Item = (&WebViewId, &WebView)> {
+    pub(crate) fn painting_order(
+        &self,
+        group_id: WebViewGroupId,
+    ) -> impl Iterator<Item = (&WebViewId, &WebView)> {
         self.painting_order
+            .get(&group_id)
+            .unwrap()
             .iter()
             .flat_map(move |webview_id| self.get(*webview_id).map(|b| (webview_id, b)))
     }
 
-    pub fn entry(&mut self, webview_id: WebViewId) -> Entry<'_, WebViewId, WebView> {
+    pub(crate) fn entry(&mut self, webview_id: WebViewId) -> Entry<'_, WebViewId, WebView> {
         self.webviews.entry(webview_id)
     }
 
-    pub fn iter(&self) -> Values<'_, WebViewId, WebView> {
+    pub(crate) fn iter(&self) -> Values<'_, WebViewId, WebView> {
         self.webviews.values()
     }
 
-    pub fn iter_mut(&mut self) -> ValuesMut<'_, WebViewId, WebView> {
+    pub(crate) fn iter_mut(&mut self) -> ValuesMut<'_, WebViewId, WebView> {
         self.webviews.values_mut()
     }
 }
