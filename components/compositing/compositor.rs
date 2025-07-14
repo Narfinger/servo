@@ -55,7 +55,7 @@ use webrender_api::{
 
 use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
-use crate::webview_manager::{WebViewGroupId, WebViewManager};
+use crate::webview_manager::{INITIAL_WEBVIEW_GROUP, WebViewGroupId, WebViewManager};
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
 
 #[derive(Debug, PartialEq)]
@@ -1095,8 +1095,9 @@ impl IOCompositor {
         webview: Box<dyn WebViewTrait>,
         viewport_details: ViewportDetails,
     ) {
+        log::error!("adding webview with group {INITIAL_WEBVIEW_GROUP}");
         self.webview_renderers.add_webview(
-            1,
+            INITIAL_WEBVIEW_GROUP,
             webview.id(),
             WebViewRenderer::new(self.global.clone(), webview, viewport_details),
         );
@@ -1239,14 +1240,14 @@ impl IOCompositor {
         self.set_needs_repaint(RepaintReason::Resize);
     }
 
-    pub fn resize_rendering_context(
-        &mut self,
-        webview_group_id: WebViewGroupId,
-        new_size: PhysicalSize<u32>,
-    ) {
+    pub fn resize_rendering_context(&mut self, webview_id: WebViewId, new_size: PhysicalSize<u32>) {
         if self.global.borrow().shutdown_state() != ShutdownState::NotShuttingDown {
             return;
         }
+        let webview_group_id = self
+            .webview_renderers
+            .group_id(webview_id)
+            .expect("Could not find groupid");
         let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
         if rendering_context.size() == new_size {
             return;

@@ -14,6 +14,7 @@ use webrender_api::units::DevicePixel;
 use crate::webview_renderer::UnknownWebView;
 
 pub(crate) type WebViewGroupId = usize;
+pub(crate) const INITIAL_WEBVIEW_GROUP: usize = 1;
 
 pub struct WebViewManager<WebView> {
     /// Our top-level browsing contexts. In the WebRender scene, their pipelines are the children of
@@ -55,7 +56,9 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn add_webview_group(&mut self, rendering_context: Rc<dyn RenderingContext>) {
-        self.rendering_contexts.insert(0, rendering_context);
+        self.rendering_contexts
+            .insert(INITIAL_WEBVIEW_GROUP, rendering_context);
+        self.painting_order.insert(INITIAL_WEBVIEW_GROUP, vec![]);
     }
 
     pub(crate) fn groups(&self) -> Vec<WebViewGroupId> {
@@ -118,7 +121,7 @@ impl<WebView> WebViewManager<WebView> {
 
     /// Returns true iff the painting order actually changed.
     pub(crate) fn hide_all(&mut self) -> bool {
-        todo!("nYI");
+        //todo!("nYI");
         /*
         if !self.painting_order.is_empty() {
             self.painting_order.clear();
@@ -126,6 +129,7 @@ impl<WebView> WebViewManager<WebView> {
         }
         false
         */
+        true
     }
 
     /// Returns true iff the painting order actually changed.
@@ -146,6 +150,13 @@ impl<WebView> WebViewManager<WebView> {
         &self,
         group_id: WebViewGroupId,
     ) -> impl Iterator<Item = (&WebViewId, &WebView)> {
+        log::error!(
+            "groups: {:?} || wvs: {:?} || groupid {:?} || painting {:?}",
+            self.webview_groups,
+            self.webviews.keys(),
+            group_id,
+            self.painting_order
+        );
         self.painting_order
             .get(&group_id)
             .expect("Could not find group")
