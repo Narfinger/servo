@@ -13,6 +13,7 @@ use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 
+use dpi::PhysicalSize;
 use keyboard_types::Key;
 use log::{LevelFilter, debug, error, info, trace, warn};
 use napi_derive_ohos::{module_exports, napi};
@@ -24,11 +25,17 @@ use ohos_ime::{
     RawTextEditorProxy,
 };
 use ohos_ime_sys::types::InputMethod_EnterKeyType;
+use raw_window_handle::{
+    DisplayHandle, OhosDisplayHandle, OhosNdkWindowHandle, RawDisplayHandle, RawWindowHandle,
+    WindowHandle,
+};
+use servo::WindowRenderingContext;
 use servo::style::Zero;
 use servo::{
     AlertResponse, EventLoopWaker, InputMethodType, LoadStatus, MediaSessionPlaybackState,
     PermissionRequest, SimpleDialog, WebView, WebViewId,
 };
+use url::Url;
 use xcomponent_sys::{
     OH_NativeXComponent, OH_NativeXComponent_Callback, OH_NativeXComponent_GetKeyEvent,
     OH_NativeXComponent_GetKeyEventAction, OH_NativeXComponent_GetKeyEventCode,
@@ -233,15 +240,35 @@ impl ServoAction {
                 }
             },
             NewWebview(xcomponent, window) => {
-                servo.pause_compositor();
-                servo.create_and_focus_toplevel_webview("about:blank".parse().unwrap());
-                let (window_handle, _, coordinates) =
+                let (window_handle, window_size, coordinates) =
+                    simpleservo::get_raw_window_handle(xcomponent.0, window.0);
+                let display_handle = RawDisplayHandle::Ohos(OhosDisplayHandle::new());
+                let display_handle = unsafe { DisplayHandle::borrow_raw(display_handle) };
+
+                let window_handle = unsafe { WindowHandle::borrow_raw(window_handle) };
+                let rendering_context = Rc::new(
+                    WindowRenderingContext::new(
+                        display_handle,
+                        window_handle,
+                        PhysicalSize::new(window_size.width as u32, window_size.height as u32),
+                    )
+                    .expect("Could not create RenderingContext"),
+                );
+
+                servo.add_webview_context(
+                    Url::parse("http://www.google.com").unwrap(),
+                    rendering_context,
+                )
+                /*
+                    servo.pause_compositor();
+                    servo.create_and_focus_toplevel_webview("about:blank".parse().unwrap());
+                    let (window_handle, _, coordinates) =
                     simpleservo::get_raw_window_handle(xcomponent.0, window.0);
 
-                servo.resume_compositor(window_handle, coordinates);
-                let webview = servo.newest_webview().expect("There should always be one");
-                let id = webview.id();
-                NATIVE_WEBVIEWS
+                    servo.resume_compositor(window_handle, coordinates);
+                    let webview = servo.newest_webview().expect("There should always be one");
+                    let id = webview.id();
+                    NATIVE_WEBVIEWS
                     .lock()
                     .unwrap()
                     .push(NativeWebViewComponents {
@@ -249,13 +276,14 @@ impl ServoAction {
                         xcomponent: xcomponent.clone(),
                         window: window.clone(),
                     });
-                let url = webview
+                    let url = webview
                     .url()
                     .map(|u| u.to_string())
                     .unwrap_or(String::from("about:blank"));
                 SET_URL_BAR_CB
-                    .get()
-                    .map(|f| f.call(url, ThreadsafeFunctionCallMode::Blocking));
+                .get()
+                .map(|f| f.call(url, ThreadsafeFunctionCallMode::Blocking));
+                    */
             },
         };
     }

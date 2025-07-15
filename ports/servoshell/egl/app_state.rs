@@ -335,6 +335,7 @@ impl RunningAppState {
             }),
         });
 
+        //app_state.own_custom_webview(second_rendering_context);
         app_state.create_and_focus_toplevel_webview(initial_url);
         app_state
     }
@@ -346,6 +347,37 @@ impl RunningAppState {
             .delegate(self.clone())
             .build();
 
+        webview.focus();
+        self.add(webview.clone());
+    }
+
+    pub(crate) fn add_webview_context(self: &Rc<Self>, url: Url, rc: Rc<WindowRenderingContext>) {
+        let webview = WebViewBuilder::new(&self.servo)
+            .url(Url::parse("https://www.duckduckgo.com").unwrap())
+            .hidpi_scale_factor(self.inner().hidpi_scale_factor)
+            .delegate(self.clone())
+            .add_rendering_context(rc)
+            .build();
+        webview.focus();
+        self.add(webview.clone());
+    }
+
+    fn own_custom_webview(self: &Rc<Self>, second_rendering_context: Rc<WindowRenderingContext>) {
+        {
+            let webview = WebViewBuilder::new(&self.servo)
+                .url(Url::parse("https://www.google.com").unwrap())
+                .hidpi_scale_factor(self.inner().hidpi_scale_factor)
+                .delegate(self.clone())
+                .build();
+            webview.focus();
+            self.add(webview.clone());
+        }
+        let webview = WebViewBuilder::new(&self.servo)
+            .url(Url::parse("https://www.duckduckgo.com").unwrap())
+            .hidpi_scale_factor(self.inner().hidpi_scale_factor)
+            .delegate(self.clone())
+            .add_rendering_context(second_rendering_context)
+            .build();
         webview.focus();
         self.add(webview.clone());
     }
