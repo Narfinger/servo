@@ -18,9 +18,9 @@ use servo::webrender_api::ScrollLocation;
 use servo::webrender_api::units::{DeviceIntPoint, DeviceIntSize};
 use servo::{
     AllowOrDenyRequest, AuthenticationRequest, FilterPattern, FormControl, GamepadHapticEffectType,
-    KeyboardEvent, LoadStatus, PermissionRequest, Servo, ServoDelegate, ServoError, SimpleDialog,
-    WebDriverCommandMsg, WebDriverJSResult, WebDriverJSValue, WebDriverLoadStatus, WebView,
-    WebViewBuilder, WebViewDelegate,
+    KeyboardEvent, LoadStatus, PermissionRequest, RenderingContext, Servo, ServoDelegate,
+    ServoError, SimpleDialog, WebDriverCommandMsg, WebDriverJSResult, WebDriverJSValue,
+    WebDriverLoadStatus, WebView, WebViewBuilder, WebViewDelegate,
 };
 use url::Url;
 
@@ -139,6 +139,15 @@ impl RunningAppState {
         webview.notify_theme_change(self.inner().window.theme());
         self.add(webview.clone());
         webview
+    }
+
+    pub(crate) fn create_new_window(self: &Rc<Self>, url: Url, rc: Rc<dyn RenderingContext>) {
+        let webview = WebViewBuilder::new(self.servo())
+            .url(url)
+            .delegate(self.clone())
+            .add_rendering_context(rc)
+            .build();
+        self.add(webview.clone());
     }
 
     pub(crate) fn inner(&self) -> Ref<RunningAppStateInner> {
