@@ -57,11 +57,15 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts.get(&group_id).unwrap().clone()
     }
 
-    pub(crate) fn add_webview_group(&mut self, rendering_context: Rc<dyn RenderingContext>) {
+    pub(crate) fn add_webview_group(
+        &mut self,
+        rendering_context: Rc<dyn RenderingContext>,
+    ) -> WebViewGroupId {
         let new_group_id = self.last_used_id.unwrap_or_default() + 1;
         self.rendering_contexts
             .insert(new_group_id, rendering_context);
         self.painting_order.insert(new_group_id, vec![]);
+        new_group_id
     }
 
     pub(crate) fn groups(&self) -> Vec<WebViewGroupId> {

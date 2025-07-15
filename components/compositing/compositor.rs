@@ -1107,8 +1107,12 @@ impl IOCompositor {
         &mut self,
         webview: Box<dyn WebViewTrait>,
         rendering_context: Rc<dyn RenderingContext>,
+        viewport_details: ViewportDetails,
     ) {
-        panic!("NYI");
+        let group_id = self.webview_renderers.add_webview_group(rendering_context);
+        let wvid = webview.id();
+        let wvr = WebViewRenderer::new(self.global.clone(), webview, viewport_details);
+        self.webview_renderers.add_webview(group_id, wvid, wvr);
     }
 
     fn set_frame_tree_for_webview(&mut self, frame_tree: &SendableFrameTree) {

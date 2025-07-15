@@ -53,7 +53,7 @@ pub(crate) struct RunningAppState {
     servo: Servo,
     /// The preferences for this run of servoshell. This is not mutable, so doesn't need to
     /// be stored inside the [`RunningAppStateInner`].
-    servoshell_preferences: ServoShellPreferences,
+    pub(crate) servoshell_preferences: ServoShellPreferences,
     /// A [`Receiver`] for receiving commands from a running WebDriver server, if WebDriver
     /// was enabled.
     webdriver_receiver: Option<Receiver<WebDriverCommandMsg>>,

@@ -13,6 +13,7 @@ use servo::servo_geometry::{DeviceIndependentIntRect, DeviceIndependentPixel};
 use servo::webrender_api::units::{DeviceIntSize, DevicePixel};
 use servo::{RenderingContext, ScreenGeometry, SoftwareRenderingContext};
 use winit::dpi::PhysicalSize;
+use winit::event_loop::ActiveEventLoop;
 
 use super::app_state::RunningAppState;
 use crate::desktop::window_trait::WindowPortsMethods;
@@ -116,7 +117,12 @@ impl WindowPortsMethods for Window {
         self.fullscreen.get()
     }
 
-    fn handle_winit_event(&self, _: Rc<RunningAppState>, _: winit::event::WindowEvent) {
+    fn handle_winit_event(
+        &self,
+        _: Rc<RunningAppState>,
+        _: winit::event::WindowEvent,
+        _: &ActiveEventLoop,
+    ) {
         // Not expecting any winit events.
     }
 

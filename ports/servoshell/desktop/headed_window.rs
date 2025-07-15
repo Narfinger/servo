@@ -213,11 +213,16 @@ impl Window {
         webview.notify_input_event(InputEvent::Keyboard(event));
     }
 
-    fn handle_keyboard_input(&self, state: Rc<RunningAppState>, winit_event: KeyEvent) {
+    fn handle_keyboard_input(
+        &self,
+        state: Rc<RunningAppState>,
+        winit_event: KeyEvent,
+        event_loop: &ActiveEventLoop,
+    ) {
         // First, handle servoshell key bindings that are not overridable by, or visible to, the page.
         let mut keyboard_event =
             keyboard_event_from_winit(&winit_event, self.modifiers_state.get());
-        if self.handle_intercepted_key_bindings(state.clone(), &keyboard_event) {
+        if self.handle_intercepted_key_bindings(state.clone(), &keyboard_event, event_loop) {
             return;
         }
 
@@ -232,16 +237,16 @@ impl Window {
             }
         }
 
-        if keyboard_event.event.state == KeyState::Down &&
-            keyboard_event.event.key == Key::Unidentified
+        if keyboard_event.event.state == KeyState::Down
+            && keyboard_event.event.key == Key::Unidentified
         {
             // If pressed and probably printable, we expect a ReceivedCharacter event.
             // Wait for that to be received and don't queue any event right now.
             self.last_pressed
                 .set(Some((keyboard_event, Some(winit_event.logical_key))));
             return;
-        } else if keyboard_event.event.state == KeyState::Up &&
-            keyboard_event.event.key == Key::Unidentified
+        } else if keyboard_event.event.state == KeyState::Up
+            && keyboard_event.event.key == Key::Unidentified
         {
             // If release and probably printable, this is following a ReceiverCharacter event.
             if let Some(key) = self.keys_down.borrow_mut().remove(&winit_event.logical_key) {
@@ -291,6 +296,7 @@ impl Window {
         &self,
         state: Rc<RunningAppState>,
         key_event: &KeyboardEvent,
+        event_loop: &ActiveEventLoop,
     ) -> bool {
         let Some(focused_webview) = state.focused_webview() else {
             return false;
@@ -400,7 +406,12 @@ impl Window {
                 }
             })
             .shortcut(CMD_OR_CONTROL, 'T', || {
-                state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
+                let w = Window::new(&state.servoshell_preferences, event_loop);
+                state.create_new_window(
+                    Url::parse("https://www.duckduckgo.com").unwrap(),
+                    w.rendering_context,
+                );
+                //state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
             })
             .shortcut(CMD_OR_CONTROL, 'Q', || state.servo().start_shutting_down())
             .otherwise(|| handled = false);
@@ -590,13 +601,20 @@ impl WindowPortsMethods for Window {
         self.winit_window.id()
     }
 
-    fn handle_winit_event(&self, state: Rc<RunningAppState>, event: WindowEvent) {
+    fn handle_winit_event(
+        &self,
+        state: Rc<RunningAppState>,
+        event: WindowEvent,
+        event_loop: &ActiveEventLoop,
+    ) {
         let Some(webview) = state.focused_webview() else {
             return;
         };
 
         match event {
-            WindowEvent::KeyboardInput { event, .. } => self.handle_keyboard_input(state, event),
+            WindowEvent::KeyboardInput { event, .. } => {
+                self.handle_keyboard_input(state, event, event_loop)
+            },
             WindowEvent::ModifiersChanged(modifiers) => self.modifiers_state.set(modifiers.state()),
             WindowEvent::MouseInput { state, button, .. } => {
                 if button == MouseButton::Left || button == MouseButton::Right {

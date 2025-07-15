@@ -721,7 +721,7 @@ impl ApplicationHandler<AppEvent> for App {
             }
         }
         if !consumed {
-            window.handle_winit_event(state.clone(), event);
+            window.handle_winit_event(state.clone(), event, event_loop);
         }
 
         // Block until the window gets an event

@@ -144,7 +144,10 @@ impl WebView {
             id,
         });
         if let Some(rc) = builder.rendering_context {
-            servo.compositor.borrow_mut().add_webview_new_group(wv, rc);
+            servo
+                .compositor
+                .borrow_mut()
+                .add_webview_new_group(wv, rc, viewport_details);
         } else {
             servo
                 .compositor
