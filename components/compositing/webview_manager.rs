@@ -119,7 +119,11 @@ impl<WebView> WebViewManager<WebView> {
         )
         .expect("Could not");
 
+        let webrender_document = renderapi_sender
+            .create_api()
+            .add_document(rendering_context.size2d().to_i32());
         let s = WebRenderInstance {
+            webrender_document,
             rendering_context,
             webrender,
             webrender_gl: gl,

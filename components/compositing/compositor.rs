@@ -309,6 +309,7 @@ impl ServoRenderer {
         details_for_pipeline: impl Fn(PipelineId) -> Option<&'a PipelineDetails>,
     ) -> Result<Vec<CompositorHitTestResult>, HitTestError> {
         // DevicePoint and WorldPoint are the same for us.
+        /*
         let world_point = WorldPoint::from_untyped(point.to_untyped());
         let results =
             self.webrender_api
@@ -365,11 +366,12 @@ impl ServoRenderer {
         }
 
         Ok(results)
+         */
+        Ok(vec![])
     }
 
-    pub(crate) fn send_transaction(&mut self, transaction: Transaction) {
-        self.webrender_api
-            .send_transaction(self.webrender_document, transaction);
+    pub(crate) fn send_transaction(&mut self, documentid: DocumentId, transaction: Transaction) {
+        self.webrender_api.send_transaction(documentid, transaction);
     }
 
     pub(crate) fn update_cursor_from_hittest(
@@ -434,7 +436,7 @@ impl IOCompositor {
                 constellation_sender: state.constellation_chan,
                 time_profiler_chan: state.time_profiler_chan,
                 webrender_api: state.webrender_api,
-                webrender_document: state.webrender_document,
+                //webrender_document: state.webrender_document,
                 webrender_gl: state.webrender_gl,
                 #[cfg(feature = "webxr")]
                 webxr_main_thread: state.webxr_main_thread,
