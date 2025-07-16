@@ -1525,7 +1525,8 @@ impl IOCompositor {
                     let size = rendering_context.size2d().to_i32();
                     error!("done size");
 
-                    webrender.render(size, 0 /* buffer_age */).ok();
+                    let v = webrender.render(size, 0 /* buffer_age */);
+                    error!("webrender render result {:?}", v);
                     error!("done webrender render");
                 }
             },
