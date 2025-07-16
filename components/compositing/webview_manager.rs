@@ -12,7 +12,7 @@ use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
 use log::error;
-use webrender::WebRenderOptions;
+use webrender::{RenderApi, RenderApiSender, WebRenderOptions};
 use webrender_api::units::DevicePixel;
 use webrender_api::{DocumentId, FramePublishId, FrameReadyParams};
 
@@ -25,6 +25,8 @@ pub(crate) struct WebRenderInstance {
     pub(crate) webrender: webrender::Renderer,
     pub(crate) webrender_gl: Rc<dyn Gl>,
     pub(crate) webrender_document: DocumentId,
+    webrender_api: RenderApi,
+    sender: RenderApiSender,
 }
 
 #[derive(Clone)]
@@ -111,7 +113,7 @@ impl<WebView> WebViewManager<WebView> {
 
         let notifier = Box::new(RenderNotifier::new());
 
-        let (webrender, renderapi_sender) = webrender::create_webrender_instance(
+        let (webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
             notifier,
             WebRenderOptions::default(),
@@ -119,10 +121,11 @@ impl<WebView> WebViewManager<WebView> {
         )
         .expect("Could not");
 
-        let webrender_document = renderapi_sender
-            .create_api()
-            .add_document(rendering_context.size2d().to_i32());
+        let api = sender.create_api();
+        let webrender_document = api.add_document(rendering_context.size2d().to_i32());
         let s = WebRenderInstance {
+            sender,
+            webrender_api: api,
             webrender_document,
             rendering_context,
             webrender,
