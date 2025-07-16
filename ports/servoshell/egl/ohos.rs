@@ -533,7 +533,7 @@ static LOGGER: LazyLock<hilog::Logger> = LazyLock::new(|| {
     let mut builder = hilog::Builder::new();
     builder.set_domain(hilog::LogDomain::new(0xE0C3));
     let filters = [
-        "fonts",
+        //"fonts",
         "servo",
         "servoshell",
         "servoshell::egl:gl_glue",
@@ -547,7 +547,7 @@ static LOGGER: LazyLock<hilog::Logger> = LazyLock::new(|| {
         "compositing::compositor",
         "compositing::touch",
         "constellation::constellation",
-        "ohos_ime",
+        //"ohos_ime",
     ];
     for &module in &filters {
         builder.filter_module(module, log::LevelFilter::Debug);

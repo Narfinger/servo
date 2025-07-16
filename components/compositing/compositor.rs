@@ -33,7 +33,7 @@ use embedder_traits::{
 use euclid::{Point2D, Rect, Scale, Size2D, Transform3D};
 use ipc_channel::ipc::{self, IpcSharedMemory};
 use libc::c_void;
-use log::{debug, info, trace, warn};
+use log::{debug, error, info, trace, warn};
 use pixels::{CorsStatus, ImageFrame, ImageMetadata, PixelFormat, RasterImage};
 use profile_traits::mem::{ProcessReports, ProfilerRegistration, Report, ReportKind};
 use profile_traits::time::{self as profile_time, ProfilerCategory};
@@ -1001,7 +1001,7 @@ impl IOCompositor {
         // Every display list needs a pipeline, but we'd like to choose one that is unlikely
         // to conflict with our content pipelines, which start at (1, 1). (0, 0) is WebRender's
         // dummy pipeline, so we choose (0, 1).
-        let root_pipeline = WebRenderPipelineId(0, 1);
+        let root_pipeline = WebRenderPipelineId(0, webview_group_id as u32);
         transaction.set_root_pipeline(root_pipeline);
 
         let mut builder = webrender_api::DisplayListBuilder::new(root_pipeline);
@@ -1113,6 +1113,8 @@ impl IOCompositor {
         let wvid = webview.id();
         let wvr = WebViewRenderer::new(self.global.clone(), webview, viewport_details);
         self.webview_renderers.add_webview(group_id, wvid, wvr);
+
+        self.set_frame_tree_for_webview(frame_tree);
     }
 
     fn set_frame_tree_for_webview(&mut self, frame_tree: &SendableFrameTree) {
@@ -1402,6 +1404,7 @@ impl IOCompositor {
             self.webview_renderers.groups()
         };
         for i in groups {
+            self.send_root_pipeline_display_list(i);
             if let Err(error) = self.render_inner(i) {
                 warn!("Unable to render: {error:?}");
                 return false;
@@ -1469,15 +1472,22 @@ impl IOCompositor {
 
     #[servo_tracing::instrument(skip_all)]
     fn render_inner(&mut self, webview_group_id: WebViewGroupId) -> Result<(), UnableToComposite> {
+        log::error!("render_inner for {webview_group_id}");
         let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
         if let Err(err) = rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
         }
+        log::error!("done make current");
         self.assert_no_gl_error();
+        error!("done assert");
 
         if let Some(webrender) = self.webrender.as_mut() {
+            error!("done taking webrender");
+
             webrender.update();
+            error!("done webrender update");
         }
+        error!("done with if (if called)");
 
         if opts::get().wait_for_stable_image {
             // The current image may be ready to output. However, if there are animations active,
@@ -1493,6 +1503,7 @@ impl IOCompositor {
         }
 
         rendering_context.prepare_for_rendering();
+        error!("done preparing");
 
         let time_profiler_chan = self.global.borrow().time_profiler_chan.clone();
         time_profile!(
@@ -1505,9 +1516,16 @@ impl IOCompositor {
                 // Paint the scene.
                 // TODO(gw): Take notice of any errors the renderer returns!
                 self.clear_background();
+                error!("done clear background");
+
                 if let Some(webrender) = self.webrender.as_mut() {
+                    error!("done webrender mut");
+
                     let size = rendering_context.size2d().to_i32();
+                    error!("done size");
+
                     webrender.render(size, 0 /* buffer_age */).ok();
+                    error!("done webrender render");
                 }
             },
         );
@@ -1670,13 +1688,13 @@ impl IOCompositor {
 
         let groups = self.webview_renderers.groups();
         for webview_group_id in groups {
+            log::error!("perform_update for {webview_group_id}");
             let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
 
             // The WebXR thread may make a different context current
             if let Err(err) = rendering_context.make_current() {
                 warn!("Failed to make the rendering context current: {:?}", err);
             }
-
             let mut need_zoom = false;
             let scroll_offset_updates: Vec<_> = self
                 .webview_renderers

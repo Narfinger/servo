@@ -372,6 +372,7 @@ impl Servo {
                     clear_color,
                     upload_method,
                     workers,
+                    panic_on_gl_error: true,
                     size_of_op: Some(servo_allocator::usable_size),
                     ..Default::default()
                 },
@@ -595,8 +596,9 @@ impl Servo {
     }
 
     fn send_animating_changed_messages(&self) {
-        let animating = self.compositor.borrow().webxr_running() ||
-            self.webviews
+        let animating = self.compositor.borrow().webxr_running()
+            || self
+                .webviews
                 .borrow()
                 .values()
                 .filter_map(WebView::from_weak_handle)

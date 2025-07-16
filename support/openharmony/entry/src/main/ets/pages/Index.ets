@@ -112,38 +112,29 @@ struct Index {
           })
       }
 
-      Tabs({ barPosition: BarPosition.Start, index: this.currentIndex}) {
-        TabContent() {
-          XComponent(this.xComponentAttrs)
-            .focusable(true)
-            .onLoad((xComponentContext) => {
-              this.xComponentContext = xComponentContext as ServoXComponentInterface;
-              let resource_dir: string = this.context.resourceDir;
-              let cache_dir: string = this.context.cacheDir;
-              console.debug("resourceDir: ", resource_dir);
-              console.debug("cacheDir: ", cache_dir);
-              let init_options: InitOpts = {
-                url: this.urlToLoad,
-                resourceDir: resource_dir,
-                commandlineArgs: this.CommandlineArgs
-              }
-              this.xComponentContext.initServo(init_options)
-              this.xComponentContext.registerURLcallback((new_url) => {
-                console.info('New URL from native: ', new_url)
-                this.urlToLoad = new_url
-              })
-              this.xComponentContext.registerPromptToastCallback(prompt_toast)
-            })
-        }.tabBar('1')
-        ForEach(this.tablist, (item: number) => {
-          TabContent() {
-            XComponent(this.xComponentAttrs)
-              .focusable(true)
-          }.tabBar(String(item))
+      Row() {
+        XComponent(this.xComponentAttrs)
+        .focusable(true)
+        .onLoad((xComponentContext) => {
+          this.xComponentContext = xComponentContext as ServoXComponentInterface;
+          let resource_dir: string = this.context.resourceDir;
+          let cache_dir: string = this.context.cacheDir;
+          console.debug("resourceDir: ", resource_dir);
+          console.debug("cacheDir: ", cache_dir);
+          let init_options: InitOpts = {
+            url: this.urlToLoad,
+            resourceDir: resource_dir,
+            commandlineArgs: this.CommandlineArgs
+          }
+          this.xComponentContext.initServo(init_options)
+          this.xComponentContext.registerURLcallback((new_url) => {
+            console.info('New URL from native: ', new_url)
+            this.urlToLoad = new_url
+          })
+          this.xComponentContext.registerPromptToastCallback(prompt_toast)
         })
-      }.onChange((index: number) => {
-        this.xComponentContext?.focusWebview(index);
-      })
+        XComponent(this.xComponentAttrs)
+      }
     }
     .width('100%')
   }
