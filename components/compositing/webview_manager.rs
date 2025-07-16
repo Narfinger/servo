@@ -13,21 +13,21 @@ use webrender_api::units::DevicePixel;
 
 use crate::webview_renderer::UnknownWebView;
 
-pub(crate) type WebViewGroupId = usize;
+pub(crate) type RenderingGroupId = usize;
 
 pub struct WebViewManager<WebView> {
     /// Our top-level browsing contexts. In the WebRender scene, their pipelines are the children of
     /// a single root pipeline that also applies any pinch zoom transformation.
     webviews: HashMap<WebViewId, WebView>,
 
-    rendering_contexts: HashMap<WebViewGroupId, Rc<dyn RenderingContext>>,
+    rendering_contexts: HashMap<RenderingGroupId, Rc<dyn RenderingContext>>,
 
-    webview_groups: HashMap<WebViewId, WebViewGroupId>,
+    webview_groups: HashMap<WebViewId, RenderingGroupId>,
 
     /// The order to paint them in, topmost last.
-    painting_order: HashMap<WebViewGroupId, Vec<WebViewId>>,
+    painting_order: HashMap<RenderingGroupId, Vec<WebViewId>>,
 
-    last_used_id: Option<WebViewGroupId>,
+    last_used_id: Option<RenderingGroupId>,
 }
 
 impl<WebView> Default for WebViewManager<WebView> {
@@ -53,14 +53,14 @@ impl<WebView> WebViewManager<WebView> {
         self.painting_order.get_mut(group_id).unwrap()
     }
 
-    pub(crate) fn rendering_context(&self, group_id: WebViewGroupId) -> Rc<dyn RenderingContext> {
+    pub(crate) fn rendering_context(&self, group_id: RenderingGroupId) -> Rc<dyn RenderingContext> {
         self.rendering_contexts.get(&group_id).unwrap().clone()
     }
 
     pub(crate) fn add_webview_group(
         &mut self,
         rendering_context: Rc<dyn RenderingContext>,
-    ) -> WebViewGroupId {
+    ) -> RenderingGroupId {
         let new_group_id = self.last_used_id.unwrap_or_default() + 1;
         self.rendering_contexts
             .insert(new_group_id, rendering_context);
@@ -68,7 +68,7 @@ impl<WebView> WebViewManager<WebView> {
         new_group_id
     }
 
-    pub(crate) fn groups(&self) -> Vec<WebViewGroupId> {
+    pub(crate) fn groups(&self) -> Vec<RenderingGroupId> {
         self.painting_order.keys().cloned().collect()
     }
 
@@ -80,7 +80,7 @@ impl<WebView> WebViewManager<WebView> {
             .size2d()
     }
 
-    pub(crate) fn group_id(&self, webview_id: WebViewId) -> Option<WebViewGroupId> {
+    pub(crate) fn group_id(&self, webview_id: WebViewId) -> Option<RenderingGroupId> {
         self.webview_groups.get(&webview_id).cloned()
     }
 
@@ -127,7 +127,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     /// Returns true iff the painting order actually changed.
-    pub(crate) fn hide_all(&mut self, group_id: WebViewGroupId) -> bool {
+    pub(crate) fn hide_all(&mut self, group_id: RenderingGroupId) -> bool {
         let v = self.painting_order.get_mut(&group_id);
         let painting_order = v.unwrap();
         if !painting_order.is_empty() {
@@ -153,7 +153,7 @@ impl<WebView> WebViewManager<WebView> {
 
     pub(crate) fn painting_order(
         &self,
-        group_id: WebViewGroupId,
+        group_id: RenderingGroupId,
     ) -> impl Iterator<Item = (&WebViewId, &WebView)> {
         log::error!(
             "groups: {:?} || wvs: {:?} || groupid {:?} || painting {:?}",
@@ -175,7 +175,7 @@ impl<WebView> WebViewManager<WebView> {
 
     pub(crate) fn add_webview(
         &mut self,
-        group_id: WebViewGroupId,
+        group_id: RenderingGroupId,
         webview_id: WebViewId,
         webview: WebView,
     ) {

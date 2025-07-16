@@ -56,7 +56,7 @@ use webrender_api::{
 
 use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
-use crate::webview_manager::{WebViewGroupId, WebViewManager};
+use crate::webview_manager::{RenderingGroupId, WebViewManager};
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
 
 #[derive(Debug, PartialEq)]
@@ -982,7 +982,7 @@ impl IOCompositor {
     /// Set the root pipeline for our WebRender scene to a display list that consists of an iframe
     /// for each visible top-level browsing context, applying a transformation on the root for
     /// pinch zoom, page zoom, and HiDPI scaling.
-    fn send_root_pipeline_display_list(&mut self, webview_group_id: WebViewGroupId) {
+    fn send_root_pipeline_display_list(&mut self, webview_group_id: RenderingGroupId) {
         let mut transaction = Transaction::new();
         self.send_root_pipeline_display_list_in_transaction(webview_group_id, &mut transaction);
         self.generate_frame(&mut transaction, RenderReasons::SCENE);
@@ -994,7 +994,7 @@ impl IOCompositor {
     /// pinch zoom, page zoom, and HiDPI scaling.
     pub(crate) fn send_root_pipeline_display_list_in_transaction(
         &self,
-        webview_group_id: WebViewGroupId,
+        webview_group_id: RenderingGroupId,
         transaction: &mut Transaction,
     ) {
         let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
@@ -1113,12 +1113,10 @@ impl IOCompositor {
         let wvid = webview.id();
         let wvr = WebViewRenderer::new(self.global.clone(), webview, viewport_details);
         self.webview_renderers.add_webview(group_id, wvid, wvr);
-
-        self.set_frame_tree_for_webview(frame_tree);
     }
 
     fn set_frame_tree_for_webview(&mut self, frame_tree: &SendableFrameTree) {
-        debug!("{}: Setting frame tree for webview", frame_tree.pipeline.id);
+        error!("{}: Setting frame tree for webview", frame_tree.pipeline.id);
 
         let webview_id = frame_tree.pipeline.webview_id;
         let Some(webview_renderer) = self.webview_renderers.get_mut(webview_id) else {
@@ -1471,7 +1469,10 @@ impl IOCompositor {
     }
 
     #[servo_tracing::instrument(skip_all)]
-    fn render_inner(&mut self, webview_group_id: WebViewGroupId) -> Result<(), UnableToComposite> {
+    fn render_inner(
+        &mut self,
+        webview_group_id: RenderingGroupId,
+    ) -> Result<(), UnableToComposite> {
         log::error!("render_inner for {webview_group_id}");
         let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
         if let Err(err) = rendering_context.make_current() {
