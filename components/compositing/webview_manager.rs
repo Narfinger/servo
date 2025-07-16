@@ -24,6 +24,7 @@ pub(crate) struct WebRenderInstance {
     pub(crate) rendering_context: Rc<dyn RenderingContext>,
     pub(crate) webrender: webrender::Renderer,
     pub(crate) webrender_gl: Rc<dyn Gl>,
+    pub(crate) webrender_document: DocumentId,
 }
 
 #[derive(Clone)]

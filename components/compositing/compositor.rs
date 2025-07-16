@@ -114,7 +114,7 @@ pub struct ServoRenderer {
     pub(crate) webrender_api: RenderApi,
 
     /// The active webrender document.
-    pub(crate) webrender_document: DocumentId,
+    //pub(crate) webrender_document: DocumentId,
 
     /// The GL bindings for webrender
     webrender_gl: Rc<dyn gleam::gl::Gl>,
@@ -1530,16 +1530,16 @@ impl IOCompositor {
         //self.clear_background();
         error!("done clear background");
 
-        if let Some(webrender) = self.webrender.as_mut() {
-            error!("done webrender mut");
+        //if let Some(webrender) = selfwebrender.as_mut() {
+        error!("done webrender mut");
 
-            let size = render_instance.rendering_context.size2d().to_i32();
-            error!("done size");
+        let size = render_instance.rendering_context.size2d().to_i32();
+        error!("done size");
 
-            let v = webrender.render(size, 0 /* buffer_age */);
-            error!("webrender render result {:?}", v);
-            error!("done webrender render");
-        }
+        let v = render_instance.webrender.render(size, 0 /* buffer_age */);
+        error!("webrender render result {:?}", v);
+        error!("done webrender render");
+        //}
         //},
         //);
 
