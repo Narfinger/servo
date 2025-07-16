@@ -18,7 +18,7 @@ use bitflags::bitflags;
 use compositing_traits::display_list::{
     CompositorDisplayListInfo, HitTestInfo, ScrollTree, ScrollType,
 };
-use compositing_traits::rendering_context::RenderingContext;
+use compositing_traits::rendering_context::{self, RenderingContext};
 use compositing_traits::{
     CompositionPipeline, CompositorMsg, ImageUpdate, PipelineExitSource, SendableFrameTree,
     WebViewTrait,
@@ -421,7 +421,7 @@ impl IOCompositor {
             CompositorMsg::CollectMemoryReport,
         );
         let mut webview_renderers = WebViewManager::default();
-        webview_renderers.add_webview_group(state.rendering_context);
+        webview_renderers.add_webview_group(state.rendering_context, state.webrender_gl.clone());
         let compositor = IOCompositor {
             global: Rc::new(RefCell::new(ServoRenderer {
                 refresh_driver: RefreshDriver::new(
@@ -997,7 +997,7 @@ impl IOCompositor {
         webview_group_id: RenderingGroupId,
         transaction: &mut Transaction,
     ) {
-        let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
+        let render_instance = self.webview_renderers.render_instance(webview_group_id);
         // Every display list needs a pipeline, but we'd like to choose one that is unlikely
         // to conflict with our content pipelines, which start at (1, 1). (0, 0) is WebRender's
         // dummy pipeline, so we choose (0, 1).
@@ -1009,7 +1009,11 @@ impl IOCompositor {
 
         let root_reference_frame = SpatialId::root_reference_frame(root_pipeline);
 
-        let viewport_size = rendering_context.size2d().to_f32().to_untyped();
+        let viewport_size = render_instance
+            .rendering_context
+            .size2d()
+            .to_f32()
+            .to_untyped();
         let viewport_rect = LayoutRect::from_origin_and_size(
             LayoutPoint::zero(),
             LayoutSize::from_untyped(viewport_size),
@@ -1109,7 +1113,9 @@ impl IOCompositor {
         rendering_context: Rc<dyn RenderingContext>,
         viewport_details: ViewportDetails,
     ) {
-        let group_id = self.webview_renderers.add_webview_group(rendering_context);
+        let group_id = self
+            .webview_renderers
+            .add_webview_group(rendering_context, self.global.borrow().webrender_gl.clone());
         let wvid = webview.id();
         let wvr = WebViewRenderer::new(self.global.clone(), webview, viewport_details);
         self.webview_renderers.add_webview(group_id, wvid, wvr);
@@ -1260,12 +1266,12 @@ impl IOCompositor {
             .webview_renderers
             .group_id(webview_id)
             .expect("Could not find groupid");
-        let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
-        if rendering_context.size() == new_size {
+        let render_instance = self.webview_renderers.render_instance(webview_group_id);
+        if render_instance.rendering_context.size() == new_size {
             return;
         }
 
-        rendering_context.resize(new_size);
+        render_instance.rendering_context.resize(new_size);
 
         let mut transaction = Transaction::new();
         let output_region = DeviceIntRect::new(
@@ -1425,9 +1431,9 @@ impl IOCompositor {
     ) -> Result<Option<RasterImage>, UnableToComposite> {
         let group_id = self.webview_renderers.group_id(webview_id).unwrap();
         self.render_inner(group_id)?;
-        let rendering_context = self.webview_renderers.rendering_context(group_id);
+        let render_instance = self.webview_renderers.render_instance(group_id);
 
-        let size = rendering_context.size2d().to_i32();
+        let size = render_instance.rendering_context.size2d().to_i32();
         let rect = if let Some(rect) = page_rect {
             let scale = self
                 .webview_renderers
@@ -1448,7 +1454,8 @@ impl IOCompositor {
             DeviceIntRect::from_origin_and_size(Point2D::origin(), size)
         };
 
-        Ok(rendering_context
+        Ok(render_instance
+            .rendering_context
             .read_to_image(rect)
             .map(|image| RasterImage {
                 metadata: ImageMetadata {
@@ -1474,22 +1481,23 @@ impl IOCompositor {
         webview_group_id: RenderingGroupId,
     ) -> Result<(), UnableToComposite> {
         log::error!("render_inner for {webview_group_id}");
-        let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
-        if let Err(err) = rendering_context.make_current() {
+        let render_instance = &mut self.webview_renderers.render_instance_mut(webview_group_id);
+        if let Err(err) = render_instance.rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
         }
         log::error!("done make current");
-        self.assert_no_gl_error();
+        //self.assert_no_gl_error();
         error!("done assert");
 
-        if let Some(webrender) = self.webrender.as_mut() {
-            error!("done taking webrender");
+        //if let Some(webrender) = self.webrender.as_mut() {
+        error!("done taking webrender");
 
-            webrender.update();
-            error!("done webrender update");
-        }
+        render_instance.webrender.update();
+        error!("done webrender update");
+        //}
         error!("done with if (if called)");
 
+        /*
         if opts::get().wait_for_stable_image {
             // The current image may be ready to output. However, if there are animations active,
             // continue waiting for the image output to be stable AND all active animations to complete.
@@ -1502,35 +1510,38 @@ impl IOCompositor {
                 return Err(UnableToComposite::NotReadyToPaintImage(result));
             }
         }
+        */
 
-        rendering_context.prepare_for_rendering();
+        render_instance.rendering_context.prepare_for_rendering();
         error!("done preparing");
 
         let time_profiler_chan = self.global.borrow().time_profiler_chan.clone();
+        /*
         time_profile!(
             ProfilerCategory::Compositing,
             None,
             time_profiler_chan,
             || {
-                trace!("Compositing");
+            */
+        trace!("Compositing");
 
-                // Paint the scene.
-                // TODO(gw): Take notice of any errors the renderer returns!
-                self.clear_background();
-                error!("done clear background");
+        // Paint the scene.
+        // TODO(gw): Take notice of any errors the renderer returns!
+        //self.clear_background();
+        error!("done clear background");
 
-                if let Some(webrender) = self.webrender.as_mut() {
-                    error!("done webrender mut");
+        if let Some(webrender) = self.webrender.as_mut() {
+            error!("done webrender mut");
 
-                    let size = rendering_context.size2d().to_i32();
-                    error!("done size");
+            let size = render_instance.rendering_context.size2d().to_i32();
+            error!("done size");
 
-                    let v = webrender.render(size, 0 /* buffer_age */);
-                    error!("webrender render result {:?}", v);
-                    error!("done webrender render");
-                }
-            },
-        );
+            let v = webrender.render(size, 0 /* buffer_age */);
+            error!("webrender render result {:?}", v);
+            error!("done webrender render");
+        }
+        //},
+        //);
 
         self.send_pending_paint_metrics_messages_after_composite();
         Ok(())
@@ -1691,10 +1702,10 @@ impl IOCompositor {
         let groups = self.webview_renderers.groups();
         for webview_group_id in groups {
             log::error!("perform_update for {webview_group_id}");
-            let rendering_context = self.webview_renderers.rendering_context(webview_group_id);
+            let render_instance = self.webview_renderers.render_instance(webview_group_id);
 
             // The WebXR thread may make a different context current
-            if let Err(err) = rendering_context.make_current() {
+            if let Err(err) = render_instance.rendering_context.make_current() {
                 warn!("Failed to make the rendering context current: {:?}", err);
             }
             let mut need_zoom = false;

@@ -8,19 +8,56 @@ use std::rc::Rc;
 
 use base::id::WebViewId;
 use compositing_traits::rendering_context::RenderingContext;
+use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
+use gleam::gl::Gl;
+use log::error;
+use webrender::WebRenderOptions;
 use webrender_api::units::DevicePixel;
+use webrender_api::{DocumentId, FramePublishId, FrameReadyParams};
 
 use crate::webview_renderer::UnknownWebView;
 
 pub(crate) type RenderingGroupId = usize;
 
-pub struct WebViewManager<WebView> {
+pub(crate) struct WebRenderInstance {
+    pub(crate) rendering_context: Rc<dyn RenderingContext>,
+    pub(crate) webrender: webrender::Renderer,
+    pub(crate) webrender_gl: Rc<dyn Gl>,
+}
+
+#[derive(Clone)]
+struct RenderNotifier {}
+
+impl RenderNotifier {
+    pub fn new() -> RenderNotifier {
+        RenderNotifier {}
+    }
+}
+
+impl webrender_api::RenderNotifier for RenderNotifier {
+    fn clone(&self) -> Box<dyn webrender_api::RenderNotifier> {
+        Box::new(RenderNotifier::new())
+    }
+
+    fn wake_up(&self, _composite_needed: bool) {}
+
+    fn new_frame_ready(
+        &self,
+        document_id: DocumentId,
+        _: FramePublishId,
+        frame_ready_params: &FrameReadyParams,
+    ) {
+        error!("RenderNotifier not implemented");
+    }
+}
+
+pub(crate) struct WebViewManager<WebView> {
     /// Our top-level browsing contexts. In the WebRender scene, their pipelines are the children of
     /// a single root pipeline that also applies any pinch zoom transformation.
     webviews: HashMap<WebViewId, WebView>,
 
-    rendering_contexts: HashMap<RenderingGroupId, Rc<dyn RenderingContext>>,
+    rendering_contexts: HashMap<RenderingGroupId, WebRenderInstance>,
 
     webview_groups: HashMap<WebViewId, RenderingGroupId>,
 
@@ -53,17 +90,40 @@ impl<WebView> WebViewManager<WebView> {
         self.painting_order.get_mut(group_id).unwrap()
     }
 
-    pub(crate) fn rendering_context(&self, group_id: RenderingGroupId) -> Rc<dyn RenderingContext> {
-        self.rendering_contexts.get(&group_id).unwrap().clone()
+    pub(crate) fn render_instance(&self, group_id: RenderingGroupId) -> &WebRenderInstance {
+        self.rendering_contexts.get(&group_id).unwrap()
+    }
+
+    pub(crate) fn render_instance_mut(
+        &mut self,
+        group_id: RenderingGroupId,
+    ) -> &mut WebRenderInstance {
+        self.rendering_contexts.get_mut(&group_id).unwrap()
     }
 
     pub(crate) fn add_webview_group(
         &mut self,
         rendering_context: Rc<dyn RenderingContext>,
+        gl: Rc<dyn Gl>,
     ) -> RenderingGroupId {
         let new_group_id = self.last_used_id.unwrap_or_default() + 1;
-        self.rendering_contexts
-            .insert(new_group_id, rendering_context);
+
+        let notifier = Box::new(RenderNotifier::new());
+
+        let (webrender, renderapi_sender) = webrender::create_webrender_instance(
+            gl.clone(),
+            notifier,
+            WebRenderOptions::default(),
+            None,
+        )
+        .expect("Could not");
+
+        let s = WebRenderInstance {
+            rendering_context,
+            webrender,
+            webrender_gl: gl,
+        };
+        self.rendering_contexts.insert(new_group_id, s);
         self.painting_order.insert(new_group_id, vec![]);
         new_group_id
     }
@@ -76,7 +136,8 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts
             .values()
             .next()
-            .expect("NO Context")
+            .expect("No Context")
+            .rendering_context
             .size2d()
     }
 
