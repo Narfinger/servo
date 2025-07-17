@@ -844,7 +844,14 @@ impl IOCompositor {
             },
 
             CompositorMsg::GenerateImageKey(sender) => {
-                //let _ = sender.send(self.global.borrow().webrender_api.generate_image_key());
+                let keys = self
+                    .webview_renderers
+                    .rendering_contexts
+                    .values()
+                    .map(|v| v.webrender_api.generate_image_key())
+                    .next()
+                    .unwrap();
+                let _ = sender.send(keys);
             },
 
             CompositorMsg::GenerateImageKeysForPipeline(pipeline_id) => {
