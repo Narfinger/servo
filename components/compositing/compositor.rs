@@ -116,7 +116,7 @@ pub struct ServoRenderer {
     //pub(crate) webrender_document: DocumentId,
 
     /// The GL bindings for webrender
-    webrender_gl: Rc<dyn gleam::gl::Gl>,
+    //webrender_gl: Rc<dyn gleam::gl::Gl>,
 
     #[cfg(feature = "webxr")]
     /// Some XR devices want to run on the main thread.
@@ -308,6 +308,7 @@ impl ServoRenderer {
         details_for_pipeline: impl Fn(PipelineId) -> Option<&'a PipelineDetails>,
     ) -> Result<Vec<CompositorHitTestResult>, HitTestError> {
         // DevicePoint and WorldPoint are the same for us.
+
         /*
         let world_point = WorldPoint::from_untyped(point.to_untyped());
         let results =
@@ -418,7 +419,7 @@ impl IOCompositor {
             CompositorMsg::CollectMemoryReport,
         );
         let mut webview_renderers = WebViewManager::default();
-        webview_renderers.add_webview_group(state.rendering_context, state.webrender_gl.clone());
+        webview_renderers.add_webview_group(state.rendering_context);
         let compositor = IOCompositor {
             global: Rc::new(RefCell::new(ServoRenderer {
                 refresh_driver: RefreshDriver::new(
@@ -432,7 +433,7 @@ impl IOCompositor {
                 time_profiler_chan: state.time_profiler_chan,
                 //webrender_api: state.webrender_api,
                 //webrender_document: state.webrender_document,
-                webrender_gl: state.webrender_gl,
+                //webrender_gl: state.webrender_gl,
                 #[cfg(feature = "webxr")]
                 webxr_main_thread: state.webxr_main_thread,
                 convert_mouse_to_touch,
@@ -450,16 +451,16 @@ impl IOCompositor {
         state.webrender.deinit();
 
         {
-            let gl = &compositor.global.borrow().webrender_gl;
-            info!("Running on {}", gl.get_string(gleam::gl::RENDERER));
-            info!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
+            //let gl = &compositor.global.borrow().webrender_gl;
+            //info!("Running on {}", gl.get_string(gleam::gl::RENDERER));
+            //info!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
         }
-        compositor.assert_gl_framebuffer_complete();
+        //compositor.assert_gl_framebuffer_complete();
         compositor
     }
 
     pub fn deinit(&mut self) {
-        error!("Deinit calling");
+        warn!("Deinit calling");
         self.webview_renderers.deinit();
     }
 
@@ -657,6 +658,7 @@ impl IOCompositor {
                         .global
                         .borrow()
                         .hit_test_at_point(point, details_for_pipeline);
+                    error!("recomposite needed");
                     if let Ok(result) = result {
                         self.global
                             .borrow_mut()
@@ -1149,16 +1151,14 @@ impl IOCompositor {
         rendering_context: Rc<dyn RenderingContext>,
         viewport_details: ViewportDetails,
     ) {
-        let group_id = self
-            .webview_renderers
-            .add_webview_group(rendering_context, self.global.borrow().webrender_gl.clone());
+        let group_id = self.webview_renderers.add_webview_group(rendering_context);
         let wvid = webview.id();
         let wvr = WebViewRenderer::new(self.global.clone(), webview, viewport_details);
         self.webview_renderers.add_webview(group_id, wvid, wvr);
     }
 
     fn set_frame_tree_for_webview(&mut self, frame_tree: &SendableFrameTree) {
-        error!("{}: Setting frame tree for webview", frame_tree.pipeline.id);
+        warn!("{}: Setting frame tree for webview", frame_tree.pipeline.id);
 
         let webview_id = frame_tree.pipeline.webview_id;
         let Some(webview_renderer) = self.webview_renderers.get_mut(webview_id) else {
@@ -1530,23 +1530,17 @@ impl IOCompositor {
         &mut self,
         webview_group_id: RenderingGroupId,
     ) -> Result<(), UnableToComposite> {
-        log::error!("render_inner for {webview_group_id}");
-        self.assert_no_gl_error();
+        warn!("render_inner for {webview_group_id}");
+        //self.assert_no_gl_error();
         self.clear_background(webview_group_id);
         let render_instance = &mut self.webview_renderers.render_instance_mut(webview_group_id);
         if let Err(err) = render_instance.rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
         }
-        log::error!("done make current");
-        error!("done assert");
-
-        //if let Some(webrender) = self.webrender.as_mut() {
-        error!("done taking webrender");
 
         render_instance.webrender.update();
-        error!("done webrender update");
+        warn!("done webrender update");
         //}
-        error!("done with if (if called)");
 
         /*
         if opts::get().wait_for_stable_image {
@@ -1578,17 +1572,12 @@ impl IOCompositor {
 
         // Paint the scene.
         // TODO(gw): Take notice of any errors the renderer returns!
-        error!("done clear background");
 
         //if let Some(webrender) = selfwebrender.as_mut() {
-        error!("done webrender mut");
 
         let size = render_instance.rendering_context.size2d().to_i32();
-        error!("done size");
 
         let v = render_instance.webrender.render(size, 0 /* buffer_age */);
-        error!("webrender render result {:?}", v);
-        error!("done webrender render");
         //}
         //},
         //);
@@ -1667,6 +1656,7 @@ impl IOCompositor {
         */
     }
 
+    /*
     #[track_caller]
     fn assert_no_gl_error(&self) {
         debug_assert_eq!(
@@ -1674,20 +1664,23 @@ impl IOCompositor {
             gleam::gl::NO_ERROR
         );
     }
+    */
 
+    /*
     #[track_caller]
     fn assert_gl_framebuffer_complete(&self) {
         debug_assert_eq!(
             (
-                self.global.borrow().webrender_gl.get_error(),
-                self.global
-                    .borrow()
-                    .webrender_gl
-                    .check_frame_buffer_status(gleam::gl::FRAMEBUFFER)
+            self.global.borrow().webrender_gl.get_error(),
+            self.global
+            .borrow()
+            .webrender_gl
+            .check_frame_buffer_status(gleam::gl::FRAMEBUFFER)
             ),
             (gleam::gl::NO_ERROR, gleam::gl::FRAMEBUFFER_COMPLETE)
-        );
-    }
+            );
+        }
+        */
 
     /// Get the message receiver for this [`IOCompositor`].
     pub fn receiver(&self) -> Ref<Receiver<CompositorMsg>> {
@@ -1750,7 +1743,7 @@ impl IOCompositor {
 
         let groups = self.webview_renderers.groups();
         for webview_group_id in groups {
-            log::error!("perform_update for {webview_group_id}");
+            warn!("perform_update for {webview_group_id}");
             let render_instance = self.webview_renderers.render_instance(webview_group_id);
 
             // The WebXR thread may make a different context current

@@ -12,7 +12,7 @@ use compositing_traits::rendering_context::{self, RenderingContext};
 use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
-use log::error;
+use log::{error, warn};
 use webrender::{RenderApi, RenderApiSender, Transaction, WebRenderOptions};
 use webrender_api::units::DevicePixel;
 use webrender_api::{DocumentId, FramePublishId, FrameReadyParams, RenderNotifier};
@@ -44,7 +44,7 @@ impl MyRenderNotifier {
     }
 
     pub(crate) fn get(&self) -> Vec<(DocumentId, bool)> {
-        error!("rendernotifier take");
+        //warn!("rendernotifier take");
         self.frame_ready_msg.take()
     }
 }
@@ -67,7 +67,7 @@ impl webrender_api::RenderNotifier for MyRenderNotifier {
         self.frame_ready_msg
             .borrow_mut()
             .push((document_id, frame_ready_params.render));
-        error!("RenderNotifier push");
+        //error!("RenderNotifier push");
     }
 }
 
@@ -100,7 +100,7 @@ impl<WebView> Default for WebViewManager<WebView> {
 
 impl<WebView> WebViewManager<WebView> {
     pub(crate) fn take_frame_ready(&self) -> Vec<(DocumentId, bool)> {
-        error!("take");
+        warn!("take");
         self.rendering_contexts
             .values()
             .map(|v| v.notifier.get())
@@ -109,6 +109,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn clear_background(&self, webview_group_id: RenderingGroupId) {
+        error!("CLEAR CLEAR CLEAR");
         let rtc = self.rendering_contexts.get(&webview_group_id).unwrap();
         let gl = &rtc.webrender_gl;
         {
@@ -125,12 +126,13 @@ impl<WebView> WebViewManager<WebView> {
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
         let color = servo_config::pref!(shell_background_color_rgba);
-        gl.clear_color(
-            color[0] as f32,
-            color[1] as f32,
-            color[2] as f32,
-            color[3] as f32,
-        );
+        gl.clear_color(0.2, 0.3, 1.0, 0.5);
+
+        //color[0] as f32,
+        //color[1] as f32,
+        //color[2] as f32,
+        //color[3] as f32,
+        //);
         gl.clear(gleam::gl::COLOR_BUFFER_BIT);
     }
 
@@ -144,7 +146,7 @@ impl<WebView> WebViewManager<WebView> {
         gid: RenderingGroupId,
         transaction: Transaction,
     ) {
-        error!("sending some transaction");
+        warn!("sending some transaction");
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
         rect.webrender_api
             .send_transaction(rect.webrender_document, transaction);
@@ -165,6 +167,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn deinit(&mut self) {
+        panic!("DEINIT CALLED");
         for (_group_id, webrender_instance) in self.rendering_contexts.drain() {
             webrender_instance
                 .rendering_context
@@ -205,10 +208,20 @@ impl<WebView> WebViewManager<WebView> {
     pub(crate) fn add_webview_group(
         &mut self,
         rendering_context: Rc<dyn RenderingContext>,
-        gl: Rc<dyn Gl>,
     ) -> RenderingGroupId {
+        error!("Adding webview group!");
         let new_group_id = self.last_used_id.unwrap_or_default() + 1;
+        let gl = rendering_context.gleam_gl_api();
+        error!("Running on {}", gl.get_string(gleam::gl::RENDERER));
+        error!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
 
+        debug_assert_eq!(
+            (
+                gl.get_error(),
+                gl.check_frame_buffer_status(gleam::gl::FRAMEBUFFER)
+            ),
+            (gleam::gl::NO_ERROR, gleam::gl::FRAMEBUFFER_COMPLETE)
+        );
         let notifier = MyRenderNotifier::new();
 
         let (webrender, sender) = webrender::create_webrender_instance(
@@ -324,7 +337,7 @@ impl<WebView> WebViewManager<WebView> {
         &self,
         group_id: RenderingGroupId,
     ) -> impl Iterator<Item = (&WebViewId, &WebView)> {
-        log::error!(
+        error!(
             "groups: {:?} || wvs: {:?} || groupid {:?} || painting {:?}",
             self.webview_groups,
             self.webviews.keys(),
