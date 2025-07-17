@@ -83,6 +83,20 @@ impl<WebView> Default for WebViewManager<WebView> {
 }
 
 impl<WebView> WebViewManager<WebView> {
+    pub(crate) fn deinit(&mut self) {
+        for (_group_id, webrender_instance) in self.rendering_contexts.drain() {
+            webrender_instance
+                .rendering_context
+                .make_current()
+                .expect("Foo");
+            webrender_instance.webrender.deinit();
+        }
+        self.last_used_id = None;
+        self.painting_order.clear();
+        self.webviews.clear();
+        self.webview_groups.clear();
+    }
+
     fn group_painting_order(&self, webview_id: WebViewId) -> &Vec<WebViewId> {
         let group_id = self.webview_groups.get(&webview_id).unwrap();
         &self.painting_order.get(group_id).unwrap()
@@ -262,6 +276,21 @@ impl<WebView> WebViewManager<WebView> {
 
     pub(crate) fn iter(&self) -> Values<'_, WebViewId, WebView> {
         self.webviews.values()
+    }
+
+    pub(crate) fn my_iter_mut(
+        &mut self,
+    ) -> impl Iterator<Item = (&WebViewId, &mut WebView, &WebRenderInstance)> {
+        self.webviews.iter_mut().map(|(id, wv)| {
+            (
+                id,
+                wv,
+                self.webview_groups
+                    .get(id)
+                    .and_then(|gid| self.rendering_contexts.get(gid))
+                    .expect("Could not get gid"),
+            )
+        })
     }
 
     pub(crate) fn iter_mut(&mut self) -> ValuesMut<'_, WebViewId, WebView> {

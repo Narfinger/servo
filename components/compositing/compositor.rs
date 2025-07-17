@@ -309,7 +309,6 @@ impl ServoRenderer {
         details_for_pipeline: impl Fn(PipelineId) -> Option<&'a PipelineDetails>,
     ) -> Result<Vec<CompositorHitTestResult>, HitTestError> {
         // DevicePoint and WorldPoint are the same for us.
-        /*
         let world_point = WorldPoint::from_untyped(point.to_untyped());
         let results =
             self.webrender_api
@@ -366,8 +365,6 @@ impl ServoRenderer {
         }
 
         Ok(results)
-         */
-        Ok(vec![])
     }
 
     pub(crate) fn send_transaction(&mut self, documentid: DocumentId, transaction: Transaction) {
@@ -452,6 +449,7 @@ impl IOCompositor {
             pending_frames: 0,
             _mem_profiler_registration: registration,
         };
+        state.webrender.deinit();
 
         {
             let gl = &compositor.global.borrow().webrender_gl;
@@ -463,12 +461,8 @@ impl IOCompositor {
     }
 
     pub fn deinit(&mut self) {
-        //if let Err(err) = self.rendering_context.make_current() {
-        //            warn!("Failed to make the rendering context current: {:?}", err);
-        //        }
-        //if let Some(webrender) = self.webrender.take() {
-        //    webrender.deinit();
-        //}
+        error!("Deinit calling");
+        self.webview_renderers.deinit();
     }
 
     pub fn rendering_context_size(&self) -> Size2D<u32, DevicePixel> {
@@ -891,11 +885,13 @@ impl IOCompositor {
             },
 
             CompositorMsg::AddSystemFont(font_key, native_handle) => {
-                /*
-                let mut transaction = Transaction::new();
-                transaction.add_native_font(font_key, native_handle);
-                self.global.borrow_mut().send_transaction(transaction);
-                */
+                for i in self.webview_renderers.my_iter_mut().map(|g| g.2) {
+                    let mut transaction = Transaction::new();
+                    transaction.add_native_font(font_key, native_handle.clone());
+                    self.global
+                        .borrow_mut()
+                        .send_transaction(i.webrender_document, transaction);
+                }
             },
 
             CompositorMsg::AddFontInstance(font_instance_key, font_key, size, flags) => {
@@ -903,18 +899,20 @@ impl IOCompositor {
             },
 
             CompositorMsg::RemoveFonts(keys, instance_keys) => {
-                /*
-                let mut transaction = Transaction::new();
+                for i in self.webview_renderers.my_iter_mut().map(|g| g.2) {
+                    let mut transaction = Transaction::new();
 
-                for instance in instance_keys.into_iter() {
-                    transaction.delete_font_instance(instance);
-                }
-                for key in keys.into_iter() {
-                    transaction.delete_font(key);
-                }
+                    for instance in instance_keys.iter() {
+                        transaction.delete_font_instance(instance.clone());
+                    }
+                    for key in keys.iter() {
+                        transaction.delete_font(key.clone());
+                    }
 
-                self.global.borrow_mut().send_transaction(transaction);
-                */
+                    self.global
+                        .borrow_mut()
+                        .send_transaction(i.webrender_document, transaction);
+                }
             },
 
             CompositorMsg::GenerateFontKeys(
@@ -1600,23 +1598,13 @@ impl IOCompositor {
     fn send_pending_paint_metrics_messages_after_composite(&mut self) {
         let paint_time = CrossProcessInstant::now();
         //let document_id = self.webrender_document();
-        for webview_renderer in self.webview_renderers.iter_mut() {
+        for (webview_id, webview_renderer, webrender_instance) in
+            self.webview_renderers.my_iter_mut()
+        {
             for (pipeline_id, pipeline) in webview_renderer.pipelines.iter_mut() {
-                let webview_id = self
-                    .global
-                    .borrow()
-                    .pipeline_to_webview_map
-                    .get(pipeline_id)
-                    .expect("Could not find webview_id")
-                    .clone();
-                let group_id = self
-                    .webview_renderers
-                    .group_id(webview_id)
-                    .expect("No group");
-                let render_instance = self.webview_renderers.render_instance(group_id);
-                let Some(current_epoch) = render_instance
+                let Some(current_epoch) = webrender_instance
                     .webrender
-                    .current_epoch(render_instance.webrender_document, pipeline_id.into())
+                    .current_epoch(webrender_instance.webrender_document, pipeline_id.into())
                 else {
                     continue;
                 };
