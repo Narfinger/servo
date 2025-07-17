@@ -309,7 +309,6 @@ impl ServoRenderer {
         details_for_pipeline: impl Fn(PipelineId) -> Option<&'a PipelineDetails>,
     ) -> Result<Vec<CompositorHitTestResult>, HitTestError> {
         // DevicePoint and WorldPoint are the same for us.
-        /*
         let world_point = WorldPoint::from_untyped(point.to_untyped());
         let results =
             self.webrender_api
@@ -366,8 +365,6 @@ impl ServoRenderer {
         }
 
         Ok(results)
-         */
-        Ok(vec![])
     }
 
     pub(crate) fn update_cursor_from_hittest(
@@ -687,8 +684,6 @@ impl IOCompositor {
                     .get(&pipeline.into())
                     .expect("No pipeline")
                     .clone();
-                let gid = self.webview_renderers.group_id(webview_id).unwrap();
-
                 self.webview_renderers.send_transaction(webview_id, txn);
             },
 
@@ -726,7 +721,6 @@ impl IOCompositor {
                     }],
                 );
                 self.generate_frame(&mut txn, RenderReasons::APZ);
-                let document_id = self.webview_renderers.document_id(&webview_id);
                 self.webview_renderers.send_transaction(webview_id, txn);
             },
 
@@ -818,7 +812,6 @@ impl IOCompositor {
                     .set_display_list(display_list_info.epoch, (pipeline_id, built_display_list));
                 self.update_transaction_with_all_scroll_offsets(&mut transaction);
                 self.generate_frame(&mut transaction, RenderReasons::SCENE);
-                let document_id = self.webview_renderers.document_id(&webview_id);
                 self.webview_renderers
                     .send_transaction(webview_id, transaction);
             },
@@ -1311,7 +1304,6 @@ impl IOCompositor {
             Point2D::new(new_size.width as i32, new_size.height as i32),
         );
         transaction.set_document_view(output_region);
-        let document_id = self.webview_renderers.document_id(&webview_id);
         self.webview_renderers
             .send_transaction(webview_id, transaction);
 
@@ -1787,10 +1779,6 @@ impl IOCompositor {
                 }
 
                 self.generate_frame(&mut transaction, RenderReasons::APZ);
-                let document_id = self
-                    .webview_renderers
-                    .render_instance(webview_group_id)
-                    .webrender_document;
                 self.webview_renderers
                     .send_transaction_to_group(webview_group_id, transaction);
             }
