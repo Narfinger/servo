@@ -680,7 +680,16 @@ impl IOCompositor {
                 let mut txn = Transaction::new();
                 txn.set_display_list(WebRenderEpoch(0), (pipeline, Default::default()));
                 self.generate_frame(&mut txn, RenderReasons::SCENE);
-                self.global.borrow_mut().send_transaction(txn);
+                let webview_id = self
+                    .global
+                    .borrow()
+                    .pipeline_to_webview_map
+                    .get(&pipeline.into())
+                    .expect("No pipeline")
+                    .clone();
+
+                let document_id = self.webview_renderers.document_id(&webview_id);
+                self.global.borrow_mut().send_transaction(document_id, txn);
             },
 
             CompositorMsg::SendScrollNode(webview_id, pipeline_id, offset, external_scroll_id) => {
@@ -717,7 +726,8 @@ impl IOCompositor {
                     }],
                 );
                 self.generate_frame(&mut txn, RenderReasons::APZ);
-                self.global.borrow_mut().send_transaction(txn);
+                let document_id = self.webview_renderers.document_id(&webview_id);
+                self.global.borrow_mut().send_transaction(document_id, txn);
             },
 
             CompositorMsg::SendDisplayList {
@@ -808,7 +818,10 @@ impl IOCompositor {
                     .set_display_list(display_list_info.epoch, (pipeline_id, built_display_list));
                 self.update_transaction_with_all_scroll_offsets(&mut transaction);
                 self.generate_frame(&mut transaction, RenderReasons::SCENE);
-                self.global.borrow_mut().send_transaction(transaction);
+                let document_id = self.webview_renderers.document_id(&webview_id);
+                self.global
+                    .borrow_mut()
+                    .send_transaction(document_id, transaction);
             },
 
             CompositorMsg::HitTest(pipeline, point, flags, sender) => {
@@ -856,6 +869,7 @@ impl IOCompositor {
                 }
             },
             CompositorMsg::UpdateImages(updates) => {
+                /*
                 let mut txn = Transaction::new();
                 for update in updates {
                     match update {
@@ -869,6 +883,7 @@ impl IOCompositor {
                     }
                 }
                 self.global.borrow_mut().send_transaction(txn);
+                */
             },
 
             CompositorMsg::AddFont(font_key, data, index) => {
@@ -876,9 +891,11 @@ impl IOCompositor {
             },
 
             CompositorMsg::AddSystemFont(font_key, native_handle) => {
+                /*
                 let mut transaction = Transaction::new();
                 transaction.add_native_font(font_key, native_handle);
                 self.global.borrow_mut().send_transaction(transaction);
+                */
             },
 
             CompositorMsg::AddFontInstance(font_instance_key, font_key, size, flags) => {
@@ -886,6 +903,7 @@ impl IOCompositor {
             },
 
             CompositorMsg::RemoveFonts(keys, instance_keys) => {
+                /*
                 let mut transaction = Transaction::new();
 
                 for instance in instance_keys.into_iter() {
@@ -896,6 +914,7 @@ impl IOCompositor {
                 }
 
                 self.global.borrow_mut().send_transaction(transaction);
+                */
             },
 
             CompositorMsg::GenerateFontKeys(
@@ -988,7 +1007,13 @@ impl IOCompositor {
         let mut transaction = Transaction::new();
         self.send_root_pipeline_display_list_in_transaction(webview_group_id, &mut transaction);
         self.generate_frame(&mut transaction, RenderReasons::SCENE);
-        self.global.borrow_mut().send_transaction(transaction);
+        let document_id = self
+            .webview_renderers
+            .render_instance(webview_group_id)
+            .webrender_document;
+        self.global
+            .borrow_mut()
+            .send_transaction(document_id, transaction);
     }
 
     /// Set the root pipeline for our WebRender scene to a display list that consists of an iframe
@@ -1281,7 +1306,10 @@ impl IOCompositor {
             Point2D::new(new_size.width as i32, new_size.height as i32),
         );
         transaction.set_document_view(output_region);
-        self.global.borrow_mut().send_transaction(transaction);
+        let document_id = self.webview_renderers.document_id(&webview_id);
+        self.global
+            .borrow_mut()
+            .send_transaction(document_id, transaction);
 
         self.send_root_pipeline_display_list(webview_group_id);
         self.set_needs_repaint(RepaintReason::Resize);
@@ -1362,10 +1390,19 @@ impl IOCompositor {
                     .iter()
                     .flat_map(WebViewRenderer::pipeline_ids)
                 {
+                    let webview_id = self
+                        .global
+                        .borrow()
+                        .pipeline_to_webview_map
+                        .get(id)
+                        .expect("Could not find webview_id")
+                        .clone();
+                    let document_id = self.webview_renderers.document_id(&webview_id);
+
                     if let Some(WebRenderEpoch(epoch)) = self
                         .webrender
                         .as_ref()
-                        .and_then(|wr| wr.current_epoch(self.webrender_document(), id.into()))
+                        .and_then(|wr| wr.current_epoch(document_id, id.into()))
                     {
                         let epoch = Epoch(epoch);
                         pipeline_epochs.insert(*id, epoch);
@@ -1558,13 +1595,24 @@ impl IOCompositor {
     /// the list.
     fn send_pending_paint_metrics_messages_after_composite(&mut self) {
         let paint_time = CrossProcessInstant::now();
-        let document_id = self.webrender_document();
+        //let document_id = self.webrender_document();
         for webview_renderer in self.webview_renderers.iter_mut() {
             for (pipeline_id, pipeline) in webview_renderer.pipelines.iter_mut() {
-                let Some(current_epoch) = self
+                let webview_id = self
+                    .global
+                    .borrow()
+                    .pipeline_to_webview_map
+                    .get(pipeline_id)
+                    .expect("Could not find webview_id")
+                    .clone();
+                let group_id = self
+                    .webview_renderers
+                    .group_id(webview_id)
+                    .expect("No group");
+                let render_instance = self.webview_renderers.render_instance(group_id);
+                let Some(current_epoch) = render_instance
                     .webrender
-                    .as_ref()
-                    .and_then(|wr| wr.current_epoch(document_id, pipeline_id.into()))
+                    .current_epoch(render_instance.webrender_document, pipeline_id.into())
                 else {
                     continue;
                 };
@@ -1741,13 +1789,20 @@ impl IOCompositor {
                 }
 
                 self.generate_frame(&mut transaction, RenderReasons::APZ);
-                self.global.borrow_mut().send_transaction(transaction);
+                let document_id = self
+                    .webview_renderers
+                    .render_instance(webview_group_id)
+                    .webrender_document;
+                self.global
+                    .borrow_mut()
+                    .send_transaction(document_id, transaction);
             }
         }
         self.global.borrow().shutdown_state() != ShutdownState::FinishedShuttingDown
     }
 
     pub fn toggle_webrender_debug(&mut self, option: WebRenderDebugOption) {
+        /*
         let Some(webrender) = self.webrender.as_mut() else {
             return;
         };
@@ -1755,8 +1810,8 @@ impl IOCompositor {
         let flag = match option {
             WebRenderDebugOption::Profiler => {
                 webrender::DebugFlags::PROFILER_DBG
-                    | webrender::DebugFlags::GPU_TIME_QUERIES
-                    | webrender::DebugFlags::GPU_SAMPLE_QUERIES
+                | webrender::DebugFlags::GPU_TIME_QUERIES
+                | webrender::DebugFlags::GPU_SAMPLE_QUERIES
             },
             WebRenderDebugOption::TextureCacheDebug => webrender::DebugFlags::TEXTURE_CACHE_DBG,
             WebRenderDebugOption::RenderTargetDebug => webrender::DebugFlags::RENDER_TARGET_DBG,
@@ -1767,6 +1822,7 @@ impl IOCompositor {
         let mut txn = Transaction::new();
         self.generate_frame(&mut txn, RenderReasons::TESTING);
         self.global.borrow_mut().send_transaction(txn);
+        */
     }
 
     pub fn capture_webrender(&mut self) {
@@ -1818,13 +1874,13 @@ impl IOCompositor {
             Vec::new(),
         );
 
-        self.global.borrow_mut().send_transaction(transaction);
+        //self.global.borrow_mut().send_transaction(transaction);
     }
 
     fn add_font(&mut self, font_key: FontKey, index: u32, data: Arc<IpcSharedMemory>) {
         let mut transaction = Transaction::new();
         transaction.add_raw_font(font_key, (**data).into(), index);
-        self.global.borrow_mut().send_transaction(transaction);
+        //self.global.borrow_mut().send_transaction(transaction);
     }
 
     pub fn notify_input_event(&mut self, webview_id: WebViewId, event: InputEvent) {
@@ -1856,9 +1912,11 @@ impl IOCompositor {
         }
     }
 
+    /*
     fn webrender_document(&self) -> DocumentId {
         self.global.borrow().webrender_document
     }
+    */
 
     fn shutdown_state(&self) -> ShutdownState {
         self.global.borrow().shutdown_state()

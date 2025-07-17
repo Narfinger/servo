@@ -97,6 +97,14 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts.get(&group_id).unwrap()
     }
 
+    pub(crate) fn document_id(&self, webview_id: &WebViewId) -> DocumentId {
+        self.webview_groups
+            .get(webview_id)
+            .and_then(|rgid| self.rendering_contexts.get(rgid))
+            .map(|rg| rg.webrender_document)
+            .expect("Could not find")
+    }
+
     pub(crate) fn render_instance_mut(
         &mut self,
         group_id: RenderingGroupId,
