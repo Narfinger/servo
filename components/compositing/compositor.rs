@@ -5,6 +5,7 @@
 use std::cell::{Cell, Ref, RefCell};
 use std::collections::HashMap;
 use std::env;
+use std::ffi::c_void;
 use std::fs::create_dir_all;
 use std::iter::once;
 use std::rc::Rc;
@@ -18,10 +19,9 @@ use bitflags::bitflags;
 use compositing_traits::display_list::{
     CompositorDisplayListInfo, HitTestInfo, ScrollTree, ScrollType,
 };
-use compositing_traits::rendering_context::{self, RenderingContext};
+use compositing_traits::rendering_context::RenderingContext;
 use compositing_traits::{
-    CompositionPipeline, CompositorMsg, ImageUpdate, PipelineExitSource, SendableFrameTree,
-    WebViewTrait,
+    CompositionPipeline, CompositorMsg, PipelineExitSource, SendableFrameTree, WebViewTrait,
 };
 use constellation_traits::{EmbedderToConstellationMessage, PaintMetricEvent};
 use crossbeam_channel::{Receiver, Sender};
@@ -32,32 +32,29 @@ use embedder_traits::{
 };
 use euclid::{Point2D, Rect, Scale, Size2D, Transform3D};
 use ipc_channel::ipc::{self, IpcSharedMemory};
-use libc::c_void;
 use log::{debug, error, info, trace, warn};
 use pixels::{CorsStatus, ImageFrame, ImageMetadata, PixelFormat, RasterImage};
-use profile_traits::mem::{ProcessReports, ProfilerRegistration, Report, ReportKind};
-use profile_traits::time::{self as profile_time, ProfilerCategory};
-use profile_traits::{path, time_profile};
+use profile_traits::mem::ProfilerRegistration;
+use profile_traits::time::{self as profile_time};
 use servo_config::{opts, pref};
 use servo_geometry::DeviceIndependentPixel;
 use style_traits::CSSPixel;
-use webrender::{CaptureBits, RenderApi, Transaction};
+use webrender::Transaction;
 use webrender_api::units::{
     DeviceIntPoint, DeviceIntRect, DevicePixel, DevicePoint, DeviceRect, LayoutPoint, LayoutRect,
     LayoutSize, WorldPoint,
 };
 use webrender_api::{
-    self, BuiltDisplayList, DirtyRect, DisplayListPayload, DocumentId, Epoch as WebRenderEpoch,
-    FontInstanceFlags, FontInstanceKey, FontInstanceOptions, FontKey, HitTestFlags,
-    PipelineId as WebRenderPipelineId, PropertyBinding, ReferenceFrameKind, RenderReasons,
-    SampledScrollOffset, ScrollLocation, SpaceAndClipInfo, SpatialId, SpatialTreeItemKey,
-    TransformStyle,
+    self, BuiltDisplayList, DisplayListPayload, Epoch as WebRenderEpoch, FontInstanceFlags,
+    FontInstanceKey, FontInstanceOptions, FontKey, HitTestFlags, PipelineId as WebRenderPipelineId,
+    PropertyBinding, ReferenceFrameKind, RenderReasons, SampledScrollOffset, ScrollLocation,
+    SpaceAndClipInfo, SpatialId, SpatialTreeItemKey, TransformStyle,
 };
 
+use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
 use crate::webview_manager::{RenderingGroupId, WebViewManager};
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
-use crate::{InitialCompositorState, webview_renderer};
 
 #[derive(Debug, PartialEq)]
 enum UnableToComposite {
@@ -309,6 +306,7 @@ impl ServoRenderer {
         details_for_pipeline: impl Fn(PipelineId) -> Option<&'a PipelineDetails>,
     ) -> Result<Vec<CompositorHitTestResult>, HitTestError> {
         // DevicePoint and WorldPoint are the same for us.
+        /*
         let world_point = WorldPoint::from_untyped(point.to_untyped());
         let results =
             self.webrender_api
@@ -365,6 +363,8 @@ impl ServoRenderer {
         }
 
         Ok(results)
+         */
+        Ok(vec![])
     }
 
     pub(crate) fn update_cursor_from_hittest(
@@ -848,19 +848,27 @@ impl IOCompositor {
             },
 
             CompositorMsg::GenerateImageKeysForPipeline(pipeline_id) => {
-                /*
-                        let image_keys = (0..pref!(image_key_batch_size))
-                        .map(|_| self.global.borrow().webrender_api.generate_image_key())
-                        .collect();
-                    if let Err(error) = self.global.borrow().constellation_sender.send(
-                        EmbedderToConstellationMessage::SendImageKeysForPipeline(
-                            pipeline_id,
-                            image_keys,
-                        ),
-                    ) {
+                let webview_id = self
+                    .global
+                    .borrow()
+                    .pipeline_to_webview_map
+                    .get(&pipeline_id)
+                    .unwrap()
+                    .clone();
+                let group_id = self.webview_renderers.group_id(webview_id).expect("F");
+                let rtc = self.webview_renderers.render_instance(group_id);
+
+                let image_keys = (0..pref!(image_key_batch_size))
+                    .map(|_| rtc.webrender_api.generate_image_key())
+                    .collect();
+                if let Err(error) = self.global.borrow().constellation_sender.send(
+                    EmbedderToConstellationMessage::SendImageKeysForPipeline(
+                        pipeline_id,
+                        image_keys,
+                    ),
+                ) {
                     warn!("Sending Image Keys to Constellation failed with({error:?}).");
                 }
-                */
             },
             CompositorMsg::UpdateImages(updates) => {
                 /*
@@ -915,21 +923,15 @@ impl IOCompositor {
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
-
-                /*
-                        let font_keys = (0..number_of_font_keys)
-                        .map(|_| self.global.borrow().webrender_api.generate_font_key())
+                for i in self.webview_renderers.rendering_contexts.values() {
+                    let font_keys = (0..number_of_font_keys)
+                        .map(|_| i.webrender_api.generate_font_key())
                         .collect();
                     let font_instance_keys = (0..number_of_font_instance_keys)
-                    .map(|_| {
-                        self.global
-                        .borrow()
-                        .webrender_api
-                        .generate_font_instance_key()
-                    })
-                    .collect();
-                let _ = result_sender.send((font_keys, font_instance_keys));
-                */
+                        .map(|_| i.webrender_api.generate_font_instance_key())
+                        .collect();
+                    let _ = result_sender.send((font_keys, font_instance_keys));
+                }
             },
             CompositorMsg::Viewport(webview_id, viewport_description) => {
                 if let Some(webview) = self.webview_renderers.get_mut(webview_id) {
@@ -1695,6 +1697,14 @@ impl IOCompositor {
 
     #[servo_tracing::instrument(skip_all)]
     pub fn handle_messages(&mut self, mut messages: Vec<CompositorMsg>) {
+        let mut frame_ready_msg = self
+            .webview_renderers
+            .take_frame_ready()
+            .into_iter()
+            .map(|(m, i)| CompositorMsg::NewWebRenderFrameReady(m, i))
+            .collect();
+
+        messages.append(&mut frame_ready_msg);
         // Check for new messages coming from the other threads in the system.
         let mut found_recomposite_msg = false;
         messages.retain(|message| {

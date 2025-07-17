@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::{Values, ValuesMut};
 use std::rc::Rc;
@@ -14,8 +15,9 @@ use gleam::gl::Gl;
 use log::error;
 use webrender::{RenderApi, RenderApiSender, Transaction, WebRenderOptions};
 use webrender_api::units::DevicePixel;
-use webrender_api::{DocumentId, FramePublishId, FrameReadyParams};
+use webrender_api::{DocumentId, FramePublishId, FrameReadyParams, RenderNotifier};
 
+use crate::IOCompositor;
 use crate::webview_renderer::UnknownWebView;
 
 pub(crate) type RenderingGroupId = usize;
@@ -27,20 +29,31 @@ pub(crate) struct WebRenderInstance {
     pub(crate) webrender_document: DocumentId,
     pub(crate) webrender_api: RenderApi,
     sender: RenderApiSender,
+    notifier: MyRenderNotifier,
 }
 
-#[derive(Clone)]
-struct RenderNotifier {}
+struct MyRenderNotifier {
+    frame_ready_msg: RefCell<Vec<(DocumentId, bool)>>,
+}
 
-impl RenderNotifier {
-    pub fn new() -> RenderNotifier {
-        RenderNotifier {}
+impl MyRenderNotifier {
+    pub fn new() -> MyRenderNotifier {
+        MyRenderNotifier {
+            frame_ready_msg: RefCell::new(vec![]),
+        }
+    }
+
+    pub(crate) fn get(&self) -> Vec<(DocumentId, bool)> {
+        error!("rendernotifier take");
+        self.frame_ready_msg.take()
     }
 }
 
-impl webrender_api::RenderNotifier for RenderNotifier {
+impl webrender_api::RenderNotifier for MyRenderNotifier {
     fn clone(&self) -> Box<dyn webrender_api::RenderNotifier> {
-        Box::new(RenderNotifier::new())
+        Box::new(MyRenderNotifier {
+            frame_ready_msg: self.frame_ready_msg.clone(),
+        })
     }
 
     fn wake_up(&self, _composite_needed: bool) {}
@@ -51,7 +64,10 @@ impl webrender_api::RenderNotifier for RenderNotifier {
         _: FramePublishId,
         frame_ready_params: &FrameReadyParams,
     ) {
-        error!("RenderNotifier not implemented");
+        self.frame_ready_msg
+            .borrow_mut()
+            .push((document_id, frame_ready_params.render));
+        error!("RenderNotifier push");
     }
 }
 
@@ -83,6 +99,15 @@ impl<WebView> Default for WebViewManager<WebView> {
 }
 
 impl<WebView> WebViewManager<WebView> {
+    pub(crate) fn take_frame_ready(&self) -> Vec<(DocumentId, bool)> {
+        error!("take");
+        self.rendering_contexts
+            .values()
+            .map(|v| v.notifier.get())
+            .flatten()
+            .collect()
+    }
+
     pub(crate) fn send_transaction(&mut self, webview_id: WebViewId, transaction: Transaction) {
         let gid = self.group_id(webview_id).unwrap();
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
@@ -171,11 +196,11 @@ impl<WebView> WebViewManager<WebView> {
     ) -> RenderingGroupId {
         let new_group_id = self.last_used_id.unwrap_or_default() + 1;
 
-        let notifier = Box::new(RenderNotifier::new());
+        let notifier = MyRenderNotifier::new();
 
         let (webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
-            notifier,
+            notifier.clone(),
             WebRenderOptions::default(),
             None,
         )
@@ -190,7 +215,9 @@ impl<WebView> WebViewManager<WebView> {
             rendering_context,
             webrender,
             webrender_gl: gl,
+            notifier,
         };
+
         self.rendering_contexts.insert(new_group_id, s);
         self.painting_order.insert(new_group_id, vec![]);
         new_group_id
