@@ -21,7 +21,8 @@ use compositing_traits::display_list::{
 };
 use compositing_traits::rendering_context::RenderingContext;
 use compositing_traits::{
-    CompositionPipeline, CompositorMsg, PipelineExitSource, SendableFrameTree, WebViewTrait,
+    CompositionPipeline, CompositorMsg, ImageUpdate, PipelineExitSource, SendableFrameTree,
+    WebViewTrait,
 };
 use constellation_traits::{EmbedderToConstellationMessage, PaintMetricEvent};
 use crossbeam_channel::{Receiver, Sender};
@@ -39,16 +40,17 @@ use profile_traits::time::{self as profile_time};
 use servo_config::{opts, pref};
 use servo_geometry::DeviceIndependentPixel;
 use style_traits::CSSPixel;
-use webrender::Transaction;
+use webrender::{CaptureBits, Transaction};
 use webrender_api::units::{
     DeviceIntPoint, DeviceIntRect, DevicePixel, DevicePoint, DeviceRect, LayoutPoint, LayoutRect,
     LayoutSize, WorldPoint,
 };
 use webrender_api::{
-    self, BuiltDisplayList, DisplayListPayload, Epoch as WebRenderEpoch, FontInstanceFlags,
-    FontInstanceKey, FontInstanceOptions, FontKey, HitTestFlags, PipelineId as WebRenderPipelineId,
-    PropertyBinding, ReferenceFrameKind, RenderReasons, SampledScrollOffset, ScrollLocation,
-    SpaceAndClipInfo, SpatialId, SpatialTreeItemKey, TransformStyle,
+    self, BuiltDisplayList, DirtyRect, DisplayListPayload, Epoch as WebRenderEpoch,
+    FontInstanceFlags, FontInstanceKey, FontInstanceOptions, FontKey, HitTestFlags,
+    PipelineId as WebRenderPipelineId, PropertyBinding, ReferenceFrameKind, RenderReasons,
+    SampledScrollOffset, ScrollLocation, SpaceAndClipInfo, SpatialId, SpatialTreeItemKey,
+    TransformStyle,
 };
 
 use crate::InitialCompositorState;
@@ -878,7 +880,8 @@ impl IOCompositor {
                 }
             },
             CompositorMsg::UpdateImages(updates) => {
-                /*
+                error!("Only one group supported now");
+                let gid = self.webview_renderers.groups().first().unwrap().clone();
                 let mut txn = Transaction::new();
                 for update in updates {
                     match update {
@@ -891,8 +894,7 @@ impl IOCompositor {
                         },
                     }
                 }
-                self.global.borrow_mut().send_transaction(txn);
-                */
+                self.webview_renderers.send_transaction_to_group(gid, txn);
             },
 
             CompositorMsg::AddFont(font_key, data, index) => {
@@ -1530,6 +1532,7 @@ impl IOCompositor {
     ) -> Result<(), UnableToComposite> {
         log::error!("render_inner for {webview_group_id}");
         self.assert_no_gl_error();
+        self.clear_background(webview_group_id);
         let render_instance = &mut self.webview_renderers.render_instance_mut(webview_group_id);
         if let Err(err) = render_instance.rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
@@ -1575,7 +1578,6 @@ impl IOCompositor {
 
         // Paint the scene.
         // TODO(gw): Take notice of any errors the renderer returns!
-        //self.clear_background();
         error!("done clear background");
 
         //if let Some(webrender) = selfwebrender.as_mut() {
@@ -1658,21 +1660,11 @@ impl IOCompositor {
         }
     }
 
-    fn clear_background(&self) {
-        let gl = &self.global.borrow().webrender_gl;
-        self.assert_gl_framebuffer_complete();
+    fn clear_background(&self, webview_group_id: RenderingGroupId) {
+        self.webview_renderers.clear_background(webview_group_id);
+        /*
 
-        // Always clear the entire RenderingContext, regardless of how many WebViews there are
-        // or where they are positioned. This is so WebView actually clears even before the
-        // first WebView is ready.
-        let color = servo_config::pref!(shell_background_color_rgba);
-        gl.clear_color(
-            color[0] as f32,
-            color[1] as f32,
-            color[2] as f32,
-            color[3] as f32,
-        );
-        gl.clear(gleam::gl::COLOR_BUFFER_BIT);
+        */
     }
 
     #[track_caller]
@@ -1828,6 +1820,7 @@ impl IOCompositor {
     }
 
     pub fn capture_webrender(&mut self) {
+        error!("CAPTURE STARET");
         let capture_id = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
@@ -1847,13 +1840,16 @@ impl IOCompositor {
             return;
         };
 
+        error!("CAPTURE PATHAHAHA {capture_path:?}");
         println!("Saving WebRender capture to {capture_path:?}");
-        /*
-        self.global
-        .borrow()
-        .webrender_api
-        .save_capture(capture_path.clone(), CaptureBits::all());
-        */
+        for webrender_api in self
+            .webview_renderers
+            .rendering_contexts
+            .values()
+            .map(|r| &r.webrender_api)
+        {
+            webrender_api.save_capture(capture_path.clone(), CaptureBits::all());
+        }
     }
 
     fn add_font_instance(

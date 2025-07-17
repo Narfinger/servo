@@ -108,6 +108,32 @@ impl<WebView> WebViewManager<WebView> {
             .collect()
     }
 
+    pub(crate) fn clear_background(&self, webview_group_id: RenderingGroupId) {
+        let rtc = self.rendering_contexts.get(&webview_group_id).unwrap();
+        let gl = &rtc.webrender_gl;
+        {
+            debug_assert_eq!(
+                (
+                    gl.get_error(),
+                    gl.check_frame_buffer_status(gleam::gl::FRAMEBUFFER)
+                ),
+                (gleam::gl::NO_ERROR, gleam::gl::FRAMEBUFFER_COMPLETE)
+            );
+        }
+
+        // Always clear the entire RenderingContext, regardless of how many WebViews there are
+        // or where they are positioned. This is so WebView actually clears even before the
+        // first WebView is ready.
+        let color = servo_config::pref!(shell_background_color_rgba);
+        gl.clear_color(
+            color[0] as f32,
+            color[1] as f32,
+            color[2] as f32,
+            color[3] as f32,
+        );
+        gl.clear(gleam::gl::COLOR_BUFFER_BIT);
+    }
+
     pub(crate) fn send_transaction(&mut self, webview_id: WebViewId, transaction: Transaction) {
         let gid = self.group_id(webview_id).unwrap();
         self.send_transaction_to_group(gid, transaction);
