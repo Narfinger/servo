@@ -54,10 +54,10 @@ use webrender_api::{
     TransformStyle,
 };
 
-use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
 use crate::webview_manager::{RenderingGroupId, WebViewManager};
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
+use crate::{InitialCompositorState, webview_renderer};
 
 #[derive(Debug, PartialEq)]
 enum UnableToComposite {
@@ -111,7 +111,7 @@ pub struct ServoRenderer {
     time_profiler_chan: profile_time::ProfilerChan,
 
     /// The WebRender [`RenderApi`] interface used to communicate with WebRender.
-    pub(crate) webrender_api: RenderApi,
+    //pub(crate) webrender_api: RenderApi,
 
     /// The active webrender document.
     //pub(crate) webrender_document: DocumentId,
@@ -309,6 +309,7 @@ impl ServoRenderer {
         details_for_pipeline: impl Fn(PipelineId) -> Option<&'a PipelineDetails>,
     ) -> Result<Vec<CompositorHitTestResult>, HitTestError> {
         // DevicePoint and WorldPoint are the same for us.
+        /*
         let world_point = WorldPoint::from_untyped(point.to_untyped());
         let results =
             self.webrender_api
@@ -365,10 +366,8 @@ impl ServoRenderer {
         }
 
         Ok(results)
-    }
-
-    pub(crate) fn send_transaction(&mut self, documentid: DocumentId, transaction: Transaction) {
-        self.webrender_api.send_transaction(documentid, transaction);
+         */
+        Ok(vec![])
     }
 
     pub(crate) fn update_cursor_from_hittest(
@@ -432,7 +431,7 @@ impl IOCompositor {
                 compositor_receiver: state.receiver,
                 constellation_sender: state.constellation_chan,
                 time_profiler_chan: state.time_profiler_chan,
-                webrender_api: state.webrender_api,
+                //webrender_api: state.webrender_api,
                 //webrender_document: state.webrender_document,
                 webrender_gl: state.webrender_gl,
                 #[cfg(feature = "webxr")]
@@ -478,6 +477,11 @@ impl IOCompositor {
         {
             false
         }
+    }
+
+    pub(crate) fn send_transaction(&mut self, webview_id: WebViewId, transaction: Transaction) {
+        self.webview_renderers
+            .send_transaction(webview_id, transaction);
     }
 
     fn set_needs_repaint(&self, reason: RepaintReason) {
@@ -537,8 +541,9 @@ impl IOCompositor {
 
         match msg {
             CompositorMsg::CollectMemoryReport(sender) => {
+                /*
                 let ops =
-                    wr_malloc_size_of::MallocSizeOfOps::new(servo_allocator::usable_size, None);
+                wr_malloc_size_of::MallocSizeOfOps::new(servo_allocator::usable_size, None);
                 let report = self.global.borrow().webrender_api.report_memory(ops);
                 let reports = vec![
                     Report {
@@ -556,8 +561,9 @@ impl IOCompositor {
                         kind: ReportKind::ExplicitJemallocHeapSize,
                         size: report.display_list,
                     },
-                ];
-                sender.send(ProcessReports::new(reports));
+                    ];
+                    sender.send(ProcessReports::new(reports));
+                    */
             },
 
             CompositorMsg::ChangeRunningAnimationsState(
@@ -681,9 +687,9 @@ impl IOCompositor {
                     .get(&pipeline.into())
                     .expect("No pipeline")
                     .clone();
+                let gid = self.webview_renderers.group_id(webview_id).unwrap();
 
-                let document_id = self.webview_renderers.document_id(&webview_id);
-                self.global.borrow_mut().send_transaction(document_id, txn);
+                self.webview_renderers.send_transaction(webview_id, txn);
             },
 
             CompositorMsg::SendScrollNode(webview_id, pipeline_id, offset, external_scroll_id) => {
@@ -721,7 +727,7 @@ impl IOCompositor {
                 );
                 self.generate_frame(&mut txn, RenderReasons::APZ);
                 let document_id = self.webview_renderers.document_id(&webview_id);
-                self.global.borrow_mut().send_transaction(document_id, txn);
+                self.webview_renderers.send_transaction(webview_id, txn);
             },
 
             CompositorMsg::SendDisplayList {
@@ -813,9 +819,8 @@ impl IOCompositor {
                 self.update_transaction_with_all_scroll_offsets(&mut transaction);
                 self.generate_frame(&mut transaction, RenderReasons::SCENE);
                 let document_id = self.webview_renderers.document_id(&webview_id);
-                self.global
-                    .borrow_mut()
-                    .send_transaction(document_id, transaction);
+                self.webview_renderers
+                    .send_transaction(webview_id, transaction);
             },
 
             CompositorMsg::HitTest(pipeline, point, flags, sender) => {
@@ -829,7 +834,7 @@ impl IOCompositor {
                 // would be to listen to the TransactionNotifier for previous per-pipeline
                 // transactions, but that isn't easily compatible with the event loop wakeup
                 // mechanism from libserver.
-                self.global.borrow().webrender_api.flush_scene_builder();
+                self.webview_renderers.flush_scene_builder();
 
                 let details_for_pipeline = |pipeline_id| self.details_for_pipeline(pipeline_id);
                 let result = self
@@ -846,21 +851,23 @@ impl IOCompositor {
             },
 
             CompositorMsg::GenerateImageKey(sender) => {
-                let _ = sender.send(self.global.borrow().webrender_api.generate_image_key());
+                //let _ = sender.send(self.global.borrow().webrender_api.generate_image_key());
             },
 
             CompositorMsg::GenerateImageKeysForPipeline(pipeline_id) => {
-                let image_keys = (0..pref!(image_key_batch_size))
-                    .map(|_| self.global.borrow().webrender_api.generate_image_key())
-                    .collect();
-                if let Err(error) = self.global.borrow().constellation_sender.send(
-                    EmbedderToConstellationMessage::SendImageKeysForPipeline(
-                        pipeline_id,
-                        image_keys,
-                    ),
-                ) {
+                /*
+                        let image_keys = (0..pref!(image_key_batch_size))
+                        .map(|_| self.global.borrow().webrender_api.generate_image_key())
+                        .collect();
+                    if let Err(error) = self.global.borrow().constellation_sender.send(
+                        EmbedderToConstellationMessage::SendImageKeysForPipeline(
+                            pipeline_id,
+                            image_keys,
+                        ),
+                    ) {
                     warn!("Sending Image Keys to Constellation failed with({error:?}).");
                 }
+                */
             },
             CompositorMsg::UpdateImages(updates) => {
                 /*
@@ -885,12 +892,11 @@ impl IOCompositor {
             },
 
             CompositorMsg::AddSystemFont(font_key, native_handle) => {
-                for i in self.webview_renderers.my_iter_mut().map(|g| g.2) {
+                for i in self.webview_renderers.my_iter_mut() {
                     let mut transaction = Transaction::new();
                     transaction.add_native_font(font_key, native_handle.clone());
-                    self.global
-                        .borrow_mut()
-                        .send_transaction(i.webrender_document, transaction);
+                    //i.2.webrender_api
+                    //    .send_transaction(i.2.webrender_document, transaction);
                 }
             },
 
@@ -909,9 +915,11 @@ impl IOCompositor {
                         transaction.delete_font(key.clone());
                     }
 
+                    /*
                     self.global
-                        .borrow_mut()
-                        .send_transaction(i.webrender_document, transaction);
+                    .borrow_mut()
+                    .send_transaction(i.webrender_document, transaction);
+                    */
                 }
             },
 
@@ -920,18 +928,20 @@ impl IOCompositor {
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
-                let font_keys = (0..number_of_font_keys)
-                    .map(|_| self.global.borrow().webrender_api.generate_font_key())
-                    .collect();
-                let font_instance_keys = (0..number_of_font_instance_keys)
+                /*
+                        let font_keys = (0..number_of_font_keys)
+                        .map(|_| self.global.borrow().webrender_api.generate_font_key())
+                        .collect();
+                    let font_instance_keys = (0..number_of_font_instance_keys)
                     .map(|_| {
                         self.global
-                            .borrow()
-                            .webrender_api
-                            .generate_font_instance_key()
+                        .borrow()
+                        .webrender_api
+                        .generate_font_instance_key()
                     })
                     .collect();
                 let _ = result_sender.send((font_keys, font_instance_keys));
+                */
             },
             CompositorMsg::Viewport(webview_id, viewport_description) => {
                 if let Some(webview) = self.webview_renderers.get_mut(webview_id) {
@@ -962,25 +972,27 @@ impl IOCompositor {
                 }
             },
             CompositorMsg::GenerateImageKey(sender) => {
-                let _ = sender.send(self.global.borrow().webrender_api.generate_image_key());
+                //let _ = sender.send(self.global.borrow().webrender_api.generate_image_key());
             },
             CompositorMsg::GenerateFontKeys(
                 number_of_font_keys,
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
-                let font_keys = (0..number_of_font_keys)
-                    .map(|_| self.global.borrow().webrender_api.generate_font_key())
-                    .collect();
-                let font_instance_keys = (0..number_of_font_instance_keys)
+                /*
+                        let font_keys = (0..number_of_font_keys)
+                        .map(|_| self.global.borrow().webrender_api.generate_font_key())
+                        .collect();
+                    let font_instance_keys = (0..number_of_font_instance_keys)
                     .map(|_| {
                         self.global
-                            .borrow()
-                            .webrender_api
-                            .generate_font_instance_key()
+                        .borrow()
+                        .webrender_api
+                        .generate_font_instance_key()
                     })
                     .collect();
                 let _ = result_sender.send((font_keys, font_instance_keys));
+                */
             },
             CompositorMsg::NewWebRenderFrameReady(..) => {
                 // Subtract from the number of pending frames, but do not do any compositing.
@@ -1005,13 +1017,13 @@ impl IOCompositor {
         let mut transaction = Transaction::new();
         self.send_root_pipeline_display_list_in_transaction(webview_group_id, &mut transaction);
         self.generate_frame(&mut transaction, RenderReasons::SCENE);
-        let document_id = self
+        let rtc = self
             .webview_renderers
-            .render_instance(webview_group_id)
-            .webrender_document;
-        self.global
-            .borrow_mut()
-            .send_transaction(document_id, transaction);
+            .rendering_contexts
+            .get_mut(&webview_group_id)
+            .unwrap();
+        rtc.webrender_api
+            .send_transaction(rtc.webrender_document, transaction);
     }
 
     /// Set the root pipeline for our WebRender scene to a display list that consists of an iframe
@@ -1305,9 +1317,8 @@ impl IOCompositor {
         );
         transaction.set_document_view(output_region);
         let document_id = self.webview_renderers.document_id(&webview_id);
-        self.global
-            .borrow_mut()
-            .send_transaction(document_id, transaction);
+        self.webview_renderers
+            .send_transaction(webview_id, transaction);
 
         self.send_root_pipeline_display_list(webview_group_id);
         self.set_needs_repaint(RepaintReason::Resize);
@@ -1785,9 +1796,8 @@ impl IOCompositor {
                     .webview_renderers
                     .render_instance(webview_group_id)
                     .webrender_document;
-                self.global
-                    .borrow_mut()
-                    .send_transaction(document_id, transaction);
+                self.webview_renderers
+                    .send_transaction_to_group(webview_group_id, transaction);
             }
         }
         self.global.borrow().shutdown_state() != ShutdownState::FinishedShuttingDown
@@ -1838,10 +1848,12 @@ impl IOCompositor {
         };
 
         println!("Saving WebRender capture to {capture_path:?}");
+        /*
         self.global
-            .borrow()
-            .webrender_api
-            .save_capture(capture_path.clone(), CaptureBits::all());
+        .borrow()
+        .webrender_api
+        .save_capture(capture_path.clone(), CaptureBits::all());
+        */
     }
 
     fn add_font_instance(

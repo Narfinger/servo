@@ -7,12 +7,12 @@ use std::collections::hash_map::{Values, ValuesMut};
 use std::rc::Rc;
 
 use base::id::WebViewId;
-use compositing_traits::rendering_context::RenderingContext;
+use compositing_traits::rendering_context::{self, RenderingContext};
 use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
 use log::error;
-use webrender::{RenderApi, RenderApiSender, WebRenderOptions};
+use webrender::{RenderApi, RenderApiSender, Transaction, WebRenderOptions};
 use webrender_api::units::DevicePixel;
 use webrender_api::{DocumentId, FramePublishId, FrameReadyParams};
 
@@ -25,7 +25,7 @@ pub(crate) struct WebRenderInstance {
     pub(crate) webrender: webrender::Renderer,
     pub(crate) webrender_gl: Rc<dyn Gl>,
     pub(crate) webrender_document: DocumentId,
-    webrender_api: RenderApi,
+    pub(crate) webrender_api: RenderApi,
     sender: RenderApiSender,
 }
 
@@ -60,7 +60,7 @@ pub(crate) struct WebViewManager<WebView> {
     /// a single root pipeline that also applies any pinch zoom transformation.
     webviews: HashMap<WebViewId, WebView>,
 
-    rendering_contexts: HashMap<RenderingGroupId, WebRenderInstance>,
+    pub(crate) rendering_contexts: HashMap<RenderingGroupId, WebRenderInstance>,
 
     webview_groups: HashMap<WebViewId, RenderingGroupId>,
 
@@ -83,6 +83,29 @@ impl<WebView> Default for WebViewManager<WebView> {
 }
 
 impl<WebView> WebViewManager<WebView> {
+    pub(crate) fn send_transaction(&mut self, webview_id: WebViewId, transaction: Transaction) {
+        let gid = self.group_id(webview_id).unwrap();
+        let rect = self.rendering_contexts.get_mut(&gid).unwrap();
+        rect.webrender_api
+            .send_transaction(rect.webrender_document, transaction);
+    }
+
+    pub(crate) fn send_transaction_to_group(
+        &mut self,
+        gid: RenderingGroupId,
+        transaction: Transaction,
+    ) {
+        let rect = self.rendering_contexts.get_mut(&gid).unwrap();
+        rect.webrender_api
+            .send_transaction(rect.webrender_document, transaction);
+    }
+
+    pub(crate) fn flush_scene_builder(&self) {
+        for i in self.rendering_contexts.values() {
+            i.webrender_api.flush_scene_builder();
+        }
+    }
+
     pub(crate) fn deinit(&mut self) {
         for (_group_id, webrender_instance) in self.rendering_contexts.drain() {
             webrender_instance
@@ -105,6 +128,13 @@ impl<WebView> WebViewManager<WebView> {
     fn group_painting_order_mut(&mut self, webview_id: WebViewId) -> &mut Vec<WebViewId> {
         let group_id = self.webview_groups.get(&webview_id).unwrap();
         self.painting_order.get_mut(group_id).unwrap()
+    }
+
+    pub(crate) fn all_document_ids(&self) -> Vec<DocumentId> {
+        self.rendering_contexts
+            .values()
+            .map(|r| r.webrender_document)
+            .collect()
     }
 
     pub(crate) fn render_instance(&self, group_id: RenderingGroupId) -> &WebRenderInstance {
