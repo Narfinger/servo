@@ -149,7 +149,7 @@ pub struct IOCompositor {
     ready_to_save_state: ReadyState,
 
     /// The webrender renderer.
-    webrender: Option<webrender::Renderer>,
+    //webrender: Option<webrender::Renderer>,
 
     /// The surfman instance that webrender targets
     //rendering_context: Rc<dyn RenderingContext>,
@@ -447,7 +447,7 @@ impl IOCompositor {
             webview_renderers,
             needs_repaint: Cell::default(),
             ready_to_save_state: ReadyState::Unknown,
-            webrender: Some(state.webrender),
+            //webrender: Some(state.webrender),
             //rendering_context: state.rendering_context,
             pending_frames: 0,
             _mem_profiler_registration: registration,
@@ -466,9 +466,9 @@ impl IOCompositor {
         //if let Err(err) = self.rendering_context.make_current() {
         //            warn!("Failed to make the rendering context current: {:?}", err);
         //        }
-        if let Some(webrender) = self.webrender.take() {
-            webrender.deinit();
-        }
+        //if let Some(webrender) = self.webrender.take() {
+        //    webrender.deinit();
+        //}
     }
 
     pub fn rendering_context_size(&self) -> Size2D<u32, DevicePixel> {
@@ -1397,12 +1397,16 @@ impl IOCompositor {
                         .get(id)
                         .expect("Could not find webview_id")
                         .clone();
+                    let group_id = self
+                        .webview_renderers
+                        .group_id(webview_id)
+                        .expect("Could not find");
+                    let rendering_context = self.webview_renderers.render_instance(group_id);
                     let document_id = self.webview_renderers.document_id(&webview_id);
 
-                    if let Some(WebRenderEpoch(epoch)) = self
+                    if let Some(WebRenderEpoch(epoch)) = rendering_context
                         .webrender
-                        .as_ref()
-                        .and_then(|wr| wr.current_epoch(document_id, id.into()))
+                        .current_epoch(document_id, id.into())
                     {
                         let epoch = Epoch(epoch);
                         pipeline_epochs.insert(*id, epoch);
