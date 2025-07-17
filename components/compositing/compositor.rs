@@ -892,12 +892,11 @@ impl IOCompositor {
             },
 
             CompositorMsg::AddSystemFont(font_key, native_handle) => {
-                for i in self.webview_renderers.my_iter_mut() {
+                self.webview_renderers.send_transaction_all(|| {
                     let mut transaction = Transaction::new();
                     transaction.add_native_font(font_key, native_handle.clone());
-                    //i.2.webrender_api
-                    //    .send_transaction(i.2.webrender_document, transaction);
-                }
+                    transaction
+                });
             },
 
             CompositorMsg::AddFontInstance(font_instance_key, font_key, size, flags) => {
@@ -905,7 +904,7 @@ impl IOCompositor {
             },
 
             CompositorMsg::RemoveFonts(keys, instance_keys) => {
-                for i in self.webview_renderers.my_iter_mut().map(|g| g.2) {
+                self.webview_renderers.send_transaction_all(|| {
                     let mut transaction = Transaction::new();
 
                     for instance in instance_keys.iter() {
@@ -914,13 +913,8 @@ impl IOCompositor {
                     for key in keys.iter() {
                         transaction.delete_font(key.clone());
                     }
-
-                    /*
-                    self.global
-                    .borrow_mut()
-                    .send_transaction(i.webrender_document, transaction);
-                    */
-                }
+                    transaction
+                });
             },
 
             CompositorMsg::GenerateFontKeys(
@@ -928,6 +922,7 @@ impl IOCompositor {
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
+
                 /*
                         let font_keys = (0..number_of_font_keys)
                         .map(|_| self.global.borrow().webrender_api.generate_font_key())
@@ -1863,28 +1858,31 @@ impl IOCompositor {
         size: f32,
         flags: FontInstanceFlags,
     ) {
-        let mut transaction = Transaction::new();
+        self.webview_renderers.send_transaction_all(|| {
+            let mut transaction = Transaction::new();
 
-        let font_instance_options = FontInstanceOptions {
-            flags,
-            ..Default::default()
-        };
-        transaction.add_font_instance(
-            instance_key,
-            font_key,
-            size,
-            Some(font_instance_options),
-            None,
-            Vec::new(),
-        );
-
-        //self.global.borrow_mut().send_transaction(transaction);
+            let font_instance_options = FontInstanceOptions {
+                flags,
+                ..Default::default()
+            };
+            transaction.add_font_instance(
+                instance_key,
+                font_key,
+                size,
+                Some(font_instance_options),
+                None,
+                Vec::new(),
+            );
+            transaction
+        });
     }
 
     fn add_font(&mut self, font_key: FontKey, index: u32, data: Arc<IpcSharedMemory>) {
-        let mut transaction = Transaction::new();
-        transaction.add_raw_font(font_key, (**data).into(), index);
-        //self.global.borrow_mut().send_transaction(transaction);
+        self.webview_renderers.send_transaction_all(|| {
+            let mut transaction = Transaction::new();
+            transaction.add_raw_font(font_key, (**data).into(), index);
+            transaction
+        });
     }
 
     pub fn notify_input_event(&mut self, webview_id: WebViewId, event: InputEvent) {

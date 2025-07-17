@@ -100,6 +100,14 @@ impl<WebView> WebViewManager<WebView> {
             .send_transaction(rect.webrender_document, transaction);
     }
 
+    pub(crate) fn send_transaction_all(&mut self, transaction_creator: impl Fn() -> Transaction) {
+        for i in self.rendering_contexts.values_mut() {
+            let document_id = i.webrender_document;
+            let t = transaction_creator();
+            i.webrender_api.send_transaction(document_id, t);
+        }
+    }
+
     pub(crate) fn flush_scene_builder(&self) {
         for i in self.rendering_contexts.values() {
             i.webrender_api.flush_scene_builder();
