@@ -110,9 +110,7 @@ impl<WebView> WebViewManager<WebView> {
 
     pub(crate) fn send_transaction(&mut self, webview_id: WebViewId, transaction: Transaction) {
         let gid = self.group_id(webview_id).unwrap();
-        let rect = self.rendering_contexts.get_mut(&gid).unwrap();
-        rect.webrender_api
-            .send_transaction(rect.webrender_document, transaction);
+        self.send_transaction_to_group(gid, transaction);
     }
 
     pub(crate) fn send_transaction_to_group(
@@ -120,6 +118,7 @@ impl<WebView> WebViewManager<WebView> {
         gid: RenderingGroupId,
         transaction: Transaction,
     ) {
+        error!("sending some transaction");
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
         rect.webrender_api
             .send_transaction(rect.webrender_document, transaction);
@@ -153,21 +152,9 @@ impl<WebView> WebViewManager<WebView> {
         self.webview_groups.clear();
     }
 
-    fn group_painting_order(&self, webview_id: WebViewId) -> &Vec<WebViewId> {
-        let group_id = self.webview_groups.get(&webview_id).unwrap();
-        &self.painting_order.get(group_id).unwrap()
-    }
-
     fn group_painting_order_mut(&mut self, webview_id: WebViewId) -> &mut Vec<WebViewId> {
         let group_id = self.webview_groups.get(&webview_id).unwrap();
         self.painting_order.get_mut(group_id).unwrap()
-    }
-
-    pub(crate) fn all_document_ids(&self) -> Vec<DocumentId> {
-        self.rendering_contexts
-            .values()
-            .map(|r| r.webrender_document)
-            .collect()
     }
 
     pub(crate) fn render_instance(&self, group_id: RenderingGroupId) -> &WebRenderInstance {

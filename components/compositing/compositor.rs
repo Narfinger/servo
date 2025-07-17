@@ -1522,12 +1522,12 @@ impl IOCompositor {
         webview_group_id: RenderingGroupId,
     ) -> Result<(), UnableToComposite> {
         log::error!("render_inner for {webview_group_id}");
+        self.assert_no_gl_error();
         let render_instance = &mut self.webview_renderers.render_instance_mut(webview_group_id);
         if let Err(err) = render_instance.rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
         }
         log::error!("done make current");
-        //self.assert_no_gl_error();
         error!("done assert");
 
         //if let Some(webrender) = self.webrender.as_mut() {
