@@ -10,7 +10,8 @@ use std::fs::create_dir_all;
 use std::iter::once;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::thread::sleep;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use base::cross_process_instant::CrossProcessInstant;
 use base::id::{PipelineId, WebViewId};
@@ -418,7 +419,7 @@ impl IOCompositor {
             state.sender.clone(),
             CompositorMsg::CollectMemoryReport,
         );
-        let mut webview_renderers = WebViewManager::default();
+        let mut webview_renderers = WebViewManager::new(state.sender);
         webview_renderers.add_webview_group(state.rendering_context);
         let compositor = IOCompositor {
             global: Rc::new(RefCell::new(ServoRenderer {
@@ -456,6 +457,7 @@ impl IOCompositor {
             //info!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
         }
         //compositor.assert_gl_framebuffer_complete();
+
         compositor
     }
 
@@ -648,7 +650,8 @@ impl IOCompositor {
                 }
             },
 
-            CompositorMsg::NewWebRenderFrameReady(_document_id, recomposite_needed) => {
+            CompositorMsg::NewWebRenderFrameReady(document_id, recomposite_needed) => {
+                error!("new frame ready {document_id:?}, {recomposite_needed}");
                 self.pending_frames -= 1;
                 let point: DevicePoint = self.global.borrow().cursor_pos;
 
@@ -1689,16 +1692,11 @@ impl IOCompositor {
 
     #[servo_tracing::instrument(skip_all)]
     pub fn handle_messages(&mut self, mut messages: Vec<CompositorMsg>) {
-        let mut frame_ready_msg = self
-            .webview_renderers
-            .take_frame_ready()
-            .into_iter()
-            .map(|(m, i)| CompositorMsg::NewWebRenderFrameReady(m, i))
-            .collect();
+        error!("frame_ready_msgs {:?}", messages);
 
-        messages.append(&mut frame_ready_msg);
         // Check for new messages coming from the other threads in the system.
         let mut found_recomposite_msg = false;
+        /*
         messages.retain(|message| {
             match message {
                 CompositorMsg::NewWebRenderFrameReady(..) if found_recomposite_msg => {
@@ -1723,6 +1721,7 @@ impl IOCompositor {
                 _ => true,
             }
         });
+        */
 
         for message in messages {
             self.handle_browser_message(message);

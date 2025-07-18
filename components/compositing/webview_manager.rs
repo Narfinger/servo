@@ -5,7 +5,9 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::{Values, ValuesMut};
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
+use std::thread::sleep;
+use std::time::Duration;
 
 use base::id::WebViewId;
 use compositing_traits::rendering_context::{self, RenderingContext};
@@ -13,9 +15,13 @@ use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
 use log::{error, warn};
-use webrender::{RenderApi, RenderApiSender, Transaction, WebRenderOptions};
+use servo_config::pref;
+use webrender::{
+    Compositor, RenderApi, RenderApiSender, ShaderPrecacheFlags, Transaction, UploadMethod,
+    VertexUsageHint, WebRenderOptions,
+};
 use webrender_api::units::DevicePixel;
-use webrender_api::{DocumentId, FramePublishId, FrameReadyParams, RenderNotifier};
+use webrender_api::{ColorF, DocumentId, FramePublishId, FrameReadyParams, RenderNotifier};
 
 use crate::IOCompositor;
 use crate::webview_renderer::UnknownWebView;
@@ -34,12 +40,14 @@ pub(crate) struct WebRenderInstance {
 
 struct MyRenderNotifier {
     frame_ready_msg: RefCell<Vec<(DocumentId, bool)>>,
+    sender: CompositorProxy,
 }
 
 impl MyRenderNotifier {
-    pub fn new() -> MyRenderNotifier {
+    pub fn new(sender: CompositorProxy) -> MyRenderNotifier {
         MyRenderNotifier {
             frame_ready_msg: RefCell::new(vec![]),
+            sender,
         }
     }
 
@@ -53,6 +61,7 @@ impl webrender_api::RenderNotifier for MyRenderNotifier {
     fn clone(&self) -> Box<dyn webrender_api::RenderNotifier> {
         Box::new(MyRenderNotifier {
             frame_ready_msg: self.frame_ready_msg.clone(),
+            sender: self.sender.clone(),
         })
     }
 
@@ -64,10 +73,11 @@ impl webrender_api::RenderNotifier for MyRenderNotifier {
         _: FramePublishId,
         frame_ready_params: &FrameReadyParams,
     ) {
-        self.frame_ready_msg
-            .borrow_mut()
-            .push((document_id, frame_ready_params.render));
-        //error!("RenderNotifier push");
+        self.sender.send(CompositorMsg::NewWebRenderFrameReady(
+            document_id,
+            frame_ready_params.render,
+        ));
+        error!("RenderNotifier push");
     }
 }
 
@@ -84,33 +94,42 @@ pub(crate) struct WebViewManager<WebView> {
     painting_order: HashMap<RenderingGroupId, Vec<WebViewId>>,
 
     last_used_id: Option<RenderingGroupId>,
+
+    sender: CompositorProxy,
 }
 
-impl<WebView> Default for WebViewManager<WebView> {
-    fn default() -> Self {
+impl<WebView> WebViewManager<WebView> {
+    pub(crate) fn new(sender: CompositorProxy) -> Self {
         Self {
             webviews: Default::default(),
             painting_order: Default::default(),
             webview_groups: Default::default(),
             rendering_contexts: Default::default(),
             last_used_id: None,
+            sender,
         }
     }
 }
 
 impl<WebView> WebViewManager<WebView> {
     pub(crate) fn take_frame_ready(&self) -> Vec<(DocumentId, bool)> {
-        warn!("take");
-        self.rendering_contexts
+        //warn!("take");
+        let v = self
+            .rendering_contexts
             .values()
             .map(|v| v.notifier.get())
             .flatten()
-            .collect()
+            .collect::<Vec<_>>();
+        if !v.is_empty() {
+            error!("found messages");
+        }
+        v
     }
 
     pub(crate) fn clear_background(&self, webview_group_id: RenderingGroupId) {
         error!("CLEAR CLEAR CLEAR");
         let rtc = self.rendering_contexts.get(&webview_group_id).unwrap();
+        error!("DOCUMENTID {:?}", rtc.webrender_document);
         let gl = &rtc.webrender_gl;
         {
             debug_assert_eq!(
@@ -146,7 +165,7 @@ impl<WebView> WebViewManager<WebView> {
         gid: RenderingGroupId,
         transaction: Transaction,
     ) {
-        warn!("sending some transaction");
+        warn!("sending some transaction to {gid}");
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
         rect.webrender_api
             .send_transaction(rect.webrender_document, transaction);
@@ -205,6 +224,31 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts.get_mut(&group_id).unwrap()
     }
 
+    fn webrender_options(&self) -> WebRenderOptions {
+        let clear_color = ColorF::new(0.1, 0.3, 0.7, 1.0);
+        webrender::WebRenderOptions {
+            // We force the use of optimized shaders here because rendering is broken
+            // on Android emulators with unoptimized shaders. This is due to a known
+            // issue in the emulator's OpenGL emulation layer.
+            // See: https://github.com/servo/servo/issues/31726
+            use_optimized_shaders: true,
+            //resource_override_path: opts.shaders_dir.clone(),
+            precache_flags: if pref!(gfx_precache_shaders) {
+                ShaderPrecacheFlags::FULL_COMPILE
+            } else {
+                ShaderPrecacheFlags::empty()
+            },
+            enable_aa: pref!(gfx_text_antialiasing_enabled),
+            enable_subpixel_aa: pref!(gfx_subpixel_text_antialiasing_enabled),
+            allow_texture_swizzling: pref!(gfx_texture_swizzling_enabled),
+            clear_color,
+            upload_method: UploadMethod::PixelBuffer(VertexUsageHint::Stream),
+            panic_on_gl_error: true,
+            size_of_op: Some(servo_allocator::usable_size),
+            ..Default::default()
+        }
+    }
+
     pub(crate) fn add_webview_group(
         &mut self,
         rendering_context: Rc<dyn RenderingContext>,
@@ -222,12 +266,12 @@ impl<WebView> WebViewManager<WebView> {
             ),
             (gleam::gl::NO_ERROR, gleam::gl::FRAMEBUFFER_COMPLETE)
         );
-        let notifier = MyRenderNotifier::new();
+        let notifier = MyRenderNotifier::new(self.sender.clone());
 
         let (webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
             notifier.clone(),
-            WebRenderOptions::default(),
+            self.webrender_options(),
             None,
         )
         .expect("Could not");
