@@ -406,11 +406,13 @@ impl Window {
                 }
             })
             .shortcut(CMD_OR_CONTROL, 'T', || {
+                log::error!("NEW WINDOW");
                 let w = Window::new(&state.servoshell_preferences, event_loop);
                 state.create_new_window(
                     Url::parse("https://www.duckduckgo.com").unwrap(),
-                    w.rendering_context,
+                    w.rendering_context.clone(),
                 );
+                state.inner_mut().other_windows.push(Box::new(w));
                 //state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
             })
             .shortcut(CMD_OR_CONTROL, 'Q', || state.servo().start_shutting_down())

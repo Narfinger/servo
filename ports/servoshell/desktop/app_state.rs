@@ -80,6 +80,9 @@ pub struct RunningAppStateInner {
     /// A handle to the Window that Servo is rendering in -- either headed or headless.
     window: Rc<dyn WindowPortsMethods>,
 
+    /// Windows that are not the main window (kind of hacky)
+    pub(crate) other_windows: Vec<Box<dyn WindowPortsMethods>>,
+
     /// Gamepad support, which may be `None` if it failed to initialize.
     gamepad_support: Option<GamepadSupport>,
 
@@ -116,6 +119,7 @@ impl RunningAppState {
                 focused_webview_id: None,
                 dialogs: Default::default(),
                 window,
+                other_windows: vec![],
                 gamepad_support: GamepadSupport::maybe_new(),
                 need_update: false,
                 need_repaint: false,
@@ -478,6 +482,10 @@ impl RunningAppState {
                 info!("Notify dialog appear failed. Maybe the channel to webdriver is closed: {err}");
             });
         }
+    }
+
+    pub(crate) fn add_window(&self, window: Box<dyn WindowPortsMethods>) {
+        self.inner_mut().other_windows.push(window);
     }
 }
 
