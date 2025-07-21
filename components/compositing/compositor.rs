@@ -853,8 +853,7 @@ impl IOCompositor {
             CompositorMsg::GenerateImageKey(sender) => {
                 let keys = self
                     .webview_renderers
-                    .rendering_contexts
-                    .values()
+                    .rendering_contexts()
                     .map(|v| v.webrender_api.generate_image_key())
                     .next()
                     .unwrap();
@@ -937,7 +936,7 @@ impl IOCompositor {
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
-                for i in self.webview_renderers.rendering_contexts.values() {
+                for i in self.webview_renderers.rendering_contexts() {
                     let font_keys = (0..number_of_font_keys)
                         .map(|_| i.webrender_api.generate_font_key())
                         .collect();
@@ -1021,13 +1020,9 @@ impl IOCompositor {
         let mut transaction = Transaction::new();
         self.send_root_pipeline_display_list_in_transaction(webview_group_id, &mut transaction);
         self.generate_frame(&mut transaction, RenderReasons::SCENE);
-        let rtc = self
-            .webview_renderers
-            .rendering_contexts
-            .get_mut(&webview_group_id)
-            .unwrap();
-        rtc.webrender_api
-            .send_transaction(rtc.webrender_document, transaction);
+
+        self.webview_renderers
+            .send_transaction_to_group(webview_group_id, transaction);
     }
 
     /// Set the root pipeline for our WebRender scene to a display list that consists of an iframe
@@ -1836,8 +1831,7 @@ impl IOCompositor {
         println!("Saving WebRender capture to {capture_path:?}");
         for webrender_api in self
             .webview_renderers
-            .rendering_contexts
-            .values()
+            .rendering_contexts()
             .map(|r| &r.webrender_api)
         {
             webrender_api.save_capture(capture_path.clone(), CaptureBits::all());

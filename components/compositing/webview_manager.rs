@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use core::panic;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::{Values, ValuesMut};
@@ -15,7 +16,7 @@ use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
 use log::{error, warn};
-use servo_config::pref;
+use servo_config::{opts, pref};
 use webrender::{
     Compositor, RenderApi, RenderApiSender, ShaderPrecacheFlags, Transaction, UploadMethod,
     VertexUsageHint, WebRenderOptions,
@@ -26,7 +27,7 @@ use webrender_api::{ColorF, DocumentId, FramePublishId, FrameReadyParams, Render
 use crate::IOCompositor;
 use crate::webview_renderer::UnknownWebView;
 
-pub(crate) type RenderingGroupId = usize;
+pub(crate) type RenderingGroupId = u64;
 
 pub(crate) struct WebRenderInstance {
     pub(crate) rendering_context: Rc<dyn RenderingContext>,
@@ -86,7 +87,7 @@ pub(crate) struct WebViewManager<WebView> {
     /// a single root pipeline that also applies any pinch zoom transformation.
     webviews: HashMap<WebViewId, WebView>,
 
-    pub(crate) rendering_contexts: HashMap<RenderingGroupId, WebRenderInstance>,
+    rendering_contexts: HashMap<RenderingGroupId, WebRenderInstance>,
 
     webview_groups: HashMap<WebViewId, RenderingGroupId>,
 
@@ -112,6 +113,10 @@ impl<WebView> WebViewManager<WebView> {
 }
 
 impl<WebView> WebViewManager<WebView> {
+    pub(crate) fn rendering_contexts(&self) -> impl Iterator<Item = &WebRenderInstance> {
+        self.rendering_contexts.iter().map(|(_, v)| v)
+    }
+
     pub(crate) fn take_frame_ready(&self) -> Vec<(DocumentId, bool)> {
         //warn!("take");
         let v = self
@@ -186,7 +191,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn deinit(&mut self) {
-        panic!("DEINIT CALLED");
+        panic!("DEINIT");
         for (_group_id, webrender_instance) in self.rendering_contexts.drain() {
             webrender_instance
                 .rendering_context
@@ -224,14 +229,14 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts.get_mut(&group_id).unwrap()
     }
 
-    fn webrender_options(&self) -> WebRenderOptions {
+    fn webrender_options(&self, id: u64) -> WebRenderOptions {
         let clear_color = ColorF::new(0.1, 0.3, 0.7, 1.0);
         webrender::WebRenderOptions {
             // We force the use of optimized shaders here because rendering is broken
             // on Android emulators with unoptimized shaders. This is due to a known
             // issue in the emulator's OpenGL emulation layer.
             // See: https://github.com/servo/servo/issues/31726
-            use_optimized_shaders: true,
+            use_optimized_shaders: false,
             //resource_override_path: opts.shaders_dir.clone(),
             precache_flags: if pref!(gfx_precache_shaders) {
                 ShaderPrecacheFlags::FULL_COMPILE
@@ -245,6 +250,7 @@ impl<WebView> WebViewManager<WebView> {
             upload_method: UploadMethod::PixelBuffer(VertexUsageHint::Stream),
             panic_on_gl_error: true,
             size_of_op: Some(servo_allocator::usable_size),
+            renderer_id: Some(id),
             ..Default::default()
         }
     }
@@ -253,8 +259,17 @@ impl<WebView> WebViewManager<WebView> {
         &mut self,
         rendering_context: Rc<dyn RenderingContext>,
     ) -> RenderingGroupId {
-        error!("Adding webview group!");
-        let new_group_id = self.last_used_id.unwrap_or_default() + 1;
+        error!(
+            "Adding webview group! map {:?} id {:?}",
+            self.webview_groups.keys(),
+            self.last_used_id
+        );
+        let new_group_id = {
+            *self.last_used_id.get_or_insert(0) += 1;
+            self.last_used_id.unwrap()
+        };
+
+        error!("WebGroupId {:?} {:?}", new_group_id, self.last_used_id);
         let gl = rendering_context.gleam_gl_api();
         error!("Running on {}", gl.get_string(gleam::gl::RENDERER));
         error!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
@@ -271,7 +286,7 @@ impl<WebView> WebViewManager<WebView> {
         let (webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
             notifier.clone(),
-            self.webrender_options(),
+            self.webrender_options(new_group_id),
             None,
         )
         .expect("Could not");
@@ -287,6 +302,10 @@ impl<WebView> WebViewManager<WebView> {
             webrender_gl: gl,
             notifier,
         };
+
+        // This would otherwise drop the previous webrender instance which will error
+        // in mysterious ways
+        assert!(!self.rendering_contexts.contains_key(&new_group_id));
 
         self.rendering_contexts.insert(new_group_id, s);
         self.painting_order.insert(new_group_id, vec![]);

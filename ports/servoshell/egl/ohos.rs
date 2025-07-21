@@ -378,8 +378,9 @@ extern "C" fn on_surface_created_cb(xcomponent: *mut OH_NativeXComponent, window
             info!("Sender disconnected - Terminating main surface thread");
         });
     } else {
-        //call(ServoAction::NewWebview(xc_wrapper, window_wrapper))
-        //    .expect("Could not create new webview");
+        error!("NEW WEBVIEW CALLED");
+        call(ServoAction::NewWebview(xc_wrapper, window_wrapper))
+            .expect("Could not create new webview");
     }
     info!("Returning from on_surface_created_cb");
 }
