@@ -180,6 +180,7 @@ pub fn init(
         )
         .expect("Could not create RenderingContext"),
     );
+    log::error!("new webview {window_size:?}, {coordinates:?}");
 
     info!("before ServoWindowCallbacks...");
 

@@ -494,16 +494,20 @@ impl IOCompositor {
     }
 
     pub fn needs_repaint(&self) -> bool {
+        error!("needs repaint");
         let repaint_reason = self.needs_repaint.get();
         if repaint_reason.is_empty() {
             return false;
         }
 
-        !self
+        error!("asking compositor");
+        let v = !self
             .global
             .borrow()
             .refresh_driver
-            .wait_to_paint(repaint_reason)
+            .wait_to_paint(repaint_reason);
+        error!("compositor says {:?}", v);
+        v
     }
 
     pub fn finish_shutting_down(&mut self) {
@@ -671,6 +675,7 @@ impl IOCompositor {
                 }
 
                 if recomposite_needed || self.animation_callbacks_running() {
+                    error!("recomposite needed in newwebrenderframready");
                     self.set_needs_repaint(RepaintReason::NewWebRenderFrame);
                 }
             },

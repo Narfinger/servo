@@ -215,6 +215,8 @@ impl ServoAction {
             },
             Resize { width, height } => servo.resize(Coordinates::new(0, 0, *width, *height)),
             FocusWebview(arkts_id) => {
+                /*
+
                 if let Some(native_webview_components) =
                     NATIVE_WEBVIEWS.lock().unwrap().get(*arkts_id as usize)
                 {
@@ -238,10 +240,15 @@ impl ServoAction {
                 } else {
                     error!("Could not find webview to focus");
                 }
+                 */
             },
             NewWebview(xcomponent, window) => {
+                let offset =
+                    unsafe { get_xcomponent_offset(xcomponent as *const _ as *mut _, window.0) };
+                error!("WINDOW OFFSET {offset:?}");
                 let (window_handle, window_size, coordinates) =
                     simpleservo::get_raw_window_handle(xcomponent.0, window.0);
+                error!("new webview {window_size:?}, {coordinates:?}");
                 let display_handle = RawDisplayHandle::Ohos(OhosDisplayHandle::new());
                 let display_handle = unsafe { DisplayHandle::borrow_raw(display_handle) };
 
@@ -256,7 +263,7 @@ impl ServoAction {
                 );
 
                 servo.add_webview_context(
-                    Url::parse("http://www.google.com").unwrap(),
+                    Url::parse("http://www.wikipedia.org").unwrap(),
                     rendering_context,
                 )
                 /*

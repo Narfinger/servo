@@ -355,6 +355,7 @@ impl RunningAppState {
     }
 
     pub(crate) fn add_webview_context(self: &Rc<Self>, url: Url, rc: Rc<WindowRenderingContext>) {
+        rc.prepare_for_rendering();
         let webview = WebViewBuilder::new(&self.servo)
             .url(Url::parse("https://m.wikipedia.com").unwrap())
             .hidpi_scale_factor(self.inner().hidpi_scale_factor)
@@ -668,7 +669,7 @@ impl RunningAppState {
         for (id, webview) in &self.inner().webviews {
             webview.notify_vsync();
         }
-        self.active_webview().notify_vsync();
+        //self.active_webview().notify_vsync();
         self.perform_updates();
     }
 
@@ -723,9 +724,13 @@ impl RunningAppState {
     pub fn present_if_needed(&self) {
         if self.inner().need_present {
             self.inner_mut().need_present = false;
-            if !self.active_webview().paint() {
-                return;
+            for (id, webview) in &self.inner().webviews {
+                webview.paint();
             }
+            error!("Present in appstate");
+            //if !self.active_webview().paint() {
+            //    return;
+            //}
             save_output_image_if_necessary(&self.servoshell_preferences, &self.rendering_context);
             self.rendering_context.present();
             for i in &self.inner().other_contexts {

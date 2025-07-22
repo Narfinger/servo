@@ -117,20 +117,6 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts.iter().map(|(_, v)| v)
     }
 
-    pub(crate) fn take_frame_ready(&self) -> Vec<(DocumentId, bool)> {
-        //warn!("take");
-        let v = self
-            .rendering_contexts
-            .values()
-            .map(|v| v.notifier.get())
-            .flatten()
-            .collect::<Vec<_>>();
-        if !v.is_empty() {
-            error!("found messages");
-        }
-        v
-    }
-
     pub(crate) fn clear_background(&self, webview_group_id: RenderingGroupId) {
         error!("CLEAR CLEAR CLEAR");
         let rtc = self.rendering_contexts.get(&webview_group_id).unwrap();
