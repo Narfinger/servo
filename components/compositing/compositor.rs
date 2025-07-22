@@ -163,7 +163,7 @@ pub struct IOCompositor {
 }
 
 /// Why we need to be repainted. This is used for debugging.
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) struct RepaintReason(u8);
 
 bitflags! {
@@ -487,6 +487,7 @@ impl IOCompositor {
     }
 
     fn set_needs_repaint(&self, reason: RepaintReason) {
+        error!("set needs_repaint {reason:?}");
         let mut needs_repaint = self.needs_repaint.get();
         needs_repaint.insert(reason);
         self.needs_repaint.set(needs_repaint);
@@ -1528,7 +1529,7 @@ impl IOCompositor {
         &mut self,
         webview_group_id: RenderingGroupId,
     ) -> Result<(), UnableToComposite> {
-        warn!("render_inner for {webview_group_id}");
+        //warn!("render_inner for {webview_group_id}");
         //self.assert_no_gl_error();
         self.clear_background(webview_group_id);
         let render_instance = &mut self.webview_renderers.render_instance_mut(webview_group_id);
@@ -1537,7 +1538,7 @@ impl IOCompositor {
         }
 
         render_instance.webrender.update();
-        warn!("done webrender update");
+        //warn!("done webrender update");
         //}
 
         /*
@@ -1582,6 +1583,10 @@ impl IOCompositor {
 
         self.send_pending_paint_metrics_messages_after_composite();
         Ok(())
+    }
+
+    pub fn present_all(&self) {
+        self.webview_renderers.present_all();
     }
 
     /// Send all pending paint metrics messages after a composite operation, which may advance
@@ -1649,9 +1654,6 @@ impl IOCompositor {
 
     fn clear_background(&self, webview_group_id: RenderingGroupId) {
         self.webview_renderers.clear_background(webview_group_id);
-        /*
-
-        */
     }
 
     /*
@@ -1691,7 +1693,6 @@ impl IOCompositor {
 
         // Check for new messages coming from the other threads in the system.
         let mut found_recomposite_msg = false;
-        /*
         messages.retain(|message| {
             match message {
                 CompositorMsg::NewWebRenderFrameReady(..) if found_recomposite_msg => {
@@ -1716,7 +1717,6 @@ impl IOCompositor {
                 _ => true,
             }
         });
-        */
 
         for message in messages {
             self.handle_browser_message(message);

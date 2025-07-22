@@ -132,8 +132,8 @@ struct Index {
             this.urlToLoad = new_url
           })
           this.xComponentContext.registerPromptToastCallback(prompt_toast)
-        })
-        XComponent(this.xComponentAttrs)
+        }).height('50%')
+        XComponent(this.xComponentAttrs).height('50%')
       }
     }
     .width('100%')

@@ -132,7 +132,6 @@ impl RunningAppState {
         webview.focus();
         webview.raise_to_top(true);
     }
-
     pub(crate) fn create_toplevel_webview(self: &Rc<Self>, url: Url) -> WebView {
         let webview = WebViewBuilder::new(self.servo())
             .url(url)

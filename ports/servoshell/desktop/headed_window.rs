@@ -409,7 +409,7 @@ impl Window {
                 log::error!("NEW WINDOW");
                 let w = Window::new(&state.servoshell_preferences, event_loop);
                 state.create_new_window(
-                    Url::parse("https://www.duckduckgo.com").unwrap(),
+                    Url::parse("https://www.wikipedia.org").unwrap(),
                     w.rendering_context.clone(),
                 );
                 state.inner_mut().other_windows.push(Box::new(w));

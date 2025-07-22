@@ -268,7 +268,7 @@ impl Minibrowser {
     /// CentralPanel when [`Minibrowser::paint`] is called.
     pub fn update(&mut self, window: &Window, state: &RunningAppState, reason: &'static str) {
         let now = Instant::now();
-        trace!(
+        log::error!(
             "{:?} since last update ({})",
             now - self.last_update,
             reason
@@ -336,8 +336,8 @@ impl Minibrowser {
                                         if cfg!(target_os = "macos") {
                                             i.clone().consume_key(Modifiers::COMMAND, Key::L)
                                         } else {
-                                            i.clone().consume_key(Modifiers::COMMAND, Key::L) ||
-                                                i.clone().consume_key(Modifiers::ALT, Key::D)
+                                            i.clone().consume_key(Modifiers::COMMAND, Key::L)
+                                                || i.clone().consume_key(Modifiers::ALT, Key::D)
                                         }
                                     }) {
                                         // The focus request immediately makes gained_focus return true.
@@ -357,8 +357,8 @@ impl Minibrowser {
                                         }
                                     }
                                     // Navigate to address when enter is pressed in the address bar.
-                                    if location_field.lost_focus() &&
-                                        ui.input(|i| i.clone().key_pressed(Key::Enter))
+                                    if location_field.lost_focus()
+                                        && ui.input(|i| i.clone().key_pressed(Key::Enter))
                                     {
                                         event_queue
                                             .borrow_mut()
@@ -506,9 +506,9 @@ impl Minibrowser {
         //       because logical OR would short-circuit if any of the functions return true.
         //       We want to ensure that all functions are called. The "bitwise OR" operator
         //       does not short-circuit.
-        self.update_location_in_toolbar(state) |
-            self.update_load_status(state) |
-            self.update_status_text(state)
+        self.update_location_in_toolbar(state)
+            | self.update_load_status(state)
+            | self.update_status_text(state)
     }
 
     /// Returns true if a redraw is required after handling the provided event.

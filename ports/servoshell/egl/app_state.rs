@@ -97,6 +97,8 @@ struct RunningAppStateInner {
 
     /// The HiDPI scaling factor to use for the display of [`WebView`]s.
     hidpi_scale_factor: Scale<f32, DeviceIndependentPixel, DevicePixel>,
+
+    other_contexts: Vec<Rc<dyn RenderingContext>>,
 }
 
 struct ServoShellServoDelegate {
@@ -332,6 +334,7 @@ impl RunningAppState {
                 focused_webview_id: None,
                 animating_state_changed,
                 hidpi_scale_factor: Scale::new(hidpi_scale_factor),
+                other_contexts: vec![],
             }),
         });
 
@@ -353,13 +356,14 @@ impl RunningAppState {
 
     pub(crate) fn add_webview_context(self: &Rc<Self>, url: Url, rc: Rc<WindowRenderingContext>) {
         let webview = WebViewBuilder::new(&self.servo)
-            .url(Url::parse("https://www.duckduckgo.com").unwrap())
+            .url(Url::parse("https://m.wikipedia.com").unwrap())
             .hidpi_scale_factor(self.inner().hidpi_scale_factor)
             .delegate(self.clone())
-            .add_rendering_context(rc)
+            .add_rendering_context(rc.clone())
             .build();
         webview.focus();
         self.add(webview.clone());
+        self.inner_mut().other_contexts.push(rc);
     }
 
     fn own_custom_webview(self: &Rc<Self>, second_rendering_context: Rc<WindowRenderingContext>) {
@@ -661,6 +665,9 @@ impl RunningAppState {
     }
 
     pub fn notify_vsync(&self) {
+        for (id, webview) in &self.inner().webviews {
+            webview.notify_vsync();
+        }
         self.active_webview().notify_vsync();
         self.perform_updates();
     }
@@ -721,6 +728,9 @@ impl RunningAppState {
             }
             save_output_image_if_necessary(&self.servoshell_preferences, &self.rendering_context);
             self.rendering_context.present();
+            for i in &self.inner().other_contexts {
+                i.present();
+            }
             if self.servoshell_preferences.exit_after_stable_image {
                 self.request_shutdown();
             }

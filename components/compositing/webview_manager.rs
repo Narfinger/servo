@@ -78,7 +78,7 @@ impl webrender_api::RenderNotifier for MyRenderNotifier {
             document_id,
             frame_ready_params.render,
         ));
-        error!("RenderNotifier push");
+        error!("RenderNotifier push from {document_id:?}");
     }
 }
 
@@ -150,7 +150,11 @@ impl<WebView> WebViewManager<WebView> {
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
         let color = servo_config::pref!(shell_background_color_rgba);
-        gl.clear_color(0.2, 0.3, 1.0, 0.5);
+        if webview_group_id == 1 {
+            gl.clear_color(0.2, 0.3, 1.0, 0.5);
+        } else {
+            gl.clear_color(0.8, 0.3, 0.2, 0.5);
+        }
 
         //color[0] as f32,
         //color[1] as f32,
@@ -170,7 +174,7 @@ impl<WebView> WebViewManager<WebView> {
         gid: RenderingGroupId,
         transaction: Transaction,
     ) {
-        warn!("sending some transaction to {gid}");
+        //warn!("sending some transaction to {gid}");
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
         rect.webrender_api
             .send_transaction(rect.webrender_document, transaction);
@@ -230,7 +234,11 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     fn webrender_options(&self, id: u64) -> WebRenderOptions {
-        let clear_color = ColorF::new(0.1, 0.3, 0.7, 1.0);
+        let clear_color = if id == 1 {
+            ColorF::new(0.1, 0.3, 0.7, 1.0)
+        } else {
+            ColorF::new(0.8, 0.3, 0.1, 1.0)
+        };
         webrender::WebRenderOptions {
             // We force the use of optimized shaders here because rendering is broken
             // on Android emulators with unoptimized shaders. This is due to a known
@@ -323,6 +331,12 @@ impl<WebView> WebViewManager<WebView> {
             .expect("No Context")
             .rendering_context
             .size2d()
+    }
+
+    pub(crate) fn present_all(&self) {
+        for webrender in self.rendering_contexts() {
+            webrender.rendering_context.present();
+        }
     }
 
     pub(crate) fn group_id(&self, webview_id: WebViewId) -> Option<RenderingGroupId> {
