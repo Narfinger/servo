@@ -268,7 +268,7 @@ impl Minibrowser {
     /// CentralPanel when [`Minibrowser::paint`] is called.
     pub fn update(&mut self, window: &Window, state: &RunningAppState, reason: &'static str) {
         let now = Instant::now();
-        log::error!(
+        trace!(
             "{:?} since last update ({})",
             now - self.last_update,
             reason
@@ -291,100 +291,19 @@ impl Minibrowser {
                 let frame = egui::Frame::default()
                     .fill(ctx.style().visuals.window_fill)
                     .inner_margin(4.0);
-                TopBottomPanel::top("toolbar").frame(frame).show(ctx, |ui| {
-                    ui.allocate_ui_with_layout(
-                        ui.available_size(),
-                        egui::Layout::left_to_right(egui::Align::Center),
-                        |ui| {
-                            if ui.add(Minibrowser::toolbar_button("⏴")).clicked() {
-                                event_queue.borrow_mut().push(MinibrowserEvent::Back);
-                            }
-                            if ui.add(Minibrowser::toolbar_button("⏵")).clicked() {
-                                event_queue.borrow_mut().push(MinibrowserEvent::Forward);
-                            }
-
-                            match self.load_status {
-                                LoadStatus::Started | LoadStatus::HeadParsed => {
-                                    if ui.add(Minibrowser::toolbar_button("X")).clicked() {
-                                        warn!("Do not support stop yet.");
-                                    }
-                                },
-                                LoadStatus::Complete => {
-                                    if ui.add(Minibrowser::toolbar_button("↻")).clicked() {
-                                        event_queue.borrow_mut().push(MinibrowserEvent::Reload);
-                                    }
-                                },
-                            }
-                            ui.add_space(2.0);
-
-                            ui.allocate_ui_with_layout(
-                                ui.available_size(),
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    let location_id = egui::Id::new("location_input");
-                                    let location_field = ui.add_sized(
-                                        ui.available_size(),
-                                        egui::TextEdit::singleline(&mut *location.borrow_mut())
-                                            .id(location_id),
-                                    );
-
-                                    if location_field.changed() {
-                                        location_dirty.set(true);
-                                    }
-                                    // Handle adddress bar shortcut.
-                                    if ui.input(|i| {
-                                        if cfg!(target_os = "macos") {
-                                            i.clone().consume_key(Modifiers::COMMAND, Key::L)
-                                        } else {
-                                            i.clone().consume_key(Modifiers::COMMAND, Key::L)
-                                                || i.clone().consume_key(Modifiers::ALT, Key::D)
-                                        }
-                                    }) {
-                                        // The focus request immediately makes gained_focus return true.
-                                        location_field.request_focus();
-                                    }
-                                    // Select address bar text when it's focused (click or shortcut).
-                                    if location_field.gained_focus() {
-                                        if let Some(mut state) =
-                                            TextEditState::load(ui.ctx(), location_id)
-                                        {
-                                            // Select the whole input.
-                                            state.cursor.set_char_range(Some(CCursorRange::two(
-                                                CCursor::new(0),
-                                                CCursor::new(location.borrow().len()),
-                                            )));
-                                            state.store(ui.ctx(), location_id);
-                                        }
-                                    }
-                                    // Navigate to address when enter is pressed in the address bar.
-                                    if location_field.lost_focus()
-                                        && ui.input(|i| i.clone().key_pressed(Key::Enter))
-                                    {
-                                        event_queue
-                                            .borrow_mut()
-                                            .push(MinibrowserEvent::Go(location.borrow().clone()));
-                                    }
-                                },
-                            );
-                        },
-                    );
-                });
+                Minibrowser::paint_top_panel(
+                    event_queue,
+                    location,
+                    location_dirty,
+                    ctx,
+                    frame,
+                    self.load_status,
+                );
             };
 
             // A simple Tab header strip
             TopBottomPanel::top("tabs").show(ctx, |ui| {
-                ui.allocate_ui_with_layout(
-                    ui.available_size(),
-                    egui::Layout::left_to_right(egui::Align::Center),
-                    |ui| {
-                        for (_, webview) in state.webviews().into_iter() {
-                            Self::browser_tab(ui, webview, &mut event_queue.borrow_mut());
-                        }
-                        if ui.add(Minibrowser::toolbar_button("+")).clicked() {
-                            event_queue.borrow_mut().push(MinibrowserEvent::NewWebView);
-                        }
-                    },
-                );
+                Minibrowser::paint_tab_list(state, event_queue, ui);
             });
 
             // The toolbar height is where the Context’s available rect starts.
@@ -403,50 +322,176 @@ impl Minibrowser {
                 return;
             };
             CentralPanel::default().frame(Frame::NONE).show(ctx, |ui| {
-                // If the top parts of the GUI changed size, then update the size of the WebView and also
-                // the size of its RenderingContext.
-                let available_size = ui.available_size();
-                let size = Size2D::new(available_size.x, available_size.y) * scale;
-                let rect = Box2D::from_origin_and_size(Point2D::origin(), size);
-                if rect != webview.rect() {
-                    webview.move_resize(rect);
-                    webview.resize(PhysicalSize::new(size.width as u32, size.height as u32))
-                }
-
-                let min = ui.cursor().min;
-                let size = ui.available_size();
-                let rect = egui::Rect::from_min_size(min, size);
-                ui.allocate_space(size);
-
-                if let Some(status_text) = &self.status_text {
-                    egui::containers::popup::show_tooltip_at(
-                        ctx,
-                        ui.layer_id(),
-                        "tooltip layer".into(),
-                        pos2(0.0, ctx.available_rect().max.y),
-                        |ui| ui.add(Label::new(status_text.clone()).extend()),
-                    );
-                }
-
-                state.repaint_servo_if_necessary();
-
-                if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
-                    ui.painter().add(PaintCallback {
-                        rect,
-                        callback: Arc::new(CallbackFn::new(move |info, painter| {
-                            let clip = info.viewport_in_pixels();
-                            let rect_in_parent = Rect::new(
-                                Point2D::new(clip.left_px, clip.from_bottom_px),
-                                Size2D::new(clip.width_px, clip.height_px),
-                            );
-                            render_to_parent(painter.gl(), rect_in_parent)
-                        })),
-                    });
-                }
+                Minibrowser::paint_main(
+                    state,
+                    rendering_context,
+                    ctx,
+                    scale,
+                    webview,
+                    ui,
+                    &self.status_text,
+                );
             });
 
             *last_update = now;
         });
+    }
+
+    fn paint_main(
+        state: &RunningAppState,
+        rendering_context: &mut Rc<OffscreenRenderingContext>,
+        ctx: &egui::Context,
+        scale: Scale<f32, DeviceIndependentPixel, DevicePixel>,
+        webview: WebView,
+        ui: &mut egui::Ui,
+        status_text: &Option<String>,
+    ) {
+        // If the top parts of the GUI changed size, then update the size of the WebView and also
+        // the size of its RenderingContext.
+        let available_size = ui.available_size();
+        let size = Size2D::new(available_size.x, available_size.y) * scale;
+        let rect = Box2D::from_origin_and_size(Point2D::origin(), size);
+        if rect != webview.rect() {
+            webview.move_resize(rect);
+            webview.resize(PhysicalSize::new(size.width as u32, size.height as u32))
+        }
+
+        let min = ui.cursor().min;
+        let size = ui.available_size();
+        let rect = egui::Rect::from_min_size(min, size);
+        ui.allocate_space(size);
+
+        if let Some(status_text) = status_text {
+            egui::containers::popup::show_tooltip_at(
+                ctx,
+                ui.layer_id(),
+                "tooltip layer".into(),
+                pos2(0.0, ctx.available_rect().max.y),
+                |ui| ui.add(Label::new(status_text.clone()).extend()),
+            );
+        }
+
+        state.repaint_servo_if_necessary();
+
+        if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
+            ui.painter().add(PaintCallback {
+                rect,
+                callback: Arc::new(CallbackFn::new(move |info, painter| {
+                    let clip = info.viewport_in_pixels();
+                    let rect_in_parent = Rect::new(
+                        Point2D::new(clip.left_px, clip.from_bottom_px),
+                        Size2D::new(clip.width_px, clip.height_px),
+                    );
+                    render_to_parent(painter.gl(), rect_in_parent)
+                })),
+            });
+        }
+    }
+
+    fn paint_top_panel(
+        event_queue: &mut RefCell<Vec<MinibrowserEvent>>,
+        location: &mut RefCell<String>,
+        location_dirty: &mut Cell<bool>,
+        ctx: &egui::Context,
+        frame: Frame,
+        load_status: LoadStatus,
+    ) {
+        TopBottomPanel::top("toolbar").frame(frame).show(ctx, |ui| {
+            ui.allocate_ui_with_layout(
+                ui.available_size(),
+                egui::Layout::left_to_right(egui::Align::Center),
+                |ui| {
+                    if ui.add(Minibrowser::toolbar_button("⏴")).clicked() {
+                        event_queue.borrow_mut().push(MinibrowserEvent::Back);
+                    }
+                    if ui.add(Minibrowser::toolbar_button("⏵")).clicked() {
+                        event_queue.borrow_mut().push(MinibrowserEvent::Forward);
+                    }
+
+                    match load_status {
+                        LoadStatus::Started | LoadStatus::HeadParsed => {
+                            if ui.add(Minibrowser::toolbar_button("X")).clicked() {
+                                warn!("Do not support stop yet.");
+                            }
+                        },
+                        LoadStatus::Complete => {
+                            if ui.add(Minibrowser::toolbar_button("↻")).clicked() {
+                                event_queue.borrow_mut().push(MinibrowserEvent::Reload);
+                            }
+                        },
+                    }
+                    ui.add_space(2.0);
+
+                    ui.allocate_ui_with_layout(
+                        ui.available_size(),
+                        egui::Layout::right_to_left(egui::Align::Center),
+                        |ui| {
+                            let location_id = egui::Id::new("location_input");
+                            let location_field = ui.add_sized(
+                                ui.available_size(),
+                                egui::TextEdit::singleline(&mut *location.borrow_mut())
+                                    .id(location_id),
+                            );
+
+                            if location_field.changed() {
+                                location_dirty.set(true);
+                            }
+                            // Handle adddress bar shortcut.
+                            if ui.input(|i| {
+                                if cfg!(target_os = "macos") {
+                                    i.clone().consume_key(Modifiers::COMMAND, Key::L)
+                                } else {
+                                    i.clone().consume_key(Modifiers::COMMAND, Key::L)
+                                        || i.clone().consume_key(Modifiers::ALT, Key::D)
+                                }
+                            }) {
+                                // The focus request immediately makes gained_focus return true.
+                                location_field.request_focus();
+                            }
+                            // Select address bar text when it's focused (click or shortcut).
+                            if location_field.gained_focus() {
+                                if let Some(mut state) = TextEditState::load(ui.ctx(), location_id)
+                                {
+                                    // Select the whole input.
+                                    state.cursor.set_char_range(Some(CCursorRange::two(
+                                        CCursor::new(0),
+                                        CCursor::new(location.borrow().len()),
+                                    )));
+                                    state.store(ui.ctx(), location_id);
+                                }
+                            }
+                            // Navigate to address when enter is pressed in the address bar.
+                            if location_field.lost_focus()
+                                && ui.input(|i| i.clone().key_pressed(Key::Enter))
+                            {
+                                event_queue
+                                    .borrow_mut()
+                                    .push(MinibrowserEvent::Go(location.borrow().clone()));
+                            }
+                        },
+                    );
+                },
+            );
+        });
+    }
+
+    fn paint_tab_list(
+        state: &RunningAppState,
+        event_queue: &mut RefCell<Vec<MinibrowserEvent>>,
+        ui: &mut egui::Ui,
+    ) {
+        ui.allocate_ui_with_layout(
+            ui.available_size(),
+            egui::Layout::left_to_right(egui::Align::Center),
+            |ui| {
+                for (_, webview) in state.webviews().into_iter() {
+                    Self::browser_tab(ui, webview, &mut event_queue.borrow_mut());
+                }
+                if ui.add(Minibrowser::toolbar_button("+")).clicked() {
+                    event_queue.borrow_mut().push(MinibrowserEvent::NewWebView);
+                }
+            },
+        );
     }
 
     /// Paint the minibrowser, as of the last update.

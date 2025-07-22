@@ -37,6 +37,7 @@ use winit::keyboard::{Key as LogicalKey, ModifiersState, NamedKey};
 use winit::platform::wayland::WindowAttributesExtWayland;
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 use winit::window::Icon;
+use winit::window::WindowAttributes;
 #[cfg(target_os = "macos")]
 use {
     objc2_app_kit::{NSColorSpace, NSView},
@@ -407,12 +408,20 @@ impl Window {
             })
             .shortcut(CMD_OR_CONTROL, 'T', || {
                 log::error!("NEW WINDOW");
-                let w = Window::new(&state.servoshell_preferences, event_loop);
+
+                /*
+                    let dh = w.display_handle().expect("DH");
+                    let wh = w.window_handle().expect("WH");
+                    let window_rendering_context = Rc::new(
+                        WindowRenderingContext::new(dh, wh, w.inner_size())
+                        .expect("Could not create RenderingContext for Window"),
+                    );
                 state.create_new_window(
                     Url::parse("https://www.wikipedia.org").unwrap(),
-                    w.rendering_context.clone(),
+                    window_rendering_context,
                 );
-                state.inner_mut().other_windows.push(Box::new(w));
+                */
+                //state.inner_mut().other_windows.push(Box::new(w));
                 //state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
             })
             .shortcut(CMD_OR_CONTROL, 'Q', || state.servo().start_shutting_down())
