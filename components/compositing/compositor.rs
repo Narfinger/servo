@@ -1544,7 +1544,15 @@ impl IOCompositor {
             warn!("Failed to make the rendering context current: {:?}", err);
         }
 
+        debug_assert_eq!(
+            render_instance.webrender_gl.get_error(),
+            gleam::gl::NO_ERROR
+        );
         render_instance.webrender.update();
+        debug_assert_eq!(
+            render_instance.webrender_gl.get_error(),
+            gleam::gl::NO_ERROR
+        );
         //warn!("done webrender update");
         //}
 
@@ -1565,6 +1573,11 @@ impl IOCompositor {
 
         render_instance.rendering_context.prepare_for_rendering();
         error!("done preparing");
+        error!("{:?}", render_instance.webrender_gl.get_error());
+        debug_assert_eq!(
+            render_instance.webrender_gl.get_error(),
+            gleam::gl::NO_ERROR
+        );
 
         let time_profiler_chan = self.global.borrow().time_profiler_chan.clone();
         /*
@@ -1583,7 +1596,7 @@ impl IOCompositor {
 
         let size = render_instance.rendering_context.size2d().to_i32();
 
-        self.webview_renderers.assert_no_gl_error(webview_group_id);
+        //self.webview_renderers.assert_no_gl_error(webview_group_id);
         let v = render_instance.webrender.render(size, 0 /* buffer_age */);
         //}
         //},
