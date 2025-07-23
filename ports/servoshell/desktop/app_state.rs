@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use crossbeam_channel::Receiver;
+use egui::Window;
 use euclid::Vector2D;
 use keyboard_types::{Key, Modifiers, ShortcutMatcher};
 use log::{error, info};
@@ -30,6 +31,7 @@ use super::dialog::Dialog;
 use super::gamepad::GamepadSupport;
 use super::keyutils::CMD_OR_CONTROL;
 use super::window_trait::{LINE_HEIGHT, WindowPortsMethods};
+use crate::desktop::headed_window;
 use crate::output_image::save_output_image_if_necessary;
 use crate::prefs::ServoShellPreferences;
 
@@ -83,6 +85,7 @@ pub struct RunningAppStateInner {
 
     /// Windows that are not the main window (kind of hacky)
     pub(crate) other_windows: Vec<(WebView, Rc<dyn RenderingContext>)>,
+    pub(crate) windows: Vec<headed_window::Window>,
 
     /// Gamepad support, which may be `None` if it failed to initialize.
     gamepad_support: Option<GamepadSupport>,
@@ -121,6 +124,7 @@ impl RunningAppState {
                 dialogs: Default::default(),
                 window,
                 other_windows: vec![],
+                windows: vec![],
                 gamepad_support: GamepadSupport::maybe_new(),
                 need_update: false,
                 need_repaint: false,

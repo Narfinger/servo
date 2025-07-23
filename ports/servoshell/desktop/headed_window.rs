@@ -417,7 +417,7 @@ impl Window {
                     window_rendering_context,
                 );
 
-                //state.inner_mut().other_windows.push(Box::new(w));
+                state.inner_mut().windows.push(w);
                 //state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
             })
             .shortcut(CMD_OR_CONTROL, 'Q', || state.servo().start_shutting_down())
