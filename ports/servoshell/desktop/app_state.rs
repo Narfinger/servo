@@ -18,9 +18,10 @@ use servo::webrender_api::ScrollLocation;
 use servo::webrender_api::units::{DeviceIntPoint, DeviceIntSize};
 use servo::{
     AllowOrDenyRequest, AuthenticationRequest, FilterPattern, FormControl, GamepadHapticEffectType,
-    KeyboardEvent, LoadStatus, PermissionRequest, RenderingContext, Servo, ServoDelegate,
-    ServoError, SimpleDialog, WebDriverCommandMsg, WebDriverJSResult, WebDriverJSValue,
-    WebDriverLoadStatus, WebView, WebViewBuilder, WebViewDelegate,
+    KeyboardEvent, LoadStatus, OffscreenRenderingContext, PermissionRequest, RenderingContext,
+    Servo, ServoDelegate, ServoError, SimpleDialog, WebDriverCommandMsg, WebDriverJSResult,
+    WebDriverJSValue, WebDriverLoadStatus, WebView, WebViewBuilder, WebViewDelegate,
+    WindowRenderingContext,
 };
 use url::Url;
 
@@ -81,7 +82,7 @@ pub struct RunningAppStateInner {
     window: Rc<dyn WindowPortsMethods>,
 
     /// Windows that are not the main window (kind of hacky)
-    pub(crate) other_windows: Vec<Box<dyn WindowPortsMethods>>,
+    pub(crate) other_windows: Vec<(WebView, Rc<dyn RenderingContext>)>,
 
     /// Gamepad support, which may be `None` if it failed to initialize.
     gamepad_support: Option<GamepadSupport>,
@@ -144,13 +145,18 @@ impl RunningAppState {
         webview
     }
 
-    pub(crate) fn create_new_window(self: &Rc<Self>, url: Url, rc: Rc<dyn RenderingContext>) {
+    pub(crate) fn create_new_window(
+        self: &Rc<Self>,
+        url: Url,
+        window_ctx: Rc<dyn RenderingContext>,
+    ) {
         let webview = WebViewBuilder::new(self.servo())
             .url(url)
             .delegate(self.clone())
-            .add_rendering_context(rc)
+            .add_rendering_context(window_ctx.clone())
             .build();
         self.add(webview.clone());
+        self.inner_mut().other_windows.push((webview, window_ctx));
     }
 
     pub(crate) fn inner(&self) -> Ref<RunningAppStateInner> {
@@ -481,10 +487,6 @@ impl RunningAppState {
                 info!("Notify dialog appear failed. Maybe the channel to webdriver is closed: {err}");
             });
         }
-    }
-
-    pub(crate) fn add_window(&self, window: Box<dyn WindowPortsMethods>) {
-        self.inner_mut().other_windows.push(window);
     }
 }
 

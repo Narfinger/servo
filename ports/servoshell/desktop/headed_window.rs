@@ -21,8 +21,8 @@ use servo::webrender_api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, 
 use servo::{
     Cursor, ImeEvent, InputEvent, Key, KeyState, KeyboardEvent, MouseButton as ServoMouseButton,
     MouseButtonAction, MouseButtonEvent, MouseLeaveEvent, MouseMoveEvent,
-    OffscreenRenderingContext, RenderingContext, ScreenGeometry, Theme, TouchEvent, TouchEventType,
-    TouchId, WebRenderDebugOption, WebView, WheelDelta, WheelEvent, WheelMode,
+    OffscreenRenderingContext, RenderingContext, ScreenGeometry, Servo, Theme, TouchEvent,
+    TouchEventType, TouchId, WebRenderDebugOption, WebView, WheelDelta, WheelEvent, WheelMode,
     WindowRenderingContext,
 };
 use surfman::{Context, Device};
@@ -408,19 +408,15 @@ impl Window {
             })
             .shortcut(CMD_OR_CONTROL, 'T', || {
                 log::error!("NEW WINDOW");
+                let w = Window::new(&ServoShellPreferences::default(), event_loop);
 
-                /*
-                    let dh = w.display_handle().expect("DH");
-                    let wh = w.window_handle().expect("WH");
-                    let window_rendering_context = Rc::new(
-                        WindowRenderingContext::new(dh, wh, w.inner_size())
-                        .expect("Could not create RenderingContext for Window"),
-                    );
+                let window_rendering_context = w.rendering_context();
+
                 state.create_new_window(
                     Url::parse("https://www.wikipedia.org").unwrap(),
                     window_rendering_context,
                 );
-                */
+
                 //state.inner_mut().other_windows.push(Box::new(w));
                 //state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
             })

@@ -324,14 +324,52 @@ impl Minibrowser {
             CentralPanel::default().frame(Frame::NONE).show(ctx, |ui| {
                 Minibrowser::paint_main(
                     state,
-                    rendering_context,
+                    rendering_context.clone(),
                     ctx,
                     scale,
                     webview,
                     ui,
                     &self.status_text,
                 );
+                if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
+                    let min = ui.cursor().min;
+                    let size = ui.available_size();
+                    let rect = egui::Rect::from_min_size(min, size);
+                    ui.painter().add(PaintCallback {
+                        rect,
+                        callback: Arc::new(CallbackFn::new(move |info, painter| {
+                            let clip = info.viewport_in_pixels();
+                            let rect_in_parent = Rect::new(
+                                Point2D::new(clip.left_px, clip.from_bottom_px),
+                                Size2D::new(clip.width_px, clip.height_px),
+                            );
+                            render_to_parent(painter.gl(), rect_in_parent)
+                        })),
+                    });
+                }
             });
+
+            for (webview, window_ctx) in &state.inner().other_windows {
+                ctx.show_viewport_immediate(
+                    egui::ViewportId::from_hash_of("immediate_viewport"),
+                    egui::ViewportBuilder::default(),
+                    |ctx, class| {
+                        egui::CentralPanel::default()
+                            .frame(Frame::NONE)
+                            .show(ctx, |ui| {
+                                Minibrowser::paint_main(
+                                    state,
+                                    window_ctx.clone(),
+                                    ctx,
+                                    scale,
+                                    webview.clone(),
+                                    ui,
+                                    &Some(String::from("FOO")),
+                                )
+                            });
+                    },
+                )
+            }
 
             *last_update = now;
         });
@@ -339,7 +377,7 @@ impl Minibrowser {
 
     fn paint_main(
         state: &RunningAppState,
-        rendering_context: &mut Rc<OffscreenRenderingContext>,
+        rendering_context: Rc<dyn RenderingContext>,
         ctx: &egui::Context,
         scale: Scale<f32, DeviceIndependentPixel, DevicePixel>,
         webview: WebView,
@@ -372,20 +410,6 @@ impl Minibrowser {
         }
 
         state.repaint_servo_if_necessary();
-
-        if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
-            ui.painter().add(PaintCallback {
-                rect,
-                callback: Arc::new(CallbackFn::new(move |info, painter| {
-                    let clip = info.viewport_in_pixels();
-                    let rect_in_parent = Rect::new(
-                        Point2D::new(clip.left_px, clip.from_bottom_px),
-                        Size2D::new(clip.width_px, clip.height_px),
-                    );
-                    render_to_parent(painter.gl(), rect_in_parent)
-                })),
-            });
-        }
     }
 
     fn paint_top_panel(
