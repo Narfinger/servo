@@ -113,6 +113,10 @@ impl<WebView> WebViewManager<WebView> {
     }
 }
 
+fn gl_error_panic(gl: &dyn Gl, s: &str, e: gleam::gl::GLenum) {
+    panic!("FOUND GL ERROR s: {:?}, e: {:?}", s, e);
+}
+
 impl<WebView> WebViewManager<WebView> {
     pub(crate) fn rendering_contexts(&self) -> impl Iterator<Item = &WebRenderInstance> {
         self.rendering_contexts.iter().map(|(_, v)| v)
@@ -277,7 +281,7 @@ impl<WebView> WebViewManager<WebView> {
         };
 
         error!("WebGroupId {:?} {:?}", new_group_id, self.last_used_id);
-        let gl = rendering_context.gleam_gl_api();
+        let gl = ErrorReactingGl::wrap(rendering_context.gleam_gl_api(), gl_error_panic);
         error!("Running on {}", gl.get_string(gleam::gl::RENDERER));
         error!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
 
