@@ -15,6 +15,7 @@ use compositing_traits::rendering_context::{self, RenderingContext};
 use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
+use libc::group;
 use log::{error, warn};
 use servo_config::{opts, pref};
 use webrender::{
@@ -155,11 +156,17 @@ impl<WebView> WebViewManager<WebView> {
         self.send_transaction_to_group(gid, transaction);
     }
 
+    pub(crate) fn assert_no_gl_error(&self, group_id: RenderingGroupId) {
+        let rtc = self.rendering_contexts.get(&group_id).expect("No group");
+        debug_assert_eq!(rtc.webrender_gl.get_error(), gleam::gl::NO_ERROR);
+    }
+
     pub(crate) fn send_transaction_to_group(
         &mut self,
         gid: RenderingGroupId,
         transaction: Transaction,
     ) {
+        self.assert_no_gl_error(gid);
         //warn!("sending some transaction to {gid}");
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
         rect.webrender_api
@@ -175,7 +182,8 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn flush_scene_builder(&self) {
-        for i in self.rendering_contexts.values() {
+        for (key, i) in self.rendering_contexts.iter() {
+            self.assert_no_gl_error(*key);
             i.webrender_api.flush_scene_builder();
         }
     }
@@ -201,13 +209,17 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn render_instance(&self, group_id: RenderingGroupId) -> &WebRenderInstance {
+        self.assert_no_gl_error(group_id);
         self.rendering_contexts.get(&group_id).unwrap()
     }
 
     pub(crate) fn document_id(&self, webview_id: &WebViewId) -> DocumentId {
         self.webview_groups
             .get(webview_id)
-            .and_then(|rgid| self.rendering_contexts.get(rgid))
+            .and_then(|rgid| {
+                self.assert_no_gl_error(*rgid);
+                self.rendering_contexts.get(rgid)
+            })
             .map(|rg| rg.webrender_document)
             .expect("Could not find")
     }
@@ -216,6 +228,7 @@ impl<WebView> WebViewManager<WebView> {
         &mut self,
         group_id: RenderingGroupId,
     ) -> &mut WebRenderInstance {
+        self.assert_no_gl_error(group_id);
         self.rendering_contexts.get_mut(&group_id).unwrap()
     }
 
@@ -303,6 +316,7 @@ impl<WebView> WebViewManager<WebView> {
 
         self.rendering_contexts.insert(new_group_id, s);
         self.painting_order.insert(new_group_id, vec![]);
+        self.assert_no_gl_error(new_group_id);
         new_group_id
     }
 

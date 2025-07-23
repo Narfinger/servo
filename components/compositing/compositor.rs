@@ -1534,6 +1534,8 @@ impl IOCompositor {
         &mut self,
         webview_group_id: RenderingGroupId,
     ) -> Result<(), UnableToComposite> {
+        self.webview_renderers.assert_no_gl_error(webview_group_id);
+
         //warn!("render_inner for {webview_group_id}");
         //self.assert_no_gl_error();
         self.clear_background(webview_group_id);
@@ -1581,6 +1583,7 @@ impl IOCompositor {
 
         let size = render_instance.rendering_context.size2d().to_i32();
 
+        self.webview_renderers.assert_no_gl_error(webview_group_id);
         let v = render_instance.webrender.render(size, 0 /* buffer_age */);
         //}
         //},
