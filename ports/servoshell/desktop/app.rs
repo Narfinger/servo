@@ -61,6 +61,7 @@ pub struct App {
     t_start: Instant,
     t: Instant,
     state: AppState,
+    events_loop: EventLoop,
 
     // This is the last field of the struct to ensure that windows are dropped *after* all other
     // references to the relevant rendering contexts have been destroyed.
@@ -106,6 +107,7 @@ impl App {
             t_start: t,
             t,
             state: AppState::Initializing,
+            events_loop: events_loop.clone(),
         }
     }
 
@@ -336,6 +338,23 @@ impl App {
                 MinibrowserEvent::CloseWebView(id) => {
                     minibrowser.update_location_dirty(false);
                     state.close_webview(id);
+                },
+                MinibrowserEvent::AddWindow => {
+                    let window = {
+                        let window = headed_window::Window::new(
+                            &self.servoshell_preferences,
+                            self.events_loop,
+                        );
+                        self.minibrowser = Some(Minibrowser::new(
+                            &window,
+                            self.events_loop,
+                            self.proxy.unwrap(),
+                            self.initial_url.clone(),
+                        ));
+                        Rc::new(window)
+                    };
+
+                    self.windows.insert(window.id(), window);
                 },
             }
         }
@@ -665,8 +684,10 @@ impl ApplicationHandler<AppEvent> for App {
             // WARNING: do not defer painting or presenting to some later tick of the event
             // loop or servoshell may become unresponsive! (servo#30312)
             if let Some(ref mut minibrowser) = self.minibrowser {
-                minibrowser.update(window.winit_window().unwrap(), state, "RedrawRequested");
-                minibrowser.paint(window.winit_window().unwrap());
+                for i in self.windows.values() {
+                    minibrowser.update(i.winit_window().unwrap(), state, "RedrawRequested");
+                    minibrowser.paint(i.winit_window().unwrap());
+                }
             }
         }
 

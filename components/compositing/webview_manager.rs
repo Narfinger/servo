@@ -141,7 +141,7 @@ impl<WebView> WebViewManager<WebView> {
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
         let color = servo_config::pref!(shell_background_color_rgba);
-        if webview_group_id == 1 {
+        if webview_group_id == 0 {
             gl.clear_color(0.2, 0.3, 1.0, 0.5);
         } else {
             gl.clear_color(0.8, 0.3, 0.2, 0.5);
@@ -281,7 +281,7 @@ impl<WebView> WebViewManager<WebView> {
         };
 
         error!("WebGroupId {:?} {:?}", new_group_id, self.last_used_id);
-        let gl = ErrorReactingGl::wrap(rendering_context.gleam_gl_api(), gl_error_panic);
+        let gl = gleam::gl::ErrorReactingGl::wrap(rendering_context.gleam_gl_api(), gl_error_panic);
         error!("Running on {}", gl.get_string(gleam::gl::RENDERER));
         error!("OpenGL Version {}", gl.get_string(gleam::gl::VERSION));
 
@@ -304,6 +304,10 @@ impl<WebView> WebViewManager<WebView> {
 
         let api = sender.create_api();
         let webrender_document = api.add_document(rendering_context.size2d().to_i32());
+        error!(
+            "WebviewGroupId: {:?}, has rendering document {:?}",
+            new_group_id, webrender_document
+        );
         let s = WebRenderInstance {
             sender,
             webrender_api: api,
