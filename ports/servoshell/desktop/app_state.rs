@@ -4,11 +4,11 @@
 
 use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::path::PathBuf;
 use std::rc::Rc;
 
 use crossbeam_channel::Receiver;
-use egui::Window;
 use euclid::Vector2D;
 use keyboard_types::{Key, Modifiers, ShortcutMatcher};
 use log::{error, info};
@@ -18,11 +18,11 @@ use servo::ipc_channel::ipc::IpcSender;
 use servo::webrender_api::ScrollLocation;
 use servo::webrender_api::units::{DeviceIntPoint, DeviceIntSize};
 use servo::{
-    AllowOrDenyRequest, AuthenticationRequest, FilterPattern, FormControl, GamepadHapticEffectType,
-    KeyboardEvent, LoadStatus, OffscreenRenderingContext, PermissionRequest, RenderingContext,
-    Servo, ServoDelegate, ServoError, SimpleDialog, WebDriverCommandMsg, WebDriverJSResult,
-    WebDriverJSValue, WebDriverLoadStatus, WebView, WebViewBuilder, WebViewDelegate,
-    WindowRenderingContext,
+    AllowOrDenyRequest, AuthenticationRequest, FilterPattern, FocusId, FormControl,
+    GamepadHapticEffectType, KeyboardEvent, LoadStatus, PermissionRequest, Servo, ServoDelegate,
+    ServoError, SimpleDialog, TraversalId, WebDriverCommandMsg, WebDriverJSResult,
+    WebDriverJSValue, WebDriverLoadStatus, WebDriverUserPrompt, WebView, WebViewBuilder,
+    WebViewDelegate,
 };
 use url::Url;
 
@@ -30,8 +30,7 @@ use super::app::PumpResult;
 use super::dialog::Dialog;
 use super::gamepad::GamepadSupport;
 use super::keyutils::CMD_OR_CONTROL;
-use super::window_trait::{LINE_HEIGHT, WindowPortsMethods};
-use crate::desktop::headed_window;
+use super::window_trait::{LINE_HEIGHT, LINE_WIDTH, WindowPortsMethods};
 use crate::output_image::save_output_image_if_necessary;
 use crate::prefs::ServoShellPreferences;
 
@@ -47,6 +46,8 @@ pub(crate) enum AppState {
 struct WebDriverSenders {
     pub load_status_senders: HashMap<WebViewId, IpcSender<WebDriverLoadStatus>>,
     pub script_evaluation_interrupt_sender: Option<IpcSender<WebDriverJSResult>>,
+    pub pending_traversals: HashMap<TraversalId, IpcSender<WebDriverLoadStatus>>,
+    pub pending_focus: HashMap<FocusId, IpcSender<bool>>,
 }
 
 pub(crate) struct RunningAppState {
@@ -56,7 +57,7 @@ pub(crate) struct RunningAppState {
     servo: Servo,
     /// The preferences for this run of servoshell. This is not mutable, so doesn't need to
     /// be stored inside the [`RunningAppStateInner`].
-    pub(crate) servoshell_preferences: ServoShellPreferences,
+    servoshell_preferences: ServoShellPreferences,
     /// A [`Receiver`] for receiving commands from a running WebDriver server, if WebDriver
     /// was enabled.
     webdriver_receiver: Option<Receiver<WebDriverCommandMsg>>,
@@ -82,10 +83,6 @@ pub struct RunningAppStateInner {
 
     /// A handle to the Window that Servo is rendering in -- either headed or headless.
     window: Rc<dyn WindowPortsMethods>,
-
-    /// Windows that are not the main window (kind of hacky)
-    pub(crate) other_windows: Vec<(WebView, Rc<dyn RenderingContext>)>,
-    pub(crate) windows: Vec<headed_window::Window>,
 
     /// Gamepad support, which may be `None` if it failed to initialize.
     gamepad_support: Option<GamepadSupport>,
@@ -123,8 +120,6 @@ impl RunningAppState {
                 focused_webview_id: None,
                 dialogs: Default::default(),
                 window,
-                other_windows: vec![],
-                windows: vec![],
                 gamepad_support: GamepadSupport::maybe_new(),
                 need_update: false,
                 need_repaint: false,
@@ -137,6 +132,7 @@ impl RunningAppState {
         webview.focus();
         webview.raise_to_top(true);
     }
+
     pub(crate) fn create_toplevel_webview(self: &Rc<Self>, url: Url) -> WebView {
         let webview = WebViewBuilder::new(self.servo())
             .url(url)
@@ -147,20 +143,6 @@ impl RunningAppState {
         webview.notify_theme_change(self.inner().window.theme());
         self.add(webview.clone());
         webview
-    }
-
-    pub(crate) fn create_new_window(
-        self: &Rc<Self>,
-        url: Url,
-        window_ctx: Rc<dyn RenderingContext>,
-    ) {
-        let webview = WebViewBuilder::new(self.servo())
-            .url(url)
-            .delegate(self.clone())
-            .add_rendering_context(window_ctx.clone())
-            .build();
-        self.add(webview.clone());
-        self.inner_mut().other_windows.push((webview, window_ctx));
     }
 
     pub(crate) fn inner(&self) -> Ref<RunningAppStateInner> {
@@ -177,10 +159,6 @@ impl RunningAppState {
 
     pub(crate) fn webdriver_receiver(&self) -> Option<&Receiver<WebDriverCommandMsg>> {
         self.webdriver_receiver.as_ref()
-    }
-
-    pub(crate) fn forward_webdriver_command(&self, command: WebDriverCommandMsg) {
-        self.servo().execute_webdriver_command(command);
     }
 
     pub(crate) fn hidpi_scale_factor_changed(&self) {
@@ -291,7 +269,9 @@ impl RunningAppState {
             .and_then(|id| inner.webviews.get(id));
 
         match last_created {
-            Some(last_created_webview) => last_created_webview.focus(),
+            Some(last_created_webview) => {
+                last_created_webview.focus();
+            },
             None => self.servo.start_shutting_down(),
         }
     }
@@ -360,11 +340,21 @@ impl RunningAppState {
     }
 
     pub(crate) fn webview_has_active_dialog(&self, webview_id: WebViewId) -> bool {
-        let inner = self.inner();
-        inner
+        self.inner()
             .dialogs
             .get(&webview_id)
             .is_some_and(|dialogs| !dialogs.is_empty())
+    }
+
+    pub(crate) fn get_current_active_dialog_webdriver_type(
+        &self,
+        webview_id: WebViewId,
+    ) -> Option<WebDriverUserPrompt> {
+        self.inner()
+            .dialogs
+            .get(&webview_id)
+            .and_then(|dialogs| dialogs.last())
+            .map(|dialog| dialog.webdriver_diaglog_type())
     }
 
     pub(crate) fn accept_active_dialogs(&self, webview_id: WebViewId) {
@@ -389,6 +379,14 @@ impl RunningAppState {
             .get(&webview_id)
             .and_then(|dialogs| dialogs.last())
             .and_then(|dialog| dialog.message())
+    }
+
+    pub(crate) fn set_alert_text_of_newest_dialog(&self, webview_id: WebViewId, text: String) {
+        if let Some(dialogs) = self.inner_mut().dialogs.get_mut(&webview_id) {
+            if let Some(dialog) = dialogs.last_mut() {
+                dialog.set_message(text);
+            }
+        }
     }
 
     pub(crate) fn get_focused_webview_index(&self) -> Option<usize> {
@@ -435,21 +433,39 @@ impl RunningAppState {
                 webview.notify_scroll_event(ScrollLocation::End, origin);
             })
             .shortcut(Modifiers::empty(), Key::ArrowUp, || {
-                let location = ScrollLocation::Delta(Vector2D::new(0.0, -3.0 * LINE_HEIGHT));
+                let location = ScrollLocation::Delta(Vector2D::new(0.0, -1.0 * LINE_HEIGHT));
                 webview.notify_scroll_event(location, origin);
             })
             .shortcut(Modifiers::empty(), Key::ArrowDown, || {
-                let location = ScrollLocation::Delta(Vector2D::new(0.0, 3.0 * LINE_HEIGHT));
+                let location = ScrollLocation::Delta(Vector2D::new(0.0, 1.0 * LINE_HEIGHT));
                 webview.notify_scroll_event(location, origin);
             })
             .shortcut(Modifiers::empty(), Key::ArrowLeft, || {
-                let location = ScrollLocation::Delta(Vector2D::new(-LINE_HEIGHT, 0.0));
+                let location = ScrollLocation::Delta(Vector2D::new(-LINE_WIDTH, 0.0));
                 webview.notify_scroll_event(location, origin);
             })
             .shortcut(Modifiers::empty(), Key::ArrowRight, || {
-                let location = ScrollLocation::Delta(Vector2D::new(LINE_HEIGHT, 0.0));
+                let location = ScrollLocation::Delta(Vector2D::new(LINE_WIDTH, 0.0));
                 webview.notify_scroll_event(location, origin);
             });
+    }
+
+    pub(crate) fn set_pending_focus(&self, focus_id: FocusId, sender: IpcSender<bool>) {
+        self.webdriver_senders
+            .borrow_mut()
+            .pending_focus
+            .insert(focus_id, sender);
+    }
+
+    pub(crate) fn set_pending_traversal(
+        &self,
+        traversal_id: TraversalId,
+        sender: IpcSender<WebDriverLoadStatus>,
+    ) {
+        self.webdriver_senders
+            .borrow_mut()
+            .pending_traversals
+            .insert(traversal_id, sender);
     }
 
     pub(crate) fn set_load_status_sender(
@@ -492,6 +508,13 @@ impl RunningAppState {
             });
         }
     }
+
+    pub(crate) fn remove_load_status_sender(&self, webview_id: WebViewId) {
+        self.webdriver_senders
+            .borrow_mut()
+            .load_status_senders
+            .remove(&webview_id);
+    }
 }
 
 struct ServoShellServoDelegate;
@@ -526,15 +549,23 @@ impl WebViewDelegate for RunningAppState {
         }
     }
 
+    fn notify_traversal_complete(&self, _webview: servo::WebView, traversal_id: TraversalId) {
+        let mut webdriver_state = self.webdriver_senders.borrow_mut();
+        if let Entry::Occupied(entry) = webdriver_state.pending_traversals.entry(traversal_id) {
+            let sender = entry.remove();
+            let _ = sender.send(WebDriverLoadStatus::Complete);
+        }
+    }
+
     fn request_move_to(&self, _: servo::WebView, new_position: DeviceIntPoint) {
         self.inner().window.set_position(new_position);
     }
 
-    fn request_resize_to(&self, webview: servo::WebView, new_outer_size: DeviceIntSize) {
-        let mut rect = webview.rect();
-        rect.set_size(new_outer_size.to_f32());
-        webview.move_resize(rect);
-        self.inner().window.request_resize(&webview, new_outer_size);
+    fn request_resize_to(&self, webview: servo::WebView, requested_outer_size: DeviceIntSize) {
+        // We need to update compositor's view later as we not sure about resizing result.
+        self.inner()
+            .window
+            .request_resize(&webview, requested_outer_size);
     }
 
     fn show_simple_dialog(&self, webview: servo::WebView, dialog: SimpleDialog) {
@@ -551,8 +582,8 @@ impl WebViewDelegate for RunningAppState {
             let _ = sender.send(WebDriverLoadStatus::Blocked);
         };
 
-        if self.servoshell_preferences.headless
-            && self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless &&
+            self.servoshell_preferences.webdriver_port.is_none()
         {
             // TODO: Avoid copying this from the default trait impl?
             // Return the DOM-specified default value for when we **cannot show simple dialogs**.
@@ -578,8 +609,8 @@ impl WebViewDelegate for RunningAppState {
         webview: WebView,
         authentication_request: AuthenticationRequest,
     ) {
-        if self.servoshell_preferences.headless
-            && self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless &&
+            self.servoshell_preferences.webdriver_port.is_none()
         {
             return;
         }
@@ -613,6 +644,14 @@ impl WebViewDelegate for RunningAppState {
 
     fn notify_closed(&self, webview: servo::WebView) {
         self.close_webview(webview.id());
+    }
+
+    fn notify_focus_complete(&self, webview: servo::WebView, focus_id: FocusId) {
+        let mut webdriver_state = self.webdriver_senders.borrow_mut();
+        if let Entry::Occupied(entry) = webdriver_state.pending_focus.entry(focus_id) {
+            let sender = entry.remove();
+            let _ = sender.send(webview.focused());
+        }
     }
 
     fn notify_focus_changed(&self, webview: servo::WebView, focused: bool) {
@@ -678,8 +717,8 @@ impl WebViewDelegate for RunningAppState {
     }
 
     fn request_permission(&self, webview: servo::WebView, permission_request: PermissionRequest) {
-        if self.servoshell_preferences.headless
-            && self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless &&
+            self.servoshell_preferences.webdriver_port.is_none()
         {
             permission_request.deny();
             return;
@@ -740,8 +779,8 @@ impl WebViewDelegate for RunningAppState {
     }
 
     fn show_form_control(&self, webview: WebView, form_control: FormControl) {
-        if self.servoshell_preferences.headless
-            && self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless &&
+            self.servoshell_preferences.webdriver_port.is_none()
         {
             return;
         }
