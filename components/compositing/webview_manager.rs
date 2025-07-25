@@ -126,7 +126,9 @@ impl<WebView> WebViewManager<WebView> {
         error!("CLEAR CLEAR CLEAR");
         let rtc = self.rendering_contexts.get(&webview_group_id).unwrap();
         error!("DOCUMENTID {:?}", rtc.webrender_document);
+        rtc.rendering_context.make_current().expect("Make current");
         let gl = &rtc.webrender_gl;
+
         {
             debug_assert_eq!(
                 (

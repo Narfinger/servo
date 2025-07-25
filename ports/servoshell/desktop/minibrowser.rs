@@ -25,7 +25,7 @@ use servo::webrender_api::units::DevicePixel;
 use servo::{LoadStatus, OffscreenRenderingContext, RenderingContext, WebView};
 use winit::event::{ElementState, MouseButton, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
-use winit::window::Window;
+use winit::window::{Window, WindowId};
 
 use super::app_state::RunningAppState;
 use super::egui_glue::EguiGlow;
@@ -49,6 +49,8 @@ pub struct Minibrowser {
     load_status: LoadStatus,
 
     status_text: Option<String>,
+
+    window_id: WindowId,
 }
 
 pub enum MinibrowserEvent {
@@ -82,6 +84,7 @@ impl Minibrowser {
         event_loop: &ActiveEventLoop,
         event_loop_proxy: EventLoopProxy,
         initial_url: ServoUrl,
+        window_id: WindowId,
     ) -> Self {
         let rendering_context = window.offscreen_rendering_context();
         // Adapted from https://github.com/emilk/egui/blob/9478e50d012c5138551c38cbee16b07bc1fcf283/crates/egui_glow/examples/pure_glow.rs
@@ -111,6 +114,7 @@ impl Minibrowser {
             location_dirty: false.into(),
             load_status: LoadStatus::Complete,
             status_text: None,
+            window_id,
         }
     }
 
@@ -336,8 +340,8 @@ impl Minibrowser {
                                         if cfg!(target_os = "macos") {
                                             i.clone().consume_key(Modifiers::COMMAND, Key::L)
                                         } else {
-                                            i.clone().consume_key(Modifiers::COMMAND, Key::L) ||
-                                                i.clone().consume_key(Modifiers::ALT, Key::D)
+                                            i.clone().consume_key(Modifiers::COMMAND, Key::L)
+                                                || i.clone().consume_key(Modifiers::ALT, Key::D)
                                         }
                                     }) {
                                         // The focus request immediately makes gained_focus return true.
@@ -357,8 +361,8 @@ impl Minibrowser {
                                         }
                                     }
                                     // Navigate to address when enter is pressed in the address bar.
-                                    if location_field.lost_focus() &&
-                                        ui.input(|i| i.clone().key_pressed(Key::Enter))
+                                    if location_field.lost_focus()
+                                        && ui.input(|i| i.clone().key_pressed(Key::Enter))
                                     {
                                         event_queue
                                             .borrow_mut()
@@ -428,7 +432,7 @@ impl Minibrowser {
                     );
                 }
 
-                state.repaint_servo_if_necessary();
+                state.repaint_servo_if_necessary(false);
 
                 if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
                     ui.painter().add(PaintCallback {
@@ -506,9 +510,9 @@ impl Minibrowser {
         //       because logical OR would short-circuit if any of the functions return true.
         //       We want to ensure that all functions are called. The "bitwise OR" operator
         //       does not short-circuit.
-        self.update_location_in_toolbar(state) |
-            self.update_load_status(state) |
-            self.update_status_text(state)
+        self.update_location_in_toolbar(state)
+            | self.update_load_status(state)
+            | self.update_status_text(state)
     }
 
     /// Returns true if a redraw is required after handling the provided event.

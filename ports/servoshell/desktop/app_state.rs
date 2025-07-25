@@ -6,21 +6,22 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
+use std::str::FromStr;
 
 use crossbeam_channel::Receiver;
 use euclid::Vector2D;
 use keyboard_types::{Key, Modifiers, ShortcutMatcher};
 use log::{error, info};
-use servo::base::id::WebViewId;
+use servo::base::id::{WEBVIEW_ID, WebViewId};
 use servo::config::pref;
 use servo::ipc_channel::ipc::IpcSender;
 use servo::webrender_api::ScrollLocation;
 use servo::webrender_api::units::{DeviceIntPoint, DeviceIntSize};
 use servo::{
     AllowOrDenyRequest, AuthenticationRequest, FilterPattern, FormControl, GamepadHapticEffectType,
-    KeyboardEvent, LoadStatus, PermissionRequest, Servo, ServoDelegate, ServoError, SimpleDialog,
-    WebDriverCommandMsg, WebDriverJSResult, WebDriverJSValue, WebDriverLoadStatus, WebView,
-    WebViewBuilder, WebViewDelegate,
+    KeyboardEvent, LoadStatus, PermissionRequest, RenderingContext, Servo, ServoDelegate,
+    ServoError, SimpleDialog, WebDriverCommandMsg, WebDriverJSResult, WebDriverJSValue,
+    WebDriverLoadStatus, WebView, WebViewBuilder, WebViewDelegate,
 };
 use url::Url;
 
@@ -89,6 +90,8 @@ pub struct RunningAppStateInner {
     /// Whether or not Servo needs to repaint its display. Currently this is global
     /// because every `WebView` shares a `RenderingContext`.
     need_repaint: bool,
+
+    pub(crate) other_window: Option<WebView>,
 }
 
 impl Drop for RunningAppState {
@@ -119,6 +122,7 @@ impl RunningAppState {
                 gamepad_support: GamepadSupport::maybe_new(),
                 need_update: false,
                 need_repaint: false,
+                other_window: None,
             }),
         }
     }
@@ -138,6 +142,19 @@ impl RunningAppState {
 
         webview.notify_theme_change(self.inner().window.theme());
         self.add(webview.clone());
+        webview
+    }
+
+    pub(crate) fn create_new_window(
+        self: &Rc<Self>,
+        rendering_context: Rc<dyn RenderingContext>,
+    ) -> WebView {
+        let webview = WebViewBuilder::new(self.servo())
+            .url(Url::from_str("http://www.duckduckgo.com").unwrap())
+            .delegate(self.clone())
+            .add_rendering_context(1, rendering_context)
+            .build();
+        self.inner_mut().other_window.insert(webview.clone());
         webview
     }
 
@@ -172,7 +189,10 @@ impl RunningAppState {
     /// Repaint the Servo view is necessary, returning true if anything was actually
     /// painted or false otherwise. Something may not be painted if Servo is waiting
     /// for a stable image to paint.
-    pub(crate) fn repaint_servo_if_necessary(&self) {
+    pub(crate) fn repaint_servo_if_necessary(&self, paint_other: bool) {
+        if paint_other {
+            return;
+        }
         if !self.inner().need_repaint {
             return;
         }
@@ -529,8 +549,8 @@ impl WebViewDelegate for RunningAppState {
             let _ = sender.send(WebDriverLoadStatus::Blocked);
         };
 
-        if self.servoshell_preferences.headless &&
-            self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless
+            && self.servoshell_preferences.webdriver_port.is_none()
         {
             // TODO: Avoid copying this from the default trait impl?
             // Return the DOM-specified default value for when we **cannot show simple dialogs**.
@@ -556,8 +576,8 @@ impl WebViewDelegate for RunningAppState {
         webview: WebView,
         authentication_request: AuthenticationRequest,
     ) {
-        if self.servoshell_preferences.headless &&
-            self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless
+            && self.servoshell_preferences.webdriver_port.is_none()
         {
             return;
         }
@@ -656,8 +676,8 @@ impl WebViewDelegate for RunningAppState {
     }
 
     fn request_permission(&self, webview: servo::WebView, permission_request: PermissionRequest) {
-        if self.servoshell_preferences.headless &&
-            self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless
+            && self.servoshell_preferences.webdriver_port.is_none()
         {
             permission_request.deny();
             return;
@@ -718,8 +738,8 @@ impl WebViewDelegate for RunningAppState {
     }
 
     fn show_form_control(&self, webview: WebView, form_control: FormControl) {
-        if self.servoshell_preferences.headless &&
-            self.servoshell_preferences.webdriver_port.is_none()
+        if self.servoshell_preferences.headless
+            && self.servoshell_preferences.webdriver_port.is_none()
         {
             return;
         }

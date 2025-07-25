@@ -35,6 +35,7 @@ use url::Url;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
+use winit::platform::modifier_supplement::KeyEventExtModifierSupplement;
 use winit::window::WindowId;
 
 use super::app_state::AppState;
@@ -61,6 +62,8 @@ pub struct App {
     t_start: Instant,
     t: Instant,
     state: AppState,
+
+    other_minibrowser: Option<Minibrowser>,
 
     // This is the last field of the struct to ensure that windows are dropped *after* all other
     // references to the relevant rendering contexts have been destroyed.
@@ -105,6 +108,7 @@ impl App {
             initial_url: initial_url.clone(),
             t_start: t,
             t,
+            other_minibrowser: None,
             state: AppState::Initializing,
         }
     }
@@ -116,13 +120,14 @@ impl App {
         assert_eq!(headless, event_loop.is_none());
         let window = match event_loop {
             Some(event_loop) => {
-                let proxy = self.proxy.take().expect("Must have a proxy available");
+                let proxy = self.proxy.clone().expect("Must have a proxy available");
                 let window = headed_window::Window::new(&self.servoshell_preferences, event_loop);
                 self.minibrowser = Some(Minibrowser::new(
                     &window,
                     event_loop,
                     proxy,
                     self.initial_url.clone(),
+                    window.id(),
                 ));
                 Rc::new(window)
             },
@@ -282,7 +287,7 @@ impl App {
                 state.shutdown();
                 self.state = AppState::ShuttingDown;
             },
-            PumpResult::Continue { .. } => state.repaint_servo_if_necessary(),
+            PumpResult::Continue { .. } => state.repaint_servo_if_necessary(false),
         }
 
         !matches!(self.state, AppState::ShuttingDown)
@@ -698,6 +703,35 @@ impl ApplicationHandler<AppEvent> for App {
                     window.winit_window().unwrap().request_redraw();
                 },
                 ref event => {
+                    if let WindowEvent::KeyboardInput {
+                        device_id,
+                        event,
+                        is_synthetic,
+                    } = event
+                    {
+                        if event.logical_key == "t" {
+                            let window = headed_window::Window::new(
+                                &self.servoshell_preferences,
+                                event_loop,
+                            );
+                            self.other_minibrowser.insert(Minibrowser::new(
+                                &window,
+                                event_loop,
+                                self.proxy.clone().unwrap(),
+                                self.initial_url.clone(),
+                                window.id(),
+                            ));
+                            /*
+                            if let AppState::Running(ref state) = self.state {
+                                let webview = state.create_new_window(window.rendering_context());
+                            }
+                            */
+                            self.windows.insert(window.id(), Rc::new(window));
+
+                            return;
+                        }
+                    }
+
                     let response =
                         minibrowser.on_window_event(window.winit_window().unwrap(), state, event);
                     // Update minibrowser if there's resize event to sync up with window.

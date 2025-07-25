@@ -232,16 +232,16 @@ impl Window {
             }
         }
 
-        if keyboard_event.event.state == KeyState::Down &&
-            keyboard_event.event.key == Key::Unidentified
+        if keyboard_event.event.state == KeyState::Down
+            && keyboard_event.event.key == Key::Unidentified
         {
             // If pressed and probably printable, we expect a ReceivedCharacter event.
             // Wait for that to be received and don't queue any event right now.
             self.last_pressed
                 .set(Some((keyboard_event, Some(winit_event.logical_key))));
             return;
-        } else if keyboard_event.event.state == KeyState::Up &&
-            keyboard_event.event.key == Key::Unidentified
+        } else if keyboard_event.event.state == KeyState::Up
+            && keyboard_event.event.key == Key::Unidentified
         {
             // If release and probably printable, this is following a ReceiverCharacter event.
             if let Some(key) = self.keys_down.borrow_mut().remove(&winit_event.logical_key) {
@@ -604,6 +604,7 @@ impl WindowPortsMethods for Window {
                 }
             },
             WindowEvent::CursorMoved { position, .. } => {
+                /*
                 let mut point = winit_position_to_euclid_point(position).to_f32();
                 point.y -= (self.toolbar_height() * self.hidpi_scale_factor()).0;
 
@@ -617,12 +618,15 @@ impl WindowPortsMethods for Window {
                 }
 
                 self.webview_relative_mouse_point.set(point);
+                */
             },
             WindowEvent::CursorLeft { .. } => {
+                /*
                 let point = self.webview_relative_mouse_point.get();
                 if webview.rect().contains(point) {
                     webview.notify_input_event(InputEvent::MouseLeave(MouseLeaveEvent::new(point)));
                 }
+                */
             },
             WindowEvent::MouseWheel { delta, .. } => {
                 let (mut dx, mut dy, mode) = match delta {
@@ -654,62 +658,74 @@ impl WindowPortsMethods for Window {
                 }
 
                 // Send events
-                webview.notify_input_event(InputEvent::Wheel(WheelEvent::new(delta, point)));
+                //webview.notify_input_event(InputEvent::Wheel(WheelEvent::new(delta, point)));
                 let scroll_location = ScrollLocation::Delta(-Vector2D::new(dx as f32, dy as f32));
-                webview.notify_scroll_event(scroll_location, point.to_i32());
+                //webview.notify_scroll_event(scroll_location, point.to_i32());
             },
             WindowEvent::Touch(touch) => {
+                /*
                 webview.notify_input_event(InputEvent::Touch(TouchEvent::new(
                     winit_phase_to_touch_event_type(touch.phase),
                     TouchId(touch.id as i32),
                     Point2D::new(touch.location.x as f32, touch.location.y as f32),
                 )));
+                */
             },
             WindowEvent::PinchGesture { delta, .. } => {
-                webview.set_pinch_zoom(delta as f32 + 1.0);
+                //webview.set_pinch_zoom(delta as f32 + 1.0);
             },
             WindowEvent::CloseRequested => {
-                state.servo().start_shutting_down();
+                //state.servo().start_shutting_down();
             },
             WindowEvent::Resized(new_size) => {
+                /*
                 if self.inner_size.get() != new_size {
                     self.window_rendering_context.resize(new_size);
                     self.inner_size.set(new_size);
                 }
+                */
             },
             WindowEvent::ThemeChanged(theme) => {
+                /*
                 webview.notify_theme_change(match theme {
                     winit::window::Theme::Light => Theme::Light,
                     winit::window::Theme::Dark => Theme::Dark,
                 });
+                */
             },
             WindowEvent::Ime(ime) => match ime {
                 Ime::Enabled => {
+                    /*
                     webview.notify_input_event(InputEvent::Ime(ImeEvent::Composition(
                         servo::CompositionEvent {
                             state: servo::CompositionState::Start,
                             data: String::new(),
                         },
                     )));
+                    */
                 },
                 Ime::Preedit(text, _) => {
+                    /*
                     webview.notify_input_event(InputEvent::Ime(ImeEvent::Composition(
                         servo::CompositionEvent {
                             state: servo::CompositionState::Update,
                             data: text,
                         },
                     )));
+                    */
                 },
                 Ime::Commit(text) => {
+                    /*
                     webview.notify_input_event(InputEvent::Ime(ImeEvent::Composition(
                         servo::CompositionEvent {
                             state: servo::CompositionState::End,
                             data: text,
                         },
                     )));
+                    */
                 },
                 Ime::Disabled => {
-                    webview.notify_input_event(InputEvent::Ime(ImeEvent::Dismissed));
+                    //webview.notify_input_event(InputEvent::Ime(ImeEvent::Dismissed));
                 },
             },
             _ => {},

@@ -89,6 +89,8 @@ pub(crate) struct WebViewInner {
     focused: bool,
     animating: bool,
     cursor: Cursor,
+
+    webview_group_id: usize,
 }
 
 impl Drop for WebViewInner {
@@ -136,6 +138,7 @@ impl WebView {
             focused: false,
             animating: false,
             cursor: Cursor::Pointer,
+            webview_group_id: builder.group_id,
         })));
 
         let viewport_details = webview.viewport_details();
@@ -561,7 +564,10 @@ impl WebView {
     /// always paint, unless the `Opts::wait_for_stable_image` option is enabled. In
     /// that case, this might do nothing. Returns true if a paint was actually performed.
     pub fn paint(&self) -> bool {
-        self.inner().compositor.borrow_mut().render()
+        self.inner()
+            .compositor
+            .borrow_mut()
+            .render(self.inner().webview_group_id)
     }
 
     /// Evaluate the specified string of JavaScript code. Once execution is complete or an error
@@ -611,6 +617,7 @@ pub struct WebViewBuilder<'servo> {
     size: Option<PhysicalSize<u32>>,
     rendering_context: Option<Rc<dyn RenderingContext>>,
     hidpi_scale_factor: Scale<f32, DeviceIndependentPixel, DevicePixel>,
+    group_id: usize,
 }
 
 impl<'servo> WebViewBuilder<'servo> {
@@ -623,6 +630,7 @@ impl<'servo> WebViewBuilder<'servo> {
             hidpi_scale_factor: Scale::new(1.0),
             rendering_context: None,
             delegate: Rc::new(DefaultWebViewDelegate),
+            group_id: 0,
         }
     }
 
@@ -632,8 +640,9 @@ impl<'servo> WebViewBuilder<'servo> {
         builder
     }
 
-    pub fn add_rendering_context(mut self, rc: Rc<dyn RenderingContext>) -> Self {
+    pub fn add_rendering_context(mut self, group_id: usize, rc: Rc<dyn RenderingContext>) -> Self {
         self.rendering_context = Some(rc);
+        self.group_id = group_id;
         self
     }
 

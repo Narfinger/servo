@@ -1452,21 +1452,21 @@ impl IOCompositor {
 
     /// Render the WebRender scene to the active `RenderingContext`. If successful, trigger
     /// the next round of animations.
-    pub fn render(&mut self) -> bool {
-        let groups = {
-            self.global
-                .borrow()
-                .refresh_driver
-                .notify_will_paint(self.webview_renderers.iter());
-
-            self.webview_renderers.groups()
-        };
-        for i in groups {
-            self.send_root_pipeline_display_list(i);
-            if let Err(error) = self.render_inner(i) {
-                warn!("Unable to render: {error:?}");
-                return false;
-            }
+    pub fn render(&mut self, webview_group_id: usize) -> bool {
+        self.global
+            .borrow()
+            .refresh_driver
+            .notify_will_paint(self.webview_renderers.iter());
+        let webview_group_id = self
+            .webview_renderers
+            .groups()
+            .get(webview_group_id)
+            .cloned()
+            .expect("Could not get group with id");
+        self.send_root_pipeline_display_list(webview_group_id);
+        if let Err(error) = self.render_inner(webview_group_id) {
+            warn!("Unable to render: {error:?}");
+            return false;
         }
 
         // We've painted the default target, which means that from the embedder's perspective,
