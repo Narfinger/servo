@@ -11,7 +11,8 @@ use dpi::PhysicalSize;
 use egui::text::{CCursor, CCursorRange};
 use egui::text_edit::TextEditState;
 use egui::{
-    Button, CentralPanel, Frame, Key, Label, Modifiers, PaintCallback, TopBottomPanel, Vec2, pos2,
+    CentralPanel, Frame, Key, Label, Modifiers, PaintCallback, SelectableLabel, TopBottomPanel,
+    Vec2, pos2,
 };
 use egui_glow::CallbackFn;
 use egui_winit::EventResponse;
@@ -227,7 +228,7 @@ impl Minibrowser {
         visuals.widgets.inactive.corner_radius = corner_radius;
 
         let selected = webview.focused();
-        let tab = ui.add(Button::selectable(
+        let tab = ui.add(SelectableLabel::new(
             selected,
             truncate_with_ellipsis(&label, 20),
         ));
@@ -418,14 +419,13 @@ impl Minibrowser {
                 ui.allocate_space(size);
 
                 if let Some(status_text) = &self.status_text {
-                    egui::Tooltip::always_open(
-                        ctx.clone(),
+                    egui::containers::popup::show_tooltip_at(
+                        ctx,
                         ui.layer_id(),
                         "tooltip layer".into(),
                         pos2(0.0, ctx.available_rect().max.y),
-                    )
-                    .show(|ui| ui.add(Label::new(status_text.clone()).extend()))
-                    .map(|response| response.inner);
+                        |ui| ui.add(Label::new(status_text.clone()).extend()),
+                    );
                 }
 
                 state.repaint_servo_if_necessary();

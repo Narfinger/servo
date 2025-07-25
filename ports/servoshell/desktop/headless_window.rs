@@ -117,12 +117,7 @@ impl WindowPortsMethods for Window {
         self.fullscreen.get()
     }
 
-    fn handle_winit_event(
-        &self,
-        _: Rc<RunningAppState>,
-        _: winit::event::WindowEvent,
-        _: &ActiveEventLoop,
-    ) {
+    fn handle_winit_event(&self, _: Rc<RunningAppState>, _: winit::event::WindowEvent) {
         // Not expecting any winit events.
     }
 

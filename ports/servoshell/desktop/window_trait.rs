@@ -24,12 +24,7 @@ pub trait WindowPortsMethods {
     fn hidpi_scale_factor(&self) -> Scale<f32, DeviceIndependentPixel, DevicePixel>;
     fn page_height(&self) -> f32;
     fn get_fullscreen(&self) -> bool;
-    fn handle_winit_event(
-        &self,
-        state: Rc<RunningAppState>,
-        event: winit::event::WindowEvent,
-        event_loop: &winit::event_loop::ActiveEventLoop,
-    );
+    fn handle_winit_event(&self, state: Rc<RunningAppState>, event: winit::event::WindowEvent);
     fn set_title(&self, _title: &str) {}
     /// Request a new outer size for the window, including external decorations.
     /// This should be the same as `window.outerWidth` and `window.outerHeight``
