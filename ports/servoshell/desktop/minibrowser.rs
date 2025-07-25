@@ -270,7 +270,13 @@ impl Minibrowser {
     /// Update the minibrowser, but don’t paint.
     /// If `servo_framebuffer_id` is given, set up a paint callback to blit its contents to our
     /// CentralPanel when [`Minibrowser::paint`] is called.
-    pub fn update(&mut self, window: &Window, state: &RunningAppState, reason: &'static str) {
+    pub fn update(
+        &mut self,
+        window: &Window,
+        state: &RunningAppState,
+        reason: &'static str,
+        paint_other: bool,
+    ) {
         let now = Instant::now();
         trace!(
             "{:?} since last update ({})",
@@ -432,7 +438,7 @@ impl Minibrowser {
                     );
                 }
 
-                state.repaint_servo_if_necessary(false);
+                state.repaint_servo_if_necessary(paint_other);
 
                 if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
                     ui.painter().add(PaintCallback {

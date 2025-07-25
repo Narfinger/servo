@@ -213,7 +213,12 @@ impl App {
         running_state.create_and_focus_toplevel_webview(self.initial_url.clone().into_url());
 
         if let Some(ref mut minibrowser) = self.minibrowser {
-            minibrowser.update(window.winit_window().unwrap(), &running_state, "init");
+            minibrowser.update(
+                window.winit_window().unwrap(),
+                &running_state,
+                "init",
+                false,
+            );
             window.set_toolbar_height(minibrowser.toolbar_height);
         }
 
@@ -289,7 +294,15 @@ impl App {
                 state.shutdown();
                 self.state = AppState::ShuttingDown;
             },
-            PumpResult::Continue { .. } => state.repaint_servo_if_necessary(false),
+            PumpResult::Continue { .. } => {
+                state.repaint_servo_if_necessary(false);
+                /*
+                if self.other_minibrowser.is_some() && self.other_window_id.is_some() {
+                    log::error!("trying to render the other thing");
+                    state.repaint_servo_if_necessary(true);
+                }
+                */
+            },
         }
 
         !matches!(self.state, AppState::ShuttingDown)
@@ -674,12 +687,22 @@ impl ApplicationHandler<AppEvent> for App {
             // loop or servoshell may become unresponsive! (servo#30312)
             if Some(window_id) == self.other_window_id {
                 if let Some(ref mut minibrowser) = self.other_minibrowser {
-                    minibrowser.update(window.winit_window().unwrap(), state, "RedrawRequested");
+                    minibrowser.update(
+                        window.winit_window().unwrap(),
+                        state,
+                        "RedrawRequested",
+                        true,
+                    );
                     minibrowser.paint(window.winit_window().unwrap());
                 }
             } else {
                 if let Some(ref mut minibrowser) = self.minibrowser {
-                    minibrowser.update(window.winit_window().unwrap(), state, "RedrawRequested");
+                    minibrowser.update(
+                        window.winit_window().unwrap(),
+                        state,
+                        "RedrawRequested",
+                        false,
+                    );
                     minibrowser.paint(window.winit_window().unwrap());
                 }
             }
@@ -719,7 +742,7 @@ impl ApplicationHandler<AppEvent> for App {
                         is_synthetic,
                     } = event
                     {
-                        if event.logical_key == "t" {
+                        if event.logical_key == "t" && self.other_minibrowser.is_none() {
                             let window = headed_window::Window::new(
                                 &self.servoshell_preferences,
                                 event_loop,
@@ -751,6 +774,7 @@ impl ApplicationHandler<AppEvent> for App {
                             window.winit_window().unwrap(),
                             state,
                             "Sync WebView size with Window Resize event",
+                            false,
                         );
                     }
                     if response.repaint && *event != WindowEvent::RedrawRequested {
