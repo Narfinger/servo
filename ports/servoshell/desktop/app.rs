@@ -64,6 +64,7 @@ pub struct App {
     state: AppState,
 
     other_minibrowser: Option<Minibrowser>,
+    other_window_id: Option<WindowId>,
 
     // This is the last field of the struct to ensure that windows are dropped *after* all other
     // references to the relevant rendering contexts have been destroyed.
@@ -108,6 +109,7 @@ impl App {
             initial_url: initial_url.clone(),
             t_start: t,
             t,
+            other_window_id: None,
             other_minibrowser: None,
             state: AppState::Initializing,
         }
@@ -668,10 +670,18 @@ impl ApplicationHandler<AppEvent> for App {
             trace!("RedrawRequested");
 
             // WARNING: do not defer painting or presenting to some later tick of the event
+
             // loop or servoshell may become unresponsive! (servo#30312)
-            if let Some(ref mut minibrowser) = self.minibrowser {
-                minibrowser.update(window.winit_window().unwrap(), state, "RedrawRequested");
-                minibrowser.paint(window.winit_window().unwrap());
+            if Some(window_id) == self.other_window_id {
+                if let Some(ref mut minibrowser) = self.other_minibrowser {
+                    minibrowser.update(window.winit_window().unwrap(), state, "RedrawRequested");
+                    minibrowser.paint(window.winit_window().unwrap());
+                }
+            } else {
+                if let Some(ref mut minibrowser) = self.minibrowser {
+                    minibrowser.update(window.winit_window().unwrap(), state, "RedrawRequested");
+                    minibrowser.paint(window.winit_window().unwrap());
+                }
             }
         }
 
@@ -726,6 +736,7 @@ impl ApplicationHandler<AppEvent> for App {
                                 let webview = state.create_new_window(window.rendering_context());
                             }
                             */
+                            self.other_window_id.insert(window.id());
                             self.windows.insert(window.id(), Rc::new(window));
 
                             return;
