@@ -494,19 +494,19 @@ impl IOCompositor {
     }
 
     pub fn needs_repaint(&self) -> bool {
-        error!("needs repaint");
+        //error!("needs repaint");
         let repaint_reason = self.needs_repaint.get();
         if repaint_reason.is_empty() {
             return false;
         }
 
-        error!("asking compositor");
+        //error!("asking compositor");
         let v = !self
             .global
             .borrow()
             .refresh_driver
             .wait_to_paint(repaint_reason);
-        error!("compositor says {:?}", v);
+        //error!("compositor says {:?}", v);
         v
     }
 
@@ -1710,7 +1710,7 @@ impl IOCompositor {
 
     #[servo_tracing::instrument(skip_all)]
     pub fn handle_messages(&mut self, mut messages: Vec<CompositorMsg>) {
-        error!("frame_ready_msgs {:?}", messages);
+        //error!("frame_ready_msgs {:?}", messages);
 
         // Check for new messages coming from the other threads in the system.
         let mut found_recomposite_msg = false;
@@ -1866,23 +1866,22 @@ impl IOCompositor {
         size: f32,
         flags: FontInstanceFlags,
     ) {
-        self.webview_renderers.send_transaction_all(|| {
-            let mut transaction = Transaction::new();
+        let mut transaction = Transaction::new();
 
-            let font_instance_options = FontInstanceOptions {
-                flags,
-                ..Default::default()
-            };
-            transaction.add_font_instance(
-                instance_key,
-                font_key,
-                size,
-                Some(font_instance_options),
-                None,
-                Vec::new(),
-            );
-            transaction
-        });
+        let font_instance_options = FontInstanceOptions {
+            flags,
+            ..Default::default()
+        };
+        transaction.add_font_instance(
+            instance_key,
+            font_key,
+            size,
+            Some(font_instance_options),
+            None,
+            Vec::new(),
+        );
+        self.webview_renderers
+            .send_transaction_to_namespace_id(transaction, font_key.0);
     }
 
     fn add_font(&mut self, font_key: FontKey, index: u32, data: Arc<IpcSharedMemory>) {

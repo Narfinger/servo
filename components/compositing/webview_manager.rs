@@ -23,7 +23,9 @@ use webrender::{
     VertexUsageHint, WebRenderOptions,
 };
 use webrender_api::units::DevicePixel;
-use webrender_api::{ColorF, DocumentId, FramePublishId, FrameReadyParams, RenderNotifier};
+use webrender_api::{
+    ColorF, DocumentId, FramePublishId, FrameReadyParams, IdNamespace, RenderNotifier,
+};
 
 use crate::IOCompositor;
 use crate::webview_renderer::UnknownWebView;
@@ -143,11 +145,11 @@ impl<WebView> WebViewManager<WebView> {
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
         let color = servo_config::pref!(shell_background_color_rgba);
-        if webview_group_id == 0 {
-            gl.clear_color(0.2, 0.3, 1.0, 0.5);
+        if webview_group_id == 1 {
+            gl.clear_color(0.1, 0.3, 0.7, 1.0)
         } else {
-            gl.clear_color(0.8, 0.3, 0.2, 0.5);
-        }
+            gl.clear_color(0.8, 0.3, 0.1, 1.0)
+        };
 
         //color[0] as f32,
         //color[1] as f32,
@@ -184,6 +186,23 @@ impl<WebView> WebViewManager<WebView> {
             let document_id = i.webrender_document;
             let t = transaction_creator();
             i.webrender_api.send_transaction(document_id, t);
+        }
+    }
+
+    pub(crate) fn send_transaction_to_namespace_id(
+        &mut self,
+        transaction: Transaction,
+        id: IdNamespace,
+    ) {
+        if let Some((group, instance)) = self
+            .rendering_contexts
+            .iter()
+            .filter(|(group, instance)| instance.webrender_api.get_namespace_id() == id)
+            .next()
+        {
+            self.send_transaction_to_group(*group, transaction);
+        } else {
+            error!("Could not find namespace, something is wrong");
         }
     }
 

@@ -92,6 +92,8 @@ pub struct RunningAppStateInner {
     need_repaint: bool,
 
     pub(crate) other_window: Option<WebView>,
+
+    other_rc: Option<Rc<dyn RenderingContext>>,
 }
 
 impl Drop for RunningAppState {
@@ -123,6 +125,7 @@ impl RunningAppState {
                 need_update: false,
                 need_repaint: false,
                 other_window: None,
+                other_rc: None,
             }),
         }
     }
@@ -150,11 +153,12 @@ impl RunningAppState {
         rendering_context: Rc<dyn RenderingContext>,
     ) -> WebView {
         let webview = WebViewBuilder::new(self.servo())
-            .url(Url::from_str("http://www.duckduckgo.com").unwrap())
+            .url(Url::from_str("http://www.wikipedia.org").unwrap())
             .delegate(self.clone())
-            .add_rendering_context(1, rendering_context)
+            .add_rendering_context(1, rendering_context.clone())
             .build();
         self.inner_mut().other_window.insert(webview.clone());
+        self.inner_mut().other_rc.insert(rendering_context);
         webview
     }
 
@@ -212,6 +216,9 @@ impl RunningAppState {
 
         let mut inner_mut = self.inner_mut();
         inner_mut.window.rendering_context().present();
+        if let Some(ref w) = inner_mut.other_rc {
+            w.present();
+        }
         inner_mut.need_repaint = false;
 
         if self.servoshell_preferences.exit_after_stable_image {

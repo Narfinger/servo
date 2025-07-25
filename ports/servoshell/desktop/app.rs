@@ -17,7 +17,7 @@ use crossbeam_channel::unbounded;
 use euclid::{Point2D, Vector2D};
 use ipc_channel::ipc;
 use keyboard_types::webdriver::Event as WebDriverInputEvent;
-use log::{info, trace, warn};
+use log::{error, info, trace, warn};
 use net::protocols::ProtocolRegistry;
 use servo::config::opts::Opts;
 use servo::config::prefs::Preferences;
@@ -751,14 +751,16 @@ impl ApplicationHandler<AppEvent> for App {
                                 &window,
                                 event_loop,
                                 self.proxy.clone().unwrap(),
-                                self.initial_url.clone(),
+                                ServoUrl::parse("http://www.wikipedia.org").unwrap(),
                                 window.id(),
                             ));
-                            /*
+
                             if let AppState::Running(ref state) = self.state {
+                                error!("Creating new window in servo");
                                 let webview = state.create_new_window(window.rendering_context());
+                                webview.focus();
                             }
-                            */
+
                             self.other_window_id.insert(window.id());
                             self.windows.insert(window.id(), Rc::new(window));
 
