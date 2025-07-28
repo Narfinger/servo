@@ -181,6 +181,7 @@ impl<WebView> WebViewManager<WebView> {
             .send_transaction(rect.webrender_document, transaction);
     }
 
+    /*
     pub(crate) fn send_transaction_all(&mut self, transaction_creator: impl Fn() -> Transaction) {
         for i in self.rendering_contexts.values_mut() {
             let document_id = i.webrender_document;
@@ -188,16 +189,17 @@ impl<WebView> WebViewManager<WebView> {
             i.webrender_api.send_transaction(document_id, t);
         }
     }
+    */
 
     pub(crate) fn send_transaction_to_namespace_id(
         &mut self,
         transaction: Transaction,
         id: IdNamespace,
     ) {
-        if let Some((group, instance)) = self
+        if let Some((group, _instance)) = self
             .rendering_contexts
             .iter()
-            .filter(|(group, instance)| instance.webrender_api.get_namespace_id() == id)
+            .filter(|(_group, instance)| instance.webrender_api.get_namespace_id() == id)
             .next()
         {
             self.send_transaction_to_group(*group, transaction);
