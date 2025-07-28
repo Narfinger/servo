@@ -101,13 +101,13 @@ pub struct SystemFontService {
     /// the compositor asynchronously for creating WebRender fonts, while immediately
     /// returning a font key for that data. Once the free keys are exhausted, the
     /// [`SystemFontService`] will fetch a new batch.
-    free_font_keys: Vec<FontKey>,
+    free_font_keys: Vec<Vec<FontKey>>,
 
     /// This is an optimization that allows the [`SystemFontService`] to create WebRender font
     /// instances in the compositor asynchronously, while immediately returning a font
     /// instance key for the instance. Once the free keys are exhausted, the
     /// [`SystemFontService`] will fetch a new batch.
-    free_font_instance_keys: Vec<FontInstanceKey>,
+    free_font_instance_keys: Vec<Vec<FontInstanceKey>>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -181,11 +181,22 @@ impl SystemFontService {
                 },
                 SystemFontServiceMessage::GetFontKey(result_sender) => {
                     self.fetch_new_keys();
-                    let _ = result_sender.send(self.free_font_keys.pop().unwrap());
+
+                    let keys = self.free_font_keys.pop().unwrap();
+                    for i in keys {
+                        let _ = result_sender.send(i);
+                    }
+
+                    //let _ = result_sender.send(self.free_font_keys.pop().unwrap());
                 },
                 SystemFontServiceMessage::GetFontInstanceKey(result_sender) => {
                     self.fetch_new_keys();
-                    let _ = result_sender.send(self.free_font_instance_keys.pop().unwrap());
+                    let keys = self.free_font_instance_keys.pop().unwrap();
+                    for i in keys {
+                        let _ = result_sender.send(i);
+                    }
+
+                    //let _ = result_sender.send(self.free_font_instance_keys.pop().unwrap());
                 },
                 SystemFontServiceMessage::CollectMemoryReport(report_sender) => {
                     self.collect_memory_report(report_sender);
@@ -282,6 +293,7 @@ impl SystemFontService {
         pt_size: Au,
         flags: FontInstanceFlags,
     ) -> FontInstanceKey {
+        /*
         self.fetch_new_keys();
 
         let compositor_api = &self.compositor_api;
@@ -290,28 +302,34 @@ impl SystemFontService {
         let font_key = *webrender_fonts
             .entry(identifier.clone())
             .or_insert_with(|| {
-                let font_key = self.free_font_keys.pop().unwrap();
+                let font_keys = self.free_font_keys.pop().unwrap();
                 let FontIdentifier::Local(local_font_identifier) = identifier else {
                     unreachable!("Should never have a web font in the system font service");
                 };
-                compositor_api
-                    .add_system_font(font_key, local_font_identifier.native_font_handle());
-                font_key
+                for font_key in font_keys {
+                    compositor_api
+                        .add_system_font(font_key, local_font_identifier.native_font_handle());
+                }
+                font_keys
             });
 
         *self
             .font_instances
             .entry((font_key, pt_size))
             .or_insert_with(|| {
-                let font_instance_key = self.free_font_instance_keys.pop().unwrap();
-                compositor_api.add_font_instance(
-                    font_instance_key,
-                    font_key,
-                    pt_size.to_f32_px(),
-                    flags,
-                );
-                font_instance_key
+                let font_instance_keys = self.free_font_instance_keys.pop().unwrap();
+                for font_instance_key in font_instance_keys {
+                    compositor_api.add_font_instance(
+                        font_instance_key,
+                        font_key,
+                        pt_size.to_f32_px(),
+                        flags,
+                    );
+                }
+                font_instance_keys
             })
+             */
+        FontInstanceKey(webrender_api::IdNamespace(0), 0)
     }
 
     pub(crate) fn family_name_for_single_font_family(

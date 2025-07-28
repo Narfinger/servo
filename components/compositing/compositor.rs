@@ -890,21 +890,25 @@ impl IOCompositor {
                 }
             },
             CompositorMsg::UpdateImages(updates) => {
-                error!("Only one group supported now");
-                let gid = self.webview_renderers.groups().first().unwrap().clone();
-                let mut txn = Transaction::new();
                 for update in updates {
-                    match update {
+                    let mut txn = Transaction::new();
+                    let key = match update {
                         ImageUpdate::AddImage(key, desc, data) => {
-                            txn.add_image(key, desc, data.into(), None)
+                            txn.add_image(key, desc, data.into(), None);
+                            key.0
                         },
-                        ImageUpdate::DeleteImage(key) => txn.delete_image(key),
+                        ImageUpdate::DeleteImage(key) => {
+                            txn.delete_image(key);
+                            key.0
+                        },
                         ImageUpdate::UpdateImage(key, desc, data) => {
-                            txn.update_image(key, desc, data.into(), &DirtyRect::All)
+                            txn.update_image(key, desc, data.into(), &DirtyRect::All);
+                            key.0
                         },
-                    }
+                    };
+                    self.webview_renderers
+                        .send_transaction_to_namespace_id(txn, key);
                 }
-                self.webview_renderers.send_transaction_to_group(gid, txn);
             },
 
             CompositorMsg::AddFont(font_key, data, index) => {
@@ -937,15 +941,25 @@ impl IOCompositor {
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
-                for i in self.webview_renderers.rendering_contexts() {
-                    let font_keys = (0..number_of_font_keys)
-                        .map(|_| i.webrender_api.generate_font_key())
-                        .collect();
-                    let font_instance_keys = (0..number_of_font_instance_keys)
-                        .map(|_| i.webrender_api.generate_font_instance_key())
-                        .collect();
-                    let _ = result_sender.send((font_keys, font_instance_keys));
-                }
+                let font_keys = (0..number_of_font_keys)
+                    .map(|_| {
+                        self.webview_renderers
+                            .rendering_contexts()
+                            .map(|wri| wri.webrender_api.generate_font_key())
+                            .collect()
+                    })
+                    .collect::<Vec<Vec<FontKey>>>();
+
+                let font_instance_keys = (0..number_of_font_instance_keys)
+                    .map(|_| {
+                        self.webview_renderers
+                            .rendering_contexts()
+                            .map(|wri| wri.webrender_api.generate_font_instance_key())
+                            .collect()
+                    })
+                    .collect::<Vec<Vec<FontInstanceKey>>>();
+
+                let _ = result_sender.send((font_keys, font_instance_keys));
             },
             CompositorMsg::Viewport(webview_id, viewport_description) => {
                 if let Some(webview) = self.webview_renderers.get_mut(webview_id) {
@@ -983,20 +997,44 @@ impl IOCompositor {
                 number_of_font_instance_keys,
                 result_sender,
             ) => {
-                let font_keys = (0..number_of_font_keys).map(|_| self.webview_renderers.groups().map(|f| ))
+                // this is in webrender_keys and webrender group
 
-                let font_keys = (0..number_of_font_keys)
-                    .map(|_| self.global.borrow().webrender_api.generate_font_key())
-                    .collect();
-                let font_instance_keys = (0..number_of_font_instance_keys)
+                /*
+                    let font_keys = (0..number_of_font_keys)
+                    .map(|_| {
+                        self.webview_renderers
+                        .rendering_contexts()
+                        .map(|wri| wri.webrender_api.generate_font_key())
+                        .collect()
+                    })
+                    .collect::<Vec<Vec<FontKey>>>();
+
+                    let font_instance_keys = (0..number_of_font_keys)
+                    .map(|_| {
+                        self.webview_renderers
+                        .rendering_contexts()
+                        .map(|wri| wri.webrender_api.generate_font_instance_key())
+                        .collect()
+                    })
+                    .collect::<Vec<Vec<FontInstanceKey>>>();
+
+                let _ = result_sender.send((font_keys, font_instance_keys));
+
+                */
+                /*
+                        let font_keys = (0..number_of_font_keys)
+                        .map(|_| self.global.borrow().webrender_api.generate_font_key())
+                        .collect();
+                    let font_instance_keys = (0..number_of_font_instance_keys)
                     .map(|_| {
                         self.global
-                            .borrow()
-                            .webrender_api
-                            .generate_font_instance_key()
+                        .borrow()
+                        .webrender_api
+                        .generate_font_instance_key()
                     })
                     .collect();
                 let _ = result_sender.send((font_keys, font_instance_keys));
+                */
             },
             CompositorMsg::NewWebRenderFrameReady(..) => {
                 // Subtract from the number of pending frames, but do not do any compositing.
