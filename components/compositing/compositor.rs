@@ -5,17 +5,15 @@
 use std::cell::{Cell, Ref, RefCell};
 use std::collections::HashMap;
 use std::env;
-use std::ffi::c_void;
 use std::fs::create_dir_all;
 use std::iter::once;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::thread::sleep;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
+use base::Epoch;
 use base::cross_process_instant::CrossProcessInstant;
 use base::id::{PipelineId, WebViewId};
-use base::{Epoch, WebRenderEpochToU16};
 use bitflags::bitflags;
 use compositing_traits::display_list::{
     CompositorDisplayListInfo, HitTestInfo, ScrollTree, ScrollType,
@@ -29,8 +27,7 @@ use constellation_traits::{EmbedderToConstellationMessage, PaintMetricEvent};
 use crossbeam_channel::{Receiver, Sender};
 use dpi::PhysicalSize;
 use embedder_traits::{
-    CompositorHitTestResult, Cursor, InputEvent, ShutdownState, UntrustedNodeAddress,
-    ViewportDetails,
+    CompositorHitTestResult, Cursor, InputEvent, ShutdownState, ViewportDetails,
 };
 use euclid::{Point2D, Rect, Scale, Size2D, Transform3D};
 use ipc_channel::ipc::{self, IpcSharedMemory};
@@ -44,7 +41,7 @@ use style_traits::CSSPixel;
 use webrender::{CaptureBits, Transaction};
 use webrender_api::units::{
     DeviceIntPoint, DeviceIntRect, DevicePixel, DevicePoint, DeviceRect, LayoutPoint, LayoutRect,
-    LayoutSize, WorldPoint,
+    LayoutSize,
 };
 use webrender_api::{
     self, BuiltDisplayList, DirtyRect, DisplayListPayload, Epoch as WebRenderEpoch,
@@ -479,11 +476,6 @@ impl IOCompositor {
         {
             false
         }
-    }
-
-    pub(crate) fn send_transaction(&mut self, webview_id: WebViewId, transaction: Transaction) {
-        self.webview_renderers
-            .send_transaction(webview_id, transaction);
     }
 
     fn set_needs_repaint(&self, reason: RepaintReason) {
@@ -979,6 +971,7 @@ impl IOCompositor {
     /// generate them, but assume they will never be used, since once shutting down the
     /// compositor no longer does any WebRender frame generation.
     fn handle_browser_message_while_shutting_down(&mut self, msg: CompositorMsg) {
+        /*
         match msg {
             CompositorMsg::PipelineExited(webview_id, pipeline_id, pipeline_exit_source) => {
                 debug!(
@@ -1044,6 +1037,7 @@ impl IOCompositor {
                 debug!("Ignoring message ({:?} while shutting down", msg);
             },
         }
+         */
     }
 
     /// Queue a new frame in the transaction and increase the pending frames count.

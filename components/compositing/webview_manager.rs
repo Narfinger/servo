@@ -6,28 +6,24 @@ use core::panic;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::{Values, ValuesMut};
-use std::rc::{Rc, Weak};
-use std::thread::sleep;
-use std::time::Duration;
+use std::rc::Rc;
 
 use base::id::WebViewId;
 use compositing_traits::rendering_context::{self, RenderingContext};
 use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
 use gleam::gl::Gl;
-use libc::group;
-use log::{error, warn};
-use servo_config::{opts, pref};
+use log::error;
+use servo_config::pref;
 use webrender::{
-    Compositor, RenderApi, RenderApiSender, ShaderPrecacheFlags, Transaction, UploadMethod,
-    VertexUsageHint, WebRenderOptions,
+    RenderApi, RenderApiSender, ShaderPrecacheFlags, Transaction, UploadMethod, VertexUsageHint,
+    WebRenderOptions,
 };
 use webrender_api::units::DevicePixel;
 use webrender_api::{
     ColorF, DocumentId, FramePublishId, FrameReadyParams, IdNamespace, RenderNotifier,
 };
 
-use crate::IOCompositor;
 use crate::webview_renderer::UnknownWebView;
 
 pub(crate) type RenderingGroupId = u64;
@@ -115,7 +111,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 }
 
-fn gl_error_panic(gl: &dyn Gl, s: &str, e: gleam::gl::GLenum) {
+fn gl_error_panic(_gl: &dyn Gl, s: &str, e: gleam::gl::GLenum) {
     panic!("FOUND GL ERROR s: {:?}, e: {:?}", s, e);
 }
 
@@ -144,7 +140,7 @@ impl<WebView> WebViewManager<WebView> {
         // Always clear the entire RenderingContext, regardless of how many WebViews there are
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
-        let color = servo_config::pref!(shell_background_color_rgba);
+        //let color = servo_config::pref!(shell_background_color_rgba);
         if webview_group_id == 1 {
             gl.clear_color(0.1, 0.3, 0.7, 1.0)
         } else {

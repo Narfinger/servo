@@ -11,7 +11,7 @@ use std::{fmt, thread};
 use app_units::Au;
 use compositing_traits::CrossProcessCompositorApi;
 use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
-use log::debug;
+use log::{debug, error};
 use malloc_size_of::MallocSizeOf as MallocSizeOfTrait;
 use malloc_size_of_derive::MallocSizeOf;
 use parking_lot::{Mutex, RwLock};
@@ -28,7 +28,7 @@ use style::values::computed::font::{
 };
 use style::values::computed::{FontStretch, FontWeight};
 use style::values::specified::FontStretch as SpecifiedFontStretch;
-use webrender_api::{FontInstanceFlags, FontInstanceKey, FontKey};
+use webrender_api::{FontInstanceFlags, FontInstanceKey, FontKey, IdNamespace};
 
 use crate::font::FontDescriptor;
 use crate::font_store::FontStore;
@@ -93,8 +93,9 @@ pub struct SystemFontService {
     port: IpcReceiver<SystemFontServiceMessage>,
     local_families: FontStore,
     compositor_api: CrossProcessCompositorApi,
-    webrender_fonts: HashMap<FontIdentifier, FontKey>,
-    font_instances: HashMap<(FontKey, Au), FontInstanceKey>,
+    // keys already have the IdNamespace for webrender
+    webrender_fonts: HashMap<FontIdentifier, Vec<FontKey>>,
+    font_instances: HashMap<(FontKey, Au), Vec<FontInstanceKey>>,
     generic_fonts: ResolvedGenericFontFamilies,
 
     /// This is an optimization that allows the [`SystemFontService`] to send font data to
@@ -292,8 +293,8 @@ impl SystemFontService {
         identifier: FontIdentifier,
         pt_size: Au,
         flags: FontInstanceFlags,
-    ) -> FontInstanceKey {
-        /*
+    ) -> Vec<FontInstanceKey> {
+        error!("Calling get font instance {identifier:?}");
         self.fetch_new_keys();
 
         let compositor_api = &self.compositor_api;
@@ -315,21 +316,19 @@ impl SystemFontService {
 
         *self
             .font_instances
-            .entry((font_key, pt_size))
+            .entry((font_key[0], pt_size))
             .or_insert_with(|| {
                 let font_instance_keys = self.free_font_instance_keys.pop().unwrap();
                 for font_instance_key in font_instance_keys {
                     compositor_api.add_font_instance(
                         font_instance_key,
-                        font_key,
+                        font_key[0],
                         pt_size.to_f32_px(),
                         flags,
                     );
                 }
                 font_instance_keys
             })
-             */
-        FontInstanceKey(webrender_api::IdNamespace(0), 0)
     }
 
     pub(crate) fn family_name_for_single_font_family(

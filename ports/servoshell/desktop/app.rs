@@ -747,7 +747,8 @@ impl ApplicationHandler<AppEvent> for App {
                                 &self.servoshell_preferences,
                                 event_loop,
                             );
-                            self.other_minibrowser.insert(Minibrowser::new(
+                            assert!(self.other_minibrowser.is_none());
+                            let _ = self.other_minibrowser.insert(Minibrowser::new(
                                 &window,
                                 event_loop,
                                 self.proxy.clone().unwrap(),
@@ -761,7 +762,8 @@ impl ApplicationHandler<AppEvent> for App {
                                 webview.focus();
                             }
 
-                            self.other_window_id.insert(window.id());
+                            assert!(self.other_window_id.is_none());
+                            let _ = self.other_window_id.insert(window.id());
                             self.windows.insert(window.id(), Rc::new(window));
 
                             return;

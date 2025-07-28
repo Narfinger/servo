@@ -70,11 +70,11 @@ pub struct FontContext {
 
     /// A collection of WebRender [`FontKey`]s generated for the web fonts that this
     /// [`FontContext`] controls.
-    webrender_font_keys: RwLock<HashMap<FontIdentifier, FontKey>>,
+    webrender_font_keys: RwLock<HashMap<FontIdentifier, Vec<FontKey>>>,
 
     /// A collection of WebRender [`FontInstanceKey`]s generated for the web fonts that
     /// this [`FontContext`] controls.
-    webrender_font_instance_keys: RwLock<HashMap<(FontKey, Au), FontInstanceKey>>,
+    webrender_font_instance_keys: RwLock<HashMap<(FontKey, Au), Vec<FontInstanceKey>>>,
 
     /// The data for each web font [`FontIdentifier`]. This data might be used by more than one
     /// [`FontTemplate`] as each identifier refers to a URL.
@@ -356,20 +356,20 @@ impl FontContext {
         if matches!(
             format_hint,
             FontFaceSourceFormat::Keyword(
-                FontFaceSourceFormatKeyword::Truetype |
-                    FontFaceSourceFormatKeyword::Opentype |
-                    FontFaceSourceFormatKeyword::Woff |
-                    FontFaceSourceFormatKeyword::Woff2
+                FontFaceSourceFormatKeyword::Truetype
+                    | FontFaceSourceFormatKeyword::Opentype
+                    | FontFaceSourceFormatKeyword::Woff
+                    | FontFaceSourceFormatKeyword::Woff2
             )
         ) {
             return true;
         }
 
         if let FontFaceSourceFormat::String(string) = format_hint {
-            return string == "truetype" ||
-                string == "opentype" ||
-                string == "woff" ||
-                string == "woff2";
+            return string == "truetype"
+                || string == "opentype"
+                || string == "woff"
+                || string == "woff2";
         }
 
         false
@@ -897,9 +897,9 @@ impl RemoteWebFontDownloader {
         response_message: FetchResponseMsg,
     ) -> DownloaderResponseResult {
         match response_message {
-            FetchResponseMsg::ProcessRequestBody(..) |
-            FetchResponseMsg::ProcessRequestEOF(..) |
-            FetchResponseMsg::ProcessCspViolations(..) => DownloaderResponseResult::InProcess,
+            FetchResponseMsg::ProcessRequestBody(..)
+            | FetchResponseMsg::ProcessRequestEOF(..)
+            | FetchResponseMsg::ProcessCspViolations(..) => DownloaderResponseResult::InProcess,
             FetchResponseMsg::ProcessResponse(_, meta_result) => {
                 trace!(
                     "@font-face {} metadata ok={:?}",

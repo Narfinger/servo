@@ -157,8 +157,10 @@ impl RunningAppState {
             .delegate(self.clone())
             .add_rendering_context(1, rendering_context.clone())
             .build();
-        self.inner_mut().other_window.insert(webview.clone());
-        self.inner_mut().other_rc.insert(rendering_context);
+        assert!(self.inner().other_window.is_none());
+        assert!(self.inner().other_rc.is_none());
+        let _ = self.inner_mut().other_window.insert(webview.clone());
+        let _ = self.inner_mut().other_rc.insert(rendering_context);
         webview
     }
 

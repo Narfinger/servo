@@ -595,6 +595,7 @@ impl WindowPortsMethods for Window {
             return;
         };
 
+        /*
         match event {
             WindowEvent::KeyboardInput { event, .. } => self.handle_keyboard_input(state, event),
             WindowEvent::ModifiersChanged(modifiers) => self.modifiers_state.set(modifiers.state()),
@@ -603,7 +604,8 @@ impl WindowPortsMethods for Window {
                     self.handle_mouse(&webview, button, state);
                 }
             },
-            WindowEvent::CursorMoved { position, .. } => {
+            WindowEvent::CursorMoved { .. } => {
+                //WindowEvent::CursorMoved { position, .. } => {
                 /*
                 let mut point = winit_position_to_euclid_point(position).to_f32();
                 point.y -= (self.toolbar_height() * self.hidpi_scale_factor()).0;
@@ -641,13 +643,13 @@ impl WindowPortsMethods for Window {
                 };
 
                 // Create wheel event before snapping to the major axis of movement
-                let delta = WheelDelta {
+                let _delta = WheelDelta {
                     x: dx,
                     y: dy,
                     z: 0.0,
                     mode,
                 };
-                let point = self.webview_relative_mouse_point.get();
+                let _point = self.webview_relative_mouse_point.get();
 
                 // Scroll events snap to the major axis of movement, with vertical
                 // preferred over horizontal.
@@ -659,10 +661,10 @@ impl WindowPortsMethods for Window {
 
                 // Send events
                 //webview.notify_input_event(InputEvent::Wheel(WheelEvent::new(delta, point)));
-                let scroll_location = ScrollLocation::Delta(-Vector2D::new(dx as f32, dy as f32));
+                let _scroll_location = ScrollLocation::Delta(-Vector2D::new(dx as f32, dy as f32));
                 //webview.notify_scroll_event(scroll_location, point.to_i32());
             },
-            WindowEvent::Touch(touch) => {
+            WindowEvent::Touch(_touch) => {
                 /*
                 webview.notify_input_event(InputEvent::Touch(TouchEvent::new(
                     winit_phase_to_touch_event_type(touch.phase),
@@ -730,6 +732,7 @@ impl WindowPortsMethods for Window {
             },
             _ => {},
         }
+         */
     }
 
     fn new_glwindow(
