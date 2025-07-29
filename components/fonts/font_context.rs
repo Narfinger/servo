@@ -70,11 +70,11 @@ pub struct FontContext {
 
     /// A collection of WebRender [`FontKey`]s generated for the web fonts that this
     /// [`FontContext`] controls.
-    webrender_font_keys: RwLock<HashMap<FontIdentifier, Vec<FontKey>>>,
+    webrender_font_keys: RwLock<HashMap<FontIdentifier, FontKey>>,
 
     /// A collection of WebRender [`FontInstanceKey`]s generated for the web fonts that
     /// this [`FontContext`] controls.
-    webrender_font_instance_keys: RwLock<HashMap<(FontKey, Au), Vec<FontInstanceKey>>>,
+    webrender_font_instance_keys: RwLock<HashMap<(FontKey, Au), FontInstanceKey>>,
 
     /// The data for each web font [`FontIdentifier`]. This data might be used by more than one
     /// [`FontTemplate`] as each identifier refers to a URL.
@@ -311,8 +311,6 @@ impl FontContext {
         flags: FontInstanceFlags,
         webview_id: WebViewId,
     ) -> FontInstanceKey {
-        /*
-
         let identifier = font_template.identifier().clone();
         let font_data = self
             .get_font_data(&identifier)
@@ -322,7 +320,7 @@ impl FontContext {
             .write()
             .entry(identifier.clone())
             .or_insert_with(|| {
-                let font_key = self.system_font_service_proxy.generate_font_key();
+                let font_key = self.system_font_service_proxy.generate_font_key(webview_id);
                 self.compositor_api.lock().add_font(
                     font_key,
                     font_data.as_ipc_shared_memory(),
@@ -336,7 +334,9 @@ impl FontContext {
             .write()
             .entry((font_key, pt_size))
             .or_insert_with(|| {
-                let font_instance_key = self.system_font_service_proxy.generate_font_instance_key();
+                let font_instance_key = self
+                    .system_font_service_proxy
+                    .generate_font_instance_key(webview_id);
                 self.compositor_api.lock().add_font_instance(
                     font_instance_key,
                     font_key,
@@ -346,7 +346,6 @@ impl FontContext {
                 font_instance_key
             });
         key
-         */
     }
 
     fn invalidate_font_groups_after_web_font_load(&self) {
@@ -581,6 +580,8 @@ impl FontContextWebFontMethods for Arc<FontContext> {
         &self,
         all: bool,
     ) -> (Vec<FontKey>, Vec<FontInstanceKey>) {
+        /*
+
         if all {
             let mut webrender_font_keys = self.webrender_font_keys.write();
             let mut webrender_font_instance_keys = self.webrender_font_instance_keys.write();
@@ -642,6 +643,8 @@ impl FontContextWebFontMethods for Arc<FontContext> {
             removed_keys.into_iter().collect(),
             removed_instance_keys.into_iter().collect(),
         )
+         */
+        (vec![], vec![])
     }
 
     fn load_web_font_for_script(

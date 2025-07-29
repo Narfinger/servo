@@ -141,7 +141,8 @@ pub enum CompositorMsg {
     GenerateFontKeys(
         usize,
         usize,
-        IpcSender<(Vec<Vec<FontKey>>, Vec<Vec<FontInstanceKey>>)>,
+        IpcSender<(Vec<FontKey>, Vec<FontInstanceKey>)>,
+        WebViewId,
     ),
     /// Add a font with the given data and font key.
     AddFont(FontKey, Arc<IpcSharedMemory>, u32),
@@ -355,12 +356,14 @@ impl CrossProcessCompositorApi {
         &self,
         number_of_font_keys: usize,
         number_of_font_instance_keys: usize,
-    ) -> (Vec<Vec<FontKey>>, Vec<Vec<FontInstanceKey>>) {
+        webview_id: WebViewId,
+    ) -> (Vec<FontKey>, Vec<FontInstanceKey>) {
         let (sender, receiver) = ipc_channel::ipc::channel().expect("Could not create IPC channel");
         let _ = self.0.send(CompositorMsg::GenerateFontKeys(
             number_of_font_keys,
             number_of_font_instance_keys,
             sender,
+            webview_id,
         ));
         receiver.recv().unwrap()
     }

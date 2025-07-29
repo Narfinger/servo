@@ -934,24 +934,20 @@ impl IOCompositor {
                 number_of_font_keys,
                 number_of_font_instance_keys,
                 result_sender,
+                webview_id,
             ) => {
+                let group_id = self
+                    .webview_renderers
+                    .group_id(webview_id)
+                    .expect("No group");
+                let wri = self.webview_renderers.render_instance(group_id);
                 let font_keys = (0..number_of_font_keys)
-                    .map(|_| {
-                        self.webview_renderers
-                            .rendering_contexts()
-                            .map(|wri| wri.webrender_api.generate_font_key())
-                            .collect()
-                    })
-                    .collect::<Vec<Vec<FontKey>>>();
+                    .map(|_| wri.webrender_api.generate_font_key())
+                    .collect::<Vec<FontKey>>();
 
                 let font_instance_keys = (0..number_of_font_instance_keys)
-                    .map(|_| {
-                        self.webview_renderers
-                            .rendering_contexts()
-                            .map(|wri| wri.webrender_api.generate_font_instance_key())
-                            .collect()
-                    })
-                    .collect::<Vec<Vec<FontInstanceKey>>>();
+                    .map(|_| wri.webrender_api.generate_font_instance_key())
+                    .collect::<Vec<FontInstanceKey>>();
 
                 let _ = result_sender.send((font_keys, font_instance_keys));
             },
