@@ -313,7 +313,7 @@ impl<WebView> WebViewManager<WebView> {
         );
         let notifier = MyRenderNotifier::new(self.sender.clone());
 
-        let (webrender, sender) = webrender::create_webrender_instance(
+        let (mut webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
             notifier.clone(),
             self.webrender_options(new_group_id),
@@ -327,6 +327,15 @@ impl<WebView> WebViewManager<WebView> {
             "WebviewGroupId: {:?}, has rendering document {:?}",
             new_group_id, webrender_document
         );
+
+        let mut flags = webrender.get_debug_flags();
+
+
+        //flags.toggle(webrender_api::DebugFlags::SHOW_OVERDRAW);
+        flags.toggle(webrender_api::DebugFlags::PRIMITIVE_DBG);
+        flags.toggle(webrender_api::DebugFlags::ZOOM_DBG);
+                webrender.set_debug_flags(flags);
+
         let s = WebRenderInstance {
             sender,
             webrender_api: api,

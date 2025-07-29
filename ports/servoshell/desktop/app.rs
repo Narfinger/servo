@@ -687,6 +687,7 @@ impl ApplicationHandler<AppEvent> for App {
             // loop or servoshell may become unresponsive! (servo#30312)
             if Some(window_id) == self.other_window_id {
                 if let Some(ref mut minibrowser) = self.other_minibrowser {
+                    error!("REDRAW WITH OTHER");
                     minibrowser.update(
                         window.winit_window().unwrap(),
                         state,
@@ -697,6 +698,7 @@ impl ApplicationHandler<AppEvent> for App {
                 }
             } else {
                 if let Some(ref mut minibrowser) = self.minibrowser {
+                    error!("REDRAW WITH ORIGINAL");
                     minibrowser.update(
                         window.winit_window().unwrap(),
                         state,

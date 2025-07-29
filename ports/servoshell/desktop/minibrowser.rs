@@ -17,7 +17,7 @@ use egui::{
 use egui_glow::CallbackFn;
 use egui_winit::EventResponse;
 use euclid::{Box2D, Length, Point2D, Rect, Scale, Size2D};
-use log::{trace, warn};
+use log::{error, trace, warn};
 use servo::base::id::WebViewId;
 use servo::servo_geometry::DeviceIndependentPixel;
 use servo::servo_url::ServoUrl;
@@ -409,9 +409,21 @@ impl Minibrowser {
                 state.for_each_active_dialog(|dialog| dialog.update(ctx));
             });
 
-            let Some(webview) = state.focused_webview() else {
+            let webview_pot = if paint_other {
+                state.inner().other_webview.clone()
+            } else {
+                state.inner().webview.clone()
+            };
+
+            let Some(webview) = webview_pot else {
+                error!("Could not find have webview");
                 return;
             };
+
+            //let Some(webview) = state.focused_webview() else {
+            //    error!("Could not find have webview");
+            //    return;
+            //};
             CentralPanel::default().frame(Frame::NONE).show(ctx, |ui| {
                 // If the top parts of the GUI changed size, then update the size of the WebView and also
                 // the size of its RenderingContext.
@@ -442,6 +454,7 @@ impl Minibrowser {
                 state.repaint_servo_if_necessary(paint_other);
 
                 if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
+                    error!("The callback thingy");
                     ui.painter().add(PaintCallback {
                         rect,
                         callback: Arc::new(CallbackFn::new(move |info, painter| {

@@ -604,7 +604,7 @@ pub(super) fn add_or_get_font(
     font_context: &FontContext,
     webview_id: WebViewId,
 ) -> usize {
-    error!("Add or get font for {webview_id:?}");
+    //error!("Add or get font for {webview_id:?}");
     let font_instance_key = font.key(webview_id, font_context);
     for (index, ifc_font_info) in ifc_fonts.iter().enumerate() {
         if ifc_font_info.key == font_instance_key

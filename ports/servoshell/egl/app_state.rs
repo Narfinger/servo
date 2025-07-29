@@ -99,6 +99,8 @@ struct RunningAppStateInner {
     hidpi_scale_factor: Scale<f32, DeviceIndependentPixel, DevicePixel>,
 
     other_contexts: Vec<Rc<dyn RenderingContext>>,
+
+    other_webview: Option<WebViewId>,
 }
 
 struct ServoShellServoDelegate {
@@ -364,6 +366,7 @@ impl RunningAppState {
             .build();
         webview.focus();
         self.add(webview.clone());
+        self.other_webview.insert(webview);
         self.inner_mut().other_contexts.push(rc);
     }
 
