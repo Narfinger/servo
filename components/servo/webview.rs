@@ -7,7 +7,7 @@ use std::hash::Hash;
 use std::rc::{Rc, Weak};
 use std::time::Duration;
 
-use base::id::WebViewId;
+use base::id::{RenderingGroupId, WebViewId};
 use compositing::IOCompositor;
 use compositing_traits::rendering_context::RenderingContext;
 use compositing_traits::{WebViewTrait, rendering_context};
@@ -90,7 +90,7 @@ pub(crate) struct WebViewInner {
     animating: bool,
     cursor: Cursor,
 
-    webview_group_id: usize,
+    webview_group_id: RenderingGroupId,
 }
 
 impl Drop for WebViewInner {
@@ -567,7 +567,7 @@ impl WebView {
         self.inner()
             .compositor
             .borrow_mut()
-            .render(self.inner().webview_group_id as u64)
+            .render(self.inner().webview_group_id.clone())
     }
 
     /// Evaluate the specified string of JavaScript code. Once execution is complete or an error
@@ -617,7 +617,7 @@ pub struct WebViewBuilder<'servo> {
     size: Option<PhysicalSize<u32>>,
     rendering_context: Option<Rc<dyn RenderingContext>>,
     hidpi_scale_factor: Scale<f32, DeviceIndependentPixel, DevicePixel>,
-    group_id: usize,
+    group_id: RenderingGroupId,
 }
 
 impl<'servo> WebViewBuilder<'servo> {
@@ -630,7 +630,7 @@ impl<'servo> WebViewBuilder<'servo> {
             hidpi_scale_factor: Scale::new(1.0),
             rendering_context: None,
             delegate: Rc::new(DefaultWebViewDelegate),
-            group_id: 0,
+            group_id: RenderingGroupId::default(),
         }
     }
 
@@ -640,9 +640,9 @@ impl<'servo> WebViewBuilder<'servo> {
         builder
     }
 
-    pub fn add_rendering_context(mut self, group_id: usize, rc: Rc<dyn RenderingContext>) -> Self {
+    pub fn add_rendering_context(mut self, rc: Rc<dyn RenderingContext>) -> Self {
         self.rendering_context = Some(rc);
-        self.group_id = group_id;
+        self.group_id = RenderingGroupId::inc();
         self
     }
 

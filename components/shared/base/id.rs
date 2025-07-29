@@ -10,7 +10,7 @@ use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
 use std::num::NonZeroU32;
-use std::sync::{Arc, LazyLock};
+use std::sync::{Arc, LazyLock, RwLock};
 
 use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
 use malloc_size_of::MallocSizeOfOps;
@@ -401,4 +401,37 @@ pub const TEST_WEBVIEW_ID: WebViewId = WebViewId(TEST_BROWSING_CONTEXT_ID);
 pub struct ScrollTreeNodeId {
     /// The index of this scroll tree node in the tree's array of nodes.
     pub index: usize,
+}
+
+#[derive(Clone, PartialEq, PartialOrd, Ord, Hash, Debug, Eq)]
+pub struct RenderingGroupId(u64);
+
+static RENDER_GROUP_COUNTER: RwLock<RenderingGroupId> = RwLock::new(RenderingGroupId(0));
+
+impl Default for RenderingGroupId {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
+impl RenderingGroupId {
+    /// the new rendering group id
+    pub fn inc() -> RenderingGroupId {
+        let mut cur = RENDER_GROUP_COUNTER.write().unwrap();
+        let n = RenderingGroupId(cur.0 + 1);
+        *cur = n.clone();
+        n
+    }
+
+    pub fn webrender_pipeline_id(&self) -> WebRenderPipelineId {
+        WebRenderPipelineId(0, self.0 as u32)
+    }
+
+    pub fn first(&self) -> bool {
+        self.0 == 0
+    }
+
+    pub fn render_id(&self) -> Option<u64> {
+        Some(self.0)
+    }
 }

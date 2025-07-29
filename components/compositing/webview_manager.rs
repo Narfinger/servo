@@ -10,7 +10,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::RwLock;
 
-use base::id::WebViewId;
+use base::id::{RenderingGroupId, WebViewId};
 use compositing_traits::rendering_context::{self, RenderingContext};
 use compositing_traits::{CompositorMsg, CompositorProxy};
 use euclid::Size2D;
@@ -21,27 +21,13 @@ use webrender::{
     RenderApi, RenderApiSender, ShaderPrecacheFlags, Transaction, UploadMethod, VertexUsageHint,
     WebRenderOptions,
 };
+use webrender_api::PipelineId as WebRenderPipelineId;
 use webrender_api::units::DevicePixel;
 use webrender_api::{
-    ColorF, DocumentId, FramePublishId, FrameReadyParams, IdNamespace, RenderNotifier,
+    ColorF, DocumentId, FramePublishId, FrameReadyParams, IdNamespace, PipelineId, RenderNotifier,
 };
 
 use crate::webview_renderer::UnknownWebView;
-
-#[derive(Clone, PartialEq, PartialOrd, Ord, Hash, Debug, Eq)]
-pub(crate) struct RenderingGroupId(u64);
-
-static RENDER_GROUP_COUNTER: RwLock<RenderingGroupId> = RwLock::new(RenderingGroupId(0));
-
-impl RenderingGroupId {
-    /// the new rendering group id
-    fn inc() -> RenderingGroupId {
-        let mut cur = RENDER_GROUP_COUNTER.write().unwrap();
-        let n = RenderingGroupId(cur.0 + 1);
-        *cur = n.clone();
-        n
-    }
-}
 
 pub(crate) struct WebRenderInstance {
     pub(crate) rendering_context: Rc<dyn RenderingContext>,
@@ -156,7 +142,7 @@ impl<WebView> WebViewManager<WebView> {
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
         //let color = servo_config::pref!(shell_background_color_rgba);
-        if webview_group_id.0 == 1 {
+        if webview_group_id.first() {
             gl.clear_color(0.1, 0.3, 0.7, 1.0)
         } else {
             gl.clear_color(0.8, 0.3, 0.1, 1.0)
@@ -270,8 +256,8 @@ impl<WebView> WebViewManager<WebView> {
         self.rendering_contexts.get_mut(&group_id).unwrap()
     }
 
-    fn webrender_options(&self, id: u64) -> WebRenderOptions {
-        let clear_color = if id == 1 {
+    fn webrender_options(&self, id: RenderingGroupId) -> WebRenderOptions {
+        let clear_color = if id.first() {
             ColorF::new(0.1, 0.3, 0.7, 1.0)
         } else {
             ColorF::new(0.8, 0.3, 0.1, 1.0)
@@ -295,7 +281,7 @@ impl<WebView> WebViewManager<WebView> {
             upload_method: UploadMethod::PixelBuffer(VertexUsageHint::Stream),
             panic_on_gl_error: true,
             size_of_op: Some(servo_allocator::usable_size),
-            renderer_id: Some(id),
+            renderer_id: id.render_id(),
             ..Default::default()
         }
     }
@@ -328,7 +314,7 @@ impl<WebView> WebViewManager<WebView> {
         let (mut webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
             notifier.clone(),
-            self.webrender_options(new_group_id.0.clone()),
+            self.webrender_options(new_group_id.clone()),
             None,
         )
         .expect("Could not");

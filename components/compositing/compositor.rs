@@ -13,7 +13,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use base::Epoch;
 use base::cross_process_instant::CrossProcessInstant;
-use base::id::{PipelineId, WebViewId};
+use base::id::{PipelineId, RenderingGroupId, WebViewId};
 use bitflags::bitflags;
 use compositing_traits::display_list::{
     CompositorDisplayListInfo, HitTestInfo, ScrollTree, ScrollType,
@@ -53,7 +53,7 @@ use webrender_api::{
 
 use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
-use crate::webview_manager::{RenderingGroupId, WebViewManager};
+use crate::webview_manager::WebViewManager;
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
 
 #[derive(Debug, PartialEq)]
@@ -1049,7 +1049,10 @@ impl IOCompositor {
     /// pinch zoom, page zoom, and HiDPI scaling.
     fn send_root_pipeline_display_list(&mut self, webview_group_id: RenderingGroupId) {
         let mut transaction = Transaction::new();
-        self.send_root_pipeline_display_list_in_transaction(webview_group_id, &mut transaction);
+        self.send_root_pipeline_display_list_in_transaction(
+            webview_group_id.clone(),
+            &mut transaction,
+        );
         self.generate_frame(&mut transaction, RenderReasons::SCENE);
 
         self.webview_renderers
@@ -1064,11 +1067,13 @@ impl IOCompositor {
         webview_group_id: RenderingGroupId,
         transaction: &mut Transaction,
     ) {
-        let render_instance = self.webview_renderers.render_instance(webview_group_id);
+        let render_instance = self
+            .webview_renderers
+            .render_instance(webview_group_id.clone());
         // Every display list needs a pipeline, but we'd like to choose one that is unlikely
         // to conflict with our content pipelines, which start at (1, 1). (0, 0) is WebRender's
         // dummy pipeline, so we choose (0, 1).
-        let root_pipeline = WebRenderPipelineId(0, webview_group_id as u32);
+        let root_pipeline = webview_group_id.webrender_pipeline_id();
         transaction.set_root_pipeline(root_pipeline);
 
         let mut builder = webrender_api::DisplayListBuilder::new(root_pipeline);
@@ -1167,11 +1172,14 @@ impl IOCompositor {
         webview: Box<dyn WebViewTrait>,
         viewport_details: ViewportDetails,
     ) {
+        panic!("DO NOT ADD THIS WAY");
+        /*
         self.webview_renderers.add_webview(
-            1,
+            WebViewManager<WebViewRenderer>::WebRenderGroupId::inc(),
             webview.id(),
             WebViewRenderer::new(self.global.clone(), webview, viewport_details),
         );
+        */
     }
 
     pub fn add_webview_new_group(
@@ -1230,9 +1238,9 @@ impl IOCompositor {
             .group_id(webview_id)
             .expect("NOT IN GROUP");
         let painting_order_changed = if hide_others {
-            let painting_order = self.webview_renderers.painting_order(group_id);
+            let painting_order = self.webview_renderers.painting_order(group_id.clone());
             let result = painting_order.map(|(&id, _)| id).ne(once(webview_id));
-            self.webview_renderers.hide_all(group_id);
+            self.webview_renderers.hide_all(group_id.clone());
             self.webview_renderers.show(webview_id)?;
             result
         } else {
@@ -1267,9 +1275,9 @@ impl IOCompositor {
             .group_id(webview_id)
             .expect("Could not find group id");
         let painting_order_changed = if hide_others {
-            let painting_order = self.webview_renderers.painting_order(group_id);
+            let painting_order = self.webview_renderers.painting_order(group_id.clone());
             let result = painting_order.map(|(&id, _)| id).ne(once(webview_id));
-            self.webview_renderers.hide_all(group_id);
+            self.webview_renderers.hide_all(group_id.clone());
             self.webview_renderers.raise_to_top(webview_id)?;
             result
         } else {
@@ -1331,7 +1339,9 @@ impl IOCompositor {
             .webview_renderers
             .group_id(webview_id)
             .expect("Could not find groupid");
-        let render_instance = self.webview_renderers.render_instance(webview_group_id);
+        let render_instance = self
+            .webview_renderers
+            .render_instance(webview_group_id.clone());
         if render_instance.rendering_context.size() == new_size {
             return;
         }
@@ -1483,11 +1493,11 @@ impl IOCompositor {
             .refresh_driver
             .notify_will_paint(self.webview_renderers.iter());
         error!(
-            "Groups {:?},  group_id {webview_group_id}",
+            "Groups {:?},  group_id {webview_group_id:?}",
             self.webview_renderers.groups()
         );
-        self.send_root_pipeline_display_list(webview_group_id);
-        if let Err(error) = self.render_inner(webview_group_id) {
+        self.send_root_pipeline_display_list(webview_group_id.clone());
+        if let Err(error) = self.render_inner(webview_group_id.clone()) {
             warn!("Unable to render: {error:?}");
             return false;
         }
@@ -1507,7 +1517,7 @@ impl IOCompositor {
         page_rect: Option<Rect<f32, CSSPixel>>,
     ) -> Result<Option<RasterImage>, UnableToComposite> {
         let group_id = self.webview_renderers.group_id(webview_id).unwrap();
-        self.render_inner(group_id)?;
+        self.render_inner(group_id.clone())?;
         let render_instance = self.webview_renderers.render_instance(group_id);
 
         let size = render_instance.rendering_context.size2d().to_i32();
@@ -1557,11 +1567,12 @@ impl IOCompositor {
         &mut self,
         webview_group_id: RenderingGroupId,
     ) -> Result<(), UnableToComposite> {
-        self.webview_renderers.assert_no_gl_error(webview_group_id);
+        self.webview_renderers
+            .assert_no_gl_error(webview_group_id.clone());
 
         //warn!("render_inner for {webview_group_id}");
         //self.assert_no_gl_error();
-        self.clear_background(webview_group_id);
+        self.clear_background(webview_group_id.clone());
         let render_instance = &mut self.webview_renderers.render_instance_mut(webview_group_id);
         if let Err(err) = render_instance.rendering_context.make_current() {
             warn!("Failed to make the rendering context current: {:?}", err);
@@ -1781,8 +1792,10 @@ impl IOCompositor {
 
         let groups = self.webview_renderers.groups();
         for webview_group_id in groups {
-            warn!("perform_update for {webview_group_id}");
-            let render_instance = self.webview_renderers.render_instance(webview_group_id);
+            warn!("perform_update for {webview_group_id:?}");
+            let render_instance = self
+                .webview_renderers
+                .render_instance(webview_group_id.clone());
 
             // The WebXR thread may make a different context current
             if let Err(err) = render_instance.rendering_context.make_current() {
@@ -1804,7 +1817,7 @@ impl IOCompositor {
                 let mut transaction = Transaction::new();
                 if need_zoom {
                     self.send_root_pipeline_display_list_in_transaction(
-                        webview_group_id,
+                        webview_group_id.clone(),
                         &mut transaction,
                     );
                 }
