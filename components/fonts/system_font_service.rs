@@ -29,7 +29,7 @@ use style::values::computed::font::{
 };
 use style::values::computed::{FontStretch, FontWeight};
 use style::values::specified::FontStretch as SpecifiedFontStretch;
-use webrender_api::{FontInstanceFlags, FontInstanceKey, FontKey, IdNamespace};
+use webrender_api::{FontInstanceFlags, FontInstanceKey, FontKey};
 
 use crate::font::FontDescriptor;
 use crate::font_store::FontStore;
@@ -190,22 +190,36 @@ impl SystemFontService {
                         result.send(self.get_font_instance(identifier, pt_size, flags, webview_id));
                 },
                 SystemFontServiceMessage::GetFontKey(webview_id, result_sender) => {
+                    let (new_font_keys, new_font_instance_keys) =
+                        self.compositor_api.fetch_font_keys(1, 1, webview_id);
+                    result_sender.send(new_font_keys[0]).expect("BROKE");
+                    /*
+
                     self.fetch_new_keys();
 
                     let keys = self.free_font_keys.pop().unwrap();
                     for i in keys {
                         let _ = result_sender.send(i);
                     }
+                    */
 
                     //let _ = result_sender.send(self.free_font_keys.pop().unwrap());
                 },
                 SystemFontServiceMessage::GetFontInstanceKey(webview_id, result_sender) => {
+                    let (new_font_keys, new_font_instance_keys) =
+                        self.compositor_api.fetch_font_keys(1, 1, webview_id);
+                    result_sender
+                        .send(new_font_instance_keys[0])
+                        .expect("BROKE");
+
+                    /*
                     self.fetch_new_keys();
                     let keys = self.free_font_instance_keys.pop().unwrap();
                     for i in keys {
                         let _ = result_sender.send(i);
                     }
 
+                    */
                     //let _ = result_sender.send(self.free_font_instance_keys.pop().unwrap());
                 },
                 SystemFontServiceMessage::CollectMemoryReport(report_sender) => {
@@ -308,6 +322,7 @@ impl SystemFontService {
         webview_id: WebViewId,
     ) -> FontInstanceKey {
         error!("Calling get font instance {identifier:?}");
+        error!("For webview {webview_id:?}");
         self.fetch_new_keys();
 
         let compositor_api = &self.compositor_api;

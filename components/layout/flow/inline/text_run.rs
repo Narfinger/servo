@@ -12,7 +12,7 @@ use fonts::{
     FontContext, FontRef, GlyphRun, LAST_RESORT_GLYPH_ADVANCE, ShapingFlags, ShapingOptions,
 };
 use fonts_traits::ByteIndex;
-use log::warn;
+use log::{error, warn};
 use malloc_size_of_derive::MallocSizeOf;
 use range::Range as ServoRange;
 use servo_arc::Arc;
@@ -604,6 +604,7 @@ pub(super) fn add_or_get_font(
     font_context: &FontContext,
     webview_id: WebViewId,
 ) -> usize {
+    error!("Add or get font for {webview_id:?}");
     let font_instance_key = font.key(webview_id, font_context);
     for (index, ifc_font_info) in ifc_fonts.iter().enumerate() {
         if ifc_font_info.key == font_instance_key
