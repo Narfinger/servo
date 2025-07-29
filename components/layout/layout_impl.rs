@@ -603,8 +603,8 @@ impl LayoutThread {
         // If only the stacking context tree is required, and it's up-to-date,
         // layout is unnecessary, otherwise a layout is necessary.
         if necessary_phases == ReflowPhases::StackingContextTreeConstruction {
-            return self.stacking_context_tree.borrow().is_some() &&
-                !self.need_new_stacking_context_tree.get();
+            return self.stacking_context_tree.borrow().is_some()
+                && !self.need_new_stacking_context_tree.get();
         }
 
         // Otherwise, the only interesting thing is whether the current display
@@ -814,6 +814,7 @@ impl LayoutThread {
             iframe_sizes: Mutex::default(),
             use_rayon: rayon_pool.is_some(),
             image_resolver: image_resolver.clone(),
+            webview_id: self.webview_id,
         };
 
         let restyle = reflow_request
@@ -953,8 +954,8 @@ impl LayoutThread {
         let Some(fragment_tree) = &*self.fragment_tree.borrow() else {
             return;
         };
-        if !damage.contains(RestyleDamage::REBUILD_STACKING_CONTEXT) &&
-            !self.need_new_stacking_context_tree.get()
+        if !damage.contains(RestyleDamage::REBUILD_STACKING_CONTEXT)
+            && !self.need_new_stacking_context_tree.get()
         {
             return;
         }
@@ -1439,15 +1440,15 @@ impl ReflowPhases {
                 QueryMsg::ResolvedStyleQuery | QueryMsg::ScrollingAreaOrOffsetQuery => {
                     Self::StackingContextTreeConstruction
                 },
-                QueryMsg::ClientRectQuery |
-                QueryMsg::ContentBox |
-                QueryMsg::ContentBoxes |
-                QueryMsg::ElementInnerOuterTextQuery |
-                QueryMsg::InnerWindowDimensionsQuery |
-                QueryMsg::OffsetParentQuery |
-                QueryMsg::ResolvedFontStyleQuery |
-                QueryMsg::TextIndexQuery |
-                QueryMsg::StyleQuery => Self::empty(),
+                QueryMsg::ClientRectQuery
+                | QueryMsg::ContentBox
+                | QueryMsg::ContentBoxes
+                | QueryMsg::ElementInnerOuterTextQuery
+                | QueryMsg::InnerWindowDimensionsQuery
+                | QueryMsg::OffsetParentQuery
+                | QueryMsg::ResolvedFontStyleQuery
+                | QueryMsg::TextIndexQuery
+                | QueryMsg::StyleQuery => Self::empty(),
             },
         }
     }
