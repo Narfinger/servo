@@ -28,8 +28,8 @@ use servo::webrender_api::ScrollLocation;
 use servo::webrender_api::units::DeviceIntSize;
 use servo::{
     EventLoopWaker, ImeEvent, InputEvent, KeyboardEvent, MouseButtonEvent, MouseMoveEvent,
-    WebDriverCommandMsg, WebDriverScriptCommand, WebDriverUserPromptAction, WheelDelta, WheelEvent,
-    WheelMode,
+    RenderingContext, WebDriverCommandMsg, WebDriverScriptCommand, WebDriverUserPromptAction,
+    WheelDelta, WheelEvent, WheelMode,
 };
 use url::Url;
 use winit::application::ApplicationHandler;
@@ -687,24 +687,31 @@ impl ApplicationHandler<AppEvent> for App {
             // loop or servoshell may become unresponsive! (servo#30312)
             if Some(window_id) == self.other_window_id {
                 if let Some(ref mut minibrowser) = self.other_minibrowser {
-                    error!("REDRAW WITH OTHER");
+                    error!("UPDATE WITH OTHER");
                     minibrowser.update(
                         window.winit_window().unwrap(),
                         state,
                         "RedrawRequested",
                         true,
                     );
-                    minibrowser.paint(window.winit_window().unwrap());
+                    if let Some(window_id) = self.other_window_id {
+                        error!("FOUND OTHER WINDOW");
+                        if let Some(window) = self.windows.get(&window_id) {
+                            error!("PAINT ON OTHER WINDOW");
+                            minibrowser.paint(window.winit_window().unwrap());
+                        }
+                    }
                 }
             } else {
                 if let Some(ref mut minibrowser) = self.minibrowser {
-                    error!("REDRAW WITH ORIGINAL");
+                    error!("UPDATE WITH ORIGINAL");
                     minibrowser.update(
                         window.winit_window().unwrap(),
                         state,
                         "RedrawRequested",
                         false,
                     );
+                    error!("PAINT ON NORMAL WINDOW");
                     minibrowser.paint(window.winit_window().unwrap());
                 }
             }
@@ -754,7 +761,8 @@ impl ApplicationHandler<AppEvent> for App {
                                 &window,
                                 event_loop,
                                 self.proxy.clone().unwrap(),
-                                ServoUrl::parse("http://www.wikipedia.org").unwrap(),
+                                ServoUrl::parse("file://wikipedia.html").unwrap(),
+                                //ServoUrl::parse("http://www.wikipedia.org").unwrap(),
                                 window.id(),
                             ));
 

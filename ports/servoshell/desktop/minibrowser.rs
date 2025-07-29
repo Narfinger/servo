@@ -454,7 +454,7 @@ impl Minibrowser {
                 state.repaint_servo_if_necessary(paint_other);
 
                 if let Some(render_to_parent) = rendering_context.render_to_parent_callback() {
-                    error!("The callback thingy");
+                    error!("The callback thingy for {paint_other}");
                     ui.painter().add(PaintCallback {
                         rect,
                         callback: Arc::new(CallbackFn::new(move |info, painter| {
