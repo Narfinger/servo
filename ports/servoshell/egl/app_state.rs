@@ -100,7 +100,7 @@ struct RunningAppStateInner {
 
     other_contexts: Vec<Rc<dyn RenderingContext>>,
 
-    other_webview: Option<WebViewId>,
+    other_webview: Option<WebView>,
 }
 
 struct ServoShellServoDelegate {
@@ -337,6 +337,7 @@ impl RunningAppState {
                 animating_state_changed,
                 hidpi_scale_factor: Scale::new(hidpi_scale_factor),
                 other_contexts: vec![],
+                other_webview: None,
             }),
         });
 
@@ -362,11 +363,11 @@ impl RunningAppState {
             .url(Url::parse("https://m.wikipedia.com").unwrap())
             .hidpi_scale_factor(self.inner().hidpi_scale_factor)
             .delegate(self.clone())
-            .add_rendering_context(rc.clone())
+            .add_rendering_context(2, rc.clone())
             .build();
         webview.focus();
         self.add(webview.clone());
-        self.other_webview.insert(webview);
+        self.inner_mut().other_webview.insert(webview);
         self.inner_mut().other_contexts.push(rc);
     }
 
@@ -384,7 +385,7 @@ impl RunningAppState {
             .url(Url::parse("https://www.duckduckgo.com").unwrap())
             .hidpi_scale_factor(self.inner().hidpi_scale_factor)
             .delegate(self.clone())
-            .add_rendering_context(second_rendering_context)
+            .add_rendering_context(2, second_rendering_context)
             .build();
         webview.focus();
         self.add(webview.clone());

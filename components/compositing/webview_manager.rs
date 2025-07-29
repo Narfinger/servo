@@ -330,11 +330,10 @@ impl<WebView> WebViewManager<WebView> {
 
         let mut flags = webrender.get_debug_flags();
 
-
         //flags.toggle(webrender_api::DebugFlags::SHOW_OVERDRAW);
         flags.toggle(webrender_api::DebugFlags::PRIMITIVE_DBG);
         flags.toggle(webrender_api::DebugFlags::ZOOM_DBG);
-                webrender.set_debug_flags(flags);
+        webrender.set_debug_flags(flags);
 
         let s = WebRenderInstance {
             sender,

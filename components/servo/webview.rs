@@ -567,7 +567,7 @@ impl WebView {
         self.inner()
             .compositor
             .borrow_mut()
-            .render(self.inner().webview_group_id)
+            .render(self.inner().webview_group_id as u64)
     }
 
     /// Evaluate the specified string of JavaScript code. Once execution is complete or an error

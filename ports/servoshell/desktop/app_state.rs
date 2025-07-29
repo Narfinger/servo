@@ -239,12 +239,12 @@ impl RunningAppState {
         if paint_other {
             if let Some(ref w) = inner_mut.other_rc {
                 error!("PRESENT OTHER");
-                w.make_current();
+                //w.make_current();
                 w.present();
             }
         } else {
             error!("PRESENT NORMAL");
-            inner_mut.window.rendering_context().make_current();
+            //inner_mut.window.rendering_context().make_current();
             inner_mut.window.rendering_context().present();
         }
         inner_mut.need_repaint = false;
