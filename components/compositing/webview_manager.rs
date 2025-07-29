@@ -3,10 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use core::panic;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::collections::hash_map::{Values, ValuesMut};
+use std::ops::Deref;
 use std::rc::Rc;
+use std::sync::RwLock;
 
 use base::id::WebViewId;
 use compositing_traits::rendering_context::{self, RenderingContext};
@@ -26,7 +28,20 @@ use webrender_api::{
 
 use crate::webview_renderer::UnknownWebView;
 
-pub(crate) type RenderingGroupId = u64;
+#[derive(Clone, PartialEq, PartialOrd, Ord, Hash, Debug, Eq)]
+pub(crate) struct RenderingGroupId(u64);
+
+static RENDER_GROUP_COUNTER: RwLock<RenderingGroupId> = RwLock::new(RenderingGroupId(0));
+
+impl RenderingGroupId {
+    /// the new rendering group id
+    fn inc() -> RenderingGroupId {
+        let mut cur = RENDER_GROUP_COUNTER.write().unwrap();
+        let n = RenderingGroupId(cur.0 + 1);
+        *cur = n.clone();
+        n
+    }
+}
 
 pub(crate) struct WebRenderInstance {
     pub(crate) rendering_context: Rc<dyn RenderingContext>,
@@ -141,7 +156,7 @@ impl<WebView> WebViewManager<WebView> {
         // or where they are positioned. This is so WebView actually clears even before the
         // first WebView is ready.
         //let color = servo_config::pref!(shell_background_color_rgba);
-        if webview_group_id == 1 {
+        if webview_group_id.0 == 1 {
             gl.clear_color(0.1, 0.3, 0.7, 1.0)
         } else {
             gl.clear_color(0.8, 0.3, 0.1, 1.0)
@@ -170,7 +185,7 @@ impl<WebView> WebViewManager<WebView> {
         gid: RenderingGroupId,
         transaction: Transaction,
     ) {
-        self.assert_no_gl_error(gid);
+        self.assert_no_gl_error(gid.clone());
         //warn!("sending some transaction to {gid}");
         let rect = self.rendering_contexts.get_mut(&gid).unwrap();
         rect.webrender_api
@@ -198,7 +213,7 @@ impl<WebView> WebViewManager<WebView> {
             .filter(|(_group, instance)| instance.webrender_api.get_namespace_id() == id)
             .next()
         {
-            self.send_transaction_to_group(*group, transaction);
+            self.send_transaction_to_group(group.clone(), transaction);
         } else {
             error!("Could not find namespace, something is wrong");
         }
@@ -206,7 +221,7 @@ impl<WebView> WebViewManager<WebView> {
 
     pub(crate) fn flush_scene_builder(&self) {
         for (key, i) in self.rendering_contexts.iter() {
-            self.assert_no_gl_error(*key);
+            self.assert_no_gl_error(key.clone());
             i.webrender_api.flush_scene_builder();
         }
     }
@@ -232,7 +247,7 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn render_instance(&self, group_id: RenderingGroupId) -> &WebRenderInstance {
-        self.assert_no_gl_error(group_id);
+        self.assert_no_gl_error(group_id.clone());
         self.rendering_contexts.get(&group_id).unwrap()
     }
 
@@ -240,7 +255,7 @@ impl<WebView> WebViewManager<WebView> {
         self.webview_groups
             .get(webview_id)
             .and_then(|rgid| {
-                self.assert_no_gl_error(*rgid);
+                self.assert_no_gl_error(rgid.clone());
                 self.rendering_contexts.get(rgid)
             })
             .map(|rg| rg.webrender_document)
@@ -251,7 +266,7 @@ impl<WebView> WebViewManager<WebView> {
         &mut self,
         group_id: RenderingGroupId,
     ) -> &mut WebRenderInstance {
-        self.assert_no_gl_error(group_id);
+        self.assert_no_gl_error(group_id.clone());
         self.rendering_contexts.get_mut(&group_id).unwrap()
     }
 
@@ -294,10 +309,7 @@ impl<WebView> WebViewManager<WebView> {
             self.webview_groups.keys(),
             self.last_used_id
         );
-        let new_group_id = {
-            *self.last_used_id.get_or_insert(0) += 1;
-            self.last_used_id.unwrap()
-        };
+        let new_group_id = RenderingGroupId::inc();
 
         error!("WebGroupId {:?} {:?}", new_group_id, self.last_used_id);
         let gl = gleam::gl::ErrorReactingGl::wrap(rendering_context.gleam_gl_api(), gl_error_panic);
@@ -316,7 +328,7 @@ impl<WebView> WebViewManager<WebView> {
         let (mut webrender, sender) = webrender::create_webrender_instance(
             gl.clone(),
             notifier.clone(),
-            self.webrender_options(new_group_id),
+            self.webrender_options(new_group_id.0.clone()),
             None,
         )
         .expect("Could not");
@@ -325,14 +337,14 @@ impl<WebView> WebViewManager<WebView> {
         let webrender_document = api.add_document(rendering_context.size2d().to_i32());
         error!(
             "WebviewGroupId: {:?}, has rendering document {:?}",
-            new_group_id, webrender_document
+            &new_group_id, webrender_document
         );
 
         let mut flags = webrender.get_debug_flags();
 
         //flags.toggle(webrender_api::DebugFlags::SHOW_OVERDRAW);
-        flags.toggle(webrender_api::DebugFlags::PRIMITIVE_DBG);
-        flags.toggle(webrender_api::DebugFlags::ZOOM_DBG);
+        //flags.toggle(webrender_api::DebugFlags::PRIMITIVE_DBG);
+        //flags.toggle(webrender_api::DebugFlags::ZOOM_DBG);
         webrender.set_debug_flags(flags);
 
         let s = WebRenderInstance {
@@ -349,9 +361,9 @@ impl<WebView> WebViewManager<WebView> {
         // in mysterious ways
         assert!(!self.rendering_contexts.contains_key(&new_group_id));
 
-        self.rendering_contexts.insert(new_group_id, s);
-        self.painting_order.insert(new_group_id, vec![]);
-        self.assert_no_gl_error(new_group_id);
+        self.rendering_contexts.insert(new_group_id.clone(), s);
+        self.painting_order.insert(new_group_id.clone(), vec![]);
+        self.assert_no_gl_error(new_group_id.clone());
         new_group_id
     }
 
