@@ -283,17 +283,23 @@ impl FontContext {
         )?))
     }
 
-    pub(crate) fn create_font_instance_key(&self, font: &Font) -> FontInstanceKey {
+    pub(crate) fn create_font_instance_key(
+        &self,
+        font: &Font,
+        webview_id: WebViewId,
+    ) -> FontInstanceKey {
         match font.template.identifier() {
             FontIdentifier::Local(_) => self.system_font_service_proxy.get_system_font_instance(
                 font.template.identifier(),
                 font.descriptor.pt_size,
                 font.webrender_font_instance_flags(),
+                webview_id,
             ),
             FontIdentifier::Web(_) => self.create_web_font_instance(
                 font.template.clone(),
                 font.descriptor.pt_size,
                 font.webrender_font_instance_flags(),
+                webview_id,
             ),
         }
     }
@@ -303,7 +309,10 @@ impl FontContext {
         font_template: FontTemplateRef,
         pt_size: Au,
         flags: FontInstanceFlags,
+        webview_id: WebViewId,
     ) -> FontInstanceKey {
+        /*
+
         let identifier = font_template.identifier().clone();
         let font_data = self
             .get_font_data(&identifier)
@@ -337,6 +346,7 @@ impl FontContext {
                 font_instance_key
             });
         key
+         */
     }
 
     fn invalidate_font_groups_after_web_font_load(&self) {

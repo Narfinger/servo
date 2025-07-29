@@ -9,6 +9,7 @@ use std::ops::{Deref, RangeInclusive};
 use std::{fmt, thread};
 
 use app_units::Au;
+use base::id::WebViewId;
 use compositing_traits::CrossProcessCompositorApi;
 use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
 use log::{debug, error};
@@ -66,9 +67,10 @@ pub enum SystemFontServiceMessage {
         Au,
         FontInstanceFlags,
         IpcSender<FontInstanceKey>,
+        WebViewId,
     ),
-    GetFontKey(IpcSender<FontKey>),
-    GetFontInstanceKey(IpcSender<FontInstanceKey>),
+    GetFontKey(WebViewId, IpcSender<FontKey>),
+    GetFontInstanceKey(WebViewId, IpcSender<FontInstanceKey>),
     CollectMemoryReport(ReportsChan),
     Exit(IpcSender<()>),
     Ping,
@@ -490,6 +492,7 @@ impl SystemFontServiceProxy {
         identifier: FontIdentifier,
         size: Au,
         flags: FontInstanceFlags,
+        webview_id: WebViewId,
     ) -> FontInstanceKey {
         let (response_chan, response_port) = ipc::channel().expect("failed to create IPC channel");
         self.sender
@@ -499,6 +502,7 @@ impl SystemFontServiceProxy {
                 size,
                 flags,
                 response_chan,
+                webview_id,
             ))
             .expect("failed to send message to system font service");
 

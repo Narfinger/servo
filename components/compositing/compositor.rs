@@ -734,6 +734,8 @@ impl IOCompositor {
                 display_list_descriptor,
                 display_list_receiver,
             } => {
+                error!("Sending display list to {webview_id}");
+
                 // This must match the order from the sender, currently in `shared/script/lib.rs`.
                 let display_list_info = match display_list_receiver.recv() {
                     Ok(display_list_info) => display_list_info,
