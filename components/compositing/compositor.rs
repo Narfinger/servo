@@ -51,10 +51,10 @@ use webrender_api::{
     TransformStyle,
 };
 
-use crate::InitialCompositorState;
 use crate::refresh_driver::RefreshDriver;
 use crate::webview_manager::WebViewManager;
 use crate::webview_renderer::{PinchZoomResult, UnknownWebView, WebViewRenderer};
+use crate::{InitialCompositorState, webview_manager};
 
 #[derive(Debug, PartialEq)]
 enum UnableToComposite {
@@ -417,7 +417,7 @@ impl IOCompositor {
             CompositorMsg::CollectMemoryReport,
         );
         let mut webview_renderers = WebViewManager::new(state.sender);
-        webview_renderers.add_webview_group(state.rendering_context);
+        webview_renderers.add_webview_group(None, state.rendering_context);
         let compositor = IOCompositor {
             global: Rc::new(RefCell::new(ServoRenderer {
                 refresh_driver: RefreshDriver::new(
@@ -1172,14 +1172,15 @@ impl IOCompositor {
         webview: Box<dyn WebViewTrait>,
         viewport_details: ViewportDetails,
     ) {
-        panic!("DO NOT ADD THIS WAY");
-        /*
+        //panic!("DO NOT ADD THIS WAY");
+
+        let groups = self.webview_renderers.groups();
+        let first_group = groups.first().expect("NO first group");
         self.webview_renderers.add_webview(
-            WebViewManager<WebViewRenderer>::WebRenderGroupId::inc(),
+            first_group.clone(),
             webview.id(),
             WebViewRenderer::new(self.global.clone(), webview, viewport_details),
         );
-        */
     }
 
     pub fn add_webview_new_group(
@@ -1188,7 +1189,13 @@ impl IOCompositor {
         rendering_context: Rc<dyn RenderingContext>,
         viewport_details: ViewportDetails,
     ) {
-        let group_id = self.webview_renderers.add_webview_group(rendering_context);
+        error!(
+            "ADD_WEBVIEW_NEW_GROUP WITH ID: {:?}",
+            webview.rendering_group_id()
+        );
+        let group_id = self
+            .webview_renderers
+            .add_webview_group(webview.rendering_group_id(), rendering_context);
         let wvid = webview.id();
         let wvr = WebViewRenderer::new(self.global.clone(), webview, viewport_details);
         self.webview_renderers.add_webview(group_id, wvid, wvr);

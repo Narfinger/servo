@@ -18,6 +18,7 @@ use embedder_traits::{
     ScreenGeometry, Theme, ViewportDetails,
 };
 use euclid::{Point2D, Scale, Size2D};
+use log::error;
 use servo_geometry::DeviceIndependentPixel;
 use url::Url;
 use webrender_api::ScrollLocation;
@@ -186,6 +187,10 @@ impl WebView {
 
     fn inner_mut(&self) -> RefMut<'_, WebViewInner> {
         self.0.borrow_mut()
+    }
+
+    pub fn rendering_group_id(&self) -> RenderingGroupId {
+        self.inner().webview_group_id.clone()
     }
 
     pub(crate) fn viewport_details(&self) -> ViewportDetails {
@@ -597,6 +602,12 @@ impl WebViewTrait for ServoRendererWebView {
         self.id
     }
 
+    fn rendering_group_id(&self) -> Option<RenderingGroupId> {
+        self.weak_handle
+            .upgrade()
+            .map(|wv| wv.borrow().webview_group_id.clone())
+    }
+
     fn screen_geometry(&self) -> Option<ScreenGeometry> {
         let webview = WebView::from_weak_handle(&self.weak_handle)?;
         webview.delegate().screen_geometry(webview)
@@ -642,7 +653,8 @@ impl<'servo> WebViewBuilder<'servo> {
 
     pub fn add_rendering_context(mut self, rc: Rc<dyn RenderingContext>) -> Self {
         self.rendering_context = Some(rc);
-        self.group_id = RenderingGroupId::inc();
+        self.group_id = RenderingGroupId::new_rendergroup_id();
+        error!("Webview with group_id = {:?}", self.group_id);
         self
     }
 

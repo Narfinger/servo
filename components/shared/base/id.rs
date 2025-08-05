@@ -403,20 +403,20 @@ pub struct ScrollTreeNodeId {
     pub index: usize,
 }
 
-#[derive(Clone, PartialEq, PartialOrd, Ord, Hash, Debug, Eq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Ord, Hash, Eq)]
 pub struct RenderingGroupId(u64);
 
 static RENDER_GROUP_COUNTER: RwLock<RenderingGroupId> = RwLock::new(RenderingGroupId(0));
 
 impl Default for RenderingGroupId {
     fn default() -> Self {
-        Self(0)
+        Self(RENDER_GROUP_COUNTER.read().unwrap().clone().0)
     }
 }
 
 impl RenderingGroupId {
-    /// the new rendering group id
-    pub fn inc() -> RenderingGroupId {
+    /// the new rendering group id. The first returned id will be 1.
+    pub fn new_rendergroup_id() -> RenderingGroupId {
         let mut cur = RENDER_GROUP_COUNTER.write().unwrap();
         let n = RenderingGroupId(cur.0 + 1);
         *cur = n.clone();

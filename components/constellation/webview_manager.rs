@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 
 use base::id::WebViewId;
+use log::error;
 
 #[derive(Debug)]
 pub struct WebViewManager<WebView> {
@@ -68,6 +69,8 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub fn focus(&mut self, webview_id: WebViewId) {
+        error!("FOCUS IN WEBVIWE MANAGER");
+
         debug_assert!(self.webviews.contains_key(&webview_id));
         self.focus_order.retain(|b| *b != webview_id);
         self.focus_order.push(webview_id);

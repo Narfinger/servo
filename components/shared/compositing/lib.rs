@@ -6,7 +6,7 @@
 
 use std::fmt::{Debug, Error, Formatter};
 
-use base::id::{PipelineId, WebViewId};
+use base::id::{PipelineId, RenderingGroupId, WebViewId};
 use crossbeam_channel::Sender;
 use embedder_traits::{AnimationState, EventLoopWaker, TouchEventResult};
 use euclid::Rect;
@@ -560,6 +560,7 @@ impl From<SerializableImageData> for ImageData {
 /// layer.
 pub trait WebViewTrait {
     fn id(&self) -> WebViewId;
+    fn rendering_group_id(&self) -> Option<RenderingGroupId>;
     fn screen_geometry(&self) -> Option<ScreenGeometry>;
     fn set_animating(&self, new_value: bool);
 }

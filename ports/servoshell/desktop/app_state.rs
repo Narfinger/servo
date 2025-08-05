@@ -91,6 +91,8 @@ pub struct RunningAppStateInner {
     /// because every `WebView` shares a `RenderingContext`.
     need_repaint: bool,
 
+    pub(crate) original_rc: Option<Rc<dyn RenderingContext>>,
+
     pub(crate) webview: Option<WebView>,
 
     pub(crate) other_webview: Option<WebView>,
@@ -129,6 +131,7 @@ impl RunningAppState {
                 other_webview: None,
                 other_rc: None,
                 webview: None,
+                original_rc: None,
             }),
         }
     }
@@ -139,13 +142,19 @@ impl RunningAppState {
         webview.raise_to_top(true);
     }
 
-    pub(crate) fn create_toplevel_webview(self: &Rc<Self>, url: Url) -> WebView {
+    pub(crate) fn create_toplevel_webview(
+        self: &Rc<Self>,
+        //rc: Rc<dyn RenderingContext>,
+        url: Url,
+    ) -> WebView {
         let webview = WebViewBuilder::new(self.servo())
             .url(url)
             .hidpi_scale_factor(self.inner().window.hidpi_scale_factor())
             .delegate(self.clone())
+            //.add_rendering_context(rc.clone())
             .build();
 
+        //self.inner_mut().original_rc = Some(rc);
         webview.notify_theme_change(self.inner().window.theme());
         self.add(webview.clone());
         webview
@@ -159,12 +168,13 @@ impl RunningAppState {
         let webview = WebViewBuilder::new(self.servo())
             .url(Url::from_str("http://www.wikipedia.org").unwrap())
             .delegate(self.clone())
-            .add_rendering_context(1, rendering_context.clone())
+            .add_rendering_context(rendering_context.clone())
             .build();
         assert!(self.inner().other_webview.is_none());
         assert!(self.inner().other_rc.is_none());
         let _ = self.inner_mut().other_webview.insert(webview.clone());
         let _ = self.inner_mut().other_rc.insert(rendering_context);
+        webview.raise_to_top(true);
         webview
     }
 
@@ -220,10 +230,13 @@ impl RunningAppState {
                     error!("Could not paint other webview");
                     return;
                 }
-            } else {
-                error!("PAINT ORIGINAL");
-                if !self.focused_webview().unwrap().paint() {
-                    error!("Could not paint original webview");
+            }
+        } else {
+            error!("PAINT ORIGINAL");
+            error!("focused {:?}", self.focused_webview().map(|wv| wv.id()));
+            if let Some(ref webview) = self.focused_webview() {
+                if !webview.paint() {
+                    error!("Coult not paint original webview");
                 }
             }
         }

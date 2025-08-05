@@ -211,7 +211,13 @@ impl App {
             webdriver_receiver,
         ));
         running_state.create_and_focus_toplevel_webview(self.initial_url.clone().into_url());
-
+        /*
+        let wv = running_state.create_toplevel_webview(
+            window.rendering_context(),
+            self.initial_url.clone().into_url(),
+        );
+        wv.focus();
+        */
         if let Some(ref mut minibrowser) = self.minibrowser {
             minibrowser.update(
                 window.winit_window().unwrap(),
@@ -351,7 +357,7 @@ impl App {
                 },
                 MinibrowserEvent::NewWebView => {
                     minibrowser.update_location_dirty(false);
-                    state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
+                    //state.create_and_focus_toplevel_webview(Url::parse("servo:newtab").unwrap());
                 },
                 MinibrowserEvent::CloseWebView(id) => {
                     minibrowser.update_location_dirty(false);
@@ -386,14 +392,16 @@ impl App {
                     running_state.forward_webdriver_command(msg);
                 },
                 WebDriverCommandMsg::NewWebView(response_sender, load_status_sender) => {
+                    /*
                     let new_webview =
-                        running_state.create_toplevel_webview(Url::parse("about:blank").unwrap());
+                    running_state.create_toplevel_webview(Url::parse("about:blank").unwrap());
 
                     if let Err(error) = response_sender.send(new_webview.id()) {
                         warn!("Failed to send response of NewWebview: {error}");
                     }
 
                     running_state.set_load_status_sender(new_webview.id(), load_status_sender);
+                    */
                 },
                 WebDriverCommandMsg::CloseWebView(webview_id) => {
                     running_state.close_webview(webview_id);

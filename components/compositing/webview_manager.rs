@@ -162,7 +162,10 @@ impl<WebView> WebViewManager<WebView> {
     }
 
     pub(crate) fn assert_no_gl_error(&self, group_id: RenderingGroupId) {
-        let rtc = self.rendering_contexts.get(&group_id).expect("No group");
+        let rtc = self
+            .rendering_contexts
+            .get(&group_id)
+            .expect(&format!("No group {:?}", group_id));
         debug_assert_eq!(rtc.webrender_gl.get_error(), gleam::gl::NO_ERROR);
     }
 
@@ -288,14 +291,16 @@ impl<WebView> WebViewManager<WebView> {
 
     pub(crate) fn add_webview_group(
         &mut self,
+        new_group_id: Option<RenderingGroupId>,
         rendering_context: Rc<dyn RenderingContext>,
     ) -> RenderingGroupId {
+        let new_group_id = new_group_id.unwrap_or(RenderingGroupId::default());
         error!(
             "Adding webview group! map {:?} id {:?}",
             self.webview_groups.keys(),
             self.last_used_id
         );
-        let new_group_id = RenderingGroupId::inc();
+        //let new_group_id = RenderingGroupId::new_rendergroup_id();
 
         error!("WebGroupId {:?} {:?}", new_group_id, self.last_used_id);
         let gl = gleam::gl::ErrorReactingGl::wrap(rendering_context.gleam_gl_api(), gl_error_panic);
