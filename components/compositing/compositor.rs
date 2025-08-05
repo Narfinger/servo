@@ -682,14 +682,17 @@ impl IOCompositor {
                 let mut txn = Transaction::new();
                 txn.set_display_list(WebRenderEpoch(0), (pipeline, Default::default()));
                 self.generate_frame(&mut txn, RenderReasons::SCENE);
-                let webview_id = self
+                if let Some(webview_id) = self
                     .global
                     .borrow()
                     .pipeline_to_webview_map
                     .get(&pipeline.into())
-                    .expect("No pipeline")
-                    .clone();
-                self.webview_renderers.send_transaction(webview_id, txn);
+                {
+                    self.webview_renderers
+                        .send_transaction(webview_id.clone(), txn);
+                } else {
+                    error!("You are trying to send to pipeline that does not exist yet.");
+                }
             },
 
             CompositorMsg::SendScrollNode(webview_id, pipeline_id, offset, external_scroll_id) => {

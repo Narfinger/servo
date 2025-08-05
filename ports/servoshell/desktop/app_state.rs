@@ -166,7 +166,7 @@ impl RunningAppState {
     ) -> WebView {
         error!("Adding window");
         let webview = WebViewBuilder::new(self.servo())
-            .url(Url::from_str("http://www.wikipedia.org").unwrap())
+            .url(Url::from_str("http://www.giphy.com").unwrap())
             .delegate(self.clone())
             .add_rendering_context(rendering_context.clone())
             .build();

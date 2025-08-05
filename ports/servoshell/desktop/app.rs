@@ -89,12 +89,15 @@ impl App {
         servo_shell_preferences: ServoShellPreferences,
         events_loop: &EventsLoop,
     ) -> Self {
-        let initial_url = get_default_url(
+        let initial_url = ServoUrl::parse("http://www.giphy.com").unwrap();
+        /*
+        get_default_url(
             servo_shell_preferences.url.as_deref(),
             env::current_dir().unwrap(),
             |path| fs::metadata(path).is_ok(),
             &servo_shell_preferences,
         );
+        */
 
         let t = Instant::now();
         App {
