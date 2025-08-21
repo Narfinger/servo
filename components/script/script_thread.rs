@@ -1223,8 +1223,8 @@ impl ScriptThread {
             // > doc and its node navigable to reflect the current state.
             built_any_display_lists = document
                 .update_the_rendering()
-                .contains(ReflowPhasesRun::BuiltDisplayList)
-                || built_any_display_lists;
+                .contains(ReflowPhasesRun::BuiltDisplayList) ||
+                built_any_display_lists;
 
             // TODO: Process top layer removals according to
             // https://drafts.csswg.org/css-position-4/#process-top-layer-removals.
@@ -1252,10 +1252,10 @@ impl ScriptThread {
             .iter()
             .any(|(_, document)| document.needs_rendering_update());
         let running_animations = self.documents.borrow().iter().any(|(_, document)| {
-            document.is_fully_active()
-                && !document.window().throttled()
-                && (document.animations().running_animation_count() != 0
-                    || document.has_active_request_animation_frame_callbacks())
+            document.is_fully_active() &&
+                !document.window().throttled() &&
+                (document.animations().running_animation_count() != 0 ||
+                    document.has_active_request_animation_frame_callbacks())
         });
 
         // If we are not running animations and no rendering update is
@@ -1372,8 +1372,8 @@ impl ScriptThread {
                             // creator's origin. This must match the logic in the constellation
                             // when creating a new pipeline
                             let not_an_about_blank_and_about_srcdoc_load =
-                                new_layout_info.load_data.url.as_str() != "about:blank"
-                                    && new_layout_info.load_data.url.as_str() != "about:srcdoc";
+                                new_layout_info.load_data.url.as_str() != "about:blank" &&
+                                    new_layout_info.load_data.url.as_str() != "about:srcdoc";
                             let origin = if not_an_about_blank_and_about_srcdoc_load {
                                 MutableOrigin::new(new_layout_info.load_data.url.origin())
                             } else if let Some(parent) =
@@ -1537,8 +1537,8 @@ impl ScriptThread {
             docs.clear();
         }
 
-        let built_any_display_lists = self.needs_rendering_update.load(Ordering::Relaxed)
-            && self.update_the_rendering(can_gc);
+        let built_any_display_lists = self.needs_rendering_update.load(Ordering::Relaxed) &&
+            self.update_the_rendering(can_gc);
 
         self.maybe_fulfill_font_ready_promises(can_gc);
         self.maybe_send_idle_document_state_to_constellation();
@@ -1875,13 +1875,13 @@ impl ScriptThread {
                 *self.receivers.webgpu_receiver.borrow_mut() =
                     ROUTER.route_ipc_receiver_to_new_crossbeam_receiver(port);
             },
-            msg @ ScriptThreadMessage::AttachLayout(..)
-            | msg @ ScriptThreadMessage::Viewport(..)
-            | msg @ ScriptThreadMessage::Resize(..)
-            | msg @ ScriptThreadMessage::ExitFullScreen(..)
-            | msg @ ScriptThreadMessage::SendInputEvent(..)
-            | msg @ ScriptThreadMessage::TickAllAnimations(..)
-            | msg @ ScriptThreadMessage::ExitScriptThread => {
+            msg @ ScriptThreadMessage::AttachLayout(..) |
+            msg @ ScriptThreadMessage::Viewport(..) |
+            msg @ ScriptThreadMessage::Resize(..) |
+            msg @ ScriptThreadMessage::ExitFullScreen(..) |
+            msg @ ScriptThreadMessage::SendInputEvent(..) |
+            msg @ ScriptThreadMessage::TickAllAnimations(..) |
+            msg @ ScriptThreadMessage::ExitScriptThread => {
                 panic!("should have handled {:?} already", msg)
             },
             ScriptThreadMessage::SetScrollStates(pipeline_id, scroll_states) => {
