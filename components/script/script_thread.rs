@@ -127,7 +127,6 @@ use crate::dom::element::Element;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::html::htmliframeelement::HTMLIFrameElement;
 use crate::dom::html::htmlslotelement::HTMLSlotElement;
-use crate::dom::mutationobserver::MutationObserver;
 use crate::dom::node::NodeTraits;
 use crate::dom::servoparser::{ParserContext, ServoParser};
 use crate::dom::types::DebuggerGlobalScope;
@@ -496,16 +495,6 @@ impl ScriptThread {
     pub(crate) fn prepare_for_shutdown() {
         with_script_thread(|script_thread| {
             script_thread.prepare_for_shutdown_inner();
-        })
-    }
-
-    pub(crate) fn add_mutation_observer(observer: &MutationObserver) {
-        with_script_thread(|script_thread| {
-            script_thread
-                .mutation_observers
-                .mutation_observers
-                .borrow_mut()
-                .push(Dom::from_ref(observer));
         })
     }
 
