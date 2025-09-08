@@ -716,7 +716,7 @@ impl ScriptThread {
 
     /// Creates a guard that sets user_is_interacting to true and returns the
     /// state of user_is_interacting on drop of the guard.
-    pub(crate) fn user_iteracting_guard() -> ScriptUserInteractingGuard {
+    pub(crate) fn user_interacting_guard() -> ScriptUserInteractingGuard {
         with_script_thread(|script_thread| {
             ScriptUserInteractingGuard::new(script_thread.is_user_interacting.clone())
         })
@@ -1075,7 +1075,7 @@ impl ScriptThread {
             return;
         }
 
-        let _ = ScriptUserInteractingGuard::new(self.is_user_interacting.clone());
+        let _guard = ScriptUserInteractingGuard::new(self.is_user_interacting.clone());
         document.event_handler().handle_pending_input_events(can_gc);
     }
 
