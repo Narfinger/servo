@@ -27,12 +27,13 @@ use num_traits::Float;
 
 use crate::JSTraceable;
 use crate::codegen::GenericBindings::EventModifierInitBinding::EventModifierInit;
+use crate::domstring::DOMString;
 use crate::inheritance::Castable;
 use crate::num::Finite;
 use crate::reflector::{DomObject, Reflector};
 use crate::root::DomRoot;
 use crate::script_runtime::JSContext as SafeJSContext;
-use crate::str::{ByteString, DOMString, USVString};
+use crate::str::{ByteString, USVString};
 use crate::trace::RootedTraceableBox;
 use crate::utils::{DOMClass, DOMJSClass};
 
@@ -72,10 +73,20 @@ pub enum StringificationBehavior {
     Empty,
 }
 
-// https://heycam.github.io/webidl/#es-DOMString
-impl ToJSValConvertible for DOMString {
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        (**self).to_jsval(cx, rval);
+impl FromJSValConvertible for DOMString {
+    type Config = StringificationBehavior;
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: HandleValue,
+        null_behavior: StringificationBehavior,
+    ) -> Result<ConversionResult<DOMString>, ()> {
+        if null_behavior == StringificationBehavior::Empty && value.get().is_null() {
+            Ok(ConversionResult::Success(DOMString::new()))
+        } else {
+            Ok(ConversionResult::Success(DOMString::from_js_string(
+                cx, value,
+            )))
+        }
     }
 }
 
@@ -100,30 +111,6 @@ impl<T: FromJSValConvertible> SafeFromJSValConvertible for T {
         option: Self::Config,
     ) -> Result<ConversionResult<Self>, ()> {
         unsafe { T::from_jsval(*cx, value, option) }
-    }
-}
-
-// https://heycam.github.io/webidl/#es-DOMString
-impl FromJSValConvertible for DOMString {
-    type Config = StringificationBehavior;
-    unsafe fn from_jsval(
-        cx: *mut JSContext,
-        value: HandleValue,
-        null_behavior: StringificationBehavior,
-    ) -> Result<ConversionResult<DOMString>, ()> {
-        if null_behavior == StringificationBehavior::Empty && value.get().is_null() {
-            Ok(ConversionResult::Success(DOMString::new()))
-        } else {
-            match ptr::NonNull::new(ToString(cx, value)) {
-                Some(jsstr) => Ok(ConversionResult::Success(DOMString::from_string(
-                    jsstr_to_string(cx, jsstr),
-                ))),
-                None => {
-                    debug!("ToString failed");
-                    Err(())
-                },
-            }
-        }
     }
 }
 
