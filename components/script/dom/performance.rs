@@ -32,6 +32,7 @@ use crate::dom::performanceobserver::PerformanceObserver as DOMPerformanceObserv
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
 
+// Because we use DOMString::eq_ascii these should only be ascii strings
 const INVALID_ENTRY_NAMES: &[&str] = &[
     "navigationStart",
     "unloadEventStart",
@@ -489,7 +490,7 @@ impl PerformanceMethods<crate::DomTypeHolder> for Performance {
     fn Mark(&self, mark_name: DOMString, can_gc: CanGc) -> Fallible<()> {
         let global = self.global();
         // Step 1.
-        if global.is::<Window>() && INVALID_ENTRY_NAMES.contains(&&*mark_name.str()) {
+        if global.is::<Window>() && INVALID_ENTRY_NAMES.iter().any(|s| mark_name.eq_ascii(s)) {
             return Err(Error::Syntax(None));
         }
 

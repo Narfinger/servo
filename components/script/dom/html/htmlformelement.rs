@@ -17,7 +17,6 @@ use mime::{self, Mime};
 use net_traits::http_percent_encode;
 use net_traits::request::Referrer;
 use rand::random;
-use rand::random;
 use rustc_hash::FxBuildHasher;
 use script_bindings::match_domstring_ascii;
 use style::attr::AttrValue;

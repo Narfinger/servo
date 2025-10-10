@@ -16,10 +16,12 @@ use html5ever::{LocalName, Namespace};
 use js::conversions::{ToJSValConvertible, jsstr_to_string};
 use js::gc::MutableHandleValue;
 use js::jsapi::{Heap, JS_GetLatin1StringCharsAndLength, JSContext, JSString};
+use js::jsval::StringValue;
 use js::rust::{Runtime, Trace};
 use malloc_size_of::MallocSizeOfOps;
 use num_traits::Zero;
 use regex::Regex;
+use smartstring::alias::String as SmartString;
 use style::Atom;
 use style::str::HTML_SPACE_CHARACTERS;
 
@@ -47,9 +49,25 @@ pub enum EncodedBytes<'a> {
     Utf8Bytes(&'a [u8]),
 }
 
+impl From<EncodedBytes<'_>> for Atom {
+    fn from(contents: EncodedBytes) -> Atom {
+        let res = match contents {
+            EncodedBytes::Latin1Bytes(items) => {
+                if items.iter().all(|c| c.is_ascii()) {
+                    unsafe { Some(str::from_utf8_unchecked(items)) }
+                } else {
+                    None
+                }
+            },
+            EncodedBytes::Utf8Bytes(s) => Some(unsafe { str::from_utf8_unchecked(s) }),
+        };
+        Atom::from(res.unwrap())
+    }
+}
+
 enum DOMStringType {
     /// A simple rust string
-    Rust(String),
+    Rust(SmartString),
     /// A JS String stored in mozjs.
     JSString(RootedTraceableBox<Heap<*mut JSString>>),
     #[cfg(test)]
@@ -61,7 +79,7 @@ enum DOMStringType {
 impl DOMStringType {
     #[allow(unused)]
     /// Returns the str if Rust and otherwise panic. You need to call `make_rust`.
-    fn str(&self) -> &str {
+    fn str(&self) -> &SmartString {
         match self {
             DOMStringType::Rust(s) => s,
             DOMStringType::JSString(_rooted_traceable_box) => {
@@ -139,7 +157,7 @@ impl Ord for StringView<'_> {
 
 impl From<StringView<'_>> for String {
     fn from(value: StringView<'_>) -> Self {
-        String::from(value.0.str())
+        value.0.str().to_owned().into()
     }
 }
 
@@ -216,6 +234,26 @@ impl EncodedBytesView<'_> {
         }
     }
 
+    pub fn split_html_space_characters<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = EncodedBytes<'a>> + 'a> {
+        match self.encoded_bytes() {
+            EncodedBytes::Latin1Bytes(items) => Box::new(
+                items
+                    .split(|c| {
+                        [ASCII_CR, ASCII_END, ASCII_NEWLINE, ASCII_SPACE, ASCII_TAB].contains(c)
+                    })
+                    .map(EncodedBytes::Latin1Bytes),
+            ),
+            EncodedBytes::Utf8Bytes(s) => Box::new(
+                unsafe { str::from_utf8_unchecked(s) }
+                    .split(|c| HTML_SPACE_CHARACTERS.contains(&c))
+                    .map(|s| s.as_bytes())
+                    .map(EncodedBytes::Utf8Bytes),
+            ),
+        }
+    }
+
     fn is_empty(&self) -> bool {
         match self.encoded_bytes() {
             EncodedBytes::Latin1Bytes(items) => items.is_empty(),
@@ -277,7 +315,7 @@ impl Clone for DOMString {
     fn clone(&self) -> Self {
         self.make_rust();
         if let DOMStringType::Rust(ref s) = *self.0.borrow() {
-            DOMString::from_string(s.to_owned())
+            DOMString(RefCell::new(DOMStringType::Rust(s.to_owned())))
         } else {
             unreachable!()
         }
@@ -287,7 +325,7 @@ impl Clone for DOMString {
 impl DOMString {
     /// Creates a new `DOMString`.
     pub fn new() -> DOMString {
-        DOMString(RefCell::new(DOMStringType::Rust(String::new())))
+        DOMString(RefCell::new(DOMStringType::Rust(SmartString::new())))
     }
 
     /// Creates the string from js. If the string can be encoded in latin1, just take the reference
@@ -295,7 +333,7 @@ impl DOMString {
     pub fn from_js_string(cx: SafeJSContext, value: js::gc::HandleValue) -> DOMString {
         let string_ptr = unsafe { js::rust::ToString(*cx, value) };
         let inner = if string_ptr.is_null() {
-            DOMStringType::Rust(String::new())
+            DOMStringType::Rust(SmartString::new())
         } else {
             let latin1 = unsafe { js::jsapi::JS_DeprecatedStringHasLatin1Chars(string_ptr) };
             if latin1 {
@@ -304,7 +342,7 @@ impl DOMString {
             } else {
                 // We need to convert the string anyway as it is not just latin1
                 DOMStringType::Rust(unsafe {
-                    jsstr_to_string(*cx, ptr::NonNull::new(string_ptr).unwrap())
+                    jsstr_to_string(*cx, ptr::NonNull::new(string_ptr).unwrap()).into()
                 })
             }
         };
@@ -312,7 +350,7 @@ impl DOMString {
     }
 
     pub fn from_string(s: String) -> DOMString {
-        DOMString(RefCell::new(DOMStringType::Rust(s)))
+        DOMString(RefCell::new(DOMStringType::Rust(s.into())))
     }
 
     /// Transforms the string into rust string if not yet a rust string.
@@ -342,7 +380,7 @@ impl DOMString {
                 },
             }
         };
-        *self.0.borrow_mut() = DOMStringType::Rust(string);
+        *self.0.borrow_mut() = DOMStringType::Rust(string.into());
     }
 
     /// Debug the current  state of the string without modifying it.
@@ -376,8 +414,21 @@ impl DOMString {
         EncodedBytesView(self.0.borrow())
     }
 
+    /// This gives you the view for the Encoded bytes _but_ makes sure that the bytes are
+    /// either ascii or utf8.
+    pub fn ascii_safe_view(&self) -> EncodedBytesView<'_> {
+        let s = match self.view().encoded_bytes() {
+            EncodedBytes::Latin1Bytes(items) => items.iter().all(|c| *c <= ASCII_END),
+            EncodedBytes::Utf8Bytes(_) => true,
+        };
+        if !s {
+            self.make_rust();
+        }
+        self.view()
+    }
+
     pub fn clear(&mut self) {
-        *self.0.borrow_mut() = DOMStringType::Rust(String::new())
+        *self.0.borrow_mut() = DOMStringType::Rust(SmartString::new())
     }
 
     pub fn is_empty(&self) -> bool {
@@ -454,7 +505,7 @@ impl DOMString {
             // [tc39] Step 2: If x is either +0 or -0, return "0".
             let parsed_value = if val.is_zero() { 0.0_f64 } else { val };
 
-            *self.0.borrow_mut() = DOMStringType::Rust(parsed_value.to_string());
+            *self.0.borrow_mut() = DOMStringType::Rust(parsed_value.to_string().into());
         }
     }
 
@@ -484,7 +535,7 @@ impl DOMString {
         // > pair with a single U+000A LF code point, and then replace every remaining
         // > U+000D CR code point with a U+000A LF code point.
         if let DOMStringType::Rust(ref mut s) = *self.0.borrow_mut() {
-            *s = s.replace("\r\n", "\n").replace("\r", "\n")
+            *s = s.replace("\r\n", "\n").replace("\r", "\n").into()
         }
     }
 
@@ -492,7 +543,7 @@ impl DOMString {
         self.make_rust();
         let new_string = self.str().to_owned();
         DOMString(RefCell::new(DOMStringType::Rust(
-            new_string.replace(needle, replace_char),
+            new_string.replace(needle, replace_char).into(),
         )))
     }
 
@@ -662,11 +713,31 @@ impl Extend<char> for DOMString {
 }
 
 impl ToJSValConvertible for DOMString {
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        self.make_rust();
-        unsafe {
-            self.str().to_jsval(cx, rval);
-        }
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
+        let val = self.0.borrow();
+        match *val {
+            DOMStringType::Rust(ref s) => unsafe {
+                s.to_jsval(cx, rval);
+            },
+            DOMStringType::JSString(ref rooted_traceable_box) => unsafe {
+                rval.set(StringValue(&*rooted_traceable_box.get()));
+            },
+            #[cfg(test)]
+            DOMStringType::Latin1Vec(ref items) => {
+                let mut v = vec![0; items.len() * 2];
+                let real_size = tendril::encoding_rs::mem::convert_latin1_to_utf8(
+                    items.as_slice(),
+                    v.as_mut_slice(),
+                );
+                v.truncate(real_size);
+
+                // Safety: convert_latin1_to_utf8 converts the raw bytes to utf8 and the
+                // buffer is the size specified in the documentation, so this should be safe.
+                unsafe {
+                    String::from_utf8_unchecked(v).to_jsval(cx, rval);
+                }
+            },
+        };
     }
 }
 
@@ -884,7 +955,9 @@ impl From<DOMString> for Atom {
 
 impl From<&str> for DOMString {
     fn from(contents: &str) -> DOMString {
-        DOMString(RefCell::new(DOMStringType::Rust(String::from(contents))))
+        DOMString(RefCell::new(DOMStringType::Rust(
+            String::from(contents).into(),
+        )))
     }
 }
 
@@ -904,7 +977,7 @@ impl From<DOMString> for Vec<u8> {
 
 impl From<Cow<'_, str>> for DOMString {
     fn from(value: Cow<'_, str>) -> Self {
-        DOMString(RefCell::new(DOMStringType::Rust(value.into_owned())))
+        DOMString(RefCell::new(DOMStringType::Rust(value.into_owned().into())))
     }
 }
 

@@ -4443,11 +4443,16 @@ impl VirtualMethods for Element {
 
     fn parse_plain_attribute(&self, name: &LocalName, value: DOMString) -> AttrValue {
         match *name {
-            local_name!("id") => AttrValue::from_atomic(value.into()),
-            local_name!("name") => AttrValue::from_atomic(value.into()),
-            local_name!("class") | local_name!("part") => {
-                AttrValue::from_serialized_tokenlist(value.into())
-            },
+            local_name!("id") => AttrValue::Atom(Atom::from(value)),
+            local_name!("name") => AttrValue::Atom(Atom::from(value)),
+            local_name!("class") | local_name!("part") => AttrValue::TokenList(
+                String::new(),
+                value
+                    .ascii_safe_view()
+                    .split_html_space_characters()
+                    .map(Atom::from)
+                    .collect(),
+            ),
             local_name!("exportparts") => AttrValue::from_shadow_parts(value.into()),
             _ => self
                 .super_type()
