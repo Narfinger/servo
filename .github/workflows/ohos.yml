@@ -246,7 +246,7 @@ jobs:
     continue-on-error: true
     runs-on: hos-runner
     needs: test-harmonyos-aarch64
-    if: github.repository == 'servo/servo'
+    if: github.repository == 'servo/servo' && ${{ inputs.bencher && inputs.profile != 'debug' && github.event_name != 'workflow_dispatch' && github.event_name != 'merge_group' }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -293,7 +293,7 @@ jobs:
         continue-on-error: true
       - name: Handle failed speedometer
         if: ${{ steps.BencherRun.outcome == 'failure' }}
-        run: | 
+        run: |
           touch speedometer.json # Create an empty file for bencher.
           mkdir speedometer_error_logs
           hdc shell snapshot_display -f /data/local/tmp/servo.jpeg
