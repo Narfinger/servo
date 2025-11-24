@@ -47,6 +47,7 @@ tracing = [
     "profile_traits/tracing",
     "script/tracing",
 ]
+tracing-hitrace = ["profile_traits/tracing-hitrace"]
 vello = ["constellation/vello"]
 vello_cpu = ["constellation/vello_cpu"]
 webgl_backtrace = [

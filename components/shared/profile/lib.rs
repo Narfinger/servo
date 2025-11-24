@@ -102,6 +102,25 @@ pub mod dummy_tracing {
     }
 }
 
+#[cfg(feature = "tracing-hitrace")]
+pub mod hitrace_tracing {
+    macro_rules! trace_span {
+        ($span_name:literal, $($field:tt)*) => {
+            hitrace::ScopedTrace::start_trace!($span_name)
+        };
+        ($span_name:literal) => {{ hitrace::ScopedTrace::start_trace!($span_name) }};
+    }
+
+    macro_rules! info_span {
+        ($span_name:literal, $($field:tt)*) => {
+            hitrace::ScopedTrace::start_trace!($span_name)
+        };
+        ($span_name:literal) => {{
+            hitrace::ScopedTrace::start_trace!($span_name)
+        };};
+    }
+}
+
 /// Constructs a span at the trace level
 ///
 /// This macro creates a Span for the purpose of instrumenting code to measure
@@ -184,5 +203,7 @@ macro_rules! info_span {
     };
 }
 
-#[cfg(feature = "tracing")]
+#[cfg(all(feature = "tracing", feature = "tracing-hitrace"))]
+pub use hitrace_tracing as servo_tracing;
+#[cfg(all(feature = "tracing", not(feature = "tracing-hitrace")))]
 pub use tracing as servo_tracing;
