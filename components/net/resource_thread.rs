@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 use std::thread;
 
+use base::generic_channel::{self, GenericSender};
 use base::id::CookieStoreId;
 use base::threadpool::ThreadPool;
 use cookie::Cookie;
@@ -19,7 +20,6 @@ use crossbeam_channel::Sender;
 use devtools_traits::DevtoolsControlMsg;
 use embedder_traits::EmbedderProxy;
 use hyper_serde::Serde;
-use ipc_channel::ipc::{self, IpcReceiver, IpcReceiverSet, IpcSender};
 use log::{debug, trace, warn};
 use net_traits::blob_url_store::parse_blob_url;
 use net_traits::filemanager_thread::FileTokenCheck;
@@ -127,9 +127,9 @@ pub fn new_core_resource_thread(
     ignore_certificate_errors: bool,
     protocols: Arc<ProtocolRegistry>,
 ) -> (CoreResourceThread, CoreResourceThread) {
-    let (public_setup_chan, public_setup_port) = ipc::channel().unwrap();
-    let (private_setup_chan, private_setup_port) = ipc::channel().unwrap();
-    let (report_chan, report_port) = ipc::channel().unwrap();
+    let (public_setup_chan, public_setup_port) = generic_channel::channel().unwrap();
+    let (private_setup_chan, private_setup_port) = generic_channel::channel().unwrap();
+    let (report_chan, report_port) = generic_channel::channel().unwrap();
 
     thread::Builder::new()
         .name("ResourceManager".to_owned())
@@ -176,7 +176,7 @@ struct ResourceChannelManager {
     ca_certificates: CACertificates,
     ignore_certificate_errors: bool,
     cancellation_listeners: FxHashMap<RequestId, Weak<CancellationListener>>,
-    cookie_listeners: FxHashMap<CookieStoreId, IpcSender<CookieAsyncResponse>>,
+    cookie_listeners: FxHashMap<CookieStoreId, GenericSender<CookieAsyncResponse>>,
 }
 
 fn create_http_states(
@@ -235,9 +235,9 @@ fn create_http_states(
 impl ResourceChannelManager {
     fn start(
         &mut self,
-        public_receiver: IpcReceiver<CoreResourceMsg>,
-        private_receiver: IpcReceiver<CoreResourceMsg>,
-        memory_reporter: IpcReceiver<ReportsChan>,
+        public_receiver: GenericReceiver<CoreResourceMsg>,
+        private_receiver: GenericReceiver<CoreResourceMsg>,
+        memory_reporter: GenericReceiver<ReportsChan>,
         protocols: Arc<ProtocolRegistry>,
         embedder_proxy: EmbedderProxy,
     ) {

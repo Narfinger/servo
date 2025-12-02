@@ -9,9 +9,11 @@ use std::sync::{LazyLock, OnceLock};
 use std::thread::{self, JoinHandle};
 
 use base::cross_process_instant::CrossProcessInstant;
-use base::generic_channel::{GenericReceiver, GenericSend, GenericSender, SendResult};
+use base::generic_channel;
+use base::generic_channel::{
+    GenericCallback, GenericReceiver, GenericSend, GenericSender, SendResult,
+};
 use base::id::{CookieStoreId, HistoryStateId};
-use base::{IpcSend, IpcSendResult, generic_channel};
 use content_security_policy::{self as csp};
 use cookie::Cookie;
 use crossbeam_channel::{Receiver, Sender, unbounded};
@@ -485,7 +487,7 @@ pub enum WebSocketNetworkEvent {
 #[derive(Debug, Deserialize, Serialize)]
 /// IPC channels to communicate with the script thread about network or DOM events.
 pub enum FetchChannels {
-    ResponseMsg(GenericSender<FetchResponseMsg>),
+    ResponseMsg(GenericCallback<FetchResponseMsg>),
     WebSocket {
         event_sender: GenericSender<WebSocketNetworkEvent>,
         action_receiver: GenericReceiver<WebSocketDomAction>,
@@ -503,7 +505,7 @@ pub enum CoreResourceMsg {
     FetchRedirect(
         RequestBuilder,
         ResponseInit,
-        GenericSender<FetchResponseMsg>,
+        GenericCallback<FetchResponseMsg>,
     ),
     /// Store a cookie for a given originating URL
     SetCookieForUrl(ServoUrl, Serde<Cookie<'static>>, CookieSource),
@@ -575,17 +577,24 @@ struct FetchThread {
     /// updates from IPC messages to crossbeam messages as well as another sender which
     /// handles requests from clients wanting to do fetches.
     receiver: Receiver<ToFetchThreadMessage>,
-    /// An [`IpcSender`] that's sent with every fetch request and leads back to our
+    /// A [`GenericCallback`] that's sent with every fetch request and leads back to our
     /// router proxy.
-    to_fetch_sender: GenericSender<FetchResponseMsg>,
+    callback: GenericCallback<FetchResponseMsg>,
 }
 
 impl FetchThread {
     fn spawn() -> (Sender<ToFetchThreadMessage>, JoinHandle<()>) {
         let (sender, receiver) = unbounded();
-        let (to_fetch_sender, from_fetch_sender) = ipc::channel().unwrap();
-
         let sender_clone = sender.clone();
+
+        let callback = GenericCallback::new(move |message| {
+            let message: FetchResponseMsg = message.unwrap();
+            let _ = sender_clone.send(ToFetchThreadMessage::FetchResponse(message));
+        })
+        .expect("Cannot set generic callback");
+        //let (to_fetch_sender, from_fetch_sender) = ipc::channel().unwrap();
+
+        /*
         ROUTER.add_typed_route(
             from_fetch_sender,
             Box::new(move |message| {
@@ -593,13 +602,14 @@ impl FetchThread {
                 let _ = sender_clone.send(ToFetchThreadMessage::FetchResponse(message));
             }),
         );
+         */
         let join_handle = thread::Builder::new()
             .name("FetchThread".to_owned())
             .spawn(move || {
                 let mut fetch_thread = FetchThread {
                     active_fetches: FxHashMap::default(),
                     receiver,
-                    to_fetch_sender,
+                    callback,
                 };
                 fetch_thread.run();
             })
@@ -623,11 +633,11 @@ impl FetchThread {
                         Some(response_init) => CoreResourceMsg::FetchRedirect(
                             request_builder,
                             response_init,
-                            self.to_fetch_sender.clone(),
+                            self.callback.clone(),
                         ),
                         None => CoreResourceMsg::Fetch(
                             request_builder,
-                            FetchChannels::ResponseMsg(self.to_fetch_sender.clone()),
+                            FetchChannels::ResponseMsg(self.callback.clone()),
                         ),
                     };
 

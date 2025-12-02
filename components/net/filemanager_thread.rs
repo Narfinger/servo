@@ -17,7 +17,6 @@ use embedder_traits::{
 };
 use headers::{ContentLength, ContentRange, ContentType, HeaderMap, HeaderMapExt, Range};
 use http::header::{self, HeaderValue};
-use ipc_channel::ipc::IpcSender;
 use log::warn;
 use mime::{self, Mime};
 use net_traits::blob_url_store::{BlobBuf, BlobURLStoreError};

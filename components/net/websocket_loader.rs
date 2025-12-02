@@ -20,8 +20,6 @@ use base64::Engine;
 use futures::stream::StreamExt;
 use http::HeaderMap;
 use http::header::{self, HeaderName, HeaderValue};
-use ipc_channel::ipc::{IpcReceiver, IpcSender};
-use ipc_channel::router::ROUTER;
 use log::{debug, trace, warn};
 use net_traits::request::{RequestBuilder, RequestMode};
 use net_traits::{CookieSource, MessageData, WebSocketDomAction, WebSocketNetworkEvent};

@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use base::generic_channel::{self, GenericReceiver, GenericSender};
+use base::generic_channel::{GenericCallback, GenericReceiver, GenericSender};
 use base::id::{PipelineId, WebViewId};
 use content_security_policy::{self as csp};
 use http::header::{AUTHORIZATION, HeaderName};
@@ -315,7 +315,7 @@ pub enum BodySource {
 #[derive(Debug, Deserialize, Serialize)]
 pub enum BodyChunkResponse {
     /// A chunk of bytes.
-    Chunk(IpcSharedMemory),
+    Chunk(ipc_channel::ipc::IpcSharedMemory),
     /// The body is done.
     Done,
     /// There was an error streaming the body,
@@ -345,7 +345,7 @@ pub enum BodyChunkRequest {
 pub struct RequestBody {
     /// Net's channel to communicate with script re this body.
     #[ignore_malloc_size_of = "Channels are hard"]
-    chan: Arc<Mutex<GenericSender<BodyChunkRequest>>>,
+    chan: Arc<Mutex<GenericCallback<BodyChunkRequest>>>,
     /// <https://fetch.spec.whatwg.org/#concept-body-source>
     source: BodySource,
     /// <https://fetch.spec.whatwg.org/#concept-body-total-bytes>
@@ -354,7 +354,7 @@ pub struct RequestBody {
 
 impl RequestBody {
     pub fn new(
-        chan: GenericSender<BodyChunkRequest>,
+        chan: GenericCallback<BodyChunkRequest>,
         source: BodySource,
         total_bytes: Option<usize>,
     ) -> Self {
@@ -370,15 +370,17 @@ impl RequestBody {
         match self.source {
             BodySource::Null => panic!("Null sources should never be re-directed."),
             BodySource::Object => {
+                /*
                 let (chan, port) = generic_channel::channel().unwrap();
                 let mut selfchan = self.chan.lock();
                 let _ = selfchan.send(BodyChunkRequest::Extract(port));
                 *selfchan = chan;
+                */
             },
         }
     }
 
-    pub fn take_stream(&self) -> Arc<Mutex<GenericSender<BodyChunkRequest>>> {
+    pub fn take_stream(&self) -> Arc<Mutex<GenericCallback<BodyChunkRequest>>> {
         self.chan.clone()
     }
 
@@ -1146,9 +1148,19 @@ pub fn convert_header_names_to_sorted_lowercase_set(
 }
 
 pub fn create_request_body_with_content(content: &str) -> RequestBody {
-    let content_bytes = IpcSharedMemory::from_bytes(content.as_bytes());
+    let content_bytes = ipc_channel::ipc::IpcSharedMemory::from_bytes(content.as_bytes());
     let content_len = content_bytes.len();
 
+    let callback = GenericCallback::new(move |message| {
+        let request = message.unwrap();
+        if let BodyChunkRequest::Connect(sender) = request {
+            let _ = sender.send(BodyChunkResponse::Chunk(content_bytes.clone()));
+            let _ = sender.send(BodyChunkResponse::Done);
+        }
+    })
+    .expect("Could not set callback");
+
+    /*
     let (chunk_request_sender, chunk_request_receiver) = ipc::channel().unwrap();
     ROUTER.add_typed_route(
         chunk_request_receiver,
@@ -1160,6 +1172,7 @@ pub fn create_request_body_with_content(content: &str) -> RequestBody {
             }
         }),
     );
+    */
 
-    RequestBody::new(chunk_request_sender, BodySource::Object, Some(content_len))
+    RequestBody::new(callback, BodySource::Object, Some(content_len))
 }
