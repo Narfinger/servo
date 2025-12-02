@@ -9,8 +9,9 @@ use std::sync::{LazyLock, OnceLock};
 use std::thread::{self, JoinHandle};
 
 use base::cross_process_instant::CrossProcessInstant;
+use base::generic_channel::{GenericReceiver, GenericSend, GenericSender, SendResult};
 use base::id::{CookieStoreId, HistoryStateId};
-use base::{IpcSend, IpcSendResult};
+use base::{IpcSend, IpcSendResult, generic_channel};
 use content_security_policy::{self as csp};
 use cookie::Cookie;
 use crossbeam_channel::{Receiver, Sender, unbounded};
@@ -18,8 +19,6 @@ use headers::{ContentType, HeaderMapExt, ReferrerPolicy as ReferrerPolicyHeader}
 use http::{Error as HttpError, HeaderMap, HeaderValue, StatusCode, header};
 use hyper_serde::Serde;
 use hyper_util::client::legacy::Error as HyperError;
-use ipc_channel::ipc::{self, IpcError, IpcReceiver, IpcSender};
-use ipc_channel::router::ROUTER;
 use malloc_size_of::malloc_size_of_is_0;
 use malloc_size_of_derive::MallocSizeOf;
 use mime::Mime;
@@ -103,7 +102,7 @@ impl CustomResponse {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CustomResponseMediator {
-    pub response_chan: IpcSender<Option<CustomResponse>>,
+    pub response_chan: GenericSender<Option<CustomResponse>>,
     pub load_url: ServoUrl,
 }
 
@@ -272,12 +271,12 @@ impl std::fmt::Debug for DebugVec {
 impl FetchResponseMsg {
     pub fn request_id(&self) -> RequestId {
         match self {
-            FetchResponseMsg::ProcessRequestBody(id) |
-            FetchResponseMsg::ProcessRequestEOF(id) |
-            FetchResponseMsg::ProcessResponse(id, ..) |
-            FetchResponseMsg::ProcessResponseChunk(id, ..) |
-            FetchResponseMsg::ProcessResponseEOF(id, ..) |
-            FetchResponseMsg::ProcessCspViolations(id, ..) => *id,
+            FetchResponseMsg::ProcessRequestBody(id)
+            | FetchResponseMsg::ProcessRequestEOF(id)
+            | FetchResponseMsg::ProcessResponse(id, ..)
+            | FetchResponseMsg::ProcessResponseChunk(id, ..)
+            | FetchResponseMsg::ProcessResponseEOF(id, ..)
+            | FetchResponseMsg::ProcessCspViolations(id, ..) => *id,
         }
     }
 }
@@ -337,7 +336,7 @@ impl FetchMetadata {
     }
 }
 
-impl FetchTaskTarget for IpcSender<FetchResponseMsg> {
+impl FetchTaskTarget for GenericSender<FetchResponseMsg> {
     fn process_request_body(&mut self, request: &Request) {
         let _ = self.send(FetchResponseMsg::ProcessRequestBody(request.id));
     }
@@ -377,7 +376,7 @@ impl FetchTaskTarget for IpcSender<FetchResponseMsg> {
     }
 }
 
-impl FetchTaskTarget for IpcSender<WebSocketNetworkEvent> {
+impl FetchTaskTarget for GenericSender<WebSocketNetworkEvent> {
     fn process_request_body(&mut self, _: &Request) {}
     fn process_request_eof(&mut self, _: &Request) {}
     fn process_response(&mut self, _: &Request, response: &Response) {
@@ -413,7 +412,7 @@ pub trait AsyncRuntime: Send {
 }
 
 /// Handle to a resource thread
-pub type CoreResourceThread = IpcSender<CoreResourceMsg>;
+pub type CoreResourceThread = GenericSender<CoreResourceMsg>;
 
 // FIXME: Originally we will construct an Arc<ResourceThread> from ResourceThread
 // in script_thread to avoid some performance pitfall. Now we decide to deal with
@@ -435,7 +434,7 @@ impl ResourceThreads {
     }
 
     pub fn clear_cookies(&self) {
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::channel().unwrap();
         let _ = self
             .core_thread
             .send(CoreResourceMsg::DeleteCookies(None, Some(sender)));
@@ -443,12 +442,12 @@ impl ResourceThreads {
     }
 }
 
-impl IpcSend<CoreResourceMsg> for ResourceThreads {
-    fn send(&self, msg: CoreResourceMsg) -> IpcSendResult {
-        self.core_thread.send(msg).map_err(IpcError::Bincode)
+impl GenericSend<CoreResourceMsg> for ResourceThreads {
+    fn send(&self, msg: CoreResourceMsg) -> SendResult {
+        self.core_thread.send(msg)
     }
 
-    fn sender(&self) -> IpcSender<CoreResourceMsg> {
+    fn sender(&self) -> GenericSender<CoreResourceMsg> {
         self.core_thread.clone()
     }
 }
@@ -486,10 +485,10 @@ pub enum WebSocketNetworkEvent {
 #[derive(Debug, Deserialize, Serialize)]
 /// IPC channels to communicate with the script thread about network or DOM events.
 pub enum FetchChannels {
-    ResponseMsg(IpcSender<FetchResponseMsg>),
+    ResponseMsg(GenericSender<FetchResponseMsg>),
     WebSocket {
-        event_sender: IpcSender<WebSocketNetworkEvent>,
-        action_receiver: IpcReceiver<WebSocketDomAction>,
+        event_sender: GenericSender<WebSocketNetworkEvent>,
+        action_receiver: GenericReceiver<WebSocketDomAction>,
     },
     /// If the fetch is just being done to populate the cache,
     /// not because the data is needed now.
@@ -501,7 +500,11 @@ pub enum CoreResourceMsg {
     Fetch(RequestBuilder, FetchChannels),
     Cancel(Vec<RequestId>),
     /// Initiate a fetch in response to processing a redirection
-    FetchRedirect(RequestBuilder, ResponseInit, IpcSender<FetchResponseMsg>),
+    FetchRedirect(
+        RequestBuilder,
+        ResponseInit,
+        GenericSender<FetchResponseMsg>,
+    ),
     /// Store a cookie for a given originating URL
     SetCookieForUrl(ServoUrl, Serde<Cookie<'static>>, CookieSource),
     /// Store a set of cookies for a given originating URL
@@ -513,22 +516,22 @@ pub enum CoreResourceMsg {
         CookieSource,
     ),
     /// Retrieve the stored cookies for a given URL
-    GetCookiesForUrl(ServoUrl, IpcSender<Option<String>>, CookieSource),
+    GetCookiesForUrl(ServoUrl, GenericSender<Option<String>>, CookieSource),
     /// Get a cookie by name for a given originating URL
     GetCookiesDataForUrl(
         ServoUrl,
-        IpcSender<Vec<Serde<Cookie<'static>>>>,
+        GenericSender<Vec<Serde<Cookie<'static>>>>,
         CookieSource,
     ),
     GetCookieDataForUrlAsync(CookieStoreId, ServoUrl, Option<String>),
     GetAllCookieDataForUrlAsync(CookieStoreId, ServoUrl, Option<String>),
-    DeleteCookies(Option<ServoUrl>, Option<IpcSender<()>>),
+    DeleteCookies(Option<ServoUrl>, Option<GenericSender<()>>),
     DeleteCookie(ServoUrl, String),
     DeleteCookieAsync(CookieStoreId, ServoUrl, String),
-    NewCookieListener(CookieStoreId, IpcSender<CookieAsyncResponse>, ServoUrl),
+    NewCookieListener(CookieStoreId, GenericSender<CookieAsyncResponse>, ServoUrl),
     RemoveCookieListener(CookieStoreId),
     /// Get a history state by a given history state id
-    GetHistoryState(HistoryStateId, IpcSender<Option<Vec<u8>>>),
+    GetHistoryState(HistoryStateId, GenericSender<Option<Vec<u8>>>),
     /// Set a history state for a given history state id
     SetHistoryState(HistoryStateId, Vec<u8>),
     /// Removes history states for the given ids
@@ -536,12 +539,12 @@ pub enum CoreResourceMsg {
     /// Clear the network cache.
     ClearCache,
     /// Send the service worker network mediator for an origin to CoreResourceThread
-    NetworkMediator(IpcSender<CustomResponseMediator>, ImmutableOrigin),
+    NetworkMediator(GenericSender<CustomResponseMediator>, ImmutableOrigin),
     /// Message forwarded to file manager's handler
     ToFileManager(FileManagerThreadMsg),
     /// Break the load handler loop, send a reply when done cleaning up local resources
     /// and exit
-    Exit(IpcSender<()>),
+    Exit(GenericSender<()>),
 }
 
 // FIXME: https://github.com/servo/servo/issues/34591
@@ -574,7 +577,7 @@ struct FetchThread {
     receiver: Receiver<ToFetchThreadMessage>,
     /// An [`IpcSender`] that's sent with every fetch request and leads back to our
     /// router proxy.
-    to_fetch_sender: IpcSender<FetchResponseMsg>,
+    to_fetch_sender: GenericSender<FetchResponseMsg>,
 }
 
 impl FetchThread {
@@ -806,9 +809,9 @@ impl ResourceFetchTiming {
     pub fn set_attribute(&mut self, attribute: ResourceAttribute) {
         let should_attribute_always_be_updated = matches!(
             attribute,
-            ResourceAttribute::FetchStart |
-                ResourceAttribute::ResponseEnd |
-                ResourceAttribute::StartTime(_)
+            ResourceAttribute::FetchStart
+                | ResourceAttribute::ResponseEnd
+                | ResourceAttribute::StartTime(_)
         );
         if !self.timing_check_passed && !should_attribute_always_be_updated {
             return;

@@ -263,10 +263,12 @@ pub fn to_receive_result<T>(receive_result: RoutedReceiverReceiveResult<T>) -> R
     }
 }
 
+#[derive(Debug)]
 pub struct GenericReceiver<T>(GenericReceiverVariants<T>)
 where
     T: for<'de> Deserialize<'de> + Serialize;
 
+#[derive(Debug)]
 enum GenericReceiverVariants<T>
 where
     T: for<'de> Deserialize<'de> + Serialize,

@@ -4,13 +4,12 @@
 
 use std::sync::Arc;
 
+use base::generic_channel::{self, GenericReceiver, GenericSender};
 use base::id::{PipelineId, WebViewId};
 use content_security_policy::{self as csp};
 use http::header::{AUTHORIZATION, HeaderName};
 use http::{HeaderMap, Method};
 use indexmap::IndexMap;
-use ipc_channel::ipc::{self, IpcReceiver, IpcSender, IpcSharedMemory};
-use ipc_channel::router::ROUTER;
 use malloc_size_of_derive::MallocSizeOf;
 use mime::Mime;
 use parking_lot::Mutex;
@@ -330,9 +329,9 @@ pub enum BodyChunkResponse {
 #[derive(Debug, Deserialize, Serialize)]
 pub enum BodyChunkRequest {
     /// Connect a fetch in `net`, with a stream of bytes from `script`.
-    Connect(IpcSender<BodyChunkResponse>),
+    Connect(GenericSender<BodyChunkResponse>),
     /// Re-extract a new stream from the source, following a redirect.
-    Extract(IpcReceiver<BodyChunkRequest>),
+    Extract(GenericReceiver<BodyChunkRequest>),
     /// Ask for another chunk.
     Chunk,
     /// Signal the stream is done(sent from script to script).
@@ -346,7 +345,7 @@ pub enum BodyChunkRequest {
 pub struct RequestBody {
     /// Net's channel to communicate with script re this body.
     #[ignore_malloc_size_of = "Channels are hard"]
-    chan: Arc<Mutex<IpcSender<BodyChunkRequest>>>,
+    chan: Arc<Mutex<GenericSender<BodyChunkRequest>>>,
     /// <https://fetch.spec.whatwg.org/#concept-body-source>
     source: BodySource,
     /// <https://fetch.spec.whatwg.org/#concept-body-total-bytes>
@@ -355,7 +354,7 @@ pub struct RequestBody {
 
 impl RequestBody {
     pub fn new(
-        chan: IpcSender<BodyChunkRequest>,
+        chan: GenericSender<BodyChunkRequest>,
         source: BodySource,
         total_bytes: Option<usize>,
     ) -> Self {
@@ -371,7 +370,7 @@ impl RequestBody {
         match self.source {
             BodySource::Null => panic!("Null sources should never be re-directed."),
             BodySource::Object => {
-                let (chan, port) = ipc::channel().unwrap();
+                let (chan, port) = generic_channel::channel().unwrap();
                 let mut selfchan = self.chan.lock();
                 let _ = selfchan.send(BodyChunkRequest::Extract(port));
                 *selfchan = chan;
@@ -379,7 +378,7 @@ impl RequestBody {
         }
     }
 
-    pub fn take_stream(&self) -> Arc<Mutex<IpcSender<BodyChunkRequest>>> {
+    pub fn take_stream(&self) -> Arc<Mutex<GenericSender<BodyChunkRequest>>> {
         self.chan.clone()
     }
 
@@ -886,11 +885,11 @@ impl Request {
     pub fn is_navigation_request(&self) -> bool {
         matches!(
             self.destination,
-            Destination::Document |
-                Destination::Embed |
-                Destination::Frame |
-                Destination::IFrame |
-                Destination::Object
+            Destination::Document
+                | Destination::Embed
+                | Destination::Frame
+                | Destination::IFrame
+                | Destination::Object
         )
     }
 
@@ -898,16 +897,16 @@ impl Request {
     pub fn is_subresource_request(&self) -> bool {
         matches!(
             self.destination,
-            Destination::Audio |
-                Destination::Font |
-                Destination::Image |
-                Destination::Manifest |
-                Destination::Script |
-                Destination::Style |
-                Destination::Track |
-                Destination::Video |
-                Destination::Xslt |
-                Destination::None
+            Destination::Audio
+                | Destination::Font
+                | Destination::Image
+                | Destination::Manifest
+                | Destination::Script
+                | Destination::Style
+                | Destination::Track
+                | Destination::Video
+                | Destination::Xslt
+                | Destination::None
         )
     }
 
@@ -1035,9 +1034,9 @@ pub fn is_cors_safelisted_request_content_type(value: &[u8]) -> bool {
     match value_mime_result {
         Err(_) => false, // step 3
         Ok(value_mime) => match (value_mime.type_(), value_mime.subtype()) {
-            (mime::APPLICATION, mime::WWW_FORM_URLENCODED) |
-            (mime::MULTIPART, mime::FORM_DATA) |
-            (mime::TEXT, mime::PLAIN) => true,
+            (mime::APPLICATION, mime::WWW_FORM_URLENCODED)
+            | (mime::MULTIPART, mime::FORM_DATA)
+            | (mime::TEXT, mime::PLAIN) => true,
             _ => false, // step 4
         },
     }
