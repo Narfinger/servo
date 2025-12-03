@@ -273,12 +273,12 @@ impl std::fmt::Debug for DebugVec {
 impl FetchResponseMsg {
     pub fn request_id(&self) -> RequestId {
         match self {
-            FetchResponseMsg::ProcessRequestBody(id)
-            | FetchResponseMsg::ProcessRequestEOF(id)
-            | FetchResponseMsg::ProcessResponse(id, ..)
-            | FetchResponseMsg::ProcessResponseChunk(id, ..)
-            | FetchResponseMsg::ProcessResponseEOF(id, ..)
-            | FetchResponseMsg::ProcessCspViolations(id, ..) => *id,
+            FetchResponseMsg::ProcessRequestBody(id) |
+            FetchResponseMsg::ProcessRequestEOF(id) |
+            FetchResponseMsg::ProcessResponse(id, ..) |
+            FetchResponseMsg::ProcessResponseChunk(id, ..) |
+            FetchResponseMsg::ProcessResponseEOF(id, ..) |
+            FetchResponseMsg::ProcessCspViolations(id, ..) => *id,
         }
     }
 }
@@ -819,9 +819,9 @@ impl ResourceFetchTiming {
     pub fn set_attribute(&mut self, attribute: ResourceAttribute) {
         let should_attribute_always_be_updated = matches!(
             attribute,
-            ResourceAttribute::FetchStart
-                | ResourceAttribute::ResponseEnd
-                | ResourceAttribute::StartTime(_)
+            ResourceAttribute::FetchStart |
+                ResourceAttribute::ResponseEnd |
+                ResourceAttribute::StartTime(_)
         );
         if !self.timing_check_passed && !should_attribute_always_be_updated {
             return;

@@ -7,7 +7,7 @@ use std::ffi::CString;
 use std::ptr::NonNull;
 
 use base::IpcSend;
-use base::generic_channel::GenericSender;
+use base::generic_channel::{GenericSend, GenericSender};
 use base::id::{BrowsingContextId, PipelineId};
 use cookie::Cookie;
 use embedder_traits::{
@@ -1455,7 +1455,7 @@ pub(crate) fn handle_get_cookie(
     documents: &DocumentCollection,
     pipeline: PipelineId,
     name: String,
-    reply: IpcSender<Result<Vec<Serde<Cookie<'static>>>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Serde<Cookie<'static>>>, ErrorStatus>>,
 ) {
     reply
         .send(

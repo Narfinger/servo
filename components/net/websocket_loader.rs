@@ -16,6 +16,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_tungstenite::WebSocketStream;
 use async_tungstenite::tokio::{ConnectStream, client_async_tls_with_connector_and_config};
+use base::generic_channel::{GenericReceiver, GenericSend, GenericSender};
 use base64::Engine;
 use futures::stream::StreamExt;
 use http::HeaderMap;
@@ -171,7 +172,7 @@ enum DomMsg {
 /// Initialize a listener for DOM actions. These are routed from the IPC channel
 /// to a tokio channel that the main WS client task uses to receive them.
 fn setup_dom_listener(
-    dom_action_receiver: IpcReceiver<WebSocketDomAction>,
+    dom_action_receiver: GenericReceiver<WebSocketDomAction>,
     initiated_close: Arc<AtomicBool>,
 ) -> UnboundedReceiver<DomMsg> {
     let (sender, receiver) = unbounded_channel();
@@ -214,7 +215,7 @@ fn setup_dom_listener(
 /// on the WS tokio runtime.
 async fn run_ws_loop(
     mut dom_receiver: UnboundedReceiver<DomMsg>,
-    resource_event_sender: IpcSender<WebSocketNetworkEvent>,
+    resource_event_sender: GenericSender<WebSocketNetworkEvent>,
     mut stream: WebSocketStream<ConnectStream>,
 ) {
     loop {
@@ -308,11 +309,11 @@ async fn run_ws_loop(
 /// listening loop will be started.
 pub(crate) async fn start_websocket(
     http_state: Arc<HttpState>,
-    resource_event_sender: IpcSender<WebSocketNetworkEvent>,
+    resource_event_sender: GenericSender<WebSocketNetworkEvent>,
     protocols: &[String],
     client: &net_traits::request::Request,
     tls_config: TlsConfig,
-    dom_action_receiver: IpcReceiver<WebSocketDomAction>,
+    dom_action_receiver: GenericReceiver<WebSocketDomAction>,
 ) -> Result<Response, Error> {
     trace!("starting WS connection to {}", client.url());
 

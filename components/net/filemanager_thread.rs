@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{self, AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
-use base::generic_channel;
+use base::generic_channel::{self, GenericSender};
 use base::threadpool::ThreadPool;
 use embedder_traits::{
     EmbedderControlId, EmbedderControlResponse, EmbedderMsg, EmbedderProxy, FilePickerRequest,
@@ -94,7 +94,7 @@ impl FileManager {
 
     pub fn read_file(
         &self,
-        sender: IpcSender<FileManagerResult<ReadFileProgress>>,
+        sender: GenericSender<FileManagerResult<ReadFileProgress>>,
         id: Uuid,
         origin: FileOrigin,
     ) {
@@ -525,7 +525,7 @@ impl FileManagerStore {
         &self,
         parent_id: Uuid,
         rel_pos: RelativePos,
-        sender: IpcSender<Result<Uuid, BlobURLStoreError>>,
+        sender: GenericSender<Result<Uuid, BlobURLStoreError>>,
         origin_in: FileOrigin,
     ) {
         match self.inc_ref(&parent_id, &origin_in) {
@@ -557,7 +557,7 @@ impl FileManagerStore {
         &self,
         control_id: EmbedderControlId,
         file_picker_request: FilePickerRequest,
-        response_sender: IpcSender<EmbedderControlResponse>,
+        response_sender: GenericSender<EmbedderControlResponse>,
         embedder_proxy: EmbedderProxy,
     ) {
         let (ipc_sender, ipc_receiver) =
@@ -668,7 +668,7 @@ impl FileManagerStore {
 
     fn get_blob_buf(
         &self,
-        sender: &IpcSender<FileManagerResult<ReadFileProgress>>,
+        sender: &GenericSender<FileManagerResult<ReadFileProgress>>,
         id: &Uuid,
         file_token: &FileTokenCheck,
         origin_in: &FileOrigin,
@@ -741,7 +741,7 @@ impl FileManagerStore {
     // Convenient wrapper over get_blob_buf
     fn try_read_file(
         &self,
-        sender: &IpcSender<FileManagerResult<ReadFileProgress>>,
+        sender: &GenericSender<FileManagerResult<ReadFileProgress>>,
         id: Uuid,
         origin_in: FileOrigin,
     ) -> Result<(), BlobURLStoreError> {
@@ -869,7 +869,7 @@ impl FileManagerStore {
 }
 
 fn read_file_in_chunks(
-    sender: &IpcSender<FileManagerResult<ReadFileProgress>>,
+    sender: &GenericSender<FileManagerResult<ReadFileProgress>>,
     file: &mut File,
     size: usize,
     opt_filename: Option<String>,

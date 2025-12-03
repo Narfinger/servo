@@ -329,7 +329,7 @@ pub enum BodyChunkResponse {
 #[derive(Debug, Deserialize, Serialize)]
 pub enum BodyChunkRequest {
     /// Connect a fetch in `net`, with a stream of bytes from `script`.
-    Connect(GenericSender<BodyChunkResponse>),
+    Connect(GenericCallback<BodyChunkResponse>),
     /// Re-extract a new stream from the source, following a redirect.
     Extract(GenericReceiver<BodyChunkRequest>),
     /// Ask for another chunk.
@@ -887,11 +887,11 @@ impl Request {
     pub fn is_navigation_request(&self) -> bool {
         matches!(
             self.destination,
-            Destination::Document
-                | Destination::Embed
-                | Destination::Frame
-                | Destination::IFrame
-                | Destination::Object
+            Destination::Document |
+                Destination::Embed |
+                Destination::Frame |
+                Destination::IFrame |
+                Destination::Object
         )
     }
 
@@ -899,16 +899,16 @@ impl Request {
     pub fn is_subresource_request(&self) -> bool {
         matches!(
             self.destination,
-            Destination::Audio
-                | Destination::Font
-                | Destination::Image
-                | Destination::Manifest
-                | Destination::Script
-                | Destination::Style
-                | Destination::Track
-                | Destination::Video
-                | Destination::Xslt
-                | Destination::None
+            Destination::Audio |
+                Destination::Font |
+                Destination::Image |
+                Destination::Manifest |
+                Destination::Script |
+                Destination::Style |
+                Destination::Track |
+                Destination::Video |
+                Destination::Xslt |
+                Destination::None
         )
     }
 
@@ -1036,9 +1036,9 @@ pub fn is_cors_safelisted_request_content_type(value: &[u8]) -> bool {
     match value_mime_result {
         Err(_) => false, // step 3
         Ok(value_mime) => match (value_mime.type_(), value_mime.subtype()) {
-            (mime::APPLICATION, mime::WWW_FORM_URLENCODED)
-            | (mime::MULTIPART, mime::FORM_DATA)
-            | (mime::TEXT, mime::PLAIN) => true,
+            (mime::APPLICATION, mime::WWW_FORM_URLENCODED) |
+            (mime::MULTIPART, mime::FORM_DATA) |
+            (mime::TEXT, mime::PLAIN) => true,
             _ => false, // step 4
         },
     }

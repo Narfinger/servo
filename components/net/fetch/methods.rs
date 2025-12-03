@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{io, mem, str};
 
+use base::generic_channel::{self, GenericReceiver, GenericSender};
 use base64::Engine as _;
 use base64::engine::general_purpose;
 use content_security_policy as csp;
@@ -15,7 +16,6 @@ use embedder_traits::resources::{self, Resource};
 use headers::{AccessControlExposeHeaders, ContentType, HeaderMapExt};
 use http::header::{self, HeaderMap, HeaderName, RANGE};
 use http::{HeaderValue, Method, StatusCode};
-use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
 use log::{debug, trace, warn};
 use mime::{self, Mime};
 use net_traits::fetch::headers::extract_mime_type_as_mime;
@@ -66,14 +66,14 @@ pub enum Data {
 }
 
 pub struct WebSocketChannel {
-    pub sender: IpcSender<WebSocketNetworkEvent>,
-    pub receiver: Option<IpcReceiver<WebSocketDomAction>>,
+    pub sender: GenericSender<WebSocketNetworkEvent>,
+    pub receiver: Option<GenericReceiver<WebSocketDomAction>>,
 }
 
 impl WebSocketChannel {
     pub fn new(
-        sender: IpcSender<WebSocketNetworkEvent>,
-        receiver: Option<IpcReceiver<WebSocketDomAction>>,
+        sender: GenericSender<WebSocketNetworkEvent>,
+        receiver: Option<GenericReceiver<WebSocketDomAction>>,
     ) -> Self {
         Self { sender, receiver }
     }
@@ -905,7 +905,7 @@ fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io
 
     let stream = body.take_stream();
     let stream = stream.lock();
-    let (body_chan, body_port) = ipc::channel().unwrap();
+    let (body_chan, body_port) = generic_channel::channel().unwrap();
     let _ = stream.send(BodyChunkRequest::Connect(body_chan));
     let _ = stream.send(BodyChunkRequest::Chunk);
     let body_bytes = match body_port.recv().ok() {

@@ -9,7 +9,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use async_recursion::async_recursion;
 use base::cross_process_instant::CrossProcessInstant;
-use base::generic_channel;
+use base::generic_channel::{self, GenericCallback, GenericSender};
 use base::id::{BrowsingContextId, HistoryStateId, PipelineId};
 use crossbeam_channel::Sender;
 use devtools_traits::{
@@ -37,8 +37,6 @@ use hyper::body::{Bytes, Frame};
 use hyper::ext::ReasonPhrase;
 use hyper::header::{HeaderName, TRANSFER_ENCODING};
 use hyper_serde::Serde;
-use ipc_channel::ipc::{self, IpcSender, IpcSharedMemory};
-use ipc_channel::router::ROUTER;
 use log::{debug, error, info, log_enabled, warn};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use net_traits::http_status::HttpStatus;
@@ -564,7 +562,7 @@ fn auth_from_cache(
 /// used to fill the body with bytes coming-in over IPC.
 enum BodyChunk {
     /// A chunk of bytes.
-    Chunk(IpcSharedMemory),
+    Chunk(ipc_channel::ipc::IpcSharedMemory),
     /// Body is done.
     Done,
 }
@@ -591,7 +589,7 @@ enum BodySink {
 }
 
 impl BodySink {
-    fn transmit_bytes(&self, bytes: IpcSharedMemory) {
+    fn transmit_bytes(&self, bytes: ipc_channel::ipc::IpcSharedMemory) {
         match self {
             BodySink::Chunked(sender) => {
                 let sender = sender.clone();
@@ -623,7 +621,7 @@ async fn obtain_response(
     url: &ServoUrl,
     method: &Method,
     request_headers: &mut HeaderMap,
-    body: Option<StdArc<Mutex<IpcSender<BodyChunkRequest>>>>,
+    body: Option<StdArc<Mutex<GenericCallback<BodyChunkRequest>>>>,
     source_is_null: bool,
     pipeline_id: &Option<PipelineId>,
     request_id: Option<&str>,
@@ -666,11 +664,44 @@ async fn obtain_response(
                 (BodySink::Buffered(sender), BodyStream::Buffered(receiver))
             };
 
-            let (body_chan, body_port) = ipc::channel().unwrap();
+            let chunk_requester2 = chunk_requester.clone();
 
+            let callback = GenericCallback::new(move |message| {
+                info!("Received message");
+                let bytes = match message.unwrap() {
+                    BodyChunkResponse::Chunk(bytes) => bytes,
+                    BodyChunkResponse::Done => {
+                        // Step 3, abort these parallel steps.
+                        let _ = fetch_terminated.send(false);
+                        sink.close();
+
+                        return;
+                    },
+                    BodyChunkResponse::Error => {
+                        // Step 4 and/or 5.
+                        // TODO: differentiate between the two steps,
+                        // where step 5 requires setting an `aborted` flag on the fetch.
+                        let _ = fetch_terminated.send(true);
+                        sink.close();
+
+                        return;
+                    },
+                };
+
+                devtools_bytes.lock().extend_from_slice(&bytes);
+
+                // Step 5.1.2.2, transmit chunk over the network,
+                // currently implemented by sending the bytes to the fetch worker.
+                sink.transmit_bytes(bytes);
+
+                // Step 5.1.2.3
+                // Request the next chunk.
+                let _ = chunk_requester2.lock().send(BodyChunkRequest::Chunk);
+            })
+            .expect("Could not create chunk callback");
             {
                 let requester = chunk_requester.lock();
-                let _ = requester.send(BodyChunkRequest::Connect(body_chan));
+                let _ = requester.send(BodyChunkRequest::Connect(callback));
 
                 // https://fetch.spec.whatwg.org/#concept-request-transmit-body
                 // Request the first chunk, corresponding to Step 3 and 4.
@@ -678,43 +709,6 @@ async fn obtain_response(
             }
 
             let devtools_bytes = devtools_bytes.clone();
-            let chunk_requester2 = chunk_requester.clone();
-
-            ROUTER.add_typed_route(
-                body_port,
-                Box::new(move |message| {
-                    info!("Received message");
-                    let bytes = match message.unwrap() {
-                        BodyChunkResponse::Chunk(bytes) => bytes,
-                        BodyChunkResponse::Done => {
-                            // Step 3, abort these parallel steps.
-                            let _ = fetch_terminated.send(false);
-                            sink.close();
-
-                            return;
-                        },
-                        BodyChunkResponse::Error => {
-                            // Step 4 and/or 5.
-                            // TODO: differentiate between the two steps,
-                            // where step 5 requires setting an `aborted` flag on the fetch.
-                            let _ = fetch_terminated.send(true);
-                            sink.close();
-
-                            return;
-                        },
-                    };
-
-                    devtools_bytes.lock().extend_from_slice(&bytes);
-
-                    // Step 5.1.2.2, transmit chunk over the network,
-                    // currently implemented by sending the bytes to the fetch worker.
-                    sink.transmit_bytes(bytes);
-
-                    // Step 5.1.2.3
-                    // Request the next chunk.
-                    let _ = chunk_requester2.lock().send(BodyChunkRequest::Chunk);
-                }),
-            );
 
             let body = match stream {
                 BodyStream::Chunked(receiver) => {
