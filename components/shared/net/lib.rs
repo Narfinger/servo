@@ -378,6 +378,46 @@ impl FetchTaskTarget for GenericSender<FetchResponseMsg> {
     }
 }
 
+impl FetchTaskTarget for GenericCallback<FetchResponseMsg> {
+    fn process_request_body(&mut self, request: &Request) {
+        let _ = self.send(FetchResponseMsg::ProcessRequestBody(request.id));
+    }
+
+    fn process_request_eof(&mut self, request: &Request) {
+        let _ = self.send(FetchResponseMsg::ProcessRequestEOF(request.id));
+    }
+
+    fn process_response(&mut self, request: &Request, response: &Response) {
+        let _ = self.send(FetchResponseMsg::ProcessResponse(
+            request.id,
+            response.metadata(),
+        ));
+    }
+
+    fn process_response_chunk(&mut self, request: &Request, chunk: Vec<u8>) {
+        let _ = self.send(FetchResponseMsg::ProcessResponseChunk(
+            request.id,
+            chunk.into(),
+        ));
+    }
+
+    fn process_response_eof(&mut self, request: &Request, response: &Response) {
+        let payload = if let Some(network_error) = response.get_network_error() {
+            Err(network_error.clone())
+        } else {
+            Ok(response.get_resource_timing().lock().clone())
+        };
+
+        let _ = self.send(FetchResponseMsg::ProcessResponseEOF(request.id, payload));
+    }
+
+    fn process_csp_violations(&mut self, request: &Request, violations: Vec<content_security_policy::Violation>) {
+        let _ = self.send(FetchResponseMsg::ProcessCspViolations(
+            request.id, violations,
+        ));
+    }
+}
+
 impl FetchTaskTarget for GenericSender<WebSocketNetworkEvent> {
     fn process_request_body(&mut self, _: &Request) {}
     fn process_request_eof(&mut self, _: &Request) {}

@@ -5657,6 +5657,7 @@ dependencies = [
  "hyper-util",
  "hyper_serde",
  "imsz",
+ "ipc-channel",
  "itertools 0.14.0",
  "log",
  "malloc_size_of_derive",

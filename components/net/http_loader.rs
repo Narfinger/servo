@@ -708,7 +708,7 @@ async fn obtain_response(
                 let _ = requester.send(BodyChunkRequest::Chunk);
             }
 
-            let devtools_bytes = devtools_bytes.clone();
+            //let devtools_bytes = devtools_bytes.clone();
 
             let body = match stream {
                 BodyStream::Chunked(receiver) => {
