@@ -363,7 +363,7 @@ jobs:
     continue-on-error: true
     runs-on: hos-runner
     if: github.repository == 'servo/servo'
-    needs: build-harmonyos-aarch64
+    needs: bench-harmonyos-aarch64
     env:
       # This will ensure the scenario pyproject.toml is picked up and the correct venv used.
       UV_PROJECT: "etc/ci/scenario"
