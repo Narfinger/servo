@@ -37,7 +37,7 @@ use embedder_traits::{
 use euclid::{Point2D, Rect, Size2D};
 use http::method::Method;
 use image::{DynamicImage, ImageFormat};
-use ipc_channel::ipc::{self, IpcReceiver, TryRecvError};
+use ipc_channel::ipc::{IpcReceiver, TryRecvError};
 use keyboard_types::webdriver::{Event as DispatchStringEvent, KeyInputState, send_keys};
 use keyboard_types::{Code, Key, KeyState, KeyboardEvent, Location, NamedKey};
 use log::{debug, error, info};
@@ -1614,7 +1614,7 @@ impl Handler {
         let cmd = WebDriverScriptCommand::GetElementShadowRoot(element.to_string(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
         // Step 5. If shadow root is null, return error with error code no such shadow root.
-        let Some(value) = wait_for_oneshot_response(receiver)? else {
+        let Some(value) = wait_for_oneshot_response_flatten(receiver)? else {
             return Err(WebDriverError::new(ErrorStatus::NoSuchShadowRoot, ""));
         };
         Ok(WebDriverResponse::Generic(ValueResponse(
@@ -1695,7 +1695,7 @@ impl Handler {
         let cmd = WebDriverScriptCommand::GetComputedRole(element.to_string(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
         Ok(WebDriverResponse::Generic(ValueResponse(
-            serde_json::to_value(wait_for_oneshot_response_flattenn(receiver)?)?,
+            serde_json::to_value(wait_for_oneshot_response_flatten(receiver)?)?,
         )))
     }
 
@@ -1775,12 +1775,12 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd =
             WebDriverScriptCommand::GetElementCSS(element.to_string(), name.to_owned(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
         Ok(WebDriverResponse::Generic(ValueResponse(
-            serde_json::to_value(wait_for_ipc_response_flatten(receiver)?)?,
+            serde_json::to_value(wait_for_oneshot_response_flatten(receiver)?)?,
         )))
     }
 
@@ -1791,10 +1791,10 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd = WebDriverScriptCommand::GetCookies(sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
-        let cookies = wait_for_ipc_response_flatten(receiver)?;
+        let cookies = wait_for_oneshot_response_flatten(receiver)?;
         let response = cookies
             .into_iter()
             .map(|cookie| cookie_msg_to_cookie(cookie.into_inner()))
@@ -1809,10 +1809,10 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd = WebDriverScriptCommand::GetCookie(name, sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
-        let cookies = wait_for_ipc_response_flatten(receiver)?;
+        let cookies = wait_for_oneshot_response_flatten(receiver)?;
         let Some(response) = cookies
             .into_iter()
             .map(|cookie| cookie_msg_to_cookie(cookie.into_inner()))
@@ -1833,7 +1833,7 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
 
         let mut cookie_builder =
             CookieBuilder::new(params.name.to_owned(), params.value.to_owned())
@@ -1864,7 +1864,7 @@ impl Handler {
 
         let cmd = WebDriverScriptCommand::AddCookie(cookie_builder.build(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
-        wait_for_ipc_response_flatten(receiver)?;
+        wait_for_oneshot_response_flatten(receiver)?;
         Ok(WebDriverResponse::Void)
     }
 
@@ -1875,10 +1875,10 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd = WebDriverScriptCommand::DeleteCookie(name, sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
-        wait_for_ipc_response_flatten(receiver)?;
+        wait_for_oneshot_response_flatten(receiver)?;
         Ok(WebDriverResponse::Void)
     }
 
@@ -1889,10 +1889,10 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd = WebDriverScriptCommand::DeleteCookies(sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::Yes)?;
-        wait_for_ipc_response_flatten(receiver)?;
+        wait_for_oneshot_response_flatten(receiver)?;
         Ok(WebDriverResponse::Void)
     }
 
@@ -1939,13 +1939,13 @@ impl Handler {
         self.verify_browsing_context_is_open(self.browsing_context_id()?)?;
         // Step 2. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
 
         let cmd = WebDriverScriptCommand::GetPageSource(sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
 
         Ok(WebDriverResponse::Generic(ValueResponse(
-            serde_json::to_value(wait_for_ipc_response_flatten(receiver)?)?,
+            serde_json::to_value(wait_for_oneshot_response_flatten(receiver)?)?,
         )))
     }
 
@@ -2031,7 +2031,7 @@ impl Handler {
         // Step 3. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
 
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::channel().unwrap();
         let cmd = WebDriverScriptCommand::ExecuteScript(script, sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
 
@@ -2076,7 +2076,7 @@ impl Handler {
         // Step 3. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
 
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         self.browsing_context_script_command(
             WebDriverScriptCommand::ExecuteAsyncScript(script, sender),
             VerifyBrowsingContextIsOpen::No,
@@ -2152,7 +2152,7 @@ impl Handler {
         // Step 4. Handle any user prompt.
         self.handle_any_user_prompts(self.webview_id()?)?;
 
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd = WebDriverScriptCommand::WillSendKeys(
             element.to_string(),
             keys.text.to_string(),
@@ -2163,7 +2163,7 @@ impl Handler {
 
         // File input and non-typeable form control should have
         // been handled in `webdriver_handler.rs`.
-        if !wait_for_ipc_response_flatten(receiver)? {
+        if !wait_for_oneshot_response_flatten(receiver)? {
             return Ok(WebDriverResponse::Void);
         }
 
@@ -2235,11 +2235,11 @@ impl Handler {
         self.handle_any_user_prompts(self.webview_id()?)?;
 
         // Step 3-11 handled in script thread.
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd = WebDriverScriptCommand::ElementClear(element.to_string(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
 
-        wait_for_ipc_response_flatten(receiver)?;
+        wait_for_oneshot_response_flatten(receiver)?;
         Ok(WebDriverResponse::Void)
     }
 
@@ -2253,13 +2253,13 @@ impl Handler {
         // Step 2. Handle any user prompts.
         self.handle_any_user_prompts(self.webview_id()?)?;
 
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
 
         // Steps 3-7 + Step 8 for <option> are handled in script thread.
         let cmd = WebDriverScriptCommand::ElementClick(element.to_string(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::No)?;
 
-        match wait_for_ipc_response_flatten(receiver)? {
+        match wait_for_oneshot_response_flatten(receiver)? {
             Some(element_id) => {
                 // Load status sender should be set up before we dispatch actions
                 // to ensure webdriver can capture any navigation events.
@@ -2499,12 +2499,12 @@ impl Handler {
 
         // Step 3. Trying to get element.
         // Step 4. Scroll into view into element.
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::oneshot().unwrap();
         let cmd =
             WebDriverScriptCommand::ScrollAndGetBoundingClientRect(element.to_string(), sender);
         self.browsing_context_script_command(cmd, VerifyBrowsingContextIsOpen::Yes)?;
 
-        let rect = wait_for_ipc_response_flatten(receiver)?;
+        let rect = wait_for_oneshot_response_flatten(receiver)?;
 
         // Step 5
         let encoded = self.take_screenshot(Some(Rect::from_untyped(&rect)))?;
