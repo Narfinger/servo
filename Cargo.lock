@@ -1530,6 +1530,8 @@ dependencies = [
  "raw-window-handle",
  "rustc-hash 2.1.1",
  "serde",
+ "serde_bytes",
+ "servo-tracing",
  "servo_geometry",
  "servo_malloc_size_of",
  "smallvec",
@@ -1537,6 +1539,7 @@ dependencies = [
  "stylo",
  "stylo_traits",
  "surfman",
+ "tracing",
  "webrender_api",
 ]
 
