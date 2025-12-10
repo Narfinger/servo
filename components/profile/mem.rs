@@ -9,8 +9,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::thread;
 
-use ipc_channel::ipc::{self, IpcReceiver};
-use ipc_channel::router::ROUTER;
+use base::generic_channel::{self, GenericReceiver};
 use log::debug;
 use profile_traits::mem::{
     MemoryReport, MemoryReportResult, ProfilerChan, ProfilerMsg, Report, Reporter, ReporterRequest,
@@ -23,7 +22,7 @@ const LOG_FILE_VAR: &str = "UNTRACKED_LOG_FILE";
 
 pub struct Profiler {
     /// The port through which messages are received.
-    pub port: IpcReceiver<ProfilerMsg>,
+    pub port: GenericReceiver<ProfilerMsg>,
 
     /// Registered memory reporters.
     reporters: HashMap<String, Reporter>,
@@ -31,7 +30,7 @@ pub struct Profiler {
 
 impl Profiler {
     pub fn create() -> ProfilerChan {
-        let (chan, port) = ipc::channel().unwrap();
+        let (chan, port) = generic_channel::channel().unwrap();
 
         if servo_allocator::is_tracking_unmeasured() && std::env::var(LOG_FILE_VAR).is_err() {
             eprintln!("Allocation tracking is enabled but {LOG_FILE_VAR} is unset.");
@@ -68,7 +67,7 @@ impl Profiler {
         mem_profiler_chan
     }
 
-    pub fn new(port: IpcReceiver<ProfilerMsg>) -> Profiler {
+    pub fn new(port: GenericReceiver<ProfilerMsg>) -> Profiler {
         Profiler {
             port,
             reporters: HashMap::new(),
@@ -141,7 +140,7 @@ impl Profiler {
         let mut result = HashMap::new();
 
         for reporter in self.reporters.values() {
-            let (chan, port) = ipc::channel().unwrap();
+            let (chan, port) = generic_channel::channel().unwrap();
             reporter.collect_reports(ReportsChan(chan));
             if let Ok(mut reports) = port.recv() {
                 result

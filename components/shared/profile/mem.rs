@@ -13,8 +13,6 @@ use std::marker::Send;
 
 use base::generic_channel::GenericSender;
 use crossbeam_channel::Sender;
-use ipc_channel::ipc::{self, IpcSender};
-use ipc_channel::router::ROUTER;
 use log::warn;
 use malloc_size_of::MallocSizeOfOps;
 use serde::{Deserialize, Serialize};
@@ -30,20 +28,6 @@ impl<T> OpaqueSender<T> for Sender<T> {
         if let Err(e) = Sender::send(self, message) {
             warn!(
                 "Error communicating with the target thread from the profiler: {:?}",
-                e
-            );
-        }
-    }
-}
-
-impl<T> OpaqueSender<T> for IpcSender<T>
-where
-    T: serde::Serialize,
-{
-    fn send(&self, message: T) {
-        if let Err(e) = IpcSender::send(self, message) {
-            warn!(
-                "Error communicating with the target thread from the profiler: {}",
                 e
             );
         }
@@ -67,7 +51,7 @@ where
 /// Front-end representation of the profiler used to communicate with the
 /// profiler.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ProfilerChan(pub IpcSender<ProfilerMsg>);
+pub struct ProfilerChan(pub GenericSender<ProfilerMsg>);
 
 /// A handle that encompasses a registration with the memory profiler.
 /// The registration is tied to the lifetime of this type; the memory
@@ -215,7 +199,7 @@ impl ProcessReports {
 
 /// A channel through which memory reports can be sent.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ReportsChan(pub IpcSender<ProcessReports>);
+pub struct ReportsChan(pub GenericSender<ProcessReports>);
 
 impl ReportsChan {
     /// Send `report` on this `IpcSender`.
@@ -241,7 +225,7 @@ pub struct ReporterRequest {
 /// registering the receiving end with the router so that messages from the memory profiler end up
 /// injected into the client's event loop.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Reporter(pub IpcSender<ReporterRequest>);
+pub struct Reporter(pub GenericSender<ReporterRequest>);
 
 impl Reporter {
     /// Collect one or more memory reports. Returns true on success, and false on failure.
@@ -294,7 +278,7 @@ pub enum ProfilerMsg {
     Exit,
 
     /// Triggers sending back the memory profiling metrics,
-    Report(IpcSender<MemoryReportResult>),
+    Report(GenericSender<MemoryReportResult>),
 }
 
 thread_local!(static SEEN_POINTERS: LazyCell<RefCell<HashSet<*const c_void>>> = const {
