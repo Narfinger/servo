@@ -11,7 +11,7 @@ use std::collections::HashSet;
 use std::ffi::c_void;
 use std::marker::Send;
 
-use base::generic_channel::GenericSender;
+use base::generic_channel::{GenericCallback, GenericSend, GenericSender};
 use crossbeam_channel::Sender;
 use log::warn;
 use malloc_size_of::MallocSizeOfOps;
@@ -92,18 +92,16 @@ impl ProfilerChan {
         C: OpaqueSender<T> + Send + 'static,
     {
         // Register the memory reporter.
-        let (reporter_sender, reporter_receiver) = ipc::channel().unwrap();
-        ROUTER.add_typed_route(
-            reporter_receiver,
-            Box::new(move |message| {
-                // Just injects an appropriate event into the paint thread's queue.
-                let request: ReporterRequest = message.unwrap();
-                channel_for_reporter.send(msg(request.reports_channel));
-            }),
-        );
+        let callback = GenericCallback::new(move |message| {
+            // Just injects an appropriate event into the paint thread's queue.
+            let request: ReporterRequest = message.unwrap();
+            channel_for_reporter.send(msg(request.reports_channel));
+        })
+        .expect("Could not create memeory reporter callback");
+
         self.send(ProfilerMsg::RegisterReporter(
             reporter_name.clone(),
-            Reporter(reporter_sender),
+            Reporter(callback),
         ));
 
         ProfilerRegistration {
@@ -113,17 +111,16 @@ impl ProfilerChan {
     }
 
     /// Runs `f()` with memory profiling.
-    pub fn run_with_memory_reporting<F, M, T, C>(
+    pub fn run_with_memory_reporting<F, M, T>(
         &self,
         f: F,
         reporter_name: String,
-        channel_for_reporter: C,
+        channel_for_reporter: GenericSender<T>,
         msg: M,
     ) where
         F: FnOnce(),
         M: Fn(ReportsChan) -> T + Send + 'static,
-        T: Send + 'static,
-        C: OpaqueSender<T> + Send + 'static,
+        T: Send + 'static + Serialize,
     {
         let _registration = self.prepare_memory_reporting(reporter_name, channel_for_reporter, msg);
 
@@ -199,7 +196,7 @@ impl ProcessReports {
 
 /// A channel through which memory reports can be sent.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ReportsChan(pub GenericSender<ProcessReports>);
+pub struct ReportsChan(pub GenericCallback<ProcessReports>);
 
 impl ReportsChan {
     /// Send `report` on this `IpcSender`.
@@ -225,7 +222,7 @@ pub struct ReporterRequest {
 /// registering the receiving end with the router so that messages from the memory profiler end up
 /// injected into the client's event loop.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Reporter(pub GenericSender<ReporterRequest>);
+pub struct Reporter(pub GenericCallback<ReporterRequest>);
 
 impl Reporter {
     /// Collect one or more memory reports. Returns true on success, and false on failure.

@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 use std::thread;
 
+use base::generic_channel::{self, GenericReceiver};
 use base::id::CookieStoreId;
 use base::threadpool::ThreadPool;
 use cookie::Cookie;
@@ -145,7 +146,7 @@ pub fn new_core_resource_thread(
 ) -> (CoreResourceThread, CoreResourceThread) {
     let (public_setup_chan, public_setup_port) = ipc::channel().unwrap();
     let (private_setup_chan, private_setup_port) = ipc::channel().unwrap();
-    let (report_chan, report_port) = ipc::channel().unwrap();
+    let (report_chan, report_port) = generic_channel::channel().unwrap();
 
     thread::Builder::new()
         .name("ResourceManager".to_owned())
@@ -253,7 +254,7 @@ impl ResourceChannelManager {
         &mut self,
         public_receiver: IpcReceiver<CoreResourceMsg>,
         private_receiver: IpcReceiver<CoreResourceMsg>,
-        memory_reporter: IpcReceiver<ReportsChan>,
+        memory_reporter: GenericReceiver<ReportsChan>,
         protocols: Arc<ProtocolRegistry>,
         embedder_proxy: EmbedderProxy,
     ) {

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::thread;
 
 use app_units::Au;
+use base::generic_channel::{self, GenericReceiver};
 use base::id::PainterId;
 use compositing_traits::CrossProcessCompositorApi;
 use fonts_traits::{
@@ -56,7 +57,7 @@ struct FontInstancesMapKey {
 /// them, and ensuring that only one copy of system font data is loaded at a time.
 #[derive(MallocSizeOf)]
 pub struct SystemFontService {
-    port: IpcReceiver<SystemFontServiceMessage>,
+    port: GenericReceiver<SystemFontServiceMessage>,
     local_families: FontStore,
     compositor_api: CrossProcessCompositorApi,
     // keys already have the IdNamespace for webrender
@@ -83,7 +84,7 @@ impl SystemFontService {
         compositor_api: CrossProcessCompositorApi,
         memory_profiler_sender: ProfilerChan,
     ) -> SystemFontServiceProxySender {
-        let (sender, receiver) = ipc::channel().unwrap();
+        let (sender, receiver) = generic_channel::channel().unwrap();
         let memory_reporter_sender = sender.clone();
 
         thread::Builder::new()

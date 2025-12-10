@@ -9,11 +9,11 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::thread;
 
-use base::generic_channel::{self, GenericReceiver};
+use base::generic_channel::{self, GenericCallback, GenericReceiver};
 use log::debug;
 use profile_traits::mem::{
-    MemoryReport, MemoryReportResult, ProfilerChan, ProfilerMsg, Report, Reporter, ReporterRequest,
-    ReportsChan,
+    MemoryReport, MemoryReportResult, ProcessReports, ProfilerChan, ProfilerMsg, Report, Reporter,
+    ReporterRequest, ReportsChan,
 };
 
 use crate::system_reporter;
@@ -51,17 +51,14 @@ impl Profiler {
         // Register the system memory reporter, which will run on its own thread. It never needs to
         // be unregistered, because as long as the memory profiler is running the system memory
         // reporter can make measurements.
-        let (system_reporter_sender, system_reporter_receiver) = ipc::channel().unwrap();
-        ROUTER.add_typed_route(
-            system_reporter_receiver,
-            Box::new(|message| {
-                let request: ReporterRequest = message.unwrap();
-                system_reporter::collect_reports(request)
-            }),
-        );
+        let callback = GenericCallback::new(|message| {
+            let request: ReporterRequest = message.unwrap();
+            system_reporter::collect_reports(request)
+        })
+        .expect("Could not create reporter callback");
         mem_profiler_chan.send(ProfilerMsg::RegisterReporter(
             "system-main".to_owned(),
-            Reporter(system_reporter_sender),
+            Reporter(callback),
         ));
 
         mem_profiler_chan
@@ -137,18 +134,35 @@ impl Profiler {
 
     /// Returns a map of pid -> reports
     fn collect_reports(&self) -> HashMap<u32, Vec<Report>> {
-        let mut result = HashMap::new();
-
+        let result = std::sync::Arc::new(std::sync::Mutex::new(HashMap::new()));
+        let value = result.clone();
+        let cb =
+            GenericCallback::new(move |reports: Result<ProcessReports, ipc_channel::Error>| {
+                if let Ok(mut reports) = reports {
+                    value
+                        .lock()
+                        .unwrap()
+                        .entry(reports.pid)
+                        .or_insert(vec![])
+                        .append(&mut reports.reports);
+                }
+            })
+            .unwrap();
         for reporter in self.reporters.values() {
-            let (chan, port) = generic_channel::channel().unwrap();
-            reporter.collect_reports(ReportsChan(chan));
-            if let Ok(mut reports) = port.recv() {
-                result
+            //let (chan, port) = generic_channel::channel().unwrap();
+            reporter.collect_reports(ReportsChan(cb.clone()));
+            /*
+                if let Ok(mut reports) = port.recv() {
+                    result
                     .entry(reports.pid)
                     .or_insert(vec![])
                     .append(&mut reports.reports);
             }
+            */
         }
-        result
+        std::sync::Arc::into_inner(result)
+            .expect("Could not get arc")
+            .into_inner()
+            .expect("Could not get inner mutex")
     }
 }
