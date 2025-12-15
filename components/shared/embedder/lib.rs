@@ -381,7 +381,7 @@ impl Image {
 
     /// Return the bytes belonging to the first image frame.
     pub fn data(&self) -> &[u8] {
-        &self.data[self.range.clone()]
+        &self.data.view()[self.range.clone()]
     }
 }
 

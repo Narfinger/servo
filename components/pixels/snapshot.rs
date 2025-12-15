@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use std::ops::{Bound, Deref, DerefMut, Range, RangeBounds};
+use std::ops::{Bound, Deref, Range, RangeBounds};
 use std::sync::Arc;
 
-use base::generic_channel::GenericSharedMemory;
+use base::generic_channel::{GenericSharedMemory, SharedMemoryView};
 use euclid::default::{Rect, Size2D};
 use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
@@ -99,33 +99,67 @@ pub enum SnapshotData {
 impl SnapshotData {
     fn to_vec(&self) -> Vec<u8> {
         match &self {
-            SnapshotData::SharedMemory(data, byte_range) => Vec::from(&data[byte_range.clone()]),
+            SnapshotData::SharedMemory(data, byte_range) => {
+                Vec::from(&data.view()[byte_range.clone()])
+            },
             SnapshotData::SharedVec(data, byte_range) => Vec::from(&data[byte_range.clone()]),
             SnapshotData::Owned(data) => data.clone(),
         }
     }
+
+    /// Get a view to the underlying data.
+    fn view(&self) -> SnapshotDataView<'_> {
+        match &self {
+            SnapshotData::SharedMemory(generic_shared_memory, range) => {
+                SnapshotDataView::SharedMemory(generic_shared_memory.view(), range.clone())
+            },
+            SnapshotData::SharedVec(items, range) => {
+                SnapshotDataView::SharedVec(items, range.clone())
+            },
+            SnapshotData::Owned(items) => SnapshotDataView::Owned(items),
+        }
+    }
 }
 
-impl DerefMut for SnapshotData {
-    fn deref_mut(&mut self) -> &mut Self::Target {
+impl AsMut<[u8]> for SnapshotData {
+    fn as_mut(&mut self) -> &mut [u8] {
         match self {
             SnapshotData::SharedMemory(..) | SnapshotData::SharedVec(..) => {
                 *self = SnapshotData::Owned(self.to_vec());
-                &mut *self
+                self.as_mut()
             },
             SnapshotData::Owned(items) => items,
         }
     }
 }
 
-impl Deref for SnapshotData {
+/// A view into the data, depending on what it is
+enum SnapshotDataView<'a> {
+    SharedMemory(SharedMemoryView<'a>, Range<usize>),
+    SharedVec(&'a [u8], Range<usize>),
+    Owned(&'a [u8]),
+}
+
+impl<'a> SnapshotDataView<'a> {
+    fn all_bytes(&self) -> &[u8] {
+        match self {
+            SnapshotDataView::SharedMemory(shared_memory_view, _) => &shared_memory_view,
+            SnapshotDataView::SharedVec(items, _) => &items,
+            SnapshotDataView::Owned(items) => &items,
+        }
+    }
+}
+
+impl<'a> Deref for SnapshotDataView<'a> {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
-        match &self {
-            SnapshotData::SharedMemory(data, byte_range) => &data[byte_range.clone()],
-            SnapshotData::SharedVec(data, byte_range) => &data[byte_range.clone()],
-            SnapshotData::Owned(items) => items,
+        match self {
+            SnapshotDataView::SharedMemory(shared_memory_view, range) => {
+                &shared_memory_view[range.clone()]
+            },
+            SnapshotDataView::SharedVec(items, range) => &items[range.clone()],
+            SnapshotDataView::Owned(items) => &items,
         }
     }
 }
@@ -224,7 +258,7 @@ impl Snapshot {
     }
 
     pub fn get_rect(&self, rect: Rect<u32>) -> Self {
-        let data = rgba8_get_rect(self.as_raw_bytes(), self.size(), rect).to_vec();
+        let data = rgba8_get_rect(self.data.view().all_bytes(), self.size(), rect).to_vec();
         Self::from_vec(rect.size, self.format, self.alpha_mode, data)
     }
 
@@ -275,17 +309,19 @@ impl Snapshot {
             return;
         }
 
-        transform_inplace(self.data.deref_mut(), multiply, swap_rb, clear_alpha);
+        transform_inplace(self.data.as_mut(), multiply, swap_rb, clear_alpha);
         self.alpha_mode = target_alpha_mode;
         self.format = target_format;
     }
 
+    /*
     pub fn as_raw_bytes(&self) -> &[u8] {
         &self.data
     }
+    */
 
     pub fn as_raw_bytes_mut(&mut self) -> &mut [u8] {
-        &mut self.data
+        self.data.as_mut()
     }
 
     pub fn to_shared(&self) -> SharedSnapshot {
@@ -333,7 +369,12 @@ impl Snapshot {
             EncodedImageType::Png => {
                 // FIXME(nox): https://github.com/image-rs/image-png/issues/86
                 // FIXME(nox): https://github.com/image-rs/image-png/issues/87
-                PngEncoder::new(encoder).write_image(data, width, height, ExtendedColorType::Rgba8)
+                PngEncoder::new(encoder).write_image(
+                    &data.view(),
+                    width,
+                    height,
+                    ExtendedColorType::Rgba8,
+                )
             },
             EncodedImageType::Jpeg => {
                 let mut jpeg_encoder = if let Some(quality) = quality {
@@ -379,7 +420,7 @@ impl Snapshot {
                 let image = RgbaDataForJpegEncoder {
                     width,
                     height,
-                    data,
+                    data: &data.view(),
                 };
 
                 jpeg_encoder.encode_image(&image)
@@ -387,7 +428,7 @@ impl Snapshot {
             EncodedImageType::Webp => {
                 // No quality support because of https://github.com/image-rs/image/issues/1984
                 WebPEncoder::new_lossless(encoder).write_image(
-                    data,
+                    &data.view(),
                     width,
                     height,
                     ExtendedColorType::Rgba8,
@@ -399,11 +440,7 @@ impl Snapshot {
 
 impl From<Snapshot> for Vec<u8> {
     fn from(value: Snapshot) -> Self {
-        match value.data {
-            SnapshotData::SharedMemory(..) => Vec::from(value.as_raw_bytes()),
-            SnapshotData::SharedVec(..) => Vec::from(value.as_raw_bytes()),
-            SnapshotData::Owned(data) => data,
-        }
+        value.data.view().all_bytes().to_vec()
     }
 }
 
@@ -460,8 +497,8 @@ impl SharedSnapshot {
         self.alpha_mode
     }
 
-    pub fn data(&self) -> &[u8] {
-        &(&self.data)[self.byte_range.clone()]
+    pub fn data(&self) -> Vec<u8> {
+        self.data.view().to_vec()
     }
 
     pub fn shared_memory(&self) -> GenericSharedMemory {

@@ -45,12 +45,6 @@ impl FontData {
     }
 }
 
-impl AsRef<[u8]> for FontData {
-    fn as_ref(&self) -> &[u8] {
-        &self.0
-    }
-}
-
 /// Raw font data and an index
 ///
 /// If the font data is of a TTC (TrueType collection) file, then the index of a specific font within

@@ -19,10 +19,12 @@ mod callback;
 pub use callback::GenericCallback;
 mod oneshot;
 mod shared_memory;
-pub use shared_memory::{SharedMemoryView, GenericSharedMemory, IpcSharedMemoryView, ArcSharedMemoryView};
 /// We want to discourage anybody from using the ipc_channel crate in servo and use 'GenericChannels' instead.
 /// 'GenericSharedMemory' is, however, still useful so we reexport it under a different name for future optimization.
 pub use oneshot::{GenericOneshotReceiver, GenericOneshotSender, oneshot};
+pub use shared_memory::{
+    GenericSharedMemory, SharedMemoryView,
+};
 
 /// Abstraction of the ability to send a particular type of message cross-process.
 /// This can be used to ease the use of GenericSender sub-fields.
