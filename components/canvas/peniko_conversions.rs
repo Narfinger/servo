@@ -170,7 +170,7 @@ impl Convert<peniko::Brush> for FillOrStrokeStyle {
                 let snapshot = &surface_style.surface_data;
                 peniko::Brush::Image(peniko::ImageBrush {
                     image: peniko::ImageData {
-                        data: peniko::Blob::from(Vec::from(snapshot.data())),
+                        data: peniko::Blob::from(snapshot.data()),
                         format: snapshot.format().convert(),
                         width: surface_style.surface_size.width,
                         height: surface_style.surface_size.height,
