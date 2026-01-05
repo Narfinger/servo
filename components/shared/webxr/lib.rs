@@ -79,7 +79,7 @@ pub fn recv_timeout<T>(
 pub fn recv_timeout<T>(
     receiver: &WebXrReceiver<T>,
     timeout: Duration,
-) -> Result<T, ipc_channel::ipc::TryRecvError>
+) -> Result<T, ipc_channel::TryRecvError>
 where
     T: serde::Serialize + for<'a> serde::Deserialize<'a>,
 {

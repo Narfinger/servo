@@ -103,7 +103,7 @@ icu_segmenter = "1.5.0"
 image = { version = "0.25", default-features = false, features = ["avif", "rayon", "bmp", "gif", "ico", "jpeg", "png", "webp"] }
 imsz = "0.4"
 indexmap = { version = "2.11.4", features = ["std"] }
-ipc-channel = "0.20.2"
+ipc-channel = "0.21"
 itertools = "0.14"
 js = { package = "mozjs", version = "=0.14.4", default-features = false, features = ["libz-sys", "intl"] }
 keyboard-types = { version = "0.8.3", features = ["serde", "webdriver"] }
@@ -159,9 +159,9 @@ serde = "1.0.228"
 serde_bytes = "0.11"
 serde_core = "1.0.226"
 serde_json = "1.0"
-servo-media = { git = "https://github.com/servo/media" }
-servo-media-dummy = { git = "https://github.com/servo/media" }
-servo-media-gstreamer = { git = "https://github.com/servo/media" }
+servo-media = { path = "../media/servo-media" }
+servo-media-dummy = { path = "../media/backends/dummy" }
+servo-media-gstreamer = { path = "../media/backends/gstreamer" }
 servo-tracing = { path = "components/servo_tracing" }
 servo_arc = { git = "https://github.com/servo/stylo", branch = "2025-11-01" }
 sha1 = "0.10"
@@ -276,6 +276,8 @@ lto = "thin"
 codegen-units = 1
 
 [patch.crates-io]
+ipc-channel = { path = "../ipc-channel" }
+
 # If you need to temporarily test Servo with a local fork of some upstream
 # crate, add that here. Use the form:
 #

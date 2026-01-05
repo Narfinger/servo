@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use constellation_traits::{SWManagerSenders, ServiceWorkerManagerFactory};
-use ipc_channel::Error;
+use ipc_channel::IpcError;
 use ipc_channel::ipc::IpcSender;
 use serde::{Deserialize, Serialize};
 use servo_config::opts::{self, Opts};
@@ -49,7 +49,7 @@ impl ServiceWorkerUnprivilegedContent {
     }
 
     /// Start the agent-cluster in it's own process.
-    pub fn spawn_multiprocess(self) -> Result<Process, Error> {
+    pub fn spawn_multiprocess(self) -> Result<Process, IpcError> {
         spawn_multiprocess(UnprivilegedContent::ServiceWorker(self))
     }
 }

@@ -63,7 +63,6 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
-use ipc_channel::ErrorKind;
 use ipc_channel::ipc::IpcSender;
 use ipc_channel::router::ROUTER;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -79,7 +78,7 @@ use crate::generic_channel::{SendError, SendResult};
 /// except that this type is not wrapped in a Box.
 /// The callback will be wrapped in either a Box or an Arc, depending on if it is run on
 /// the router, or passed to the recipient.
-pub type MsgCallback<T> = dyn FnMut(Result<T, ipc_channel::Error>) + Send;
+pub type MsgCallback<T> = dyn FnMut(Result<T, ipc_channel::IpcError>) + Send;
 
 /// A mechanism to run a callback in the process this callback was constructed in.
 ///
@@ -131,9 +130,9 @@ where
     /// Creates a new GenericCallback.
     ///
     /// The callback should not do any heavy work and not block.
-    pub fn new<F: FnMut(Result<T, ipc_channel::Error>) + Send + 'static>(
+    pub fn new<F: FnMut(Result<T, ipc_channel::IpcError>) + Send + 'static>(
         callback: F,
-    ) -> Result<Self, ipc_channel::Error> {
+    ) -> Result<Self, ipc_channel::IpcError> {
         let generic_callback = if opts::get().multiprocess || opts::get().force_ipc {
             let (ipc_sender, ipc_receiver) = ipc_channel::ipc::channel()?;
             ROUTER.add_typed_route(ipc_receiver, Box::new(callback));
@@ -153,11 +152,13 @@ where
     pub fn send(&self, value: T) -> SendResult {
         match &self.0 {
             GenericCallbackVariants::CrossProcess(sender) => {
-                sender.send(value).map_err(|error| match *error {
-                    ErrorKind::Io(_) => SendError::Disconnected,
+                sender.send(value).map_err(|error| match error {
                     serialization_error => {
                         SendError::SerializationError(serialization_error.to_string())
                     },
+                    ipc_channel::IpcError::SerializationError(serialization_error) => todo!(),
+                    ipc_channel::IpcError::Io(error) => todo!(),
+                    ipc_channel::IpcError::Disconnected => todo!(),
                 })
             },
             GenericCallbackVariants::InProcess(callback) => {

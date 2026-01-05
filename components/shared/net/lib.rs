@@ -19,7 +19,8 @@ use headers::{ContentType, HeaderMapExt, ReferrerPolicy as ReferrerPolicyHeader}
 use http::{Error as HttpError, HeaderMap, HeaderValue, StatusCode, header};
 use hyper_serde::Serde;
 use hyper_util::client::legacy::Error as HyperError;
-use ipc_channel::ipc::{self, IpcError, IpcReceiver, IpcSender};
+use ipc_channel::IpcError;
+use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
 use ipc_channel::router::ROUTER;
 use malloc_size_of::malloc_size_of_is_0;
 use malloc_size_of_derive::MallocSizeOf;
@@ -552,7 +553,7 @@ impl ResourceThreads {
 
 impl IpcSend<CoreResourceMsg> for ResourceThreads {
     fn send(&self, msg: CoreResourceMsg) -> IpcSendResult {
-        self.core_thread.send(msg).map_err(IpcError::Bincode)
+        self.core_thread.send(msg)
     }
 
     fn sender(&self) -> IpcSender<CoreResourceMsg> {

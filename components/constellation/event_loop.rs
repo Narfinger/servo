@@ -11,12 +11,12 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 
 use background_hang_monitor_api::{BackgroundHangMonitorControlMsg, HangMonitorAlert};
-use base::generic_channel::{self, GenericReceiver, GenericSender};
+use base::generic_channel::{self, GenericReceiver, GenericSender, SendError};
 use base::id::ScriptEventLoopId;
 use constellation_traits::ServiceWorkerManagerFactory;
 use embedder_traits::ScriptToEmbedderChan;
 use ipc_channel::ipc::IpcSender;
-use ipc_channel::{Error, ipc};
+use ipc_channel::{IpcError, ipc};
 use layout_api::ScriptThreadFactory;
 use log::error;
 use media::WindowGLContext;
@@ -68,7 +68,7 @@ impl EventLoop {
     pub(crate) fn spawn<STF: ScriptThreadFactory, SWF: ServiceWorkerManagerFactory>(
         constellation: &mut Constellation<STF, SWF>,
         is_private: bool,
-    ) -> Result<Rc<Self>, Error> {
+    ) -> Result<Rc<Self>, IpcError> {
         let (script_chan, script_port) =
             base::generic_channel::channel().expect("Pipeline script chan");
 
@@ -155,7 +155,7 @@ impl EventLoop {
     fn spawn_in_process<STF: ScriptThreadFactory, SWF: ServiceWorkerManagerFactory>(
         constellation: &mut Constellation<STF, SWF>,
         initial_script_state: InitialScriptState,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, IpcError> {
         let script_chan = initial_script_state.constellation_to_script_sender.clone();
         let id = initial_script_state.id;
 
@@ -195,10 +195,9 @@ impl EventLoop {
     }
 
     /// Send a message to the event loop.
-    pub fn send(&self, msg: ScriptThreadMessage) -> Result<(), Error> {
+    pub fn send(&self, msg: ScriptThreadMessage) -> Result<(), SendError> {
         self.script_chan
             .send(msg)
-            .map_err(|_err| Box::new(ipc_channel::ErrorKind::Custom("SendError".into())))
     }
 
     /// If this is [`EventLoop`] is in another process, send a message to its `BackgroundHangMonitor`,

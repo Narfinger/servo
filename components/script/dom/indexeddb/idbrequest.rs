@@ -398,7 +398,7 @@ impl IDBRequest {
             .database_access_task_source()
             .to_sendable();
 
-        let closure = move |message: Result<BackendResult<T>, ipc_channel::Error>| {
+        let closure = move |message: Result<BackendResult<T>, ipc_channel::IpcError>| {
             let response_listener = response_listener.clone();
             task_source.queue(task!(request_callback: move || {
                 response_listener.handle_async_request_finished(
