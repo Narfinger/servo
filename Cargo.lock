@@ -10527,11 +10527,13 @@ dependencies = [
 name = "webxr"
 version = "0.0.1"
 dependencies = [
+ "base",
  "crossbeam-channel",
  "euclid",
  "glow",
  "log",
  "openxr",
+ "profile_traits",
  "raw-window-handle",
  "surfman",
  "webxr-api",
@@ -10543,10 +10545,11 @@ dependencies = [
 name = "webxr-api"
 version = "0.0.1"
 dependencies = [
+ "base",
  "embedder_traits",
  "euclid",
- "ipc-channel",
  "log",
+ "profile_traits",
  "serde",
 ]
 

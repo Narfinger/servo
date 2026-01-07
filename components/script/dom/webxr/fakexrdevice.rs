@@ -8,8 +8,7 @@ use std::rc::Rc;
 use dom_struct::dom_struct;
 use euclid::{Point2D, Point3D, Rect, RigidTransform3D, Rotation3D, Size2D, Transform3D, Vector3D};
 use ipc_channel::ipc::IpcSender;
-use ipc_channel::router::ROUTER;
-use profile_traits::ipc;
+use profile_traits::generic_callback::GenericCallback;
 use webxr_api::{
     EntityType, Handedness, InputId, InputSource, MockDeviceMsg, MockInputInit, MockRegion,
     MockViewInit, MockViewsInit, MockWorld, TargetRayMode, Triangle, Visibility,
@@ -68,7 +67,7 @@ impl FakeXRDevice {
         )
     }
 
-    pub(crate) fn disconnect(&self, sender: IpcSender<()>) {
+    pub(crate) fn disconnect(&self, sender: GenericCallback<()>) {
         let _ = self.sender.send(MockDeviceMsg::Disconnect(sender));
     }
 }
@@ -315,18 +314,14 @@ impl FakeXRDeviceMethods<crate::DomTypeHolder> for FakeXRDevice {
             .task_manager()
             .dom_manipulation_task_source()
             .to_sendable();
-        let (sender, receiver) = ipc::channel(global.time_profiler_chan().clone()).unwrap();
-
-        ROUTER.add_typed_route(
-            receiver.to_ipc_receiver(),
-            Box::new(move |_| {
-                let trusted = trusted
-                    .take()
-                    .expect("disconnect callback called multiple times");
-                task_source.queue(trusted.resolve_task(()));
-            }),
-        );
-        self.disconnect(sender);
+        let callback = GenericCallback::new(global.time_profiler_chan().clone(), move |_| {
+            let trusted = trusted
+                .take()
+                .expect("disconnect callback called multiple times");
+            task_source.queue(trusted.resolve_task(()));
+        })
+        .expect("Could not create callback");
+        self.disconnect(callback);
         p
     }
 

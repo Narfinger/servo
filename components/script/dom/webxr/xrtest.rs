@@ -12,6 +12,7 @@ use dom_struct::dom_struct;
 use ipc_channel::ipc::IpcSender;
 use ipc_channel::router::ROUTER;
 use js::jsval::JSVal;
+use profile_traits::generic_callback::GenericCallback;
 use profile_traits::ipc;
 use webxr_api::{self, Error as XRError, MockDeviceInit, MockDeviceMsg};
 
@@ -154,25 +155,22 @@ impl XRTestMethods<crate::DomTypeHolder> for XRTest {
             .task_manager()
             .dom_manipulation_task_source()
             .to_sendable();
-        let (sender, receiver) = ipc::channel(global.time_profiler_chan().clone()).unwrap();
 
-        ROUTER.add_typed_route(
-            receiver.to_ipc_receiver(),
-            Box::new(move |message| {
-                let trusted = trusted
-                    .take()
-                    .expect("SimulateDeviceConnection callback called twice");
-                let this = this.clone();
-                let message =
-                    message.expect("SimulateDeviceConnection callback given incorrect payload");
+        let callback = GenericCallback::new(global.time_profiler_chan().clone(), move |message| {
+            let trusted = trusted
+                .take()
+                .expect("SimulateDeviceConnection callback called twice");
+            let this = this.clone();
+            let message =
+                message.expect("SimulateDeviceConnection callback given incorrect payload");
 
-                task_source.queue(task!(request_session: move || {
-                    this.root().device_obtained(message, trusted, CanGc::note());
-                }));
-            }),
-        );
+            task_source.queue(task!(request_session: move || {
+                this.root().device_obtained(message, trusted, CanGc::note());
+            }));
+        })
+        .expect("Could not create callback");
         if let Some(mut r) = global.as_window().webxr_registry() {
-            r.simulate_device_connection(init, sender);
+            r.simulate_device_connection(init, callback);
         }
 
         p

@@ -9,6 +9,7 @@ use base::id::PipelineId;
 use dom_struct::dom_struct;
 use ipc_channel::ipc::{self as ipc_crate, IpcReceiver};
 use ipc_channel::router::ROUTER;
+use profile_traits::generic_callback::GenericCallback;
 use profile_traits::ipc;
 use servo_config::pref;
 use webxr_api::{Error as XRError, Frame, Session, SessionInit, SessionMode};
@@ -122,10 +123,8 @@ impl XRSystemMethods<crate::DomTypeHolder> for XRSystem {
             .task_manager()
             .dom_manipulation_task_source()
             .to_sendable();
-        let (sender, receiver) = ipc::channel(global.time_profiler_chan().clone()).unwrap();
-        ROUTER.add_typed_route(
-            receiver.to_ipc_receiver(),
-            Box::new(move |message| {
+
+        let callback = GenericCallback::new(global.time_profiler_chan().clone(), move |message| {
                 // router doesn't know this is only called once
                 let trusted = if let Some(trusted) = trusted.take() {
                     trusted
@@ -144,10 +143,10 @@ impl XRSystemMethods<crate::DomTypeHolder> for XRSystem {
                 } else {
                     task_source.queue(trusted.resolve_task(false));
                 };
-            }),
-        );
+            }).expect("Could not create callback");
+
         if let Some(mut r) = global.as_window().webxr_registry() {
-            r.supports_session(mode.convert(), sender);
+            r.supports_session(mode.convert(), callback);
         }
 
         promise
@@ -241,9 +240,7 @@ impl XRSystemMethods<crate::DomTypeHolder> for XRSystem {
         let (sender, receiver) = ipc::channel(global.time_profiler_chan().clone()).unwrap();
         let (frame_sender, frame_receiver) = ipc_crate::channel().unwrap();
         let mut frame_receiver = Some(frame_receiver);
-        ROUTER.add_typed_route(
-            receiver.to_ipc_receiver(),
-            Box::new(move |message| {
+        let callback = GenericCallback::new(global.time_profiler.chan().clone(), move |message| {
                 // router doesn't know this is only called once
                 let trusted = trusted.take().unwrap();
                 let this = this.clone();
@@ -256,9 +253,9 @@ impl XRSystemMethods<crate::DomTypeHolder> for XRSystem {
                 };
                 task_source.queue(task!(request_session: move || {
                     this.root().session_obtained(message, trusted.root(), mode, frame_receiver, CanGc::note());
-                }));
-            }),
-        );
+                }))
+            }).expect("Could not create callback");
+
         if let Some(mut r) = window.webxr_registry() {
             r.request_session(mode.convert(), init, sender, frame_sender);
         }

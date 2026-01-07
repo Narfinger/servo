@@ -16,7 +16,7 @@ use ipc_channel::router::ROUTER;
 use js::jsapi::JSObject;
 use js::rust::MutableHandleValue;
 use js::typedarray::HeapFloat32Array;
-use profile_traits::ipc;
+use profile_traits::generic_callback::GenericCallback;
 use rustc_hash::FxBuildHasher;
 use script_bindings::trace::RootedTraceableBox;
 use stylo_atoms::Atom;
@@ -236,20 +236,16 @@ impl XRSession {
             .task_manager()
             .dom_manipulation_task_source()
             .to_sendable();
-        let (sender, receiver) = ipc::channel(global.time_profiler_chan().clone()).unwrap();
 
-        ROUTER.add_typed_route(
-            receiver.to_ipc_receiver(),
-            Box::new(move |message| {
-                let this = this.clone();
-                task_source.queue(task!(xr_event_callback: move || {
-                    this.root().event_callback(message.unwrap(), CanGc::note());
-                }));
-            }),
-        );
-
+        let callback = GenericCallback::new(global.time_profiler_chan().clone(), move |message| {
+            let this = this.clone();
+            task_source.queue(task!(xr_event_callback: move || {
+                this.root().event_callback(message.unwrap(), CanGc::note());
+            }));
+        })
+        .expect("Could not create callback");
         // request animation frame
-        self.session.borrow_mut().set_event_dest(sender);
+        self.session.borrow_mut().set_event_dest(callback);
     }
 
     // Must be called after the promise for session creation is resolved
@@ -1071,23 +1067,20 @@ impl XRSessionMethods<crate::DomTypeHolder> for XRSession {
             .task_manager()
             .dom_manipulation_task_source()
             .to_sendable();
-        let (sender, receiver) = ipc::channel(global.time_profiler_chan().clone()).unwrap();
 
-        ROUTER.add_typed_route(
-            receiver.to_ipc_receiver(),
-            Box::new(move |message| {
-                let this = this.clone();
-                task_source.queue(task!(update_session_framerate: move || {
-                    let session = this.root();
-                    session.apply_nominal_framerate(message.unwrap(), CanGc::note());
-                    if let Some(promise) = session.update_framerate_promise.borrow_mut().take() {
-                        promise.resolve_native(&(), CanGc::note());
-                    };
-                }));
-            }),
-        );
+        let callback = GenericCallback::new(global.time_profiler_chan().clone(), move |message| {
+            let this = this.clone();
+            task_source.queue(task!(update_session_framerate: move || {
+                let session = this.root();
+                session.apply_nominal_framerate(message.unwrap(), CanGc::note());
+                if let Some(promise) = session.update_framerate_promise.borrow_mut().take() {
+                    promise.resolve_native(&(), CanGc::note());
+                };
+            }))
+        })
+        .expect("Could not create callback");
 
-        self.session.borrow_mut().update_frame_rate(*rate, sender);
+        self.session.borrow_mut().update_frame_rate(*rate, callback);
 
         promise
     }
