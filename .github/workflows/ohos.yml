@@ -224,6 +224,9 @@ jobs:
         run: |
           mkdir test_output
           hdc shell aa force-stop org.servo.servo
+          # perf mode
+          hdc power-shell setmode 602
+          hdc power-shell timeout -o 600000
           # Hitrace allows us to save application and system traces, which is useful to analyze performance.
           # The main reason however, is that we can use the application traces to determine if servo
           # successfully reaches certain locations in the code, in particular if a page is successfully loaded.
@@ -240,6 +243,9 @@ jobs:
           hdc file recv /data/local/tmp/ohtrace.txt  test_output/servo.ftrace
           # To limit the logsize we only save logs from servo.
           hdc shell hilog --exit -D 0xE0C3 > test_output/servo.log
+          # reset the perf mode
+          hdc power-shell setmode 600
+          hdc power-shell timeout -r
       # todo: Also benchmark some other websites....
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -372,9 +378,9 @@ jobs:
         run: jq --compact-output --slurp add speedometer.json bench.json > combined-bencher.json
       - name: Uploading to bencher.dev
         # Post to bencher if at least one of the benchmarks succeeded.
-        if: | 
-          ${{ !cancelled() && steps.setup_complete.outcome == 'success' 
-                && (steps.hitrace_bench.outcome == 'success' 
+        if: |
+          ${{ !cancelled() && steps.setup_complete.outcome == 'success'
+                && (steps.hitrace_bench.outcome == 'success'
                       || steps.speedometer.outcome == 'success')
           }}
         # Note: That e.g. `--start-point` is ignored if it is an empty string,
