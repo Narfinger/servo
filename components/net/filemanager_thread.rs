@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::ops::Index;
@@ -14,6 +15,7 @@ use embedder_traits::{
     EmbedderControlId, EmbedderControlResponse, EmbedderMsg, EmbedderProxy, FilePickerRequest,
     SelectedFile,
 };
+use futures::{Stream, StreamExt, TryFutureExt, stream};
 use headers::{ContentLength, ContentRange, ContentType, HeaderMap, HeaderMapExt, Range};
 use http::header::{self, HeaderValue};
 use ipc_channel::ipc::IpcSender;
@@ -29,6 +31,7 @@ use net_traits::response::{Response, ResponseBody};
 use parking_lot::{Mutex, RwLock};
 use rustc_hash::{FxHashMap, FxHashSet};
 use servo_arc::Arc as ServoArc;
+use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::sync::mpsc::UnboundedSender as TokioSender;
 use url::Url;
 use uuid::Uuid;
@@ -90,12 +93,7 @@ impl FileManager {
         }
     }
 
-    pub fn read_file(
-        &self,
-        sender: IpcSender<FileManagerResult<ReadFileProgress>>,
-        id: Uuid,
-        origin: FileOrigin,
-    ) {
+    pub fn read_file(&self, id: Uuid, origin: FileOrigin) {
         let store = self.store.clone();
         std::thread::spawn(move || {
             if let Err(e) = store.try_read_file(&sender, id, origin) {
@@ -181,7 +179,7 @@ impl FileManager {
         range: RelativePos,
     ) {
         let done_sender = done_sender.clone();
-        std::thread::spawn(move || {
+        tokio::task::spawn_blocking(move || {
             loop {
                 if cancellation_listener.cancelled() {
                     *res_body.lock() = ResponseBody::Done(vec![]);
@@ -639,14 +637,13 @@ impl FileManagerStore {
         })
     }
 
-    fn get_blob_buf(
+    async fn get_blob_buf(
         &self,
-        sender: &IpcSender<FileManagerResult<ReadFileProgress>>,
         id: &Uuid,
         file_token: &FileTokenCheck,
         origin_in: &FileOrigin,
         rel_pos: RelativePos,
-    ) -> Result<(), BlobURLStoreError> {
+    ) -> impl Stream<Item = Result<ReadFileProgress, BlobURLStoreError>> {
         let file_impl = self.get_impl(id, file_token, origin_in)?;
         match file_impl {
             FileImpl::Memory(buf) => {
@@ -658,10 +655,7 @@ impl FileManagerStore {
                     bytes: buf.bytes.index(range).to_vec(),
                 };
 
-                let _ = sender.send(Ok(ReadFileProgress::Meta(buf)));
-                let _ = sender.send(Ok(ReadFileProgress::EOF));
-
-                Ok(())
+                stream::iter([Ok(ReadFileProgress::Meta(buf)), Ok(ReadFileProgress::EOF)])
             },
             FileImpl::MetaDataOnly(metadata) => {
                 /* XXX: Snapshot state check (optional) https://w3c.github.io/FileAPI/#snapshot-state.
@@ -679,52 +673,38 @@ impl FileManagerStore {
                 let mime = mime_guess::from_path(metadata.path.clone()).first();
                 let range = rel_pos.to_abs_range(metadata.size as usize);
 
-                let mut file = File::open(&metadata.path)
+                let file = tokio::fs::File::open(&metadata.path)
+                    .await
                     .map_err(|e| BlobURLStoreError::External(e.to_string()))?;
                 let seeked_start = file
                     .seek(SeekFrom::Start(range.start as u64))
+                    .await
                     .map_err(|e| BlobURLStoreError::External(e.to_string()))?;
-
+                /*
                 if seeked_start == (range.start as u64) {
                     let type_string = match mime {
                         Some(x) => format!("{}", x),
                         None => "".to_string(),
                     };
 
-                    read_file_in_chunks(sender, &mut file, range.len(), opt_filename, type_string);
-                    Ok(())
-                } else {
-                    Err(BlobURLStoreError::InvalidEntry)
-                }
+                                    read_file_in_chunks(file, range.len(), opt_filename, type_string)
+                                } else {
+                                    stream::once(async {Err(BlobURLStoreError::InvalidEntry) })
+                                }
+                                */
             },
             FileImpl::Sliced(parent_id, inner_rel_pos) => {
                 // Next time we don't need to check validity since
                 // we have already done that for requesting URL if necessary
                 self.get_blob_buf(
-                    sender,
                     &parent_id,
                     file_token,
                     origin_in,
                     rel_pos.slice_inner(&inner_rel_pos),
                 )
+                .await
             },
         }
-    }
-
-    // Convenient wrapper over get_blob_buf
-    fn try_read_file(
-        &self,
-        sender: &IpcSender<FileManagerResult<ReadFileProgress>>,
-        id: Uuid,
-        origin_in: FileOrigin,
-    ) -> Result<(), BlobURLStoreError> {
-        self.get_blob_buf(
-            sender,
-            &id,
-            &FileTokenCheck::NotRequired,
-            &origin_in,
-            RelativePos::full_range(),
-        )
     }
 
     fn dec_ref(&self, id: &Uuid, origin_in: &FileOrigin) -> Result<(), BlobURLStoreError> {
@@ -841,50 +821,55 @@ impl FileManagerStore {
     }
 }
 
-fn read_file_in_chunks(
-    sender: &IpcSender<FileManagerResult<ReadFileProgress>>,
-    file: &mut File,
+async fn read_file_in_chunks(
+    file: tokio::fs::File,
     size: usize,
     opt_filename: Option<String>,
     type_string: String,
-) {
-    // First chunk
-    let mut buf = vec![0; FILE_CHUNK_SIZE];
-    match file.read(&mut buf) {
-        Ok(n) => {
-            buf.truncate(n);
-            let blob_buf = BlobBuf {
-                filename: opt_filename,
-                type_string,
-                size: size as u64,
-                bytes: buf,
-            };
-            let _ = sender.send(Ok(ReadFileProgress::Meta(blob_buf)));
-        },
-        Err(e) => {
-            let _ = sender.send(Err(FileManagerThreadError::FileSystemError(e.to_string())));
-            return;
-        },
-    }
+) -> impl Stream<Item = FileManagerResult<ReadFileProgress>> {
+    let file = std::rc::Rc::new(RefCell::new(file));
+    let file_c = file.clone();
 
-    // Send the remaining chunks
-    loop {
+    // First chunk
+    let first_bytes = stream::once(async move {
         let mut buf = vec![0; FILE_CHUNK_SIZE];
-        match file.read(&mut buf) {
-            Ok(0) => {
-                let _ = sender.send(Ok(ReadFileProgress::EOF));
-                return;
-            },
+        match file.borrow_mut().read(&mut buf).await {
             Ok(n) => {
                 buf.truncate(n);
-                let _ = sender.send(Ok(ReadFileProgress::Partial(buf)));
+                let blob_buf = BlobBuf {
+                    filename: opt_filename,
+                    type_string,
+                    size: size as u64,
+                    bytes: buf,
+                };
+                Ok(ReadFileProgress::Meta(blob_buf))
             },
-            Err(e) => {
-                let _ = sender.send(Err(FileManagerThreadError::FileSystemError(e.to_string())));
-                return;
-            },
+            Err(e) => Err(FileManagerThreadError::FileSystemError(e.to_string())),
         }
-    }
+    });
+
+
+    let other_bytes = stream::unfold((true, file_c), |(keep_running, file)| async move {
+        if keep_running {
+            let mut buf = vec![0; FILE_CHUNK_SIZE];
+            let (yielding, continuing) = match file.borrow_mut().read(&mut buf).await {
+                Ok(0) =>
+                    (Ok(ReadFileProgress::EOF), false) ,
+                Ok(n) => {
+                    buf.truncate(n);
+                    (Ok(ReadFileProgress::Partial(buf)), true)
+                },
+                Err(e) =>
+                    (Err(FileManagerThreadError::FileSystemError(e.to_string())),
+                    false) ,
+            };
+            Some((yielding, (continuing, file)))
+        } else {
+            None
+        }
+    });
+
+    first_bytes.chain(other_bytes)
 }
 
 fn set_headers(
