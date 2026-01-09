@@ -4,7 +4,7 @@
 
 use std::cell::RefCell;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
+use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::ops::Index;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -15,7 +15,7 @@ use embedder_traits::{
     EmbedderControlId, EmbedderControlResponse, EmbedderMsg, EmbedderProxy, FilePickerRequest,
     SelectedFile,
 };
-use futures::{Stream, StreamExt, TryFutureExt, stream};
+use futures::{Stream, StreamExt, stream};
 use headers::{ContentLength, ContentRange, ContentType, HeaderMap, HeaderMapExt, Range};
 use http::header::{self, HeaderValue};
 use ipc_channel::ipc::IpcSender;
@@ -95,11 +95,25 @@ impl FileManager {
 
     pub fn read_file(&self, id: Uuid, origin: FileOrigin) {
         let store = self.store.clone();
-        std::thread::spawn(move || {
-            if let Err(e) = store.try_read_file(&sender, id, origin) {
-                let _ = sender.send(Err(FileManagerThreadError::BlobURLStoreError(e)));
-            }
+        let id = id;
+        let origin = origin;
+        tokio::task::spawn_blocking(|| async move {
+            store.get_blob_buf(
+                &id,
+                &FileTokenCheck::NotRequired,
+                &origin,
+                RelativePos::full_range(),
+            )
         });
+
+        /*
+        std::thread::spawn(move || {
+
+        if let Err(e) = store.try_read_file(&sender, id, origin) {
+            let _ = sender.send(Err(FileManagerThreadError::BlobURLStoreError(e)));
+        }
+    });
+    */
     }
 
     pub fn get_token_for_file(&self, file_id: &Uuid) -> FileTokenCheck {
@@ -150,7 +164,7 @@ impl FileManager {
                 });
             },
             FileManagerThreadMsg::ReadFile(sender, id, origin) => {
-                self.read_file(sender, id, origin);
+                self.read_file(id, origin);
             },
             FileManagerThreadMsg::PromoteMemory(id, blob_buf, set_valid, origin) => {
                 self.promote_memory(id, blob_buf, set_valid, origin);
@@ -680,18 +694,16 @@ impl FileManagerStore {
                     .seek(SeekFrom::Start(range.start as u64))
                     .await
                     .map_err(|e| BlobURLStoreError::External(e.to_string()))?;
-                /*
                 if seeked_start == (range.start as u64) {
                     let type_string = match mime {
                         Some(x) => format!("{}", x),
                         None => "".to_string(),
                     };
 
-                                    read_file_in_chunks(file, range.len(), opt_filename, type_string)
-                                } else {
-                                    stream::once(async {Err(BlobURLStoreError::InvalidEntry) })
-                                }
-                                */
+                    read_file_in_chunks(file, range.len(), opt_filename, type_string)
+                } else {
+                    stream::once(async { Err(BlobURLStoreError::InvalidEntry) })
+                }
             },
             FileImpl::Sliced(parent_id, inner_rel_pos) => {
                 // Next time we don't need to check validity since
@@ -848,20 +860,19 @@ async fn read_file_in_chunks(
         }
     });
 
-
     let other_bytes = stream::unfold((true, file_c), |(keep_running, file)| async move {
         if keep_running {
             let mut buf = vec![0; FILE_CHUNK_SIZE];
             let (yielding, continuing) = match file.borrow_mut().read(&mut buf).await {
-                Ok(0) =>
-                    (Ok(ReadFileProgress::EOF), false) ,
+                Ok(0) => (Ok(ReadFileProgress::EOF), false),
                 Ok(n) => {
                     buf.truncate(n);
                     (Ok(ReadFileProgress::Partial(buf)), true)
                 },
-                Err(e) =>
-                    (Err(FileManagerThreadError::FileSystemError(e.to_string())),
-                    false) ,
+                Err(e) => (
+                    Err(FileManagerThreadError::FileSystemError(e.to_string())),
+                    false,
+                ),
             };
             Some((yielding, (continuing, file)))
         } else {
