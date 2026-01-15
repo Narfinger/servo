@@ -6,7 +6,7 @@ use std::cell::Cell;
 use std::sync::Arc;
 use std::time::Duration;
 
-use compositing_traits::{ImageUpdate, SerializableImageData};
+use compositing_traits::ImageUpdate;
 use layout_api::AnimatingImages;
 use malloc_size_of::MallocSizeOf;
 use parking_lot::RwLock;
@@ -67,15 +67,20 @@ impl ImageAnimationManager {
                 }
 
                 let image = &state.image;
-                let (descriptor, ipc_shared_memory) =
-                    image.webrender_image_descriptor_and_data_for_frame(state.active_frame);
-
-                Some(ImageUpdate::UpdateImage(
-                    image.id.unwrap(),
-                    descriptor,
-                    SerializableImageData::Raw(ipc_shared_memory),
-                    None,
-                ))
+                let frame = image
+                    .frame_data(state.active_frame)
+                    .expect("No frame found")
+                    .clone();
+                if let Some(descriptor) = image.webrender_image_descriptor_for_image_animation() {
+                    Some(ImageUpdate::UpdateAnimation(
+                        image.id.unwrap(),
+                        frame,
+                        descriptor,
+                    ))
+                } else {
+                    error!("Doing normal image update which will be slow!");
+                    None
+                }
             })
             .collect();
         window
