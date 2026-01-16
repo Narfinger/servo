@@ -28,6 +28,11 @@ updates:
         - "emath"
         - "epaint"
         - "epaint_default_fonts"
+    futures-related:
+      patterns:
+        - "futures"
+        - "futures-core"
+        - "futures-util"
     gstreamer-related:
       patterns:
         - "gio*"

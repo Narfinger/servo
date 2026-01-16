@@ -7,9 +7,12 @@
 use std::fmt;
 use std::fmt::Display;
 use std::marker::PhantomData;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 use std::time::Duration;
 
 use crossbeam_channel::RecvTimeoutError;
+use futures::Stream;
 use ipc_channel::ipc::IpcError;
 use ipc_channel::router::ROUTER;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -396,6 +399,30 @@ where
             GenericReceiverVariants::Crossbeam(receiver) => receiver,
         }
     }
+
+    /// Create a stream out of the receiver
+    pub fn to_stream(self) -> GenericStream<T> {
+        GenericStream(self)
+    }
+}
+
+impl<T: Serialize + for<'de> Deserialize<'de>> Unpin for GenericStream<T> {}
+
+pub struct GenericStream<T: Serialize + for<'de> Deserialize<'de>>(GenericReceiver<T>);
+
+impl<T> Stream for GenericStream<T>
+where
+    T: for<'de> Deserialize<'de> + Serialize,
+{
+    type Item = T;
+
+    fn poll_next(self: Pin<&mut Self>, _ctx: &mut Context) -> Poll<Option<Self::Item>> {
+        match self.0.try_recv() {
+            Ok(value) => Poll::Ready(Some(value)),
+            Err(TryReceiveError::ReceiveError(_)) => Poll::Ready(None),
+            Err(TryReceiveError::Empty) => Poll::Pending,
+        }
+    }
 }
 
 impl<T> Serialize for GenericReceiver<T>
@@ -659,6 +686,8 @@ mod single_process_channel_tests {
 mod generic_receiversets_tests {
     use std::time::Duration;
 
+    use futures::StreamExt;
+
     use crate::generic_channel::generic_channelset::{
         GenericSelectionResult, create_crossbeam_receiver_set, create_ipc_receiver_set,
     };
@@ -886,5 +915,29 @@ mod generic_receiversets_tests {
             *channel_result,
             GenericSelectionResult::ChannelClosed(recv2_select_index)
         );
+    }
+
+    #[tokio::test]
+    async fn test_async_crossbeam() {
+        let (snd, recv) = new_generic_channel_crossbeam();
+        let mut s = recv.to_stream();
+        tokio::spawn(async move {
+            assert_eq!(Some(1), s.next().await);
+            assert_eq!(Some(42), s.next().await);
+        });
+        assert!(snd.send(1).is_ok());
+        assert!(snd.send(42).is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_async_ipc() {
+        let (snd, recv) = new_generic_channel_ipc().unwrap();
+        let mut s = recv.to_stream();
+        tokio::spawn(async move {
+            assert_eq!(Some(1), s.next().await);
+            assert_eq!(Some(42), s.next().await);
+        });
+        assert!(snd.send(1).is_ok());
+        assert!(snd.send(42).is_ok());
     }
 }

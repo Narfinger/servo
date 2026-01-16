@@ -779,6 +779,7 @@ name = "base"
 version = "0.0.1"
 dependencies = [
  "crossbeam-channel",
+ "futures 0.3.31",
  "ipc-channel",
  "libc",
  "log",
@@ -792,6 +793,7 @@ dependencies = [
  "servo_config",
  "servo_malloc_size_of",
  "time",
+ "tokio",
  "unicode-segmentation",
  "webrender_api",
  "windows-sys 0.61.2",

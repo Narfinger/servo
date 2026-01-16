@@ -15,6 +15,7 @@ doctest = false
 
 [dependencies]
 crossbeam-channel = { workspace = true }
+futures = { workspace = true }
 ipc-channel = { workspace = true }
 malloc_size_of = { workspace = true }
 malloc_size_of_derive = { workspace = true }
@@ -28,6 +29,9 @@ webrender_api = { workspace = true }
 log = { workspace = true }
 regex = { workspace = true }
 unicode-segmentation = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 mach2 = { workspace = true }
