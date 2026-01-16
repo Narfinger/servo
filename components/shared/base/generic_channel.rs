@@ -417,6 +417,7 @@ where
     type Item = T;
 
     fn poll_next(self: Pin<&mut Self>, _ctx: &mut Context) -> Poll<Option<Self::Item>> {
+        println!("STREAM POLLED");
         match self.0.try_recv() {
             Ok(value) => Poll::Ready(Some(value)),
             Err(TryReceiveError::ReceiveError(_)) => Poll::Ready(None),
@@ -918,18 +919,6 @@ mod generic_receiversets_tests {
     }
 
     #[tokio::test]
-    async fn test_async_crossbeam() {
-        let (snd, recv) = new_generic_channel_crossbeam();
-        let mut s = recv.to_stream();
-        tokio::spawn(async move {
-            assert_eq!(Some(1), s.next().await);
-            assert_eq!(Some(42), s.next().await);
-        });
-        assert!(snd.send(1).is_ok());
-        assert!(snd.send(42).is_ok());
-    }
-
-    #[tokio::test]
     async fn test_async_ipc() {
         let (snd, recv) = new_generic_channel_ipc().unwrap();
         let mut s = recv.to_stream();
@@ -937,6 +926,21 @@ mod generic_receiversets_tests {
             assert_eq!(Some(1), s.next().await);
             assert_eq!(Some(42), s.next().await);
         });
+        std::thread::sleep(Duration::from_secs(1));
+        assert!(snd.send(1).is_ok());
+        assert!(snd.send(42).is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_async_crossbeam() {
+        panic!("DOES NOT WORK YET");
+        let (snd, recv) = new_generic_channel_crossbeam();
+        let mut s = recv.to_stream();
+        tokio::spawn(async move {
+            assert_eq!(Some(1), s.next().await);
+            assert_eq!(Some(42), s.next().await);
+        });
+        std::thread::sleep(Duration::from_secs(1));
         assert!(snd.send(1).is_ok());
         assert!(snd.send(42).is_ok());
     }

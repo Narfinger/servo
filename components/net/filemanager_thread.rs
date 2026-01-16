@@ -14,6 +14,7 @@ use embedder_traits::{
     EmbedderControlId, EmbedderControlResponse, EmbedderMsg, EmbedderProxy, FilePickerRequest,
     SelectedFile,
 };
+use futures::StreamExt;
 use headers::{ContentLength, ContentRange, ContentType, HeaderMap, HeaderMapExt, Range};
 use http::header::{self, HeaderValue};
 use ipc_channel::ipc::IpcSender;
@@ -549,13 +550,15 @@ impl FileManagerStore {
             ipc_sender,
         ));
 
-        let paths = match ipc_receiver.recv() {
-            Ok(Some(result)) => result,
-            Ok(None) => {
+        let mut ipc_stream = ipc_receiver.to_stream();
+        let paths = match ipc_stream.next().await {
+            Some(Some(result)) => result,
+            Some(None) => {
+                println!("NONE");
                 return EmbedderControlResponse::FilePicker(None);
             },
-            Err(error) => {
-                warn!("Failed to receive files from embedder ({:?}).", error);
+            None => {
+                warn!("Failed to receive files from embedder.");
                 return EmbedderControlResponse::FilePicker(None);
             },
         };
