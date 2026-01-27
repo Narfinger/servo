@@ -707,7 +707,7 @@ async fn obtain_response(
             }
 
             let devtools_bytes = devtools_bytes.clone();
-            let chunk_requester2 = chunk_requester.clone();
+            let chunk_requester2 = chunk_requester;
 
             ROUTER.add_typed_route(
                 body_port,
@@ -716,10 +716,12 @@ async fn obtain_response(
                     let bytes = match message.unwrap() {
                         BodyChunkResponse::Chunk(bytes) => bytes,
                         BodyChunkResponse::Done => {
+                            println!("WHEN IS THIS CALLED MAKE THIS REALLY LONG SO I CAN SEE IT IN THE MSSAGES.");
                             // Step 3, abort these parallel steps.
                             let _ = fetch_terminated.send(false);
                             sink.close();
 
+                            let _ = chunk_requester2.lock().send(BodyChunkRequest::Done);
                             return;
                         },
                         BodyChunkResponse::Error => {
@@ -729,6 +731,7 @@ async fn obtain_response(
                             let _ = fetch_terminated.send(true);
                             sink.close();
 
+                            let _ = chunk_requester2.lock().send(BodyChunkRequest::Error);
                             return;
                         },
                     };

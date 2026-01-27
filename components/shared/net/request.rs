@@ -348,6 +348,7 @@ impl RequestBody {
     }
 
     pub fn take_stream(&self) -> Arc<Mutex<IpcSender<BodyChunkRequest>>> {
+        println!("TAKE STREAM");
         self.chan.clone()
     }
 
@@ -358,6 +359,12 @@ impl RequestBody {
     #[expect(clippy::len_without_is_empty)]
     pub fn len(&self) -> Option<usize> {
         self.total_bytes
+    }
+}
+
+impl Drop for RequestBody {
+    fn drop(&mut self) {
+        println!("DROPPING REQUESTBODY");
     }
 }
 

@@ -253,20 +253,21 @@ impl TransmitBodyConnectHandler {
 
         let stream = self.stream.clone();
         let control_sender = self.control_sender.clone();
-        let bytes_sender = self
-            .bytes_sender
-            .clone()
-            .expect("No bytes sender to transmit chunk.");
 
         // In case of the data being in-memory, send everything in one chunk, by-passing SpiderMonkey.
         if let Some(bytes) = self.in_memory.take() {
-            let _ = bytes_sender.send(BodyChunkResponse::Chunk(bytes));
+            let _ = self.bytes_sender.as_ref().unwrap().send(BodyChunkResponse::Chunk(bytes));
             // Mark this body as `done` so that we can stop reading in the next tick,
             // matching the behavior of the promise-based flow
             self.in_memory_done = true;
             return;
         }
 
+        let bytes_sender = self
+            .bytes_sender
+            .clone()
+            .expect("No bytes sender to transmit chunk.");
+        /*
         self.task_source.queue(
             task!(setup_native_body_promise_handler: move || {
                 let rooted_stream = stream.root();
@@ -299,6 +300,7 @@ impl TransmitBodyConnectHandler {
                 promise.append_native_handler(&handler, comp, CanGc::note());
             })
         );
+         */
     }
 }
 
@@ -443,6 +445,7 @@ impl ExtractedBody {
             source,
         );
 
+        println!("ROUTER ADD");
         ROUTER.add_typed_route(
             chunk_request_receiver,
             Box::new(move |message| {
