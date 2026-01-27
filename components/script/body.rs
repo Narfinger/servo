@@ -94,6 +94,7 @@ enum StopReading {
 /// This route runs in the script process,
 /// and will queue tasks to perform operations
 /// on the stream and transmit body chunks over IPC.
+#[derive(Clone)]
 struct TransmitBodyConnectHandler {
     stream: Trusted<ReadableStream>,
     task_source: SendableTaskSource,
@@ -134,7 +135,7 @@ impl TransmitBodyConnectHandler {
     fn re_extract(&mut self, chunk_request_receiver: IpcReceiver<BodyChunkRequest>) {
         println!("REEXTREAct");
 
-        /*
+
 
         let mut body_handler = self.clone();
         body_handler.reset_in_memory_done();
@@ -164,7 +165,6 @@ impl TransmitBodyConnectHandler {
                 }
             }),
         );
-         */
     }
 
     /// In case of re-direct, and of a source available in memory,
@@ -184,7 +184,7 @@ impl TransmitBodyConnectHandler {
             panic!("ReadableStream(Null) sources should not re-direct.");
         }
 
-        if let Some(bytes) = self.in_memory.take() {
+        if let Some(bytes) = self.in_memory.clone() {
             println!("MEMORY GOT CLONED");
             // The memoized bytes are sent so we mark it as done again
             self.in_memory_done = true;
@@ -231,8 +231,6 @@ impl TransmitBodyConnectHandler {
             .bytes_sender
             .take()
             .expect("Stop reading called multiple times on TransmitBodyConnectHandler.");
-        let _ = self.in_memory.take();
-        let _ = self.control_sender.take();
         match reason {
             StopReading::Error => {
                 let _ = bytes_sender.send(BodyChunkResponse::Error);
@@ -241,6 +239,7 @@ impl TransmitBodyConnectHandler {
                 let _ = bytes_sender.send(BodyChunkResponse::Done);
             },
         }
+        let _ = self.control_sender.take();
     }
 
     /// Step 4 and following of <https://fetch.spec.whatwg.org/#concept-request-transmit-body>
@@ -267,7 +266,7 @@ impl TransmitBodyConnectHandler {
             .bytes_sender
             .clone()
             .expect("No bytes sender to transmit chunk.");
-        /*
+
         self.task_source.queue(
             task!(setup_native_body_promise_handler: move || {
                 let rooted_stream = stream.root();
@@ -300,7 +299,6 @@ impl TransmitBodyConnectHandler {
                 promise.append_native_handler(&handler, comp, CanGc::note());
             })
         );
-         */
     }
 }
 
