@@ -1090,6 +1090,7 @@ impl ScriptThread {
     /// actually updated.
     ///
     /// Returns true if any reflows produced a new display list.
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn update_the_rendering(&self, can_gc: CanGc) -> bool {
         self.last_render_opportunity_time.set(Some(Instant::now()));
         self.cancel_scheduled_update_the_rendering();
@@ -1248,6 +1249,7 @@ impl ScriptThread {
     /// scheduled already. Another example is if rAFs are running but no display
     /// lists are being produced. In that case the [`ScriptThread`] is
     /// responsible for scheduling animation ticks.
+    #[servo_tracing::instrument(skip_all)]
     fn maybe_schedule_rendering_opportunity_after_ipc_message(
         &self,
         built_any_display_lists: bool,
@@ -1332,6 +1334,7 @@ impl ScriptThread {
     }
 
     /// Handle incoming messages from other tasks and the task queue.
+    #[servo_tracing::instrument(skip_all)]
     fn handle_msgs(&self, cx: &mut js::context::JSContext) -> bool {
         // Proritize rendering tasks and others, and gather all other events as `sequential`.
         let mut sequential = vec![];
@@ -1347,7 +1350,7 @@ impl ScriptThread {
             &self.timer_scheduler.borrow(),
             &fully_active,
         );
-
+        let span = profile_traits::trace_span!("sequential msg gathering").entered();
         loop {
             debug!("Handling event: {event:?}");
 
@@ -1387,7 +1390,9 @@ impl ScriptThread {
                 None => break,
             }
         }
+        drop(span);
 
+        let span = profile_traits::trace_span!("execute sequential msgs").entered();
         // Process the gathered events.
         debug!("Processing events.");
         for msg in sequential {
@@ -1689,6 +1694,7 @@ impl ScriptThread {
         value
     }
 
+    #[servo_tracing::instrument(skip_all)]
     fn handle_msg_from_constellation(
         &self,
         msg: ScriptThreadMessage,
@@ -3072,6 +3078,7 @@ impl ScriptThread {
     }
 
     /// Handles a request to exit the script thread and shut down layout.
+    #[servo_tracing::instrument(skip_all)]
     fn handle_exit_script_thread_msg(&self, can_gc: CanGc) {
         debug!("Exiting script thread.");
 
@@ -3937,6 +3944,7 @@ impl ScriptThread {
         });
     }
 
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn perform_a_microtask_checkpoint(&self, can_gc: CanGc) {
         // Only perform the checkpoint if we're not shutting down.
         if self.can_continue_running_inner() {

@@ -7804,6 +7804,7 @@ dependencies = [
  "serde",
  "serde_json",
  "servo-media",
+ "servo-tracing",
  "servo_arc",
  "servo_config",
  "servo_geometry",
