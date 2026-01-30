@@ -3104,6 +3104,7 @@ impl Document {
     // > doc and its node navigable to reflect the current state.
     //
     // Returns the set of reflow phases run as a [`ReflowPhasesRun`].
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn update_the_rendering(&self) -> ReflowPhasesRun {
         if self.render_blocking_element_count() > 0 {
             return Default::default();

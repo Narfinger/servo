@@ -87,6 +87,7 @@ pub(crate) fn process_padding_request(
     })
 }
 
+#[servo_tracing::instrument(skip_all)]
 pub(crate) fn process_box_area_request(
     stacking_context_tree: &StackingContextTree,
     node: ServoThreadSafeLayoutNode<'_>,

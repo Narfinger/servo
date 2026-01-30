@@ -1136,6 +1136,7 @@ impl ScriptThread {
                 .find_document(*pipeline_id)
                 .expect("Got pipeline for Document not managed by this ScriptThread.");
 
+            let span = profile_traits::trace_span!("first part").entered();
             if !document.is_fully_active() {
                 continue;
             }
@@ -1155,6 +1156,9 @@ impl ScriptThread {
             // TODO: Should this be broken and to match the specification more closely? For instance see
             // https://html.spec.whatwg.org/multipage/#flush-autofocus-candidates.
             self.process_pending_input_events(*pipeline_id, can_gc);
+
+            drop(span);
+            let span = profile_traits::trace_span!("second part").entered();
 
             // > 8. For each doc of docs, run the resize steps for doc. [CSSOMVIEW]
             let resized = document.window().run_the_resize_steps(can_gc);
@@ -1179,6 +1183,8 @@ impl ScriptThread {
             // > global object as the timestamp [WEBANIMATIONS]
             document.update_animations_and_send_events(can_gc);
 
+            drop(span);
+            let span = profile_traits::trace_span!("third span").entered();
             // TODO(#31866): Implement "run the fullscreen steps" from
             // https://fullscreen.spec.whatwg.org/multipage/#run-the-fullscreen-steps.
 
@@ -2022,6 +2028,7 @@ impl ScriptThread {
         }
     }
 
+    #[servo_tracing::instrument(skip_all)]
     fn handle_msg_from_script(&self, msg: MainThreadScriptMsg, cx: &mut js::context::JSContext) {
         match msg {
             MainThreadScriptMsg::Common(CommonScriptMsg::Task(_, task, pipeline_id, _)) => {
@@ -2029,6 +2036,7 @@ impl ScriptThread {
                     let global = self.documents.borrow().find_global(id);
                     global.map(|global| enter_realm(&*global))
                 });
+                let span = profile_traits::trace_span!("{task:?}").entered();
                 task.run_box(cx)
             },
             MainThreadScriptMsg::Common(CommonScriptMsg::CollectReports(chan)) => {
