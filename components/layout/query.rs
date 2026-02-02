@@ -55,6 +55,7 @@ use crate::taffy::SpecificTaffyGridInfo;
 
 /// Get a scroll node that would represents this [`ServoLayoutNode`]'s transform and
 /// calculate its cumulative transform from its root scroll node to the scroll node.
+#[servo_tracing::instrument(skip_all)]
 fn root_transform_for_layout_node(
     scroll_tree: &ScrollTree,
     node: ServoThreadSafeLayoutNode<'_>,

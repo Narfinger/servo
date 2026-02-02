@@ -145,6 +145,12 @@ pub(crate) enum ScriptThreadEventCategory {
     WebGPUMsg,
 }
 
+impl ScriptThreadEventCategory {
+    pub(crate) fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
 impl From<ScriptThreadEventCategory> for ProfilerCategory {
     fn from(category: ScriptThreadEventCategory) -> Self {
         match category {

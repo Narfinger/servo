@@ -605,6 +605,7 @@ impl ScrollTree {
 
     /// Find a transformation that can convert a point in the node coordinate system to a
     /// point in the root coordinate system.
+    #[servo_tracing::instrument(skip_all)]
     pub fn cumulative_node_to_root_transform(
         &self,
         node_id: ScrollTreeNodeId,

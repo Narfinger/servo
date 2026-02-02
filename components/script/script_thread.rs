@@ -1046,6 +1046,7 @@ impl ScriptThread {
     }
 
     /// Process input events as part of a "update the rendering task".
+    #[servo_tracing::instrument(skip_all)]
     fn process_pending_input_events(&self, pipeline_id: PipelineId, can_gc: CanGc) {
         let Some(document) = self.documents.borrow().find_document(pipeline_id) else {
             warn!("Processing pending input events for closed pipeline {pipeline_id}.");
@@ -2031,12 +2032,13 @@ impl ScriptThread {
     #[servo_tracing::instrument(skip_all)]
     fn handle_msg_from_script(&self, msg: MainThreadScriptMsg, cx: &mut js::context::JSContext) {
         match msg {
-            MainThreadScriptMsg::Common(CommonScriptMsg::Task(_, task, pipeline_id, _)) => {
+            MainThreadScriptMsg::Common(CommonScriptMsg::Task(event, task, pipeline_id, _)) => {
                 let _realm = pipeline_id.and_then(|id| {
                     let global = self.documents.borrow().find_global(id);
                     global.map(|global| enter_realm(&*global))
                 });
-                let span = profile_traits::trace_span!("{task:?}").entered();
+                let span = profile_traits::trace_span!("Run_box", box_name = event.to_string());
+                let _guard = span.entered();
                 task.run_box(cx)
             },
             MainThreadScriptMsg::Common(CommonScriptMsg::CollectReports(chan)) => {

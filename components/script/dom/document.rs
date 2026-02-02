@@ -1912,6 +1912,7 @@ impl Document {
     }
 
     /// <https://html.spec.whatwg.org/multipage/#run-the-animation-frame-callbacks>
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn run_the_animation_frame_callbacks(&self, can_gc: CanGc) {
         let _realm = enter_realm(self);
 
@@ -3359,6 +3360,7 @@ impl Document {
     }
 
     /// <https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo>
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn update_intersection_observer_steps(
         &self,
         time: CrossProcessInstant,
