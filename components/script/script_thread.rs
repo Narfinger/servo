@@ -1429,14 +1429,13 @@ impl ScriptThread {
                     }),
                 _ => {
                     sequential.push(event);
+                    cnt +=1;
                 },
             }
 
-            if cnt >20 {
+            if cnt >4 {
                 println!("CNT is 30");
                 break;
-            } else {
-                cnt +=1;
             }
 
             // If any of our input sources has an event pending, we'll perform another
