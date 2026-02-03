@@ -316,6 +316,7 @@ impl IntersectionObserver {
 
     /// <https://w3c.github.io/IntersectionObserver/#queue-an-intersectionobserverentry>
     #[allow(clippy::too_many_arguments)]
+    #[servo_tracing::instrument(skip_all)]
     fn queue_an_intersectionobserverentry(
         &self,
         document: &Document,
@@ -418,9 +419,9 @@ impl IntersectionObserver {
     /// <https://w3c.github.io/IntersectionObserver/#intersectionobserver-root-intersection-rectangle>
     pub(crate) fn root_intersection_rectangle(
         &self,
-        document: &Document,
+        window: &Window,
     ) -> Option<Rect<Au, CSSPixel>> {
-        let window = document.window();
+        //let window = document.window();
         let intersection_rectangle = match &self.root {
             // Handle if root is an element.
             Some(ElementOrDocument::Element(element)) => {
@@ -453,8 +454,7 @@ impl IntersectionObserver {
                     //
                     // There are uncertainties whether the browsing context we should consider is the browsing
                     // context of the target or observer. <https://github.com/w3c/IntersectionObserver/issues/456>
-                    document
-                        .window()
+                    window
                         .webview_window_proxy()
                         .and_then(|window_proxy| window_proxy.document())
                 } else if let Some(ElementOrDocument::Document(document)) = &self.root {
@@ -497,6 +497,7 @@ impl IntersectionObserver {
     /// Note that current draft specs skipped wrong steps, as it should skip computing fields that
     /// would result in different intersection entry other than the default entry per published spec.
     /// <https://www.w3.org/TR/intersection-observer/>
+    #[servo_tracing::instrument(skip_all)]
     fn maybe_compute_intersection_output(
         &self,
         document: &Document,
