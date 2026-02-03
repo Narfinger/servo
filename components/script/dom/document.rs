@@ -1918,6 +1918,7 @@ impl Document {
     }
 
     /// <https://html.spec.whatwg.org/multipage/#run-the-animation-frame-callbacks>
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn run_the_animation_frame_callbacks(&self, can_gc: CanGc) {
         let _realm = enter_realm(self);
 
@@ -3110,6 +3111,7 @@ impl Document {
     // > doc and its node navigable to reflect the current state.
     //
     // Returns the set of reflow phases run as a [`ReflowPhasesRun`].
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn update_the_rendering(&self) -> ReflowPhasesRun {
         if self.render_blocking_element_count() > 0 {
             return Default::default();
@@ -3364,6 +3366,7 @@ impl Document {
     }
 
     /// <https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo>
+    #[servo_tracing::instrument(skip_all)]
     pub(crate) fn update_intersection_observer_steps(
         &self,
         time: CrossProcessInstant,
