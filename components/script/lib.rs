@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #![cfg_attr(crown, feature(register_tool))]
-#![deny(unsafe_code)]
 #![doc = "The script crate contains all matters DOM."]
 // Register the linter `crown`, which is the Servo-specific linter for the script crate.
 #![cfg_attr(crown, register_tool(crown))]

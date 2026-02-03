@@ -10,6 +10,7 @@ use std::default::Default;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::atomic::AtomicPtr;
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
@@ -3367,27 +3368,45 @@ impl Document {
         can_gc: CanGc,
     ) {
         // Step 1-2
+        let mut handles = vec![];
         for intersection_observer in &*self.intersection_observers.borrow() {
-            self.update_single_intersection_observer_steps(intersection_observer, time, can_gc);
+            let d = AtomicPtr::new(self as *const Document as *mut Document);
+            let io = AtomicPtr::new(intersection_observer.as_ptr() as *const IntersectionObserver as *mut IntersectionObserver);
+            let join_handle = std::thread::spawn(move || {
+                Document::update_single_intersection_observer_steps(d, io, time, CanGc::note());
+            });
+            handles.push(join_handle);
+        }
+
+        for i in handles {
+            i.join();
         }
     }
 
     /// Step 2.1-2.2 of <https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo>
     fn update_single_intersection_observer_steps(
-        &self,
-        intersection_observer: &IntersectionObserver,
+        document: AtomicPtr<Document>,
+        intersection_observer: AtomicPtr<IntersectionObserver>,
         time: CrossProcessInstant,
         can_gc: CanGc,
     ) {
+        let document =
+        unsafe {
+            document.load(std::sync::atomic::Ordering::SeqCst).as_ref().unwrap()
+        };
+
+        let intersection_observer = unsafe {
+            intersection_observer.load(std::sync::atomic::Ordering::SeqCst).as_ref().unwrap()
+        };
         // Step 1
         // > Let rootBounds be observer’s root intersection rectangle.
-        let root_bounds = intersection_observer.root_intersection_rectangle(self.window());
+        let root_bounds = intersection_observer.root_intersection_rectangle(document.window());
 
         // Step 2
         // > For each target in observer’s internal [[ObservationTargets]] slot,
         // > processed in the same order that observe() was called on each target:
         intersection_observer.update_intersection_observations_steps(
-            self,
+            document,
             time,
             root_bounds,
             can_gc,
