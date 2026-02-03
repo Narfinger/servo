@@ -1433,10 +1433,12 @@ impl ScriptThread {
                 },
             }
 
+            /*
             if cnt >4 {
                 println!("CNT is 30");
-                break;
+                //   break;
             }
+            */
 
             // If any of our input sources has an event pending, we'll perform another
             // iteration and check for events. If there are no events pending, we'll move
@@ -2089,8 +2091,8 @@ impl ScriptThread {
                     let global = self.documents.borrow().find_global(id);
                     global.map(|global| enter_realm(&*global))
                 });
-                let span = profile_traits::trace_span!("Run_box", box_name = event.to_string());
-                let _guard = span.entered();
+                //let span = profile_traits::trace_span!("Run_box", box_name = event.to_string());
+                //let _guard = span.entered();
                 task.run_box(cx)
             },
             MainThreadScriptMsg::Common(CommonScriptMsg::CollectReports(chan)) => {
