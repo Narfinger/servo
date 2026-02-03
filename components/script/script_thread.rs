@@ -1399,6 +1399,7 @@ impl ScriptThread {
             &fully_active,
         );
         let span = profile_traits::trace_span!("sequential msg gathering").entered();
+        let mut cnt = 0;
         loop {
             debug!("Handling event: {event:?}");
 
@@ -1428,6 +1429,12 @@ impl ScriptThread {
                 _ => {
                     sequential.push(event);
                 },
+            }
+
+            if cnt >10 {
+                break;
+            } else {
+                cnt +=1;
             }
 
             // If any of our input sources has an event pending, we'll perform another
