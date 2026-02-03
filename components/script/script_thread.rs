@@ -1393,6 +1393,10 @@ impl ScriptThread {
         // Receive at least one message so we don't spinloop.
         debug!("Waiting for event.");
         let fully_active = self.get_fully_active_document_ids();
+                    self.timer_scheduler
+                .borrow_mut()
+                .dispatch_completed_timers();
+
         let mut event = self.receivers.recv(
             &self.task_queue,
             &self.timer_scheduler.borrow(),
@@ -1404,9 +1408,6 @@ impl ScriptThread {
             debug!("Handling event: {event:?}");
 
             // Dispatch any completed timers, so that their tasks can be run below.
-            self.timer_scheduler
-                .borrow_mut()
-                .dispatch_completed_timers();
 
             // https://html.spec.whatwg.org/multipage/#event-loop-processing-model step 7
             match event {
@@ -1431,7 +1432,8 @@ impl ScriptThread {
                 },
             }
 
-            if cnt >10 {
+            if cnt >20 {
+                println!("CNT is 30");
                 break;
             } else {
                 cnt +=1;
@@ -1450,7 +1452,10 @@ impl ScriptThread {
         let span = profile_traits::trace_span!("execute sequential msgs").entered();
         // Process the gathered events.
         debug!("Processing events.");
+        println!("Sequential length {:?}", sequential.len());
         for msg in sequential {
+
+
             debug!("Processing event {:?}.", msg);
             let category = self.categorize_msg(&msg);
             let pipeline_id = msg.pipeline_id();
