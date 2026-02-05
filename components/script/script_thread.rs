@@ -1453,7 +1453,6 @@ impl ScriptThread {
         let span = profile_traits::trace_span!("execute sequential msgs").entered();
         // Process the gathered events.
         debug!("Processing events.");
-        println!("Sequential length {:?}", sequential.len());
         for msg in sequential {
 
 
