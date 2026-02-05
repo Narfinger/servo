@@ -652,7 +652,7 @@ async fn obtain_response(
     url: &ServoUrl,
     method: &Method,
     request_headers: &mut HeaderMap,
-    body: Option<StdArc<Mutex<IpcSender<BodyChunkRequest>>>>,
+    body: Option<IpcSender<BodyChunkRequest>>,
     source_is_null: bool,
     pipeline_id: &Option<PipelineId>,
     request_id: Option<&str>,
@@ -698,16 +698,15 @@ async fn obtain_response(
             let (body_chan, body_port) = ipc::channel().unwrap();
 
             {
-                let requester = chunk_requester.lock();
-                let _ = requester.send(BodyChunkRequest::Connect(body_chan));
+                let _ = chunk_requester.send(BodyChunkRequest::Connect(body_chan));
 
                 // https://fetch.spec.whatwg.org/#concept-request-transmit-body
                 // Request the first chunk, corresponding to Step 3 and 4.
-                let _ = requester.send(BodyChunkRequest::Chunk);
+                let _ = chunk_requester.send(BodyChunkRequest::Chunk);
             }
 
             let devtools_bytes = devtools_bytes.clone();
-            let chunk_requester2 = chunk_requester.clone();
+            //            let chunk_requester2 = chunk_requester.clone();
 
             ROUTER.add_typed_route(
                 body_port,
@@ -741,7 +740,7 @@ async fn obtain_response(
 
                     // Step 5.1.2.3
                     // Request the next chunk.
-                    let _ = chunk_requester2.lock().send(BodyChunkRequest::Chunk);
+                    let _ = chunk_requester.send(BodyChunkRequest::Chunk);
                 }),
             );
 
@@ -2044,7 +2043,7 @@ async fn http_network_fetch(
     // The receiver will receive true if there has been an error streaming the request body.
     let (fetch_terminated_sender, mut fetch_terminated_receiver) = unbounded_channel();
 
-    let body = request.body.as_ref().map(|body| body.take_stream());
+    let body = request.body.as_ref().and_then(|body| body.take_stream());
 
     if body.is_none() {
         // There cannot be an error streaming a non-existent body.

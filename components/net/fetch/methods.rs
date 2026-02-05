@@ -937,8 +937,7 @@ fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io
         None => return error("No body found"),
     };
 
-    let stream = body.take_stream();
-    let stream = stream.lock();
+    let stream = body.take_stream().expect("Body already taken");
     let (body_chan, body_port) = ipc::channel().unwrap();
     let _ = stream.send(BodyChunkRequest::Connect(body_chan));
     let _ = stream.send(BodyChunkRequest::Chunk);

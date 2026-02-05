@@ -314,7 +314,7 @@ pub enum BodyChunkRequest {
 pub struct RequestBody {
     /// Net's channel to communicate with script re this body.
     #[ignore_malloc_size_of = "Channels are hard"]
-    chan: Arc<Mutex<IpcSender<BodyChunkRequest>>>,
+    chan: Arc<Mutex<Option<IpcSender<BodyChunkRequest>>>>,
     /// <https://fetch.spec.whatwg.org/#concept-body-source>
     source: BodySource,
     /// <https://fetch.spec.whatwg.org/#concept-body-total-bytes>
@@ -328,7 +328,7 @@ impl RequestBody {
         total_bytes: Option<usize>,
     ) -> Self {
         RequestBody {
-            chan: Arc::new(Mutex::new(chan)),
+            chan: Arc::new(Mutex::new(Some(chan))),
             source,
             total_bytes,
         }
@@ -339,16 +339,18 @@ impl RequestBody {
         match self.source {
             BodySource::Null => panic!("Null sources should never be re-directed."),
             BodySource::Object => {
+                /*
                 let (chan, port) = ipc::channel().unwrap();
                 let mut selfchan = self.chan.lock();
                 let _ = selfchan.send(BodyChunkRequest::Extract(port));
-                *selfchan = chan;
+                selfchan = chan;
+                 */
             },
         }
     }
 
-    pub fn take_stream(&self) -> Arc<Mutex<IpcSender<BodyChunkRequest>>> {
-        self.chan.clone()
+    pub fn take_stream(&self) -> Option<IpcSender<BodyChunkRequest>> {
+        self.chan.lock().take()
     }
 
     pub fn source_is_null(&self) -> bool {
