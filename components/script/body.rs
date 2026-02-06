@@ -4,6 +4,8 @@
 
 use std::io::Cursor;
 use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::atomic::AtomicUsize;
 use std::{fs, ptr, slice, str};
 
 use base::generic_channel::GenericSharedMemory;
@@ -109,7 +111,10 @@ struct TransmitBodyConnectHandler {
     in_memory: Option<GenericSharedMemory>,
     in_memory_done: bool,
     source: BodySource,
+    atomic_count: Arc<AtomicUsize>,
 }
+
+static ATOMIC_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 impl TransmitBodyConnectHandler {
     pub(crate) fn new(
@@ -127,6 +132,7 @@ impl TransmitBodyConnectHandler {
             in_memory,
             in_memory_done: false,
             source,
+            atomic_count: Arc::new(AtomicUsize::new(ATOMIC_COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst))),
         }
     }
 
@@ -202,6 +208,7 @@ impl TransmitBodyConnectHandler {
     /// Take the IPC sender sent by `net`, so we can send body chunks with it.
     /// Also the entry point to <https://fetch.spec.whatwg.org/#concept-request-transmit-body>
     fn start_reading(&mut self, sender: IpcSender<BodyChunkResponse>) {
+        println!("Start reading {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
         self.bytes_sender = Some(sender);
 
         // If we're using an actual ReadableStream, acquire a reader for it.
@@ -228,6 +235,7 @@ impl TransmitBodyConnectHandler {
     /// Otherwise, the following cycle will happen: The control sender is owned by us which keeps the control receiver
     /// alive in the router which keeps us alive.
     fn stop_reading(&mut self, reason: StopReading) {
+        println!("Stop reading {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
         let bytes_sender = self
             .bytes_sender
             .take()
@@ -442,6 +450,7 @@ impl ExtractedBody {
             in_memory,
             source,
         );
+        let foo = body_handler.atomic_count.clone();
 
         ROUTER.add_typed_route(
             chunk_request_receiver,
@@ -470,8 +479,8 @@ impl ExtractedBody {
 
         // Return `components::net` view into this request body,
         // which can be used by `net` to transmit it over the network.
-        let request_body = RequestBody::new(chunk_request_sender, net_source, total_bytes);
-
+        let mut request_body = RequestBody::new(chunk_request_sender, net_source, total_bytes);
+        request_body.atomic_count = foo;
         // Also return the stream for this body, which can be used by script to consume it.
         (request_body, stream)
     }

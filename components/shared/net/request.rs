@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use std::sync::Arc;
+use std::sync::atomic::AtomicUsize;
 
 use base::generic_channel::GenericSharedMemory;
 use base::id::{PipelineId, WebViewId};
@@ -319,6 +320,9 @@ pub struct RequestBody {
     source: BodySource,
     /// <https://fetch.spec.whatwg.org/#concept-body-total-bytes>
     total_bytes: Option<usize>,
+
+    #[ignore_malloc_size_of="foo"]
+    pub atomic_count: Arc<AtomicUsize>,
 }
 
 impl RequestBody {
@@ -331,6 +335,7 @@ impl RequestBody {
             chan: Arc::new(Mutex::new(Some(chan))),
             source,
             total_bytes,
+            atomic_count: Arc::new(AtomicUsize::new(0)),
         }
     }
 
@@ -341,12 +346,17 @@ impl RequestBody {
             BodySource::Object => {
                 let (chan, port) = ipc::channel().unwrap();
                 let selfchan = self.chan.lock().replace(chan);
-                let _ = selfchan.unwrap().send(BodyChunkRequest::Extract(port));
+                if let Some(s) = selfchan {
+                    let _ = s.send(BodyChunkRequest::Extract(port));
+                } else {
+                    println!("FOO");
+                }
             },
         }
     }
 
     pub fn take_stream(&self) -> Option<IpcSender<BodyChunkRequest>> {
+        println!("Take stream received for request id {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
         self.chan.lock().take()
     }
 

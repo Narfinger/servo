@@ -41,6 +41,8 @@ rustls-pki-types = { workspace = true }
 serde = { workspace = true }
 servo_arc = { workspace = true }
 servo_url = { path = "../../url" }
+tracing = { optional=true, workspace = true }
+tracing-serde = "0.2"
 tokio = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }

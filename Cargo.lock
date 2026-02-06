@@ -5743,6 +5743,8 @@ dependencies = [
  "servo_malloc_size_of",
  "servo_url",
  "tokio",
+ "tracing",
+ "tracing-serde",
  "url",
  "uuid",
  "webrender_api",
@@ -7897,6 +7899,7 @@ dependencies = [
  "time",
  "timers",
  "tracing",
+ "tracing-serde",
  "unicode-bidi",
  "unicode-script",
  "unicode-segmentation",
@@ -9723,6 +9726,16 @@ dependencies = [
  "thread-id",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "tracing-serde"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "704b1aeb7be0d0a84fc9828cae51dab5970fee5088f83d1dd7ee6f6246fc6ff1"
+dependencies = [
+ "serde",
+ "tracing-core",
 ]
 
 [[package]]

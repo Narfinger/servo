@@ -2045,6 +2045,7 @@ async fn http_network_fetch(
 
     let body = request.body.as_ref().and_then(|body| body.take_stream());
 
+
     if body.is_none() {
         // There cannot be an error streaming a non-existent body.
         // However in such a case the channel will remain unused

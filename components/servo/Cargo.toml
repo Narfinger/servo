@@ -51,6 +51,7 @@ tracing = [
     "layout/tracing",
     "profile_traits/tracing",
     "script/tracing",
+    "net_traits/tracing",
 ]
 vello = ["constellation/vello"]
 webgl_backtrace = [
