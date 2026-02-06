@@ -12,6 +12,7 @@ use http::header::{AUTHORIZATION, HeaderName};
 use http::{HeaderMap, Method};
 use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
 use ipc_channel::router::ROUTER;
+use log::error;
 use malloc_size_of_derive::MallocSizeOf;
 use mime::Mime;
 use parking_lot::Mutex;
@@ -327,14 +328,14 @@ pub struct RequestBody {
 
 impl Drop for RequestBody {
     fn drop(&mut self) {
-        println!("Dropping request body {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+        error!("Dropping request body {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
     }
 }
 
 impl Clone for RequestBody {
     fn clone(&self) -> Self {
         let val = self.atomic_count.load(std::sync::atomic::Ordering::SeqCst);
-        println!("Cloning RequestBody {val} with new {}", val+500);
+        error!("Cloning RequestBody {val} with new {}", val+500);
         let new_val = Arc::new(AtomicUsize::new(val + 500));
 
 
@@ -366,15 +367,16 @@ impl RequestBody {
                 if let Some(s) = selfchan {
                     let _ = s.send(BodyChunkRequest::Extract(port));
                 } else {
-                    println!("FOO");
+                    error!("FOO");
                 }
             },
         }
     }
 
     pub fn take_stream(&self) -> Option<IpcSender<BodyChunkRequest>> {
-        println!("Take stream received for request id {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+        error!("Take stream received for request id {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
         self.chan.lock().take()
+        //self.chan.lock().clone()
     }
 
     pub fn source_is_null(&self) -> bool {

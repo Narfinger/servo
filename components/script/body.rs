@@ -116,7 +116,7 @@ struct TransmitBodyConnectHandler {
 
 impl Drop for TransmitBodyConnectHandler {
     fn drop(&mut self) {
-        println!("DROPPING TransmitBodyConnectHandler {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+        error!("DROPPING TransmitBodyConnectHandler {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
     }
 }
 
@@ -160,7 +160,7 @@ impl TransmitBodyConnectHandler {
                 let request = message.unwrap();
                 match request {
                     BodyChunkRequest::Connect(sender) => {
-                        println!("CONNECT transmitbodyconnecthandler {}", body_handler.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+                        error!("CONNECT transmitbodyconnecthandler {}", body_handler.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
                         body_handler.start_reading(sender);
                     },
                     BodyChunkRequest::Extract(receiver) => {
@@ -215,7 +215,7 @@ impl TransmitBodyConnectHandler {
     /// Take the IPC sender sent by `net`, so we can send body chunks with it.
     /// Also the entry point to <https://fetch.spec.whatwg.org/#concept-request-transmit-body>
     fn start_reading(&mut self, sender: IpcSender<BodyChunkResponse>) {
-        println!("Start reading {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+        error!("Start reading {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
         self.bytes_sender = Some(sender);
 
         // If we're using an actual ReadableStream, acquire a reader for it.
@@ -242,7 +242,7 @@ impl TransmitBodyConnectHandler {
     /// Otherwise, the following cycle will happen: The control sender is owned by us which keeps the control receiver
     /// alive in the router which keeps us alive.
     fn stop_reading(&mut self, reason: StopReading) {
-        println!("Stop reading {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+        error!("Stop reading {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
         let bytes_sender = self
             .bytes_sender
             .take()

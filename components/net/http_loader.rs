@@ -712,6 +712,7 @@ async fn obtain_response(
                 body_port,
                 Box::new(move |message| {
                     info!("Received message");
+                    error!("RECEIVED MSG IN OBTAIN_RESPONSE ROUTER");
                     let bytes = match message.unwrap() {
                         BodyChunkResponse::Chunk(bytes) => bytes,
                         BodyChunkResponse::Done => {
@@ -2043,8 +2044,8 @@ async fn http_network_fetch(
     // The receiver will receive true if there has been an error streaming the request body.
     let (fetch_terminated_sender, mut fetch_terminated_receiver) = unbounded_channel();
 
+    error!("THIS IS WHAT WE WILL TAKE {:?}", request.body.as_ref().map(|body| body.atomic_count.load(std::sync::atomic::Ordering::SeqCst)));
     let body = request.body.as_ref().and_then(|body| body.take_stream());
-    println!("THIS IS THE TAKE {:?}", request.body.as_ref().map(|body| body.atomic_count.load(std::sync::atomic::Ordering::SeqCst)));
 
 
     if body.is_none() {
