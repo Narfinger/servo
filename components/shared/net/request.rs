@@ -339,12 +339,9 @@ impl RequestBody {
         match self.source {
             BodySource::Null => panic!("Null sources should never be re-directed."),
             BodySource::Object => {
-                /*
                 let (chan, port) = ipc::channel().unwrap();
-                let mut selfchan = self.chan.lock();
-                let _ = selfchan.send(BodyChunkRequest::Extract(port));
-                selfchan = chan;
-                 */
+                let selfchan = self.chan.lock().replace(chan);
+                let _ = selfchan.unwrap().send(BodyChunkRequest::Extract(port));
             },
         }
     }
