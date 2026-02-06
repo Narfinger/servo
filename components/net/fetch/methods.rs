@@ -930,6 +930,7 @@ fn create_about_memory(url: ServoUrl, timing_type: ResourceTimingType) -> Respon
 
 /// Handle a request from the user interface to ignore validation errors for a certificate.
 fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io::Result<()> {
+    /*
     let error = |string| Err(io::Error::other(string));
 
     let body = match request.body.as_mut() {
@@ -966,6 +967,7 @@ fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io
         .state
         .override_manager
         .add_override(&CertificateDer::from_slice(&cert_bytes).into_owned());
+     */
     Ok(())
 }
 

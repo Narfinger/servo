@@ -2044,6 +2044,7 @@ async fn http_network_fetch(
     let (fetch_terminated_sender, mut fetch_terminated_receiver) = unbounded_channel();
 
     let body = request.body.as_ref().and_then(|body| body.take_stream());
+    println!("THIS IS THE TAKE {:?}", request.body.as_ref().map(|body| body.atomic_count.load(std::sync::atomic::Ordering::SeqCst)));
 
 
     if body.is_none() {

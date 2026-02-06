@@ -325,6 +325,24 @@ pub struct RequestBody {
     pub atomic_count: Arc<AtomicUsize>,
 }
 
+impl Drop for RequestBody {
+    fn drop(&mut self) {
+        println!("Dropping request body {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+    }
+}
+
+/*
+impl Clone for RequestBody {
+    fn clone(&self) -> Self {
+        let val = self.atomic_count.load(std::sync::atomic::Ordering::SeqCst);
+        println!("Cloning RequestBody {val}");
+        let new_val = Arc::new(AtomicUsize::new(val + 500));
+
+        Self { chan: self.chan.clone(), source: self.source.clone(), total_bytes: self.total_bytes.clone(), atomic_count: new_val}
+    }
+}
+*/
+
 impl RequestBody {
     pub fn new(
         chan: IpcSender<BodyChunkRequest>,

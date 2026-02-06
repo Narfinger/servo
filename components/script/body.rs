@@ -114,6 +114,12 @@ struct TransmitBodyConnectHandler {
     atomic_count: Arc<AtomicUsize>,
 }
 
+impl Drop for TransmitBodyConnectHandler {
+    fn drop(&mut self) {
+        println!("DROPPING TransmitBodyConnectHandler {}", self.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
+    }
+}
+
 static ATOMIC_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 impl TransmitBodyConnectHandler {
