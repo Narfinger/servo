@@ -311,7 +311,7 @@ pub enum BodyChunkRequest {
 }
 
 /// The net component's view into <https://fetch.spec.whatwg.org/#bodies>
-#[derive(Clone, Debug, Deserialize, MallocSizeOf, Serialize)]
+#[derive(Debug, Deserialize, MallocSizeOf, Serialize)]
 pub struct RequestBody {
     /// Net's channel to communicate with script re this body.
     #[ignore_malloc_size_of = "Channels are hard"]
@@ -331,17 +331,16 @@ impl Drop for RequestBody {
     }
 }
 
-/*
 impl Clone for RequestBody {
     fn clone(&self) -> Self {
         let val = self.atomic_count.load(std::sync::atomic::Ordering::SeqCst);
         println!("Cloning RequestBody {val}");
         let new_val = Arc::new(AtomicUsize::new(val + 500));
 
+
         Self { chan: self.chan.clone(), source: self.source.clone(), total_bytes: self.total_bytes.clone(), atomic_count: new_val}
     }
 }
-*/
 
 impl RequestBody {
     pub fn new(
