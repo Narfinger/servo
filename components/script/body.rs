@@ -160,6 +160,7 @@ impl TransmitBodyConnectHandler {
                 let request = message.unwrap();
                 match request {
                     BodyChunkRequest::Connect(sender) => {
+                        println!("CONNECT transmitbodyconnecthandler {}", body_handler.atomic_count.load(std::sync::atomic::Ordering::SeqCst));
                         body_handler.start_reading(sender);
                     },
                     BodyChunkRequest::Extract(receiver) => {
@@ -457,12 +458,15 @@ impl ExtractedBody {
             source,
         );
         let foo = body_handler.atomic_count.clone();
+        let other_foo = body_handler.atomic_count.clone();
 
         ROUTER.add_typed_route(
             chunk_request_receiver,
             Box::new(move |message| {
                 match message.unwrap() {
                     BodyChunkRequest::Connect(sender) => {
+                        println!("CONNECT router {}", other_foo.load(std::sync::atomic::Ordering::SeqCst));
+
                         body_handler.start_reading(sender);
                     },
                     BodyChunkRequest::Extract(receiver) => {
