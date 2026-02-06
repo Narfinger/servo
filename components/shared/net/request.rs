@@ -334,7 +334,7 @@ impl Drop for RequestBody {
 impl Clone for RequestBody {
     fn clone(&self) -> Self {
         let val = self.atomic_count.load(std::sync::atomic::Ordering::SeqCst);
-        println!("Cloning RequestBody {val}");
+        println!("Cloning RequestBody {val} with new {}", val+500);
         let new_val = Arc::new(AtomicUsize::new(val + 500));
 
 
