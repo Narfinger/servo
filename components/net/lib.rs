@@ -9,6 +9,7 @@ pub mod connector;
 pub mod cookie;
 pub mod cookie_storage;
 mod decoder;
+mod disk_cache;
 pub mod embedder;
 pub mod filemanager_thread;
 mod hosts;
