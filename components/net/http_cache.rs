@@ -256,9 +256,7 @@ where
                 std::task::Poll::Pending
             },
             // Memory has value, ignore disk
-            (Some(Ok(memory_value)), _) => {
-                std::task::Poll::Ready(FutureValue::Value(memory_value))
-            },
+            (Some(Ok(memory_value)), _) => std::task::Poll::Ready(FutureValue::Value(memory_value)),
             // Memory does not have value but disk
             (Some(Err(guard)), Some(Some(disk_value))) => {
                 let _ = guard.insert(disk_value.clone());
