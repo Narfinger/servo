@@ -12,6 +12,7 @@ description.workspace = true
 [lib]
 name = "webgpu"
 path = "lib.rs"
+crate-type = ["dylib"]
 
 [dependencies]
 arrayvec = { workspace = true, features = ["serde"] }
