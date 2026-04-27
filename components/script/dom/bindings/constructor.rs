@@ -41,12 +41,12 @@ use crate::dom::bindings::codegen::Bindings::{
     HTMLTimeElementBinding, HTMLTitleElementBinding, HTMLTrackElementBinding,
     HTMLUListElementBinding, HTMLVideoElementBinding,
 };
-use crate::dom::bindings::codegen::PrototypeList;
-use crate::dom::bindings::conversions::DerivedFrom;
-use crate::dom::bindings::error::{Error, throw_dom_exception};
-use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::reflector::DomObject;
-use crate::dom::bindings::root::DomRoot;
+use crate::codegen::PrototypeList;
+use crate::conversions::DerivedFrom;
+use crate::error::{Error, throw_dom_exception};
+use crate::inheritance::Castable;
+use crate::reflector::DomObject;
+use crate::root::DomRoot;
 use crate::dom::create::create_native_html_element;
 use crate::dom::customelementregistry::{ConstructionStackEntry, CustomElementState};
 use crate::dom::element::{Element, ElementCreator};

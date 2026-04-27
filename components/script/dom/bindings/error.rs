@@ -30,11 +30,11 @@ use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
 #[cfg(feature = "js_backtrace")]
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::conversions::{
+use crate::cell::DomRefCell;
+use crate::conversions::{
     ConversionResult, SafeFromJSValConvertible, root_from_object,
 };
-use crate::dom::bindings::str::USVString;
+use crate::str::USVString;
 use crate::dom::domexception::{DOMErrorName, DOMException};
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::types::QuotaExceededError;

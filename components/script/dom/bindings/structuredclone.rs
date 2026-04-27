@@ -40,11 +40,11 @@ use servo_constellation_traits::{
 };
 use strum::IntoEnumIterator;
 
-use crate::dom::bindings::conversions::root_from_object;
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::serializable::{Serializable, StorageKey};
-use crate::dom::bindings::transferable::Transferable;
+use crate::conversions::root_from_object;
+use crate::error::{Error, Fallible};
+use crate::root::DomRoot;
+use crate::serializable::{Serializable, StorageKey};
+use crate::transferable::Transferable;
 use crate::dom::blob::Blob;
 use crate::dom::dompoint::DOMPoint;
 use crate::dom::dompointreadonly::DOMPointReadOnly;

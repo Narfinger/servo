@@ -19,10 +19,10 @@ pub(crate) mod module {
     pub(crate) use script_bindings::utils::DOMClass;
 
     pub(crate) use super::base::*;
-    pub(crate) use crate::dom::bindings::iterable::IterableIterator;
-    pub(crate) use crate::dom::bindings::reflector::{
+    pub(crate) use crate::iterable::IterableIterator;
+    pub(crate) use crate::reflector::{
         DomObjectIteratorWrap, DomObjectWrap, Reflector,
     };
-    pub(crate) use crate::dom::bindings::root::{Dom, Root};
-    pub(crate) use crate::dom::bindings::weakref::WeakReferenceable;
+    pub(crate) use crate::root::{Dom, Root};
+    pub(crate) use crate::weakref::WeakReferenceable;
 }

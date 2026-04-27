@@ -41,8 +41,8 @@ use js::typedarray::{
     TypedArrayElementCreator,
 };
 
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::trace::RootedTraceableBox;
+use crate::error::{Error, Fallible};
+use crate::trace::RootedTraceableBox;
 #[cfg(feature = "webgpu")]
 use crate::dom::globalscope::GlobalScope;
 use crate::script_runtime::{CanGc, JSContext};

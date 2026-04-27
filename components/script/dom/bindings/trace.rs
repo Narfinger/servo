@@ -43,9 +43,9 @@ use malloc_size_of::{MallocConditionalSizeOf, MallocSizeOf, MallocSizeOfOps};
 use rustc_hash::FxBuildHasher;
 pub(crate) use script_bindings::trace::*;
 
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::refcounted::{Trusted, TrustedPromise};
-use crate::dom::bindings::reflector::DomObject;
+use crate::cell::DomRefCell;
+use crate::refcounted::{Trusted, TrustedPromise};
+use crate::reflector::DomObject;
 use crate::dom::html::htmlimageelement::SourceSet;
 use crate::dom::html::htmlmediaelement::HTMLMediaElementFetchContext;
 use crate::dom::windowproxy::WindowProxyHandler;

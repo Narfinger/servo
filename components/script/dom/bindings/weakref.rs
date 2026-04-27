@@ -10,9 +10,9 @@ use js::jsapi::JSTracer;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 pub(crate) use script_bindings::weakref::*;
 
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::trace::JSTraceable;
+use crate::cell::DomRefCell;
+use crate::root::DomRoot;
+use crate::trace::JSTraceable;
 
 /// A mutable weak reference to a JS-managed DOM object. On tracing,
 /// the contained weak reference is dropped if the pointee was already

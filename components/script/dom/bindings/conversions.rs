@@ -44,9 +44,9 @@ use js::rust::{HandleObject, MutableHandleValue};
 pub(crate) use script_bindings::conversions::{is_dom_proxy, *};
 use script_bindings::script_runtime::JSContext;
 
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::reflector::DomObject;
-use crate::dom::bindings::root::DomRoot;
+use crate::error::{Error, Fallible};
+use crate::reflector::DomObject;
+use crate::root::DomRoot;
 
 /// Get a `DomRoot<T>` for the given DOM object, unwrapping any wrapper
 /// around it first, and checking if the object is of the correct type.

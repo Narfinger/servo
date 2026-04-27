@@ -7,8 +7,8 @@ use js::jsapi::Heap;
 use js::jsval::JSVal;
 use js::rust::MutableHandleValue;
 
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::utils::to_frozen_array;
+use crate::cell::DomRefCell;
+use crate::utils::to_frozen_array;
 use crate::script_runtime::{CanGc, JSContext};
 
 #[derive(JSTraceable)]

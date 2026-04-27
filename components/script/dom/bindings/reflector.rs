@@ -8,8 +8,8 @@ use js::rust::HandleObject;
 use script_bindings::script_runtime::temp_cx;
 
 use crate::DomTypes;
-use crate::dom::bindings::conversions::DerivedFrom;
-use crate::dom::bindings::root::DomRoot;
+use crate::conversions::DerivedFrom;
+use crate::root::DomRoot;
 use crate::dom::globalscope::GlobalScope;
 use crate::realms::{InRealm, enter_realm};
 use crate::script_runtime::CanGc;

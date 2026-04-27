@@ -9,9 +9,9 @@ use rustc_hash::FxHashMap;
 use script_bindings::structuredclone::MarkedAsSerializableInIdl;
 use servo_base::id::{Index, NamespaceIndex, PipelineNamespaceId};
 
-use crate::dom::bindings::reflector::DomObject;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::structuredclone::StructuredData;
+use crate::reflector::DomObject;
+use crate::root::DomRoot;
+use crate::structuredclone::StructuredData;
 use crate::dom::globalscope::GlobalScope;
 use crate::script_runtime::CanGc;
 

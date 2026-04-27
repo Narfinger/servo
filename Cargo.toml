@@ -272,6 +272,7 @@ servo-canvas = { version = "0.1.0", path = "components/canvas" }
 servo-canvas-traits = { version = "0.1.0", path = "components/shared/canvas" }
 servo-config = { version = "0.1.0", path = "components/config" }
 servo-config-macro = { version = "0.1.0", path = "components/config/macro" }
+servo-script-dom-bindings = { package = "dom", version = "0.1.0", path = "components/script/dom/bindings" }
 servo-constellation = { version = "0.1.0", path = "components/constellation" }
 servo-constellation-traits = { version = "0.1.0", path = "components/shared/constellation" }
 servo-default-resources = { version = "0.1.0", path = "components/default-resources" }
