@@ -42,7 +42,7 @@ use crate::conversions::DerivedFrom;
 use crate::inheritance::Castable;
 use crate::reflector::DomObject;
 use crate::trace::JSTraceable;
-use crate::dom::node::Node;
+//use crate::dom::node::Node;
 
 pub(crate) trait ToLayout<T> {
     /// Returns `LayoutDom<T>` containing the same pointer.

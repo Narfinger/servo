@@ -45,6 +45,7 @@ use crate::error::{Error, Fallible};
 use crate::root::DomRoot;
 use crate::serializable::{Serializable, StorageKey};
 use crate::transferable::Transferable;
+/*
 use crate::dom::blob::Blob;
 use crate::dom::dompoint::DOMPoint;
 use crate::dom::dompointreadonly::DOMPointReadOnly;
@@ -63,6 +64,7 @@ use crate::dom::types::{
 };
 use crate::realms::{AlreadyInRealm, InRealm, enter_realm};
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
+*/
 
 // TODO: Should we add Min and Max const to https://github.com/servo/rust-mozjs/blob/master/src/consts.rs?
 // TODO: Determine for sure which value Min and Max should have.

@@ -10,7 +10,7 @@ pub(crate) mod base {
     pub(crate) use js::realm::CurrentRealm;
     pub(crate) use js::rust::{HandleObject, MutableHandleObject};
 
-    pub(crate) use crate::script_runtime::JSContext as SafeJSContext;
+    pub(crate) use script_bindings::script_runtime::JSContext as SafeJSContext;
 }
 
 pub(crate) mod module {

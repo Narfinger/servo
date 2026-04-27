@@ -12,7 +12,7 @@ use script_bindings::principals::{ServoJSPrincipals, ServoJSPrincipalsRef};
 use servo_url::MutableOrigin;
 
 use super::structuredclone::StructuredCloneTags;
-use crate::DomTypeHolder;
+//use crate::DomTypeHolder;
 
 #[expect(unused)]
 pub(crate) unsafe extern "C" fn destroy_servo_jsprincipal(principals: *mut JSPrincipals) {

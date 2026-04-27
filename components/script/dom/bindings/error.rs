@@ -35,11 +35,13 @@ use crate::conversions::{
     ConversionResult, SafeFromJSValConvertible, root_from_object,
 };
 use crate::str::USVString;
+/*
 use crate::dom::domexception::{DOMErrorName, DOMException};
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::types::QuotaExceededError;
 use crate::realms::InRealm;
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
+*/
 
 #[cfg(feature = "js_backtrace")]
 thread_local! {

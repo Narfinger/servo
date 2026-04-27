@@ -9,7 +9,7 @@ use js::rust::MutableHandleValue;
 
 use crate::cell::DomRefCell;
 use crate::utils::to_frozen_array;
-use crate::script_runtime::{CanGc, JSContext};
+//use crate::script_runtime::{CanGc, JSContext};
 
 #[derive(JSTraceable)]
 #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]

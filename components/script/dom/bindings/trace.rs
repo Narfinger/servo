@@ -46,12 +46,14 @@ pub(crate) use script_bindings::trace::*;
 use crate::cell::DomRefCell;
 use crate::refcounted::{Trusted, TrustedPromise};
 use crate::reflector::DomObject;
+/*
 use crate::dom::html::htmlimageelement::SourceSet;
 use crate::dom::html::htmlmediaelement::HTMLMediaElementFetchContext;
 use crate::dom::windowproxy::WindowProxyHandler;
 use crate::script_runtime::StreamConsumer;
 use crate::script_thread::IncompleteParserContexts;
 use crate::task::TaskBox;
+*/
 
 unsafe impl<T: CustomTraceable> CustomTraceable for DomRefCell<T> {
     unsafe fn trace(&self, trc: *mut JSTracer) {

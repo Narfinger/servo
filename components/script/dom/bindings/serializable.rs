@@ -12,8 +12,8 @@ use servo_base::id::{Index, NamespaceIndex, PipelineNamespaceId};
 use crate::reflector::DomObject;
 use crate::root::DomRoot;
 use crate::structuredclone::StructuredData;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
+//use crate::dom::globalscope::GlobalScope;
+//use crate::script_runtime::CanGc;
 
 /// The key corresponding to the storage location
 /// of a serialized platform object stored in a StructuredDataHolder.

@@ -7,12 +7,12 @@
 use js::rust::HandleObject;
 use script_bindings::script_runtime::temp_cx;
 
-use crate::DomTypes;
+//use crate::DomTypes;
 use crate::conversions::DerivedFrom;
 use crate::root::DomRoot;
-use crate::dom::globalscope::GlobalScope;
-use crate::realms::{InRealm, enter_realm};
-use crate::script_runtime::CanGc;
+//use crate::dom::globalscope::GlobalScope;
+//use crate::realms::{InRealm, enter_realm};
+//use crate::script_runtime::CanGc;
 
 /// Create the reflector for a new DOM object and yield ownership to the
 /// reflector.

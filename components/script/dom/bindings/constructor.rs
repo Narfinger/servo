@@ -15,6 +15,7 @@ use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::interface::get_desired_proto;
 
 use super::utils::ProtoOrIfaceArray;
+/*
 use crate::dom::bindings::codegen::Bindings::WindowBinding::WindowMethods;
 use crate::dom::bindings::codegen::Bindings::{
     HTMLAnchorElementBinding, HTMLAreaElementBinding, HTMLAudioElementBinding,
@@ -41,12 +42,14 @@ use crate::dom::bindings::codegen::Bindings::{
     HTMLTimeElementBinding, HTMLTitleElementBinding, HTMLTrackElementBinding,
     HTMLUListElementBinding, HTMLVideoElementBinding,
 };
+*/
 use crate::codegen::PrototypeList;
 use crate::conversions::DerivedFrom;
 use crate::error::{Error, throw_dom_exception};
 use crate::inheritance::Castable;
 use crate::reflector::DomObject;
 use crate::root::DomRoot;
+/*
 use crate::dom::create::create_native_html_element;
 use crate::dom::customelementregistry::{ConstructionStackEntry, CustomElementState};
 use crate::dom::element::{Element, ElementCreator};
@@ -54,6 +57,7 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::html::htmlelement::HTMLElement;
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
+*/
 
 /// <https://html.spec.whatwg.org/multipage/#htmlconstructor>
 fn html_constructor(

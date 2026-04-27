@@ -15,7 +15,7 @@ use crate::error::Fallible;
 use crate::reflector::DomObject;
 use crate::root::DomRoot;
 use crate::structuredclone::StructuredData;
-use crate::dom::globalscope::GlobalScope;
+//use crate::dom::globalscope::GlobalScope;
 
 pub(crate) trait Transferable: DomObject + MarkedAsTransferableInIdl
 where

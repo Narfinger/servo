@@ -17,7 +17,7 @@ use js::rust::{HandleObject, MutableHandleValue, get_object_class, is_dom_class}
 use script_bindings::interfaces::{DomHelpers, Interface};
 use script_bindings::settings_stack::StackEntry;
 
-use crate::DomTypes;
+//use crate::DomTypes;
 use crate::codegen::{InterfaceObjectMap, PrototypeList};
 use crate::constructor::call_html_constructor;
 use crate::conversions::DerivedFrom;
@@ -27,11 +27,13 @@ use crate::proxyhandler::is_platform_object_same_origin;
 use crate::reflector::{DomObject, DomObjectWrap, reflect_dom_object};
 use crate::root::DomRoot;
 use crate::settings_stack;
+/*
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::windowproxy::WindowProxyHandler;
 use crate::realms::InRealm;
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 use crate::script_thread::ScriptThread;
+*/
 
 #[derive(JSTraceable, MallocSizeOf)]
 /// Static data associated with a global object.

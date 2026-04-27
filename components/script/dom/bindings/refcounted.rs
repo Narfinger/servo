@@ -38,8 +38,8 @@ use crate::error::Error;
 use crate::reflector::{DomObject, Reflector};
 use crate::root::DomRoot;
 use crate::trace::trace_reflector;
-use crate::dom::promise::Promise;
-use crate::task::TaskOnce;
+//use crate::dom::promise::Promise;
+//use crate::task::TaskOnce;
 
 mod dummy {
     // Attributes don’t apply through the macro.

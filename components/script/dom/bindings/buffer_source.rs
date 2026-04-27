@@ -29,6 +29,7 @@ use js::jsapi::{
     StealArrayBufferContents, Type,
 };
 use js::jsval::{ObjectValue, UndefinedValue};
+use js::rooted;
 use js::rust::wrappers::DetachArrayBuffer;
 use js::rust::{
     CustomAutoRooterGuard, Handle, MutableHandleObject,
@@ -36,16 +37,19 @@ use js::rust::{
 };
 #[cfg(feature = "webgpu")]
 use js::typedarray::HeapArrayBuffer;
+use js::typedarray;
 use js::typedarray::{
-    ArrayBufferU8, ArrayBufferViewU8, CreateWith, TypedArray, TypedArrayElement,
-    TypedArrayElementCreator,
+    ArrayBufferU8, ArrayBufferViewU8, CreateWith, TypedArray, TypedArrayElement, TypedArrayElementCreator
 };
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 
 use crate::error::{Error, Fallible};
 use crate::trace::RootedTraceableBox;
 #[cfg(feature = "webgpu")]
 use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::{CanGc, JSContext};
+use script_bindings::script_runtime::{CanGc, JSContext};
 
 pub(crate) type RootedTypedArray<T> = RootedTraceableBox<TypedArray<T, Box<Heap<*mut JSObject>>>>;
 
