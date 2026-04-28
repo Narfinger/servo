@@ -7,7 +7,6 @@ use std::sync::LazyLock;
 
 use num_traits::Zero;
 use regex::Regex;
-pub use script_bindings::str::*;
 use time::{Date, Month, OffsetDateTime, Time, Weekday};
 
 /// <https://html.spec.whatwg.org/multipage/#parse-a-month-component>

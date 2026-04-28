@@ -5,8 +5,8 @@
 //! Functions for validating names as defined in the DOM Standard: <https://dom.spec.whatwg.org/#namespaces>
 
 use html5ever::{LocalName, Namespace, Prefix, ns};
-use script_bindings::error::{Error, Fallible};
-use script_bindings::str::DOMString;
+
+use crate::{error::{Error, Fallible}, str::DOMString};
 
 /// <https://infra.spec.whatwg.org/#xml-namespace>
 const XML_NAMESPACE: &str = "http://www.w3.org/XML/1998/namespace";

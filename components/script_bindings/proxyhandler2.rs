@@ -8,8 +8,8 @@
 
 use js::jsapi::{GetObjectRealmOrNull, GetRealmPrincipals, HandleObject as RawHandleObject};
 use js::realm::CurrentRealm;
-use script_bindings::principals::ServoJSPrincipalsRef;
-pub(crate) use script_bindings::proxyhandler::*;
+
+use crate::principals::ServoJSPrincipalsRef;
 
 /// <https://html.spec.whatwg.org/multipage/#isplatformobjectsameorigin-(-o-)>
 pub(crate) unsafe fn is_platform_object_same_origin(

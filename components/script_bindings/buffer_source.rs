@@ -41,11 +41,10 @@ use js::typedarray::{
     TypedArrayElementCreator,
 };
 
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::trace::RootedTraceableBox;
-#[cfg(feature = "webgpu")]
-use crate::dom::globalscope::GlobalScope;
+use crate::error::{Error, Fallible};
 use crate::script_runtime::{CanGc, JSContext};
+use crate::trace::RootedTraceableBox;
+
 
 pub(crate) type RootedTypedArray<T> = RootedTraceableBox<TypedArray<T, Box<Heap<*mut JSObject>>>>;
 

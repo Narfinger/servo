@@ -134,32 +134,20 @@
 #![deny(missing_docs)]
 #![deny(non_snake_case)]
 
-pub(crate) mod buffer_source;
-#[expect(dead_code)]
-pub(crate) mod cell;
 pub(crate) mod constructor;
-pub(crate) mod conversions;
-pub(crate) mod domname;
 pub(crate) mod error;
-pub(crate) mod frozenarray;
-pub(crate) mod function;
 pub(crate) mod import;
 pub(crate) mod inheritance;
-pub(crate) mod like;
 pub(crate) mod principals;
-pub(crate) mod proxyhandler;
 pub(crate) mod refcounted;
 pub(crate) mod reflector;
 pub(crate) mod root;
 pub(crate) mod serializable;
 pub(crate) mod settings_stack;
-pub(crate) mod str;
 pub(crate) mod structuredclone;
 pub(crate) mod trace;
 pub(crate) mod transferable;
 pub(crate) mod utils;
-pub(crate) mod weakref;
-pub(crate) mod xmlname;
 
 pub(crate) use script_bindings::{callback, iterable, num};
 
