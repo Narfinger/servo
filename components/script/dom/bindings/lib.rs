@@ -160,9 +160,25 @@ pub mod transferable;
 pub mod utils;
 pub mod weakref;
 pub mod xmlname;
+pub mod globalscope_trait;
 use jstraceable_derive;
 
 pub use script_bindings::{callback, iterable, num};
+
+macro_rules! task {
+    ($name:ident: |$($field:ident: $field_type:ty$(,)*)*| $body:tt) => {{
+    }};
+
+    ($name:ident: move || $body:tt) => {{
+    }};
+
+    ($name:ident: |$cx: ident $(, $field:ident: $field_type:ty)*| $body:tt) => {{
+    }};
+
+    ($name:ident: move |$cx: ident| $body:tt) => {{
+    }};
+}
+
 
 /// Generated JS-Rust bindings.
 #[allow(missing_docs, non_snake_case)]

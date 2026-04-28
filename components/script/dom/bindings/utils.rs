@@ -15,9 +15,10 @@ use js::jsapi::{
 use js::realm::CurrentRealm;
 use js::rooted;
 use js::rust::{HandleObject, MutableHandleValue, get_object_class, is_dom_class};
-use jstraceable_derive::JSTraceable;
+use jstraceable_derive::{JSTraceable, JSTraceable2};
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::interfaces::{DomHelpers, Interface};
+use script_bindings::script_runtime::CanGc;
 use script_bindings::settings_stack::StackEntry;
 
 //use crate::DomTypes;
@@ -40,7 +41,7 @@ use crate::script_thread::ScriptThread;
 use script_bindings::trace::*;
 
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceable2, MallocSizeOf)]
 /// Static data associated with a global object.
 pub(crate) struct GlobalStaticData {
     #[ignore_malloc_size_of = "WindowProxyHandler does not properly implement it anyway"]
@@ -62,7 +63,7 @@ pub(crate) use script_bindings::utils::*;
 /// Returns a JSVal representing the frozen JavaScript array
 pub(crate) fn to_frozen_array<T: ToJSValConvertible>(
     convertibles: &[T],
-    cx: SafeJSContext,
+    cx: script_bindings::script_runtime::JSContext,
     mut rval: MutableHandleValue,
     can_gc: CanGc,
 ) {

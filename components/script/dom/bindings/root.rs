@@ -34,7 +34,7 @@ use js::context::NoGC;
 use js::jsapi::{Heap, JSObject, JSTracer, Value};
 use js::rust::HandleValue;
 use script_bindings::trace::*;
-use jstraceable_derive::JSTraceable;
+use jstraceable_derive::{JSTraceable, JSTraceable2};
 use layout_api::TrustedNodeAddress;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 pub(crate) use script_bindings::root::*;
@@ -288,7 +288,7 @@ impl<'a, T: Castable> UnrootedDom<'a, T> {
 /// This should only be used as a field in other DOM objects; see warning
 /// on `Dom<T>`.
 #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
-#[derive(JSTraceable)]
+#[derive(JSTraceable2)]
 pub(crate) struct MutNullableDom<T: DomObject> {
     ptr: UnsafeCell<Option<Dom<T>>>,
 }

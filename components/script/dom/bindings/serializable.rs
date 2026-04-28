@@ -6,6 +6,7 @@
 //! (<https://html.spec.whatwg.org/multipage/#serializable-objects>).
 
 use rustc_hash::FxHashMap;
+use script_bindings::script_runtime::CanGc;
 use script_bindings::structuredclone::MarkedAsSerializableInIdl;
 use servo_base::id::{Index, NamespaceIndex, PipelineNamespaceId};
 

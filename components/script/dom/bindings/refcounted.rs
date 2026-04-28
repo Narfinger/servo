@@ -61,6 +61,22 @@ mod dummy {
 }
 pub(crate) use self::dummy::LIVE_REFERENCES;
 
+
+macro_rules! task {
+    ($name:ident: |$($field:ident: $field_type:ty$(,)*)*| $body:tt) => {{
+    }};
+
+    ($name:ident: move || $body:tt) => {{
+    }};
+
+    ($name:ident: |$cx: ident $(, $field:ident: $field_type:ty)*| $body:tt) => {{
+    }};
+
+    ($name:ident: move |$cx: ident| $body:tt) => {{
+    }};
+}
+
+
 /// A pointer to a Rust DOM object that needs to be destroyed.
 #[derive(MallocSizeOf)]
 struct TrustedReference(

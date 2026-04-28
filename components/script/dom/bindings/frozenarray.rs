@@ -7,6 +7,7 @@ use js::jsapi::Heap;
 use js::jsval::JSVal;
 use js::rust::MutableHandleValue;
 use jstraceable_derive::JSTraceable;
+use script_bindings::script_runtime::CanGc;
 
 use crate::cell::DomRefCell;
 use crate::utils::to_frozen_array;
@@ -29,7 +30,7 @@ impl CachedFrozenArray {
     pub(crate) fn get_or_init<F: FnOnce() -> Vec<T>, T: ToJSValConvertible>(
         &self,
         f: F,
-        cx: JSContext,
+        cx: script_bindings::script_runtime::JSContext,
         mut retval: MutableHandleValue,
         can_gc: CanGc,
     ) {

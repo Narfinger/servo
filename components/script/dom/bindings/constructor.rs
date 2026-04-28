@@ -15,6 +15,7 @@ use js::rust::{HandleObject, MutableHandleObject, MutableHandleValue};
 use script_bindings::codegen::GenericBindings::HTMLElementBinding;
 use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::interface::get_desired_proto;
+use script_bindings::script_runtime::CanGc;
 
 use super::utils::ProtoOrIfaceArray;
 /*
@@ -62,9 +63,9 @@ use crate::script_runtime::CanGc;
 */
 
 /// <https://html.spec.whatwg.org/multipage/#htmlconstructor>
-fn html_constructor(
+fn html_constructor<G:GlobalScopeTrait>(
     cx: &mut js::context::JSContext,
-    global: &GlobalScope,
+    global: &G,
     call_args: &CallArgs,
     check_type: fn(&Element) -> bool,
     proto_id: PrototypeList::ID,

@@ -5,7 +5,7 @@
 //! The `Reflector` struct.
 
 use js::rust::HandleObject;
-use script_bindings::script_runtime::temp_cx;
+use script_bindings::script_runtime::{CanGc, temp_cx};
 
 //use crate::DomTypes;
 use crate::conversions::DerivedFrom;

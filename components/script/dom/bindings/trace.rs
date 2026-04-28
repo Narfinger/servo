@@ -34,6 +34,21 @@ use std::collections::hash_map::RandomState;
 use std::fmt::Display;
 use std::hash::{BuildHasher, Hash};
 
+macro_rules! task {
+    ($name:ident: |$($field:ident: $field_type:ty$(,)*)*| $body:tt) => {{
+    }};
+
+    ($name:ident: move || $body:tt) => {{
+    }};
+
+    ($name:ident: |$cx: ident $(, $field:ident: $field_type:ty)*| $body:tt) => {{
+    }};
+
+    ($name:ident: move |$cx: ident| $body:tt) => {{
+    }};
+}
+
+
 /// A trait to allow tracing (only) DOM objects.
 pub(crate) use js::gc::Traceable as JSTraceable;
 use js::glue::{CallScriptTracer, CallStringTracer, CallValueTracer};
@@ -55,6 +70,20 @@ use crate::script_runtime::StreamConsumer;
 use crate::script_thread::IncompleteParserContexts;
 use crate::task::TaskBox;
 */
+
+macro_rules! unsafe_no_jsmanaged_fields(
+    ($($ty:ty),+) => (
+        $(
+            #[expect(unsafe_code)]
+            unsafe impl bindings::trace::JSTraceable for $ty {
+                #[inline]
+                unsafe fn trace(&self, _: *mut ::js::jsapi::JSTracer) {
+                    // Do nothing
+                }
+            }
+        )+
+    );
+);
 
 unsafe impl<T: CustomTraceable> CustomTraceable for DomRefCell<T> {
     unsafe fn trace(&self, trc: *mut JSTracer) {

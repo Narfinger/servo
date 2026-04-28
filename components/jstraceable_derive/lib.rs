@@ -153,7 +153,7 @@ fn js_traceable_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
                 // If no reason argument is provided to `no_trace` (ie `#[no_trace="This types does not need..."]`),
                 // assert that the type in this bound field does not implement traceable.
                 if !matches!(attr.meta, syn::Meta::NameValue(_)) {
-                    asserts.extend(assert_not_impl_traceable(&binding.ast().ty));
+                    //asserts.extend(assert_not_impl_traceable(&binding.ast().ty));
                 }
                 return None;
             } else if attr.path().is_ident("custom_trace") {
@@ -192,3 +192,52 @@ fn js_traceable_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
 
     tokens
 }
+
+fn js_traceable_derive2(s: synstructure::Structure) -> proc_macro2::TokenStream {
+    let mut asserts = quote!();
+    let match_body = s.each(|binding| {
+        for attr in binding.ast().attrs.iter() {
+            if attr.path().is_ident("no_trace") {
+                // If no reason argument is provided to `no_trace` (ie `#[no_trace="This types does not need..."]`),
+                // assert that the type in this bound field does not implement traceable.
+                if !matches!(attr.meta, syn::Meta::NameValue(_)) {
+                    asserts.extend(assert_not_impl_traceable(&binding.ast().ty));
+                }
+                return None;
+            } else if attr.path().is_ident("custom_trace") {
+                return Some(quote!(<dyn CustomTraceable>::trace(#binding, tracer);));
+            }
+        }
+        Some(quote!(#binding.trace(tracer);))
+    });
+
+    let ast = s.ast();
+    let name = &ast.ident;
+    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+    let mut where_clause = where_clause.unwrap_or(&parse_quote!(where)).clone();
+    for param in ast.generics.type_params() {
+        let ident = &param.ident;
+        where_clause
+            .predicates
+            .push(parse_quote!(#ident: JSTraceable))
+    }
+
+    let tokens = quote! {
+        #asserts
+
+        #[expect(unsafe_code)]
+        unsafe impl #impl_generics JSTraceable for #name #ty_generics #where_clause {
+            #[inline]
+            #[expect(unused_variables, unused_imports)]
+            unsafe fn trace(&self, tracer: *mut js::jsapi::JSTracer) {
+                //use JSTraceable;
+                match *self {
+                    #match_body
+                }
+            }
+        }
+    };
+    tokens
+}
+
+decl_derive!([JSTraceable2, attributes(no_trace, custom_trace)] => js_traceable_derive2);
