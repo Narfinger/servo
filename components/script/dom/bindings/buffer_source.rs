@@ -28,6 +28,9 @@ use js::jsapi::{
     JS_NewUint32ArrayWithBuffer, JSObject, NewArrayBuffer, NewArrayBufferWithContents,
     StealArrayBufferContents, Type,
 };
+
+use jstraceable_derive;
+use jstraceable_derive::JSTraceable;
 use js::jsval::{ObjectValue, UndefinedValue};
 use js::rooted;
 use js::rust::wrappers::DetachArrayBuffer;
@@ -41,7 +44,6 @@ use js::typedarray;
 use js::typedarray::{
     ArrayBufferU8, ArrayBufferViewU8, CreateWith, TypedArray, TypedArrayElement, TypedArrayElementCreator
 };
-use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 
@@ -686,7 +688,7 @@ where
     }
 }
 
-unsafe impl<T> crate::dom::bindings::trace::JSTraceable for HeapBufferSource<T> {
+unsafe impl<T> crate::trace::JSTraceable for HeapBufferSource<T> {
     #[inline]
     unsafe fn trace(&self, tracer: *mut js::jsapi::JSTracer) {
         match &self.buffer_source {
@@ -749,12 +751,12 @@ pub(crate) fn byte_size(byte_type: Type) -> u64 {
     }
 }
 
-#[derive(Clone, Eq, JSTraceable, MallocSizeOf, PartialEq)]
+#[derive(Clone, Eq, /* JSTraceable,*/ MallocSizeOf, PartialEq)]
 pub(crate) enum Constructor {
     DataView,
     Name(
         #[ignore_malloc_size_of = "mozjs"]
-        #[no_trace]
+        //#[no_trace]
         Type,
     ),
 }

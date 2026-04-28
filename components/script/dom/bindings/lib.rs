@@ -160,6 +160,7 @@ pub mod transferable;
 pub mod utils;
 pub mod weakref;
 pub mod xmlname;
+use jstraceable_derive;
 
 pub use script_bindings::{callback, iterable, num};
 

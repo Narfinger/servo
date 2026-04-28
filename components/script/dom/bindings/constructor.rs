@@ -9,8 +9,10 @@ use html5ever::{LocalName, local_name, ns};
 use js::glue::{UnwrapObjectDynamic, UnwrapObjectStatic};
 use js::jsapi::{CallArgs, JSObject};
 use js::realm::AutoRealm;
+use js::rooted;
 use js::rust::wrappers2::{JS_SetPrototype, JS_WrapObject};
 use js::rust::{HandleObject, MutableHandleObject, MutableHandleValue};
+use script_bindings::codegen::GenericBindings::HTMLElementBinding;
 use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::interface::get_desired_proto;
 

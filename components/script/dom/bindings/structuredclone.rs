@@ -20,12 +20,15 @@ use js::jsapi::{
 };
 use js::jsval::UndefinedValue;
 use js::realm::CurrentRealm;
+use js::{rooted, rooted_vec};
 use js::rust::wrappers::{JS_ReadStructuredClone, JS_WriteStructuredClone};
 use js::rust::{
     CustomAutoRooterGuard, HandleValue, JSAutoStructuredCloneBufferWrapper, MutableHandleValue,
 };
+use log::warn;
 use rustc_hash::FxHashMap;
 use script_bindings::conversions::{IDLInterface, SafeToJSValConvertible};
+use script_bindings::script_runtime::JSContext as SafeJSContext;
 use servo_base::id::{
     BlobId, DomExceptionId, DomMatrixId, DomPointId, DomQuadId, DomRectId, FileId, FileListId,
     ImageBitmapId, ImageDataId, Index, MessagePortId, NamespaceIndex, OffscreenCanvasId,

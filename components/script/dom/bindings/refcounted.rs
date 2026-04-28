@@ -30,6 +30,8 @@ use std::rc::Rc;
 use std::sync::{Arc, Weak};
 
 use js::jsapi::JSTracer;
+use log::trace;
+use malloc_size_of_derive::MallocSizeOf;
 use rustc_hash::FxHashMap;
 use script_bindings::script_runtime::CanGc;
 

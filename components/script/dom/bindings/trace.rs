@@ -39,6 +39,7 @@ pub(crate) use js::gc::Traceable as JSTraceable;
 use js::glue::{CallScriptTracer, CallStringTracer, CallValueTracer};
 use js::jsapi::{GCTraceKindToAscii, Heap, JSScript, JSString, JSTracer, TraceKind};
 use js::jsval::JSVal;
+use log::trace;
 use malloc_size_of::{MallocConditionalSizeOf, MallocSizeOf, MallocSizeOfOps};
 use rustc_hash::FxBuildHasher;
 pub(crate) use script_bindings::trace::*;

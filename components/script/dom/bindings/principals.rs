@@ -8,6 +8,7 @@ use js::glue::{DestroyRustJSPrincipals, GetRustJSPrincipalsPrivate, JSPrincipals
 use js::jsapi::{
     JS_ReadUint32Pair, JSContext, JSPrincipals, JSStructuredCloneReader, JSStructuredCloneWriter,
 };
+use log::warn;
 use script_bindings::principals::{ServoJSPrincipals, ServoJSPrincipalsRef};
 use servo_url::MutableOrigin;
 

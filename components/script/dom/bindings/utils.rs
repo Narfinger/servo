@@ -13,7 +13,10 @@ use js::jsapi::{
     CallArgs, DOMCallbacks, HandleObject as RawHandleObject, JS_FreezeObject, JSContext, JSObject,
 };
 use js::realm::CurrentRealm;
+use js::rooted;
 use js::rust::{HandleObject, MutableHandleValue, get_object_class, is_dom_class};
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::interfaces::{DomHelpers, Interface};
 use script_bindings::settings_stack::StackEntry;
 
@@ -34,6 +37,8 @@ use crate::realms::InRealm;
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 use crate::script_thread::ScriptThread;
 */
+use script_bindings::trace::*;
+
 
 #[derive(JSTraceable, MallocSizeOf)]
 /// Static data associated with a global object.

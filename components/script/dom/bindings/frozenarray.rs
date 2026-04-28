@@ -6,12 +6,14 @@ use js::conversions::ToJSValConvertible;
 use js::jsapi::Heap;
 use js::jsval::JSVal;
 use js::rust::MutableHandleValue;
+use jstraceable_derive::JSTraceable;
 
 use crate::cell::DomRefCell;
 use crate::utils::to_frozen_array;
 //use crate::script_runtime::{CanGc, JSContext};
 
-#[derive(JSTraceable)]
+
+//#[derive(JSTraceable)]
 #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
 pub(crate) struct CachedFrozenArray {
     frozen_value: DomRefCell<Option<Heap<JSVal>>>,

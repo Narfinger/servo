@@ -20,6 +20,7 @@ use js::jsapi::StackFormat as JSStackFormat;
 use js::jsapi::{ExceptionStackBehavior, JS_ClearPendingException, JS_IsExceptionPending};
 use js::jsval::UndefinedValue;
 use js::realm::CurrentRealm;
+use js::rooted;
 use js::rust::wrappers::{JS_ErrorFromException, JS_GetPendingException, JS_SetPendingException};
 use js::rust::wrappers2::JS_GetProperty;
 use js::rust::{describe_scripted_caller, error_info_from_exception_stack};
@@ -40,8 +41,8 @@ use crate::dom::domexception::{DOMErrorName, DOMException};
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::types::QuotaExceededError;
 use crate::realms::InRealm;
-use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 */
+use script_bindings::script_runtime::{CanGc, JSContext as SafeJSContext};
 
 #[cfg(feature = "js_backtrace")]
 thread_local! {
