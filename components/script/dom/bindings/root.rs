@@ -216,10 +216,6 @@ impl<T: DomObject + PartialEq> PartialEq<T> for MutDom<T> {
     }
 }
 
-pub(crate) fn assert_in_layout() {
-    debug_assert!(thread_state::get().is_layout());
-}
-
 /// A struct to make Unrooted Dom objects work. By taking a no_gc as reference, we ensure that the lifetime of this object
 /// is bounded by the lifetime of NoGC which enforces no gc happening.
 #[cfg_attr(crown, crown::unrooted_must_root_lint::allow_unrooted_interior)]

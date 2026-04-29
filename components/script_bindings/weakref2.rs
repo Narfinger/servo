@@ -50,7 +50,7 @@ impl<T: WeakReferenceable> MallocSizeOf for MutableWeakRef<T> {
     }
 }
 
-unsafe impl<T: WeakReferenceable> JSTraceable for MutableWeakRef<T> {
+unsafe impl<T: WeakReferenceable> js::gc::Traceable for MutableWeakRef<T> {
     unsafe fn trace(&self, _: *mut JSTracer) {
         let ptr = self.cell.get();
         let value = unsafe { &mut *ptr };
@@ -166,7 +166,7 @@ impl<T: WeakReferenceable> DOMTracker<T> {
 }
 
 #[expect(unsafe_code)]
-unsafe impl<T: WeakReferenceable> JSTraceable for DOMTracker<T> {
+unsafe impl<T: WeakReferenceable> js::gc::Traceable for DOMTracker<T> {
     unsafe fn trace(&self, _: *mut JSTracer) {
         self.dom_objects.borrow_mut().retain_alive();
     }

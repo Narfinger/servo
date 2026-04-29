@@ -43,6 +43,8 @@ use js::typedarray::{
 
 use crate::error::{Error, Fallible};
 use crate::script_runtime::{CanGc, JSContext};
+#[cfg(feature = "webgpu")]
+use crate::trace::NoTrace;
 use crate::trace::RootedTraceableBox;
 
 
@@ -681,7 +683,7 @@ where
     }
 }
 
-unsafe impl<T> crate::dom::bindings::trace::JSTraceable for HeapBufferSource<T> {
+unsafe impl<T> js::gc::Traceable for HeapBufferSource<T> {
     #[inline]
     unsafe fn trace(&self, tracer: *mut js::jsapi::JSTracer) {
         match &self.buffer_source {
@@ -902,13 +904,18 @@ pub(crate) fn create_array_buffer_with_size(
     }
 }
 
+pub(crate) trait GlobalScopeTrait {
+    fn get_cx() -> JSContext;
+}
+
 #[cfg(feature = "webgpu")]
 #[derive(JSTraceable, MallocSizeOf)]
-pub(crate) struct DataBlock {
+pub(crate) struct DataBlock<G: GlobalScopeTrait> {
     #[conditional_malloc_size_of]
     data: Arc<Box<[u8]>>,
     /// Data views (mutable subslices of data)
-    data_views: Vec<DataView>,
+    data_views: Vec<DataView<G>>,
+    phantom: NoTrace<PhantomData<G>>,
 }
 
 /// Returns true if two non-inclusive ranges overlap
@@ -919,12 +926,13 @@ fn range_overlap<T: std::cmp::PartialOrd>(range1: &Range<T>, range2: &Range<T>) 
 }
 
 #[cfg(feature = "webgpu")]
-impl DataBlock {
+impl<G: GlobalScopeTrait> DataBlock<G> {
     pub(crate) fn new_zeroed(size: usize) -> Self {
         let data = vec![0; size];
         Self {
             data: Arc::new(data.into_boxed_slice()),
             data_views: Vec::new(),
+            phantom: NoTrace(PhantomData),
         }
     }
 
@@ -945,7 +953,7 @@ impl DataBlock {
     }
 
     /// Returns error if requested range is already mapped
-    pub(crate) fn view(&mut self, range: Range<usize>, _can_gc: CanGc) -> Result<&DataView, ()> {
+    pub(crate) fn view(&mut self, range: Range<usize>, _can_gc: CanGc) -> Result<&DataView<G>, ()> {
         if self
             .data_views
             .iter()
@@ -953,7 +961,7 @@ impl DataBlock {
         {
             return Err(());
         }
-        let cx = GlobalScope::get_cx();
+        let cx = G::get_cx();
         /// `freeFunc()` must be threadsafe, should be safely callable from any thread
         /// without causing conflicts, unexpected behavior.
         unsafe extern "C" fn free_func(_contents: *mut c_void, free_user_data: *mut c_void) {
@@ -977,6 +985,7 @@ impl DataBlock {
         self.data_views.push(DataView {
             range,
             buffer: HeapArrayBuffer::from(*object).unwrap(),
+            phantom: NoTrace(PhantomData),
         });
         Ok(self.data_views.last().unwrap())
     }
@@ -985,15 +994,16 @@ impl DataBlock {
 #[cfg(feature = "webgpu")]
 #[derive(JSTraceable, MallocSizeOf)]
 #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-pub(crate) struct DataView {
+pub(crate) struct DataView<G:GlobalScopeTrait> {
     #[no_trace]
     range: Range<usize>,
     #[ignore_malloc_size_of = "defined in mozjs"]
     buffer: HeapArrayBuffer,
+    phantom: NoTrace<PhantomData<G>>,
 }
 
 #[cfg(feature = "webgpu")]
-impl DataView {
+impl<G:GlobalScopeTrait> DataView<G> {
     pub(crate) fn array_buffer(&self) -> RootedTraceableBox<HeapArrayBuffer> {
         RootedTraceableBox::new(unsafe {
             HeapArrayBuffer::from(self.buffer.underlying_object().get()).unwrap()
@@ -1002,10 +1012,10 @@ impl DataView {
 }
 
 #[cfg(feature = "webgpu")]
-impl Drop for DataView {
+impl<G:GlobalScopeTrait> Drop for DataView<G> {
     #[expect(unsafe_code)]
     fn drop(&mut self) {
-        let cx = GlobalScope::get_cx();
+        let cx = G::get_cx();
         assert!(unsafe {
             js::jsapi::DetachArrayBuffer(*cx, self.buffer.underlying_object().handle())
         })

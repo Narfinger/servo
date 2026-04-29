@@ -11,6 +11,7 @@ pub(crate) use std::cell::{Ref, RefCell, RefMut};
 #[cfg(feature = "refcell_backtrace")]
 pub(crate) use accountable_refcell::{Ref, RefCell, RefMut};
 use malloc_size_of::{MallocConditionalSizeOf, MallocSizeOfOps};
+use style::thread_state;
 
 use crate::root::assert_in_script;
 
@@ -28,6 +29,11 @@ impl<T: MallocConditionalSizeOf> MallocConditionalSizeOf for DomRefCell<T> {
         self.value.borrow().conditional_size_of(ops)
     }
 }
+
+pub(crate) fn assert_in_layout() {
+    debug_assert!(thread_state::get().is_layout());
+}
+
 
 // Functionality specific to Servo's `DomRefCell` type
 // ===================================================
