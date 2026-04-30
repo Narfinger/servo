@@ -7,6 +7,7 @@ use std::cell::Cell;
 use dom_struct::dom_struct;
 use html5ever::local_name;
 use js::context::JSContext;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
 
 use crate::dom::bindings::cell::DomRefCell;
 use crate::dom::bindings::codegen::Bindings::ElementInternalsBinding::{
@@ -15,7 +16,6 @@ use crate::dom::bindings::codegen::Bindings::ElementInternalsBinding::{
 use crate::dom::bindings::codegen::UnionTypes::FileOrUSVStringOrFormData;
 use crate::dom::bindings::error::{Error, ErrorResult, Fallible};
 use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::reflector::{Reflector, reflect_dom_object};
 use crate::dom::bindings::root::{Dom, DomRoot, LayoutDom, MutNullableDom};
 use crate::dom::bindings::str::{DOMString, USVString};
 use crate::dom::customstateset::CustomStateSet;

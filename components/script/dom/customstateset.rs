@@ -6,6 +6,7 @@ use dom_struct::dom_struct;
 use indexmap::IndexSet;
 use script_bindings::codegen::GenericBindings::ElementInternalsBinding::CustomStateSetMethods;
 use script_bindings::like::Setlike;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -13,7 +14,6 @@ use script_bindings::trace::CustomTraceable;
 
 use crate::dom::bindings::cell::DomRefCell;
 use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::reflector::{Reflector, reflect_dom_object};
 use crate::dom::html::htmlelement::HTMLElement;
 use crate::dom::node::{Node, NodeDamage};
 use crate::dom::window::Window;

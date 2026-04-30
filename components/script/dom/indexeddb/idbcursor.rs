@@ -9,6 +9,7 @@ use js::context::JSContext;
 use js::jsapi::Heap;
 use js::jsval::{JSVal, UndefinedValue};
 use js::rust::MutableHandleValue;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::script_runtime::CanGc;
 use storage_traits::indexeddb::{IndexedDBKeyRange, IndexedDBKeyType, IndexedDBRecord};
 
@@ -19,7 +20,6 @@ use crate::dom::bindings::codegen::Bindings::IDBCursorBinding::{
 use crate::dom::bindings::codegen::UnionTypes::IDBObjectStoreOrIDBIndex;
 use crate::dom::bindings::error::Error;
 use crate::dom::bindings::refcounted::Trusted;
-use crate::dom::bindings::reflector::{Reflector, reflect_dom_object};
 use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
 use crate::dom::bindings::structuredclone;
 use crate::dom::globalscope::GlobalScope;

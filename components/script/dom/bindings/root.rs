@@ -35,12 +35,12 @@ use js::jsapi::{Heap, JSObject, JSTracer, Value};
 use js::rust::HandleValue;
 use layout_api::TrustedNodeAddress;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use script_bindings::reflector::DomObject;
 pub(crate) use script_bindings::root::*;
 use style::thread_state;
 
 use crate::dom::bindings::conversions::DerivedFrom;
 use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::reflector::DomObject;
 use crate::dom::bindings::trace::JSTraceable;
 use crate::dom::node::Node;
 

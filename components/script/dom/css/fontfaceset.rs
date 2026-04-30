@@ -8,12 +8,13 @@ use dom_struct::dom_struct;
 use fonts::FontContextWebFontMethods;
 use js::rust::HandleObject;
 use script_bindings::like::Setlike;
+use script_bindings::reflector::reflect_dom_object_with_proto;
 
 use crate::dom::bindings::cell::DomRefCell;
 use crate::dom::bindings::codegen::Bindings::FontFaceSetBinding::FontFaceSetMethods;
 use crate::dom::bindings::codegen::Bindings::WindowBinding::WindowMethods;
 use crate::dom::bindings::refcounted::TrustedPromise;
-use crate::dom::bindings::reflector::{DomGlobal, reflect_dom_object_with_proto};
+use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::DOMString;
 use crate::dom::eventtarget::EventTarget;
