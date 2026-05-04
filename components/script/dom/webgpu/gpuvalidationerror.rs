@@ -6,12 +6,6 @@ use dom_struct::dom_struct;
 use js::rust::HandleObject;
 use script_bindings::reflector::reflect_dom_object_with_proto;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUValidationError_Binding::GPUValidationErrorMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::GPUError;
-use crate::script_runtime::CanGc;
 
 #[dom_struct]
 pub(crate) struct GPUValidationError {

@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
-
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUComputePassEncoder {
     #[no_trace]
     channel: WebGPU,
@@ -27,7 +29,7 @@ impl Drop for DroppableGPUComputePassEncoder {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUComputePassEncoder {
     reflector_: Reflector,
     label: DomRefCell<USVString>,

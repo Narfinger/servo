@@ -6,8 +6,8 @@ use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 
 use arrayvec::ArrayVec;
-use dom_struct::dom_struct;
-use jstraceable_derive::JSTraceable;
+use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
@@ -35,7 +35,7 @@ fn supported_context_format(format: GPUTextureFormat) -> bool {
     )
 }
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUCanvasContext {
     #[no_trace]
     context_id: WebGPUContextId,
@@ -56,7 +56,7 @@ impl Drop for DroppableGPUCanvasContext {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUCanvasContext {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>

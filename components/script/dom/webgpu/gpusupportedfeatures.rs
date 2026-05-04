@@ -10,18 +10,9 @@ use js::rust::HandleObject;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use wgpu_types::Features;
 
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUFeatureName, GPUSupportedFeaturesMethods,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::like::Setlike;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
+use jstraceable_derive::JSTraceableInSub;
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUSupportedFeatures {
     reflector: Reflector,
     // internal storage for features

@@ -2,18 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use script_bindings::reflector::reflect_dom_object_with_proto;
-
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUInternalError_Binding::GPUInternalErrorMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::GPUError;
-use crate::script_runtime::CanGc;
-
-#[dom_struct]
+use jstraceable_derive::JSTraceableInSub;
+#[dom_struct2]
 pub(crate) struct GPUInternalError {
     gpu_error: GPUError,
 }

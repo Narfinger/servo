@@ -7,14 +7,18 @@ use std::rc::Rc;
 use dom_struct::dom_struct2;
 use js::jsapi::HandleObject;
 use log::warn;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat}, realms::InRealm, reflector::{Reflector, reflect_dom_object}, root::DomRoot, script_runtime::CanGc};
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat}, realms::InRealm, reflector::{Reflector, reflect_dom_object}, root::DomRoot, script_runtime::CanGc, str::DOMString};
 use servo_constellation_traits::ScriptToConstellationMessage;
 
-use jstraceable_derive::JSTraceable;
 use webgpu_traits::WebGPUAdapterResponse;
 use wgpu_types::PowerPreference;
+use crate::gpuadapter::GPUAdapter;
+
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
-use js::gc::Traceable as JSTraceable;
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
+
+
 
 #[dom_struct2]
 #[expect(clippy::upper_case_acronyms)]

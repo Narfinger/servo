@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::ShaderCompilationInfo;
+use jstraceable_derive::JSTraceableInSub;
 
-
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUCompilationMessage {
     reflector_: Reflector,
     message: DOMString,

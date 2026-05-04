@@ -11,20 +11,6 @@ use wgpu_core::pipeline::ProgrammableStageDescriptor;
 use wgpu_core::resource::TextureDescriptor;
 use wgpu_types::{self, AstcBlock, AstcChannel};
 
-use crate::conversions::{Convert, TryConvert};
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUAddressMode, GPUBindGroupEntry, GPUBindGroupLayoutEntry, GPUBindingResource,
-    GPUBlendComponent, GPUBlendFactor, GPUBlendOperation, GPUBufferBindingType, GPUColor,
-    GPUCompareFunction, GPUCullMode, GPUExtent3D, GPUFilterMode, GPUFrontFace, GPUImageCopyBuffer,
-    GPUImageCopyTexture, GPUImageDataLayout, GPUIndexFormat, GPULoadOp, GPUObjectDescriptorBase,
-    GPUOrigin3D, GPUPrimitiveState, GPUPrimitiveTopology, GPUProgrammableStage,
-    GPUSamplerBindingType, GPUStencilOperation, GPUStorageTextureAccess, GPUStoreOp,
-    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
-    GPUTextureSampleType, GPUTextureViewDimension, GPUVertexFormat,
-};
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::types::GPUDevice;
-
 impl Convert<wgpu_types::TextureFormat> for GPUTextureFormat {
     fn convert(self) -> wgpu_types::TextureFormat {
         match self {

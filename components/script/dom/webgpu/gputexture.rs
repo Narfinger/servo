@@ -4,28 +4,19 @@
 
 use std::string::String;
 
-use dom_struct::dom_struct;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUTextureDimension, GPUTextureFormat}, reflector::{Reflector, reflect_dom_object}, str::USVString};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
-use super::gpuconvert::convert_texture_descriptor;
-use crate::conversions::Convert;
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
-    GPUTextureMethods, GPUTextureViewDescriptor,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gputextureview::GPUTextureView;
-use crate::script_runtime::CanGc;
+use crate::gpudevice::GPUDevice;
 
-#[derive(JSTraceable, MallocSizeOf)]
+use super::gpuconvert::convert_texture_descriptor;
+
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUTexture {
     #[no_trace]
     channel: WebGPU,
@@ -48,7 +39,7 @@ impl Drop for DroppableGPUTexture {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUTexture {
     reflector_: Reflector,
     label: DomRefCell<USVString>,

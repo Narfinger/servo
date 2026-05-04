@@ -192,3 +192,122 @@ fn js_traceable_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
 
     tokens
 }
+
+
+// Used for subcrates under script
+decl_derive!([JSTraceableInSub, attributes(no_trace, custom_trace)] =>
+js_traceable_derive_sub);
+
+// based off https://docs.rs/static_assertions/latest/src/static_assertions/assert_impl.rs.html#263
+fn assert_not_impl_traceable_sub(ty: &syn::Type) -> proc_macro2::TokenStream {
+    quote!(
+        const _: fn() = || {
+            // Generic trait with a blanket impl over `()` for all types.
+            // becomes ambiguous if impl
+            trait NoTraceOnJSTraceable<A> {
+                // Required for actually being able to reference the trait.
+                fn some_item() {}
+            }
+
+            impl<T: ?Sized> NoTraceOnJSTraceable<()> for T {}
+
+            // Used for the specialized impl when JSTraceable is implemented.
+            #[expect(dead_code)]
+            struct Invalid0;
+            // forbids JSTraceable
+            impl<T> NoTraceOnJSTraceable<Invalid0> for T where T: ?Sized + crate::JSTraceable {}
+
+            #[expect(dead_code)]
+            struct Invalid2;
+            // forbids HashMap<JSTraceble, _>
+            impl<K, V, S> NoTraceOnJSTraceable<Invalid2> for std::collections::HashMap<K, V, S>
+            where
+                K: script_bindings::JSTraceable + std::cmp::Eq + std::hash::Hash,
+                S: std::hash::BuildHasher,
+            {
+            }
+
+            #[expect(dead_code)]
+            struct Invalid3;
+            // forbids HashMap<_, JSTraceble>
+            impl<K, V, S> NoTraceOnJSTraceable<Invalid3> for std::collections::HashMap<K, V, S>
+            where
+                K: std::cmp::Eq + std::hash::Hash,
+                V: script_bindings::JSTraceable,
+                S: std::hash::BuildHasher,
+            {
+            }
+
+            #[expect(dead_code)]
+            struct Invalid4;
+            // forbids BTreeMap<_, JSTraceble>
+            impl<K, V> NoTraceOnJSTraceable<Invalid4> for std::collections::BTreeMap<K, V> where
+                K: script_bindings::JSTraceable + std::cmp::Eq + std::hash::Hash
+            {
+            }
+
+            #[expect(dead_code)]
+            struct Invalid5;
+            // forbids BTreeMap<_, JSTraceble>
+            impl<K, V> NoTraceOnJSTraceable<Invalid5> for std::collections::BTreeMap<K, V>
+            where
+                K: std::cmp::Eq + std::hash::Hash,
+                V: script_bindings::JSTraceable,
+            {
+            }
+
+            // If there is only one specialized trait impl, type inference with
+            // `_` can be resolved and this can compile. Fails to compile if
+            // ty implements `NoTraceOnJSTraceable<InvalidX>`.
+            let _ = <#ty as NoTraceOnJSTraceable<_>>::some_item;
+        };
+    )
+}
+
+fn js_traceable_derive_sub(s: synstructure::Structure) -> proc_macro2::TokenStream {
+    let mut asserts = quote!();
+    let match_body = s.each(|binding| {
+        for attr in binding.ast().attrs.iter() {
+            if attr.path().is_ident("no_trace") {
+                // If no reason argument is provided to `no_trace` (ie `#[no_trace="This types does not need..."]`),
+                // assert that the type in this bound field does not implement traceable.
+                if !matches!(attr.meta, syn::Meta::NameValue(_)) {
+                    asserts.extend(assert_not_impl_traceable_sub(&binding.ast().ty));
+                }
+                return None;
+            } else if attr.path().is_ident("custom_trace") {
+                return Some(quote!(<dyn crate::CustomTraceable>::trace(#binding, tracer);));
+            }
+        }
+        Some(quote!(#binding.trace(tracer);))
+    });
+
+    let ast = s.ast();
+    let name = &ast.ident;
+    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+    let mut where_clause = where_clause.unwrap_or(&parse_quote!(where)).clone();
+    for param in ast.generics.type_params() {
+        let ident = &param.ident;
+        where_clause
+            .predicates
+            .push(parse_quote!(#ident: script_bindings::JSTraceable))
+    }
+
+    let tokens = quote! {
+        #asserts
+
+        #[expect(unsafe_code)]
+        unsafe impl #impl_generics script_bindings::JSTraceable for #name #ty_generics #where_clause {
+            #[inline]
+            #[expect(unused_variables, unused_imports)]
+            unsafe fn trace(&self, tracer: *mut js::jsapi::JSTracer) {
+                use script_bindings::JSTraceable;
+                match *self {
+                    #match_body
+                }
+            }
+        }
+    };
+
+    tokens
+}

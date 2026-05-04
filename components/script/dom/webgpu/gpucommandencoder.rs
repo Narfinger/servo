@@ -2,17 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use dom_struct::{dom_struct, dom_struct2};
+use script_bindings::{reflector::{Reflector, reflect_dom_object}, str::USVString};
 use webgpu_traits::{
     WebGPU, WebGPUCommandBuffer, WebGPUCommandEncoder, WebGPUComputePass, WebGPUDevice,
     WebGPURenderPass, WebGPURequest,
 };
 use wgpu_core::command as wgpu_com;
+use jstraceable_derive::JSTraceableInSub;
+use jstraceable_derive::JSTraceableInSub;
 
+use crate::gpudevice::GPUDevice;
+use malloc_size_of_derive::MallocSizeOf;
 
-
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUCommandEncoder {
     reflector_: Reflector,
     #[no_trace]

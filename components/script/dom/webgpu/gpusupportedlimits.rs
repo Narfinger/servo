@@ -7,13 +7,9 @@ use dom_struct::dom_struct;
 use num_traits::bounds::UpperBounded;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use wgpu_types::Limits;
+use jstraceable_derive::JSTraceableInSub;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUSupportedLimits_Binding;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
-
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUSupportedLimits {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in wgpu-types"]

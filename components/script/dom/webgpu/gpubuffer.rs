@@ -6,9 +6,9 @@ use std::ops::Range;
 use std::rc::Rc;
 use std::string::String;
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use js::typedarray::HeapArrayBuffer;
-use jstraceable_derive::JSTraceable;
+use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -19,7 +19,7 @@ use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
     // TODO(sagudev): Use GenericSharedMemory when https://github.com/servo/ipc-channel/pull/356 lands
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-data>
@@ -51,7 +51,7 @@ impl ActiveBufferMapping {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUBuffer {
     reflector_: Reflector,
     #[no_trace]

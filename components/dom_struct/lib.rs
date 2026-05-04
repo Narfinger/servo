@@ -69,7 +69,7 @@ pub fn dom_struct2(args: TokenStream, input: TokenStream) -> TokenStream {
         panic!("#[dom_struct] only takes 'associated_memory' as an argument");
     }
     let attributes = quote! {
-        #[derive(deny_public_fields::DenyPublicFields, JSTraceable, MallocSizeOf)]
+        #[derive(deny_public_fields::DenyPublicFields, JSTraceableInSub, MallocSizeOf)]
         #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
         #[repr(C)]
     };

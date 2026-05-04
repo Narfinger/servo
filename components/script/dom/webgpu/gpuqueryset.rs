@@ -5,10 +5,9 @@
 use dom_struct::dom_struct;
 use script_bindings::reflector::Reflector;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUQuerySetMethods;
-use crate::dom::bindings::str::USVString;
+use jstraceable_derive::JSTraceableInSub;
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUQuerySet {
     reflector_: Reflector,
 }

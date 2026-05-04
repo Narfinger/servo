@@ -6,17 +6,9 @@ use dom_struct::dom_struct;
 use js::rust::HandleObject;
 use script_bindings::reflector::reflect_dom_object_with_proto;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUPipelineErrorInit, GPUPipelineErrorMethods, GPUPipelineErrorReason,
-};
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::domexception::DOMException;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUPipelineError {
     exception: DOMException,
     reason: GPUPipelineErrorReason,

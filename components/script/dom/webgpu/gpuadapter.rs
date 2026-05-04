@@ -6,19 +6,24 @@ use std::rc::Rc;
 
 use dom_struct::dom_struct2;
 use js::jsapi::{HandleObject, Heap, JSObject};
-use jstraceable_derive::JSTraceable;
+use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cformat;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::Dom;
 use script_bindings::str::DOMString;
+use webgpu_traits::{WebGPU, WebGPUAdapter, WebGPURequest};
 use wgpu_types::AdapterInfo;
+
+use crate::gpuadapterinfo::GPUAdapterInfo;
+use crate::gpusupportedlimits::GPUSupportedLimits;
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
 use super::gpusupportedlimits::set_limit;
 
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUAdapter {
     #[no_trace]
     channel: WebGPU,

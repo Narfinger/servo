@@ -5,15 +5,9 @@
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
 use script_bindings::reflector::reflect_dom_object_with_proto;
+use jstraceable_derive::JSTraceableInSub;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUOutOfMemoryError_Binding::GPUOutOfMemoryErrorMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::GPUError;
-use crate::script_runtime::CanGc;
-
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUOutOfMemoryError {
     gpu_error: GPUError,
 }

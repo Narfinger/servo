@@ -5,6 +5,10 @@
 use dom_struct::dom_struct2;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
+
+
 #[dom_struct2]
 pub(crate) struct GPUAdapterInfo {
     reflector_: Reflector,

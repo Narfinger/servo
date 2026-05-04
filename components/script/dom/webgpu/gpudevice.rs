@@ -6,8 +6,11 @@ use std::borrow::Cow;
 use std::cell::Cell;
 use std::rc::Rc;
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use js::jsapi::{HandleObject, Heap, JSObject};
+use jstraceable_derive::JSTraceableInSub;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cformat;
 use script_bindings::reflector::reflect_dom_object;
 use webgpu_traits::{
@@ -24,51 +27,8 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
-use crate::conversions::Convert;
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::EventBinding::EventInit;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUAdapterMethods, GPUBindGroupDescriptor, GPUBindGroupLayoutDescriptor, GPUBufferDescriptor,
-    GPUCommandEncoderDescriptor, GPUComputePipelineDescriptor, GPUDeviceLostReason,
-    GPUDeviceMethods, GPUErrorFilter, GPUPipelineErrorReason, GPUPipelineLayoutDescriptor,
-    GPURenderBundleEncoderDescriptor, GPURenderPipelineDescriptor, GPUSamplerDescriptor,
-    GPUShaderModuleDescriptor, GPUSupportedLimitsMethods, GPUTextureDescriptor, GPUTextureFormat,
-    GPUUncapturedErrorEventInit, GPUVertexStepMode,
-};
-use crate::dom::bindings::codegen::UnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::refcounted::Trusted;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::bindings::trace::RootedTraceableBox;
-use crate::dom::event::Event;
-use crate::dom::eventtarget::EventTarget;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::types::GPUError;
-use crate::dom::webgpu::gpuadapter::GPUAdapter;
-use crate::dom::webgpu::gpuadapterinfo::GPUAdapterInfo;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpucomputepipeline::GPUComputePipeline;
-use crate::dom::webgpu::gpupipelinelayout::GPUPipelineLayout;
-use crate::dom::webgpu::gpuqueue::GPUQueue;
-use crate::dom::webgpu::gpurenderbundleencoder::GPURenderBundleEncoder;
-use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
-use crate::dom::webgpu::gpusampler::GPUSampler;
-use crate::dom::webgpu::gpushadermodule::GPUShaderModule;
-use crate::dom::webgpu::gpusupportedfeatures::GPUSupportedFeatures;
-use crate::dom::webgpu::gputexture::GPUTexture;
-use crate::dom::webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
-use crate::realms::InRealm;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
-use crate::script_runtime::CanGc;
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUDevice {
     #[no_trace]
     channel: WebGPU,
@@ -88,7 +48,7 @@ impl Drop for DroppableGPUDevice {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUDevice {
     eventtarget: EventTarget,
     adapter: Dom<GPUAdapter>,

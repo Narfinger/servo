@@ -4,8 +4,9 @@
 
 use std::borrow::Cow;
 
-use dom_struct::dom_struct;
-use jstraceable_derive::JSTraceable;
+use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::{JSTraceable, JSTraceableInSub};
+use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
@@ -13,7 +14,7 @@ use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
 
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUBindGroupLayout {
     #[no_trace]
     channel: WebGPU,

@@ -2,28 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
-use crate::conversions::TryConvert;
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUColor, GPUIndexFormat, GPURenderPassEncoderMethods,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::num::Finite;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpurenderbundle::GPURenderBundle;
-use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
-use crate::script_runtime::CanGc;
 
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPURenderPassEncoder {
     #[no_trace]
     channel: WebGPU,
@@ -42,7 +29,7 @@ impl Drop for DroppableGPURenderPassEncoder {
         }
     }
 }
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPURenderPassEncoder {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
