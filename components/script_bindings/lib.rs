@@ -97,7 +97,6 @@ pub use crate::reflector::{DomObject, MutDomObject, Reflector};
 pub use crate::trace::CustomTraceable;
 
 /// THIS IS WRONG
-pub struct DomTypeHolder;
 pub struct DomRefCell<T> {
     phantom: std::marker::PhantomData<T>,
 }

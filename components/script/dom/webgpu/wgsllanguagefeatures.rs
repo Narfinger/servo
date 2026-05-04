@@ -9,13 +9,14 @@ use indexmap::IndexSet;
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeaturesMethods;
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::like::Setlike;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
+use script_bindings::{DomRefCell, DomTypes};
 use wgpu_core::naga::front::wgsl::ImplementedLanguageExtension;
 
 #[dom_struct2]
@@ -48,7 +49,7 @@ impl WGSLLanguageFeatures {
     }
 }
 
-impl WGSLLanguageFeaturesMethods<script_bindings::DomTypeHolder> for WGSLLanguageFeatures {
+impl WGSLLanguageFeaturesMethods<crate::DomTypeHolder> for WGSLLanguageFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }

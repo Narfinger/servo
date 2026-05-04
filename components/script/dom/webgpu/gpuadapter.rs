@@ -10,7 +10,7 @@ use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUAdapterMethods, GPUDeviceDescriptor,
+    GPUAdapterMethods, GPUDeviceDescriptor, GPUDeviceLostReason,
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Error;
@@ -187,7 +187,7 @@ impl GPUAdapter {
     }
 }
 
-impl GPUAdapterMethods<script_bindings::DomTypeHolder> for GPUAdapter {
+impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
         &self,

@@ -93,7 +93,7 @@ impl GPUAdapterInfo {
     }
 }
 
-impl GPUAdapterInfoMethods<script_bindings::DomTypeHolder> for GPUAdapterInfo {
+impl GPUAdapterInfoMethods<crate::DomTypeHolder> for GPUAdapterInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-vendor>
     fn Vendor(&self) -> DOMString {
         self.vendor.clone()

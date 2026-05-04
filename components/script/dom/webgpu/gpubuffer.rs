@@ -7,13 +7,14 @@ use std::rc::Rc;
 use std::string::String;
 
 use dom_struct::{dom_struct, dom_struct2};
+use js::context::JSContext;
 use js::typedarray::HeapArrayBuffer;
 use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUBufferDescriptor, GPUBufferMethods, GPUFlagsConstant, GPUMapModeConstants, GPUMapModeFlags,
-    GPUSize64,
+    GPUBufferDescriptor, GPUBufferMapState, GPUBufferMethods, GPUFlagsConstant,
+    GPUMapModeConstants, GPUMapModeFlags, GPUSize64,
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::{Error, Fallible};
@@ -68,7 +69,7 @@ pub(crate) struct GPUBuffer {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,
-    // label: DomRefCell<USVString>,
+    label: DomRefCell<USVString>,
     #[no_trace]
     buffer: WebGPUBuffer,
     device: Dom<GPUDevice>,
@@ -187,7 +188,7 @@ impl Drop for GPUBuffer {
     }
 }
 
-impl GPUBufferMethods<script_bindings::DomTypeHolder> for GPUBuffer {
+impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
         // Step 1

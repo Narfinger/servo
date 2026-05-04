@@ -7,22 +7,26 @@ use std::borrow::Cow;
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUIndexFormat, GPURenderBundleEncoderDescriptor, GPURenderBundleEncoderMethods,
+    GPUIndexFormat, GPURenderBundleDescriptor, GPURenderBundleEncoderDescriptor,
+    GPURenderBundleEncoderMethods,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use script_bindings::{DomRefCell, DomTypes};
 use webgpu_traits::{WebGPU, WebGPURenderBundle, WebGPURequest};
 use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
 };
 
+use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpudevice::GPUDevice;
+use crate::gpurenderbundle::GPURenderBundle;
 use crate::gpurenderpipeline::GPURenderPipeline;
 
 #[dom_struct2]
@@ -126,7 +130,7 @@ impl GPURenderBundleEncoder {
     }
 }
 
-impl GPURenderBundleEncoderMethods<script_bindings::DomTypeHolder> for GPURenderBundleEncoder {
+impl GPURenderBundleEncoderMethods<crate::DomTypeHolder> for GPURenderBundleEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

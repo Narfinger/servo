@@ -6,12 +6,12 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
 use num_traits::bounds::UpperBounded;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimitsMethods;
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
-use script_bindings::{DomTypeHolder, DomTypes};
 use wgpu_types::Limits;
 
 #[dom_struct2]
@@ -51,7 +51,7 @@ impl GPUSupportedLimits {
     }
 }
 
-impl GPUSupportedLimitsMethods<script_bindings::DomTypeHolder> for GPUSupportedLimits {
+impl GPUSupportedLimitsMethods<crate::DomTypeHolder> for GPUSupportedLimits {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpusupportedlimits-maxtexturedimension1d>
     fn MaxTextureDimension1D(&self) -> u32 {
         self.limits.max_texture_dimension_1d

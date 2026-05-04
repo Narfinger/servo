@@ -9,7 +9,6 @@ use indexmap::IndexSet;
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUFeatureName, GPUSupportedFeaturesMethods,
 };
@@ -20,6 +19,7 @@ use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
+use script_bindings::{DomRefCell, DomTypes};
 use wgpu_types::Features;
 
 #[dom_struct2]
@@ -34,8 +34,8 @@ pub(crate) struct GPUSupportedFeatures {
 }
 
 impl GPUSupportedFeatures {
-    fn new(
-        global: &GlobalScope,
+    fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
@@ -120,7 +120,7 @@ impl GPUSupportedFeatures {
     }
 }
 
-impl GPUSupportedFeaturesMethods<script_bindings::DomTypeHolder> for GPUSupportedFeatures {
+impl GPUSupportedFeaturesMethods<crate::DomTypeHolder> for GPUSupportedFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }

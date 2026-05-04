@@ -43,7 +43,7 @@ impl GPUValidationError {
     }
 }
 
-impl GPUValidationErrorMethods<script_bindings::DomTypeHolder> for GPUValidationError {
+impl GPUValidationErrorMethods<crate::DomTypeHolder> for GPUValidationError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
     fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
         global: &G,

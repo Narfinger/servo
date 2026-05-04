@@ -6,7 +6,9 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUOutOfMemoryErrorMethods;
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::reflector::reflect_dom_object_with_proto;
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
@@ -41,7 +43,7 @@ impl GPUOutOfMemoryError {
     }
 }
 
-impl GPUOutOfMemoryErrorMethods<script_bindings::DomTypeHolder> for GPUOutOfMemoryError {
+impl GPUOutOfMemoryErrorMethods<crate::DomTypeHolder> for GPUOutOfMemoryError {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
     fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
         global: &G,

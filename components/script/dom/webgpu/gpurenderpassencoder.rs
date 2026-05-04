@@ -6,19 +6,23 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUIndexFormat, GPURenderPassEncoderMethods,
 };
+use script_bindings::codegen::GenericUnionTypes::DoubleSequenceOrGPUColorDict;
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::error::Fallible;
 use script_bindings::num::Finite;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use script_bindings::{DomRefCell, DomTypes};
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpurenderbundle::GPURenderBundle;
 use crate::gpurenderpipeline::GPURenderPipeline;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
@@ -108,7 +112,7 @@ impl GPURenderPassEncoder {
     }
 }
 
-impl GPURenderPassEncoderMethods<script_bindings::DomTypeHolder> for GPURenderPassEncoder {
+impl GPURenderPassEncoderMethods<crate::DomTypeHolder> for GPURenderPassEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

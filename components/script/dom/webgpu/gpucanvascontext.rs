@@ -11,7 +11,6 @@ use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
-use script_bindings::cformat;
 use script_bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUObjectDescriptorBase, GPUTextureDescriptor,
@@ -20,10 +19,13 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::codegen::GenericUnionTypes::{
     HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use script_bindings::{DomTypes, cformat};
 use servo_base::{Epoch, generic_channel};
 use webgpu_traits::{
     ContextConfiguration, PRESENTATION_BUFFER_COUNT, PendingTexture, WebGPU, WebGPUContextId,
@@ -319,7 +321,7 @@ impl CanvasContext for GPUCanvasContext {
     }
 }
 
-impl GPUCanvasContextMethods<script_bindings::DomTypeHolder> for GPUCanvasContext {
+impl GPUCanvasContextMethods<crate::DomTypeHolder> for GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
         RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)

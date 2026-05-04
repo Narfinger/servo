@@ -86,7 +86,7 @@ impl GPUCommandBuffer {
     }
 }
 
-impl GPUCommandBufferMethods<script_bindings::DomTypeHolder> for GPUCommandBuffer {
+impl GPUCommandBufferMethods<crate::DomTypeHolder> for GPUCommandBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

@@ -5,9 +5,11 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCompilationMessageMethods, GPUCompilationMessageType,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
@@ -83,7 +85,7 @@ impl GPUCompilationMessage {
     }
 }
 
-impl GPUCompilationMessageMethods<script_bindings::DomTypeHolder> for GPUCompilationMessage {
+impl GPUCompilationMessageMethods<crate::DomTypeHolder> for GPUCompilationMessage {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationmessage-message>
     fn Message(&self) -> DOMString {
         self.message.to_owned()

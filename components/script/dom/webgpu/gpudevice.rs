@@ -11,13 +11,18 @@ use js::jsapi::{HandleObject, Heap, JSObject};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::cformat;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUErrorFilter, GPURenderBundleEncoderDescriptor,
+    GPUDeviceLostReason, GPUDeviceMethods, GPUErrorFilter, GPURenderBundleEncoderDescriptor,
+    GPURenderPipelineDescriptor, GPUTextureFormat, GPUVertexStepMode,
 };
+use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
+use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::reflect_dom_object;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
+use script_bindings::{DomRefCell, cformat};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
     WebGPUPoppedErrorScopeResponse, WebGPUQueue, WebGPURenderPipeline,
@@ -32,8 +37,12 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
+use crate::gpuadapter::GPUAdapter;
+use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgroup::GPUBindGroup;
+use crate::gpuqueue::GPUQueue;
 use crate::gpurenderbundleencoder::GPURenderBundleEncoder;
+use crate::gpusupportedfeatures::GPUSupportedFeatures;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUDevice {
@@ -125,8 +134,8 @@ impl GPUDevice {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         adapter: &GPUAdapter,
         extensions: HandleObject,

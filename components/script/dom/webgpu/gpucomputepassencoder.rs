@@ -15,7 +15,10 @@ use script_bindings::str::USVString;
 use script_bindings::{DomRefCell, DomTypes};
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpucomputepipeline::GPUComputePipeline;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUComputePassEncoder {
@@ -84,7 +87,7 @@ impl GPUComputePassEncoder {
     }
 }
 
-impl GPUComputePassEncoderMethods<script_bindings::DomTypeHolder> for GPUComputePassEncoder {
+impl GPUComputePassEncoderMethods<crate::DomTypeHolder> for GPUComputePassEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

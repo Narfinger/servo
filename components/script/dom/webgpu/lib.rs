@@ -46,3 +46,46 @@ pub(crate) mod gpuvalidationerror;
 #[expect(dead_code)]
 pub(crate) mod identityhub;
 pub(crate) mod wgsllanguagefeatures;
+
+pub struct DomTypeHolder;
+impl script_bindings::DomTypes for DomTypeHolder {
+    type GPU = crate::gpu::GPU;
+    type GPUAdapter = crate::gpuadapter::GPUAdapter;
+    type GPUAdapterInfo = crate::gpuadapterinfo::GPUAdapterInfo;
+    type GPUBindGroup = crate::gpubindgroup::GPUBindGroup;
+    type GPUBindGroupLayout = crate::gpubindgrouplayout::GPUBindGroupLayout;
+    type GPUBuffer = crate::gpubuffer::GPUBuffer;
+    type GPUBufferUsage = crate::gpubufferusage::GPUBufferUsage;
+    type GPUCanvasContext = crate::gpucanvascontext::GPUCanvasContext;
+    type GPUColorWrite = crate::gpucolorwrite::GPUColorWrite;
+    type GPUCommandBuffer = crate::gpucommandbuffer::GPUCommandBuffer;
+    type GPUCommandEncoder = crate::gpucommandencoder::GPUCommandEncoder;
+    type GPUCompilationInfo = crate::gpucompilationinfo::GPUCompilationInfo;
+    type GPUCompilationMessage = crate::gpucompilationmessage::GPUCompilationMessage;
+    type GPUComputePassEncoder = crate::gpucomputepassencoder::GPUComputePassEncoder;
+    type GPUComputePipeline = crate::gpucomputepipeline::GPUComputePipeline;
+    type GPUDevice = crate::gpudevice::GPUDevice;
+    type GPUDeviceLostInfo = crate::gpudevicelostinfo::GPUDeviceLostInfo;
+    type GPUError = crate::gpuerror::GPUError;
+    type GPUInternalError = crate::gpuinternalerror::GPUInternalError;
+    type GPUMapMode = crate::gpumapmode::GPUMapMode;
+    type GPUOutOfMemoryError = crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
+    type GPUPipelineError = crate::gpupipelineerror::GPUPipelineError;
+    type GPUPipelineLayout = crate::gpupipelinelayout::GPUPipelineLayout;
+    type GPUQuerySet = crate::gpuqueryset::GPUQuerySet;
+    type GPUQueue = crate::gpuqueue::GPUQueue;
+    type GPURenderBundle = crate::gpurenderbundle::GPURenderBundle;
+    type GPURenderBundleEncoder = crate::gpurenderbundleencoder::GPURenderBundleEncoder;
+    type GPURenderPassEncoder = crate::gpurenderpassencoder::GPURenderPassEncoder;
+    type GPURenderPipeline = crate::gpurenderpipeline::GPURenderPipeline;
+    type GPUSampler = crate::gpusampler::GPUSampler;
+    type GPUShaderModule = crate::gpushadermodule::GPUShaderModule;
+    type GPUShaderStage = crate::gpushaderstage::GPUShaderStage;
+    type GPUSupportedFeatures = crate::gpusupportedfeatures::GPUSupportedFeatures;
+    type GPUSupportedLimits = crate::gpusupportedlimits::GPUSupportedLimits;
+    type GPUTexture = crate::gputexture::GPUTexture;
+    type GPUTextureUsage = crate::gputextureusage::GPUTextureUsage;
+    type GPUTextureView = crate::gputextureview::GPUTextureView;
+    type GPUUncapturedErrorEvent = crate::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
+    type GPUValidationError = crate::gpuvalidationerror::GPUValidationError;
+}

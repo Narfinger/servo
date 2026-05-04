@@ -9,8 +9,8 @@ use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureMethods,
-    GPUTextureViewDescriptor,
+    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
+    GPUTextureMethods, GPUTextureViewDescriptor,
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
@@ -171,7 +171,7 @@ impl GPUTexture {
     }
 }
 
-impl GPUTextureMethods<script_bindings::DomTypeHolder> for GPUTexture {
+impl GPUTextureMethods<crate::DomTypeHolder> for GPUTexture {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

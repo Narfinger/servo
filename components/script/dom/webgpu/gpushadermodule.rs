@@ -8,12 +8,17 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUShaderModuleDescriptor, GPUShaderModuleMethods,
+};
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
+use script_bindings::{DomRefCell, DomTypes};
 use webgpu_traits::{ShaderCompilationInfo, WebGPU, WebGPURequest, WebGPUShaderModule};
 
 use super::gpucompilationinfo::GPUCompilationInfo;
@@ -135,7 +140,7 @@ impl GPUShaderModule {
     }
 }
 
-impl GPUShaderModuleMethods<script_bindings::DomTypeHolder> for GPUShaderModule {
+impl GPUShaderModuleMethods<crate::DomTypeHolder> for GPUShaderModule {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
