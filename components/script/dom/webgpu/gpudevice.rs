@@ -12,7 +12,9 @@ use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cformat;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPURenderBundleEncoderDescriptor};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUErrorFilter, GPURenderBundleEncoderDescriptor,
+};
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::reflect_dom_object;
 use script_bindings::script_runtime::CanGc;
@@ -26,12 +28,12 @@ use wgpu_core::pipeline as wgpu_pipe;
 use wgpu_core::pipeline::RenderPipelineDescriptor;
 use wgpu_types::{self, TextureFormat};
 
-use crate::gpurenderbundleencoder::GPURenderBundleEncoder;
-
 use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpurenderbundleencoder::GPURenderBundleEncoder;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUDevice {

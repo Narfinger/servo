@@ -6,7 +6,12 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{reflector::{Reflector, reflect_dom_object}, root::Dom, str::USVString};
+use script_bindings::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePipelineDescriptor;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPUComputePipeline, WebGPUComputePipelineResponse,
@@ -64,8 +69,8 @@ impl GPUComputePipeline {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
         device: &GPUDevice,

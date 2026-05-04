@@ -6,7 +6,13 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUInternalErrorMethods, reflector::reflect_dom_object_with_proto, root::DomRoot, script_runtime::CanGc, str::DOMString};
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUInternalErrorMethods;
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 
 use crate::gpuerror::GPUError;
 
@@ -37,7 +43,7 @@ impl GPUInternalError {
     }
 }
 
-impl GPUInternalErrorMethods<DomTypeHolder> for GPUInternalError {
+impl GPUInternalErrorMethods<script_bindings::DomTypeHolder> for GPUInternalError {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUInternalError-GPUInternalError>
     fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
         global: &G,

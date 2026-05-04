@@ -8,9 +8,22 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUImageCopyTexture, GPUImageDataLayout, GPUQueueMethods, GPUSize64,
+};
+use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};
+
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandbuffer::GPUCommandBuffer;
+use crate::gpudevice::GPUDevice;
 
 #[dom_struct2]
 pub(crate) struct GPUQueue {
@@ -35,8 +48,8 @@ impl GPUQueue {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         queue: WebGPUQueue,
         can_gc: CanGc,
@@ -59,7 +72,7 @@ impl GPUQueue {
     }
 }
 
-impl GPUQueueMethods<crate::DomTypeHolder> for GPUQueue {
+impl GPUQueueMethods<script_bindings::DomTypeHolder> for GPUQueue {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

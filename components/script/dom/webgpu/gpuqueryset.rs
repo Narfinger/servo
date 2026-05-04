@@ -5,6 +5,7 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUQuerySetMethods;
 use script_bindings::reflector::Reflector;
 
 #[dom_struct2]
@@ -13,7 +14,7 @@ pub(crate) struct GPUQuerySet {
 }
 
 // TODO: wgpu does not expose right fields right now
-impl GPUQuerySetMethods<crate::DomTypeHolder> for GPUQuerySet {
+impl GPUQuerySetMethods<script_bindings::DomTypeHolder> for GPUQuerySet {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueryset-destroy>
     fn Destroy(&self) {
         todo!()

@@ -85,10 +85,6 @@ pub mod codegen {
     pub mod RegisterBindings {
         include!(concat!(env!("OUT_DIR"), "/RegisterBindings.rs"));
     }
-
-    pub mod DomTypeHolder {
-        include!(concat!(env!("OUT_DIR"), "/DomTypeHolder.rs"));
-    }
 }
 
 // These trait exports are public, because they are used in the DOM bindings.
@@ -99,4 +95,9 @@ pub use js::gc::Traceable as JSTraceable;
 pub use crate::codegen::DomTypes::DomTypes;
 pub use crate::reflector::{DomObject, MutDomObject, Reflector};
 pub use crate::trace::CustomTraceable;
-pub use crate::codegen::DomTypeHolder::DomTypeHolder;
+
+/// THIS IS WRONG
+pub struct DomTypeHolder;
+pub struct DomRefCell<T> {
+    phantom: std::marker::PhantomData<T>,
+}

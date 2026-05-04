@@ -6,10 +6,13 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandEncoderMethods;
+use script_bindings::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
+};
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use script_bindings::root::DomRoot;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{
@@ -49,8 +52,8 @@ impl GPUCommandEncoder {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         device: &GPUDevice,
         encoder: WebGPUCommandEncoder,

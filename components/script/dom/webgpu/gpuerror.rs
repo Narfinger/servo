@@ -6,10 +6,18 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{DomTypes, codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods}, conversions::DerivedFrom, reflector::{Reflector, reflect_dom_object_with_proto}, root::DomRoot, script_runtime::CanGc, str::DOMString};
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods};
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 use webgpu_traits::{Error, ErrorFilter};
 
-use crate::{gpuinternalerror::GPUInternalError, gpuvalidationerror::GPUValidationError};
+use crate::gpuinternalerror::GPUInternalError;
+use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
+use crate::gpuvalidationerror::GPUValidationError;
 
 #[dom_struct2]
 pub(crate) struct GPUError {
@@ -26,7 +34,11 @@ impl GPUError {
     }
 
     #[expect(dead_code)]
-    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(global: &G, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
+        message: DOMString,
+        can_gc: CanGc,
+    ) -> DomRoot<Self> {
         Self::new_with_proto(global, None, message, can_gc)
     }
 
@@ -44,7 +56,11 @@ impl GPUError {
         )
     }
 
-    pub(crate) fn from_error<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(global: &G, error: Error, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn from_error<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
+        error: Error,
+        can_gc: CanGc,
+    ) -> DomRoot<Self> {
         match error {
             Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
                 global,

@@ -5,7 +5,15 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUDeviceLostInfoMethods, GPUDeviceLostReason}, reflector::{Reflector, reflect_dom_object}, root::DomRoot, script_runtime::CanGc, str::DOMString};
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUDeviceLostInfoMethods, GPUDeviceLostReason,
+};
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 
 #[dom_struct2]
 pub(crate) struct GPUDeviceLostInfo {

@@ -6,7 +6,12 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundleMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURenderBundle, WebGPURequest};
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
@@ -59,8 +64,8 @@ impl GPURenderBundle {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
         channel: WebGPU,
@@ -86,7 +91,7 @@ impl GPURenderBundle {
     }
 }
 
-impl GPURenderBundleMethods<crate::DomTypeHolder> for GPURenderBundle {
+impl GPURenderBundleMethods<script_bindings::DomTypeHolder> for GPURenderBundle {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

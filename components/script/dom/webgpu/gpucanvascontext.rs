@@ -13,11 +13,16 @@ use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
 use script_bindings::cformat;
 use script_bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUObjectDescriptorBase, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants};
-use script_bindings::codegen::GenericUnionTypes::{HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUObjectDescriptorBase, GPUTextureDescriptor,
+    GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants,
+};
+use script_bindings::codegen::GenericUnionTypes::{
+    HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
+};
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use script_bindings::root::Dom;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use servo_base::{Epoch, generic_channel};
 use webgpu_traits::{

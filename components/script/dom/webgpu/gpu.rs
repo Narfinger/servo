@@ -9,9 +9,11 @@ use js::jsapi::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -41,7 +43,10 @@ impl GPU {
         }
     }
 
-    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(global: &G, can_gc: CanGc) -> DomRoot<GPU> {
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
+        can_gc: CanGc,
+    ) -> DomRoot<GPU> {
         reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }

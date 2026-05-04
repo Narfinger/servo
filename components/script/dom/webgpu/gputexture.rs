@@ -9,18 +9,22 @@ use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureMethods
+    GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureMethods,
+    GPUTextureViewDescriptor,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use script_bindings::{DomRefCell, DomTypes};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
 use crate::gpudevice::GPUDevice;
+use crate::gputextureview::GPUTextureView;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUTexture {

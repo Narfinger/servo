@@ -11,7 +11,11 @@ use js::typedarray::HeapArrayBuffer;
 use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUBufferDescriptor, GPUBufferMethods, GPUFlagsConstant, GPUMapModeConstants, GPUMapModeFlags, GPUSize64};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBufferDescriptor, GPUBufferMethods, GPUFlagsConstant, GPUMapModeConstants, GPUMapModeFlags,
+    GPUSize64,
+};
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -19,6 +23,7 @@ use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
+use script_bindings::{DomRefCell, DomTypes};
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;

@@ -6,8 +6,18 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUUncapturedErrorEventInit, reflector::reflect_dom_object_with_proto, root::DomRoot, script_runtime::CanGc};
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods,
+};
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 use stylo_atoms::Atom;
+
+use crate::gpuerror::GPUError;
 
 #[dom_struct2]
 pub(crate) struct GPUUncapturedErrorEvent {
@@ -53,10 +63,10 @@ impl GPUUncapturedErrorEvent {
     }
 }
 
-impl GPUUncapturedErrorEventMethods<crate::DomTypeHolder> for GPUUncapturedErrorEvent {
+impl GPUUncapturedErrorEventMethods<script_bindings::DomTypeHolder> for GPUUncapturedErrorEvent {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-gpuuncapturederrorevent>
-    fn Constructor(
-        global: &GlobalScope,
+    fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         event_type: DOMString,

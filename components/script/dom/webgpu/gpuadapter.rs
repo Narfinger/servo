@@ -9,17 +9,20 @@ use js::jsapi::{HandleObject, Heap, JSObject};
 use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::cformat;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUAdapterMethods, GPUDeviceDescriptor,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
-use webgpu_traits::{RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest};
+use script_bindings::{DomTypes, cformat};
+use webgpu_traits::{
+    RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest,
+};
 use wgpu_types::{AdapterInfo, MemoryHints};
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;

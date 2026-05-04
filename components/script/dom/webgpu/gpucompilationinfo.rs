@@ -3,10 +3,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::{dom_struct, dom_struct2};
-use js::{context::JSContext, rust::MutableHandleValue};
+use js::context::JSContext;
+use js::rust::MutableHandleValue;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods, reflector::{Reflector, reflect_dom_object_with_proto}, root::DomRoot, script_runtime::CanGc};
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods;
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
 use webgpu_traits::ShaderCompilationInfo;
 
 use crate::gpucompilationmessage::GPUCompilationMessage;

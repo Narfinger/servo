@@ -6,7 +6,13 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUPipelineErrorReason, reflector::reflect_dom_object_with_proto, root::DomRoot, script_runtime::CanGc, str::DOMString};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUPipelineErrorInit, GPUPipelineErrorMethods, GPUPipelineErrorReason,
+};
+use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct2]
@@ -23,8 +29,8 @@ impl GPUPipelineError {
         }
     }
 
-    pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+    pub(crate) fn new_with_proto<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         message: DOMString,
         reason: GPUPipelineErrorReason,
@@ -38,8 +44,8 @@ impl GPUPipelineError {
         )
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         message: DOMString,
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
@@ -51,7 +57,7 @@ impl GPUPipelineError {
 impl GPUPipelineErrorMethods<crate::DomTypeHolder> for GPUPipelineError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-constructor>
     fn Constructor(
-        global: &GlobalScope,
+        global: &G,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,

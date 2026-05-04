@@ -6,9 +6,18 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUSamplerDescriptor, GPUSamplerMethods,
+};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURequest, WebGPUSampler};
 use wgpu_core::resource::SamplerDescriptor;
+
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUSampler {
@@ -57,8 +66,8 @@ impl GPUSampler {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         device: WebGPUDevice,
         compare_enable: bool,
@@ -134,7 +143,7 @@ impl GPUSampler {
     }
 }
 
-impl GPUSamplerMethods<crate::DomTypeHolder> for GPUSampler {
+impl GPUSamplerMethods<script_bindings::DomTypeHolder> for GPUSampler {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

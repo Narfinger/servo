@@ -8,10 +8,16 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
+use script_bindings::trace::RootedTraceableBox;
 use webgpu_traits::{ShaderCompilationInfo, WebGPU, WebGPURequest, WebGPUShaderModule};
 
 use super::gpucompilationinfo::GPUCompilationInfo;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUShaderModule {
@@ -63,8 +69,8 @@ impl GPUShaderModule {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
@@ -129,7 +135,7 @@ impl GPUShaderModule {
     }
 }
 
-impl GPUShaderModuleMethods<crate::DomTypeHolder> for GPUShaderModule {
+impl GPUShaderModuleMethods<script_bindings::DomTypeHolder> for GPUShaderModule {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

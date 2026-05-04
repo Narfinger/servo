@@ -5,7 +5,9 @@
 use dom_struct::dom_struct2;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;

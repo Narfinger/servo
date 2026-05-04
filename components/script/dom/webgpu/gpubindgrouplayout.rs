@@ -11,11 +11,13 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
 };
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use script_bindings::{DomRefCell, DomTypes};
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
