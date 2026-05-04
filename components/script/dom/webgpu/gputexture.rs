@@ -9,9 +9,12 @@ use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUTextureDimension, GPUTextureFormat,
+    GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureMethods
 };
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
@@ -87,8 +90,8 @@ impl GPUTexture {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         texture: WebGPUTexture,
         device: &GPUDevice,
         channel: WebGPU,
@@ -164,7 +167,7 @@ impl GPUTexture {
     }
 }
 
-impl GPUTextureMethods<crate::DomTypeHolder> for GPUTexture {
+impl GPUTextureMethods<script_bindings::DomTypeHolder> for GPUTexture {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

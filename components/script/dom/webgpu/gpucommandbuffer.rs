@@ -6,8 +6,12 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandBufferMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use webgpu_traits::{WebGPU, WebGPUCommandBuffer};
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUCommandBuffer {
@@ -55,8 +59,8 @@ impl GPUCommandBuffer {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
         label: USVString,
@@ -80,7 +84,7 @@ impl GPUCommandBuffer {
     }
 }
 
-impl GPUCommandBufferMethods<crate::DomTypeHolder> for GPUCommandBuffer {
+impl GPUCommandBufferMethods<script_bindings::DomTypeHolder> for GPUCommandBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

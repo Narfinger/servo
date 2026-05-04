@@ -13,6 +13,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
@@ -67,8 +68,8 @@ impl GPUBindGroupLayout {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
         label: USVString,
@@ -137,7 +138,7 @@ impl GPUBindGroupLayout {
     }
 }
 
-impl GPUBindGroupLayoutMethods<crate::DomTypeHolder> for GPUBindGroupLayout {
+impl GPUBindGroupLayoutMethods<script_bindings::DomTypeHolder> for GPUBindGroupLayout {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

@@ -41,12 +41,12 @@ impl GPU {
         }
     }
 
-    pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(global: &G, can_gc: CanGc) -> DomRoot<GPU> {
         reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
 
-impl GPUMethods<DomTypeHolder> for GPU {
+impl GPUMethods<script_bindings::DomTypeHolder> for GPU {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,

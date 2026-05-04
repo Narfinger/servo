@@ -19,12 +19,13 @@ use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
-use webgpu_traits::{WebGPU, WebGPUAdapter, WebGPURequest};
+use webgpu_traits::{RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest};
 use wgpu_types::{AdapterInfo, MemoryHints};
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
 use super::gpusupportedlimits::set_limit;
 use crate::gpuadapterinfo::GPUAdapterInfo;
+use crate::gpudevice::GPUDevice;
 use crate::gpusupportedfeatures::gpu_to_wgt_feature;
 use crate::gpusupportedlimits::GPUSupportedLimits;
 
@@ -84,8 +85,8 @@ impl GPUAdapter {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         name: DOMString,
         extensions: HandleObject,
@@ -110,8 +111,8 @@ impl GPUAdapter {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-new-adapter-info>
-    fn create_adapter_info(
-        global: &GlobalScope,
+    fn create_adapter_info<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         info: AdapterInfo,
         features: &GPUSupportedFeatures,
         limits: &GPUSupportedLimits,
@@ -183,7 +184,7 @@ impl GPUAdapter {
     }
 }
 
-impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
+impl GPUAdapterMethods<script_bindings::DomTypeHolder> for GPUAdapter {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
         &self,

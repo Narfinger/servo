@@ -3,11 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::{dom_struct, dom_struct2};
-use js::rust::MutableHandleValue;
+use js::{context::JSContext, rust::MutableHandleValue};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods, reflector::{Reflector, reflect_dom_object_with_proto}, root::DomRoot, script_runtime::CanGc};
 use webgpu_traits::ShaderCompilationInfo;
+
+use crate::gpucompilationmessage::GPUCompilationMessage;
 #[dom_struct2]
 pub(crate) struct GPUCompilationInfo {
     reflector_: Reflector,
@@ -23,16 +25,16 @@ impl GPUCompilationInfo {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         msg: Vec<DomRoot<GPUCompilationMessage>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object_with_proto(Box::new(Self::new_inherited(msg)), global, None, can_gc)
     }
 
-    pub(crate) fn from(
-        global: &GlobalScope,
+    pub(crate) fn from<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         error: Option<ShaderCompilationInfo>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -48,7 +50,7 @@ impl GPUCompilationInfo {
     }
 }
 
-impl GPUCompilationInfoMethods<crate::DomTypeHolder> for GPUCompilationInfo {
+impl GPUCompilationInfoMethods<script_bindings::DomTypeHolder> for GPUCompilationInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationinfo-messages>
     fn Messages(&self, cx: JSContext, can_gc: CanGc, retval: MutableHandleValue) {
         to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)

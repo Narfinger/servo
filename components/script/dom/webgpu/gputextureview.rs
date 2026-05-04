@@ -6,8 +6,10 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::{reflector::{Reflector, reflect_dom_object}, root::Dom, str::USVString};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
+
+use crate::gputexture::GPUTexture;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUTextureView {
@@ -59,8 +61,8 @@ impl GPUTextureView {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         texture_view: WebGPUTextureView,
         texture: &GPUTexture,

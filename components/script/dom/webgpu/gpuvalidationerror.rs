@@ -6,7 +6,9 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::{DomTypes, codegen::GenericBindings::WebGPUBinding::GPUValidationErrorMethods, conversions::DerivedFrom, reflector::reflect_dom_object_with_proto, root::DomRoot, script_runtime::CanGc, str::DOMString};
+
+use crate::gpuerror::GPUError;
 
 #[dom_struct2]
 pub(crate) struct GPUValidationError {
@@ -20,8 +22,8 @@ impl GPUValidationError {
         }
     }
 
-    pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+    pub(crate) fn new_with_proto<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -35,10 +37,10 @@ impl GPUValidationError {
     }
 }
 
-impl GPUValidationErrorMethods<crate::DomTypeHolder> for GPUValidationError {
+impl GPUValidationErrorMethods<script_bindings::DomTypeHolder> for GPUValidationError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
-    fn Constructor(
-        global: &GlobalScope,
+    fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,

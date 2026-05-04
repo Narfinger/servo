@@ -12,8 +12,13 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
 use script_bindings::cformat;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureFormat;
+use script_bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUObjectDescriptorBase, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants};
+use script_bindings::codegen::GenericUnionTypes::{HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict};
+use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::Dom;
+use script_bindings::str::USVString;
 use servo_base::{Epoch, generic_channel};
 use webgpu_traits::{
     ContextConfiguration, PRESENTATION_BUFFER_COUNT, PendingTexture, WebGPU, WebGPUContextId,
@@ -74,8 +79,8 @@ pub(crate) struct GPUCanvasContext {
 
 impl GPUCanvasContext {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-    fn new_inherited(
-        global: &GlobalScope,
+    fn new_inherited<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         canvas: HTMLCanvasElementOrOffscreenCanvas,
         channel: WebGPU,
     ) -> Self {
@@ -108,8 +113,8 @@ impl GPUCanvasContext {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         canvas: &HTMLCanvasElement,
         channel: WebGPU,
         can_gc: CanGc,
@@ -309,7 +314,7 @@ impl CanvasContext for GPUCanvasContext {
     }
 }
 
-impl GPUCanvasContextMethods<crate::DomTypeHolder> for GPUCanvasContext {
+impl GPUCanvasContextMethods<script_bindings::DomTypeHolder> for GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
         RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)

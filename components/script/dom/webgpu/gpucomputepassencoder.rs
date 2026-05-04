@@ -6,8 +6,10 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUComputePassEncoderMethods, reflector::{Reflector, reflect_dom_object}, root::{Dom, DomRoot}, script_runtime::CanGc, str::USVString};
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
+
+use crate::gpucommandencoder::GPUCommandEncoder;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUComputePassEncoder {
@@ -55,8 +57,8 @@ impl GPUComputePassEncoder {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         parent: &GPUCommandEncoder,
         compute_pass: WebGPUComputePass,
@@ -76,7 +78,7 @@ impl GPUComputePassEncoder {
     }
 }
 
-impl GPUComputePassEncoderMethods<crate::DomTypeHolder> for GPUComputePassEncoder {
+impl GPUComputePassEncoderMethods<script_bindings::DomTypeHolder> for GPUComputePassEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

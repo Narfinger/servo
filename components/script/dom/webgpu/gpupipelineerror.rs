@@ -6,7 +6,7 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUPipelineErrorReason, reflector::reflect_dom_object_with_proto, root::DomRoot, script_runtime::CanGc, str::DOMString};
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct2]

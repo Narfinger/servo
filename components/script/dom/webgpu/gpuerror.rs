@@ -6,8 +6,10 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::{DomTypes, codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods}, conversions::DerivedFrom, reflector::{Reflector, reflect_dom_object_with_proto}, root::DomRoot, script_runtime::CanGc, str::DOMString};
 use webgpu_traits::{Error, ErrorFilter};
+
+use crate::{gpuinternalerror::GPUInternalError, gpuvalidationerror::GPUValidationError};
 
 #[dom_struct2]
 pub(crate) struct GPUError {
@@ -24,12 +26,12 @@ impl GPUError {
     }
 
     #[expect(dead_code)]
-    pub(crate) fn new(global: &GlobalScope, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(global: &G, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
         Self::new_with_proto(global, None, message, can_gc)
     }
 
-    pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+    pub(crate) fn new_with_proto<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -42,7 +44,7 @@ impl GPUError {
         )
     }
 
-    pub(crate) fn from_error(global: &GlobalScope, error: Error, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn from_error<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(global: &G, error: Error, can_gc: CanGc) -> DomRoot<Self> {
         match error {
             Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
                 global,
@@ -66,7 +68,7 @@ impl GPUError {
     }
 }
 
-impl GPUErrorMethods<crate::DomTypeHolder> for GPUError {
+impl GPUErrorMethods<script_bindings::DomTypeHolder> for GPUError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

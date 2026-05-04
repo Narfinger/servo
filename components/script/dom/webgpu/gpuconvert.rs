@@ -5,6 +5,7 @@
 use std::borrow::Cow;
 use std::num::NonZeroU64;
 
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureFormat;
 use wgpu_core::binding_model::{BindGroupEntry, BindingResource, BufferBinding};
 use wgpu_core::command as wgpu_com;
 use wgpu_core::pipeline::ProgrammableStageDescriptor;

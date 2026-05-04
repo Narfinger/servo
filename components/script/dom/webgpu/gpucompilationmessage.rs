@@ -5,7 +5,7 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUCompilationMessageType, reflector::{Reflector, reflect_dom_object}, str::DOMString};
 use webgpu_traits::ShaderCompilationInfo;
 
 #[dom_struct2]

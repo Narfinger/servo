@@ -3067,7 +3067,7 @@ def DomTypeHolder(descriptors: list[Descriptor],
     elements = [
         CGGeneric(
             "#[derive(JSTraceable, MallocSizeOf, PartialEq)]\n"
-            "pub(crate) struct DomTypeHolder;\n"
+            "pub struct DomTypeHolder;\n"
             "impl crate::DomTypes for DomTypeHolder {\n"
         ),
     ]

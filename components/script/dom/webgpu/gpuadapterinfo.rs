@@ -5,6 +5,7 @@
 use dom_struct::dom_struct2;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
@@ -45,8 +46,8 @@ impl GPUAdapterInfo {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         vendor: DOMString,
         architecture: DOMString,
         device: DOMString,
@@ -71,8 +72,8 @@ impl GPUAdapterInfo {
         )
     }
 
-    pub(crate) fn clone_from(
-        global: &GlobalScope,
+    pub(crate) fn clone_from<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         info: &GPUAdapterInfo,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -90,7 +91,7 @@ impl GPUAdapterInfo {
     }
 }
 
-impl GPUAdapterInfoMethods<crate::DomTypeHolder> for GPUAdapterInfo {
+impl GPUAdapterInfoMethods<script_bindings::DomTypeHolder> for GPUAdapterInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-vendor>
     fn Vendor(&self) -> DOMString {
         self.vendor.clone()

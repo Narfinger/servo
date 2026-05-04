@@ -6,7 +6,7 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::GPUUncapturedErrorEventInit, reflector::reflect_dom_object_with_proto, root::DomRoot, script_runtime::CanGc};
 use stylo_atoms::Atom;
 
 #[dom_struct2]
@@ -24,8 +24,8 @@ impl GPUUncapturedErrorEvent {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit,
         can_gc: CanGc,
@@ -33,8 +33,8 @@ impl GPUUncapturedErrorEvent {
         Self::new_with_proto(global, None, event_type, init, can_gc)
     }
 
-    fn new_with_proto(
-        global: &GlobalScope,
+    fn new_with_proto<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         proto: Option<HandleObject>,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit,

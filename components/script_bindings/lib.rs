@@ -85,13 +85,18 @@ pub mod codegen {
     pub mod RegisterBindings {
         include!(concat!(env!("OUT_DIR"), "/RegisterBindings.rs"));
     }
+
+    pub mod DomTypeHolder {
+        include!(concat!(env!("OUT_DIR"), "/DomTypeHolder.rs"));
+    }
 }
 
 // These trait exports are public, because they are used in the DOM bindings.
 // Since they are used in derive macros,
 // it is useful that they are accessible at the root of the crate.
-pub(crate) use js::gc::Traceable as JSTraceable;
+pub use js::gc::Traceable as JSTraceable;
 
 pub use crate::codegen::DomTypes::DomTypes;
-pub(crate) use crate::reflector::{DomObject, MutDomObject, Reflector};
-pub(crate) use crate::trace::CustomTraceable;
+pub use crate::reflector::{DomObject, MutDomObject, Reflector};
+pub use crate::trace::CustomTraceable;
+pub use crate::codegen::DomTypeHolder::DomTypeHolder;

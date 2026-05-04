@@ -6,13 +6,15 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::{reflector::{Reflector, reflect_dom_object}, root::Dom, str::USVString};
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPUComputePipeline, WebGPUComputePipelineResponse,
     WebGPURequest,
 };
 use wgpu_core::pipeline::ComputePipelineDescriptor;
+
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUComputePipeline {

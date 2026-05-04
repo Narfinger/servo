@@ -5,7 +5,7 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUDeviceLostInfoMethods, GPUDeviceLostReason}, reflector::{Reflector, reflect_dom_object}, root::DomRoot, script_runtime::CanGc, str::DOMString};
 
 #[dom_struct2]
 pub(crate) struct GPUDeviceLostInfo {
@@ -23,8 +23,8 @@ impl GPUDeviceLostInfo {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         message: DOMString,
         reason: GPUDeviceLostReason,
         can_gc: CanGc,
@@ -37,7 +37,7 @@ impl GPUDeviceLostInfo {
     }
 }
 
-impl GPUDeviceLostInfoMethods<crate::DomTypeHolder> for GPUDeviceLostInfo {
+impl GPUDeviceLostInfoMethods<script_bindings::DomTypeHolder> for GPUDeviceLostInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevicelostinfo-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

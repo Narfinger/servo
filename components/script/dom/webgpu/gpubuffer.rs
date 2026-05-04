@@ -11,14 +11,20 @@ use js::typedarray::HeapArrayBuffer;
 use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUMapModeFlags;
-use script_bindings::error::Error;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUBufferDescriptor, GPUBufferMethods, GPUFlagsConstant, GPUMapModeConstants, GPUMapModeFlags, GPUSize64};
+use script_bindings::error::{Error, Fallible};
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
+
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
@@ -57,7 +63,7 @@ pub(crate) struct GPUBuffer {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,
-    label: DomRefCell<USVString>,
+    // label: DomRefCell<USVString>,
     #[no_trace]
     buffer: WebGPUBuffer,
     device: Dom<GPUDevice>,
@@ -96,8 +102,8 @@ impl GPUBuffer {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         buffer: WebGPUBuffer,
         device: &GPUDevice,
@@ -176,7 +182,7 @@ impl Drop for GPUBuffer {
     }
 }
 
-impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
+impl GPUBufferMethods<script_bindings::DomTypeHolder> for GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
         // Step 1

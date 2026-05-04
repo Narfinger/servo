@@ -8,13 +8,16 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUBindGroupDescriptor, GPUBindGroupMethods};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
 use wgpu_core::binding_model::BindGroupDescriptor;
 
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUBindGroup {
@@ -69,8 +72,8 @@ impl GPUBindGroup {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+        global: &G,
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
@@ -136,7 +139,7 @@ impl GPUBindGroup {
     }
 }
 
-impl GPUBindGroupMethods<crate::DomTypeHolder> for GPUBindGroup {
+impl GPUBindGroupMethods<script_bindings::DomTypeHolder> for GPUBindGroup {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
