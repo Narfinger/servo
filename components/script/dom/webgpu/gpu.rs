@@ -4,29 +4,19 @@
 
 use std::rc::Rc;
 
-use dom_struct::dom_struct;
+use dom_struct::dom_struct2;
 use js::jsapi::HandleObject;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use log::warn;
+use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat}, realms::InRealm, reflector::{Reflector, reflect_dom_object}, root::DomRoot, script_runtime::CanGc};
 use servo_constellation_traits::ScriptToConstellationMessage;
+
+use jstraceable_derive::JSTraceable;
 use webgpu_traits::WebGPUAdapterResponse;
 use wgpu_types::PowerPreference;
-
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
-};
-use crate::dom::bindings::error::Error;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{DomRoot, MutNullableDom};
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::webgpu::gpuadapter::GPUAdapter;
-use crate::realms::InRealm;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
-use crate::script_runtime::CanGc;
+use js::gc::Traceable as JSTraceable;
 
-#[dom_struct]
+#[dom_struct2]
 #[expect(clippy::upper_case_acronyms)]
 pub(crate) struct GPU {
     reflector_: Reflector,
@@ -47,7 +37,7 @@ impl GPU {
     }
 }
 
-impl GPUMethods<crate::DomTypeHolder> for GPU {
+impl GPUMethods<DomTypeHolder> for GPU {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,

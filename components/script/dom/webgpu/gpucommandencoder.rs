@@ -10,25 +10,7 @@ use webgpu_traits::{
 };
 use wgpu_core::command as wgpu_com;
 
-use crate::conversions::{Convert, TryConvert};
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUCommandBufferDescriptor, GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
-    GPUComputePassDescriptor, GPUExtent3D, GPUImageCopyBuffer, GPUImageCopyTexture,
-    GPURenderPassDescriptor, GPUSize64,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::gpuconvert::convert_load_op;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandbuffer::GPUCommandBuffer;
-use crate::dom::webgpu::gpucomputepassencoder::GPUComputePassEncoder;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpurenderpassencoder::GPURenderPassEncoder;
-use crate::script_runtime::CanGc;
+
 
 #[dom_struct]
 pub(crate) struct GPUCommandEncoder {

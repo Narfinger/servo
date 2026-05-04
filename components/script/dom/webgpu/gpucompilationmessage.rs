@@ -6,13 +6,6 @@ use dom_struct::dom_struct;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::ShaderCompilationInfo;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUCompilationMessageMethods, GPUCompilationMessageType,
-};
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::types::GlobalScope;
-use crate::script_runtime::CanGc;
 
 #[dom_struct]
 pub(crate) struct GPUCompilationMessage {

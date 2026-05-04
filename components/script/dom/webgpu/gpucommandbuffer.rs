@@ -4,14 +4,7 @@
 
 use dom_struct::dom_struct;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use webgpu_traits::{WebGPU, WebGPUCommandBuffer, WebGPURequest};
 
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUCommandBufferMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUCommandBuffer {
     #[no_trace]

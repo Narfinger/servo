@@ -5,22 +5,13 @@
 use std::borrow::Cow;
 
 use dom_struct::dom_struct;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::{reflector::{Reflector, reflect_dom_object}, str::USVString};
 use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
 use wgpu_core::binding_model::BindGroupDescriptor;
 
-use crate::conversions::Convert;
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUBindGroupDescriptor, GPUBindGroupMethods,
-};
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::script_runtime::CanGc;
+
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroup {
     #[no_trace]
@@ -44,7 +35,7 @@ impl Drop for DroppableGPUBindGroup {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUBindGroup {
     reflector_: Reflector,
     label: DomRefCell<USVString>,

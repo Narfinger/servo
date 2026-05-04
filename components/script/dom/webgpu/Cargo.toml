@@ -1,6 +1,6 @@
 [package]
-name = "servo-script"
-build = "build.rs"
+name = "servo-script-webgpu"
+# build = "build.rs"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -11,10 +11,11 @@ repository.workspace = true
 description.workspace = true
 
 [lib]
-name = "script"
+name = "script_webgpu"
 path = "lib.rs"
 
 [features]
+default = [ "webxr", "webgpu"]
 bluetooth = ['servo-bluetooth-traits', 'script_bindings/bluetooth']
 crown = ['js/crown']
 debugmozjs = ['js/debugmozjs']
@@ -41,6 +42,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(crown)'] }
 
 [dependencies]
 accountable-refcell = { workspace = true, optional = true }
+script_bindings = { workspace = true }
 aes = { workspace = true }
 aes-gcm = { workspace = true }
 aes-kw = { workspace = true }
@@ -125,7 +127,6 @@ rand = { workspace = true }
 regex = { workspace = true }
 rsa = { workspace = true }
 rustc-hash = { workspace = true }
-script_bindings = { workspace = true }
 script_traits = { workspace = true }
 sec1 = { workspace = true }
 selectors = { workspace = true }
@@ -176,7 +177,6 @@ x25519-dalek = { workspace = true }
 xml5ever = { workspace = true }
 xpath = { workspace = true }
 zeroize = { workspace = true }
-script_webgpu = { package = "servo-script-webgpu", path = "dom/webgpu"}
 
 [target.'cfg(not(target_os = "ios"))'.dependencies]
 mozangle = { workspace = true }

@@ -4,33 +4,19 @@
 
 use std::rc::Rc;
 
-use dom_struct::dom_struct;
+use dom_struct::dom_struct2;
 use js::jsapi::{HandleObject, Heap, JSObject};
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cformat;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use webgpu_traits::{
-    RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest,
-};
-use wgpu_types::{self, AdapterInfo, MemoryHints};
+use script_bindings::str::DOMString;
+use wgpu_types::AdapterInfo;
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
 use super::gpusupportedlimits::set_limit;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUAdapterMethods, GPUDeviceDescriptor, GPUDeviceLostReason,
-};
-use crate::dom::bindings::error::Error;
-use crate::dom::bindings::like::Setlike;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::types::{GPUAdapterInfo, GPUSupportedLimits};
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpusupportedfeatures::gpu_to_wgt_feature;
-use crate::realms::InRealm;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
-use crate::script_runtime::CanGc;
+
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUAdapter {
@@ -55,7 +41,7 @@ impl Drop for DroppableGPUAdapter {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUAdapter {
     reflector_: Reflector,
     name: DOMString,
