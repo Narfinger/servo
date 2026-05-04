@@ -184,6 +184,7 @@ impl GPUDevice {
 
         // Queue a global task, using the webgpu task source, to fire an event named
         // uncapturederror at a GPUDevice using GPUUncapturedErrorEvent.
+        /*
         self.global().task_manager().webgpu_task_source().queue(
             task!(fire_uncaptured_error: move || {
                 let this = this.root();
@@ -202,6 +203,7 @@ impl GPUDevice {
                 event.upcast::<Event>().fire(this.upcast(), CanGc::deprecated_note());
             }),
         );
+        */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-validate-texture-format-required-features>
@@ -370,7 +372,9 @@ impl GPUDevice {
 
         // Queue a global task, using the webgpu task source, to resolve device.lost
         // promise with a new GPUDeviceLostInfo with reason and message.
+        /*
         self.global().task_manager().webgpu_task_source().queue(
+
             task!(resolve_device_lost: move || {
                 let this = this.root();
 
@@ -379,6 +383,7 @@ impl GPUDevice {
                 lost_promise.resolve_native(&*lost, CanGc::deprecated_note());
             }),
         );
+        */
     }
 }
 
@@ -586,7 +591,7 @@ impl GPUDeviceMethods<crate::DomTypeHolder> for GPUDevice {
     }
 
     // https://gpuweb.github.io/gpuweb/#dom-gpudevice-onuncapturederror
-    event_handler!(uncapturederror, GetOnuncapturederror, SetOnuncapturederror);
+    //event_handler!(uncapturederror, GetOnuncapturederror, SetOnuncapturederror);
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy>
     fn Destroy(&self) {

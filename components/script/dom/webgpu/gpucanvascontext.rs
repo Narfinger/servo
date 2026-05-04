@@ -33,7 +33,6 @@ fn supported_context_format(format: GPUTextureFormat) -> bool {
         GPUTextureFormat::Bgra8unorm | GPUTextureFormat::Rgba8unorm
     )
 }
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUCanvasContext {
     #[no_trace]

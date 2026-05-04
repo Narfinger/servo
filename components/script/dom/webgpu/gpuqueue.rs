@@ -5,6 +5,9 @@
 use std::rc::Rc;
 
 use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};

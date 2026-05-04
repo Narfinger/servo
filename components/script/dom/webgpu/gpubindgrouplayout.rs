@@ -8,9 +8,18 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::{JSTraceable, JSTraceableInSub};
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
+};
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
+
+use crate::gpuconvert::convert_bind_group_layout_entry;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUBindGroupLayout {
