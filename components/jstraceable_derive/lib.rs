@@ -193,7 +193,6 @@ fn js_traceable_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
     tokens
 }
 
-
 // Used for subcrates under script
 decl_derive!([JSTraceableInSub, attributes(no_trace, custom_trace)] =>
 js_traceable_derive_sub);

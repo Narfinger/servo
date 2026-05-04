@@ -2,19 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
 
-use crate::dom::bindings::cell::DomRefCell;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUTextureViewMethods;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gputexture::GPUTexture;
-use crate::script_runtime::CanGc;
-
-#[derive(JSTraceable, MallocSizeOf)]
+#[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUTextureView {
     #[ignore_malloc_size_of = "defined in webgpu"]
     #[no_trace]
@@ -38,7 +32,7 @@ impl Drop for DroppableGPUTextureView {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUTextureView {
     reflector_: Reflector,
     label: DomRefCell<USVString>,

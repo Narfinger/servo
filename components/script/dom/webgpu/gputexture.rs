@@ -8,13 +8,16 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{codegen::GenericBindings::WebGPUBinding::{GPUTextureDimension, GPUTextureFormat}, reflector::{Reflector, reflect_dom_object}, str::USVString};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUTextureDimension, GPUTextureFormat,
+};
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
-use crate::gpudevice::GPUDevice;
-
 use super::gpuconvert::convert_texture_descriptor;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUTexture {

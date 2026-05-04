@@ -132,7 +132,6 @@ pub(crate) fn expand_dom_object(
     tokens
 }
 
-
 pub(crate) fn expand_dom_object2(
     input: syn::ItemStruct,
     associated_memory: bool,

@@ -5,17 +5,16 @@
 use std::borrow::Cow;
 
 use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{reflector::{Reflector, reflect_dom_object}, root::Dom, str::USVString};
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::Dom;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
 use wgpu_core::binding_model::BindGroupDescriptor;
 
-use jstraceable_derive::JSTraceableInSub;
-
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
-
-
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUBindGroup {

@@ -18,7 +18,6 @@ use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
     // TODO(sagudev): Use GenericSharedMemory when https://github.com/servo/ipc-channel/pull/356 lands

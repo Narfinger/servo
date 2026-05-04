@@ -12,8 +12,6 @@ use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
-
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUBindGroupLayout {
     #[no_trace]

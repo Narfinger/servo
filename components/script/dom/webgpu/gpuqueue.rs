@@ -9,8 +9,7 @@ use script_bindings::reflector::{Reflector, reflect_dom_object};
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};
 
-
-#[dom_struct2s]
+#[dom_struct2]
 pub(crate) struct GPUQueue {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in webgpu"]

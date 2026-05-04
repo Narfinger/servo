@@ -4,13 +4,13 @@
 
 // check-tidy: no specs after this line
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use indexmap::IndexSet;
 use js::rust::HandleObject;
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use wgpu_types::Features;
-
-use jstraceable_derive::JSTraceableInSub;
 
 #[dom_struct2]
 pub(crate) struct GPUSupportedFeatures {

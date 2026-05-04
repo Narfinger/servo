@@ -176,7 +176,7 @@ x25519-dalek = { workspace = true }
 xml5ever = { workspace = true }
 xpath = { workspace = true }
 zeroize = { workspace = true }
-script_webgpu = { package = "servo-script-webgpu", path = "dom/webgpu"}
+script_webgpu = { package = "servo-script-webgpu", path = "dom/webgpu" }
 
 [target.'cfg(not(target_os = "ios"))'.dependencies]
 mozangle = { workspace = true }

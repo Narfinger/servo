@@ -4,11 +4,10 @@
 
 use dom_struct::{dom_struct, dom_struct2};
 use js::rust::MutableHandleValue;
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use webgpu_traits::ShaderCompilationInfo;
-use malloc_size_of_derive::MallocSizeOf;
-
-use jstraceable_derive::JSTraceableInSub;
 #[dom_struct2]
 pub(crate) struct GPUCompilationInfo {
     reflector_: Reflector,

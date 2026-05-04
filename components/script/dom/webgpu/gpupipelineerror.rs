@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::reflect_dom_object_with_proto;
-
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct2]

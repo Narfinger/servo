@@ -3,9 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::Reflector;
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPUTextureUsage {
     reflector_: Reflector,
 }

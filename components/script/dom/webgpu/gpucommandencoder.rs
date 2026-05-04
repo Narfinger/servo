@@ -3,17 +3,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::{dom_struct, dom_struct2};
-use script_bindings::{reflector::{Reflector, reflect_dom_object}, str::USVString};
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::str::USVString;
 use webgpu_traits::{
     WebGPU, WebGPUCommandBuffer, WebGPUCommandEncoder, WebGPUComputePass, WebGPUDevice,
     WebGPURenderPass, WebGPURequest,
 };
 use wgpu_core::command as wgpu_com;
-use jstraceable_derive::JSTraceableInSub;
-use jstraceable_derive::JSTraceableInSub;
 
 use crate::gpudevice::GPUDevice;
-use malloc_size_of_derive::MallocSizeOf;
 
 #[dom_struct2]
 pub(crate) struct GPUCommandEncoder {

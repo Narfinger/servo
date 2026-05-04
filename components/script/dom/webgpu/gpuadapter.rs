@@ -16,12 +16,10 @@ use script_bindings::str::DOMString;
 use webgpu_traits::{WebGPU, WebGPUAdapter, WebGPURequest};
 use wgpu_types::AdapterInfo;
 
-use crate::gpuadapterinfo::GPUAdapterInfo;
-use crate::gpusupportedlimits::GPUSupportedLimits;
-
 use super::gpusupportedfeatures::GPUSupportedFeatures;
 use super::gpusupportedlimits::set_limit;
-
+use crate::gpuadapterinfo::GPUAdapterInfo;
+use crate::gpusupportedlimits::GPUSupportedLimits;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUAdapter {

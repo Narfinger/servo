@@ -4,8 +4,10 @@
 
 use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
-use script_bindings::reflector::reflect_dom_object_with_proto;
 use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::reflector::reflect_dom_object_with_proto;
+
 #[dom_struct2]
 pub(crate) struct GPUInternalError {
     gpu_error: GPUError,

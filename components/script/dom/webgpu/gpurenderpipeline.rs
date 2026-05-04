@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use dom_struct::dom_struct;
+use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
+use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use servo_base::generic_channel::GenericCallback;
@@ -36,7 +37,7 @@ impl Drop for DroppableGPURenderPipeline {
     }
 }
 
-#[dom_struct]
+#[dom_struct2]
 pub(crate) struct GPURenderPipeline {
     reflector_: Reflector,
     label: DomRefCell<USVString>,

@@ -9,7 +9,6 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPURenderPassEncoder {
     #[no_trace]

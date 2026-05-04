@@ -6,7 +6,8 @@ use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::{reflector::{Reflector, reflect_dom_object}, str::USVString};
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::str::USVString;
 
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUCommandBuffer {

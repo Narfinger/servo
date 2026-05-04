@@ -25,7 +25,6 @@ use wgpu_core::id;
 use super::gpuconvert::convert_texture_descriptor;
 use super::gputexture::GPUTexture;
 
-
 /// <https://gpuweb.github.io/gpuweb/#supported-context-formats>
 fn supported_context_format(format: GPUTextureFormat) -> bool {
     // TODO: GPUTextureFormat::Rgba16float

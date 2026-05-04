@@ -3,8 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::{dom_struct, dom_struct2};
-use script_bindings::reflector::{Reflector, reflect_dom_object};
 use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
 
 #[dom_struct2]
 pub(crate) struct GPUDeviceLostInfo {

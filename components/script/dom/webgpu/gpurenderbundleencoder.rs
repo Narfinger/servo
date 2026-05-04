@@ -5,12 +5,13 @@
 use std::borrow::Cow;
 
 use dom_struct::{dom_struct, dom_struct2};
+use jstraceable_derive::JSTraceableInSub;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPURenderBundle, WebGPURequest};
 use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
 };
-
 
 #[dom_struct2]
 pub(crate) struct GPURenderBundleEncoder {
