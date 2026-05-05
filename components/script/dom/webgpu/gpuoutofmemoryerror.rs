@@ -45,7 +45,7 @@ impl GPUOutOfMemoryError {
 
 impl<D: DomTypes> GPUOutOfMemoryErrorMethods<D> for GPUOutOfMemoryError {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
-    fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
+    fn Constructor<G: DerivedFrom<D::GlobalScope>>(
         global: &G,
         proto: Option<HandleObject>,
         can_gc: CanGc,

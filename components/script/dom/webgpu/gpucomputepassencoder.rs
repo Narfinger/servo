@@ -117,7 +117,11 @@ impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-dispatchworkgroupsindirect>
-    fn DispatchWorkgroupsIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DispatchWorkgroupsIndirect(
+        &self,
+        buffer: &<D as script_bindings::DomTypes>::GPUBuffer,
+        offset: u64,
+    ) {
         if let Err(e) =
             self.droppable
                 .channel
@@ -150,7 +154,12 @@ impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
-    fn SetBindGroup(&self, index: u32, bind_group: &GPUBindGroup, offsets: Vec<u32>) {
+    fn SetBindGroup(
+        &self,
+        index: u32,
+        bind_group: &<D as script_bindings::DomTypes>::GPUBindGroup,
+        offsets: Vec<u32>,
+    ) {
         if let Err(e) = self
             .droppable
             .channel

@@ -144,7 +144,15 @@ impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
-    fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<GPUBindGroupLayout>> {
+    fn GetBindGroupLayout(
+        &self,
+        index: u32,
+    ) -> std::result::Result<
+        script_bindings::root::Root<
+            script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUBindGroupLayout>,
+        >,
+        script_bindings::error::Error,
+    > {
         let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self

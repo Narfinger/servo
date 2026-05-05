@@ -91,6 +91,7 @@ impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
     }
 }
 
+/*
 impl Convert<GPUErrorFilter> for ErrorFilter {
     fn convert(self) -> GPUErrorFilter {
         match self {
@@ -100,6 +101,7 @@ impl Convert<GPUErrorFilter> for ErrorFilter {
         }
     }
 }
+ */
 
 pub(crate) trait AsWebGpu {
     fn as_webgpu(&self) -> ErrorFilter;

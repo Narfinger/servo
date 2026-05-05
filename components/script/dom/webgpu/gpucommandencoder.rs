@@ -7,8 +7,8 @@ use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUCommandEncoderDescriptor, GPUCommandEncoderMethods, GPUImageCopyBuffer, GPUImageCopyTexture,
-    GPURenderPassDescriptor, GPUSize64,
+    GPUCommandEncoderDescriptor, GPUCommandEncoderMethods, GPUComputePassDescriptor,
+    GPUImageCopyBuffer, GPUImageCopyTexture, GPURenderPassDescriptor, GPUSize64,
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
@@ -29,6 +29,7 @@ use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucomputepassencoder::GPUComputePassEncoder;
 //use crate::gpuconvert::convert_load_op;
 use crate::gpudevice::GPUDevice;
+use crate::gpurenderpassencoder::GPURenderPassEncoder;
 
 #[dom_struct2]
 pub(crate) struct GPUCommandEncoder {
@@ -131,7 +132,9 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     fn BeginComputePass(
         &self,
         descriptor: &GPUComputePassDescriptor,
-    ) -> DomRoot<GPUComputePassEncoder> {
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUComputePassEncoder>,
+    > {
         let compute_pass_id = self.global().wgpu_id_hub().create_compute_pass_id();
 
         if let Err(e) = self.channel.0.send(WebGPURequest::BeginComputePass {
@@ -165,15 +168,14 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
                         .depthLoadOp
                         .as_ref()
                         .map(|l| convert_load_op(l, ds.depthClearValue.map(|v| *v))),
-                    store_op: ds.depthStoreOp.as_ref().map(Convert::convert),
+                    store_op: ds.depthStoreOp.as_ref(), /*.map(Convert::convert) */
                     read_only: ds.depthReadOnly,
                 },
                 stencil: wgpu_com::PassChannel {
-                    load_op: ds
-                        .stencilLoadOp
-                        .as_ref()
-                        .map(|l| convert_load_op(l, Some(ds.stencilClearValue))),
-                    store_op: ds.stencilStoreOp.as_ref().map(Convert::convert),
+                    load_op: ds.stencilLoadOp.as_ref(),   /*
+                                                          .map(|l| convert_load_op(l, Some(ds.stencilClearValue))),
+                                                          */
+                    store_op: ds.stencilStoreOp.as_ref(), /*.map(Convert::convert)*/
                     read_only: ds.stencilReadOnly,
                 },
                 view: ds.view.id().0,

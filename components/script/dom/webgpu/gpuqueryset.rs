@@ -5,6 +5,7 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUQuerySetMethods;
 use script_bindings::reflector::Reflector;
 use script_bindings::str::USVString;

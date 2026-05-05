@@ -59,8 +59,8 @@ impl<D: DomTypes> GPUMethods<D> for GPU {
         options: &GPURequestAdapterOptions,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<()> {
-        Rc::new(())
+    ) -> std::rc::Rc<<D as script_bindings::DomTypes>::Promise> {
+        todo!()
         /*
          *
         let global = &self.global();
@@ -105,7 +105,12 @@ impl<D: DomTypes> GPUMethods<D> for GPU {
     }
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures> {
+    fn WgslLanguageFeatures(
+        &self,
+        can_gc: CanGc,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::WGSLLanguageFeatures>,
+    > {
         self.wgsl_language_features
             .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
     }

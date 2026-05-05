@@ -139,6 +139,8 @@ impl GPUTexture {
         descriptor: &GPUTextureDescriptor,
         can_gc: CanGc,
     ) -> Fallible<DomRoot<GPUTexture>> {
+        todo!()
+        /*
         let (desc, size) = convert_texture_descriptor(descriptor, device)?;
 
         let texture_id = device.global().wgpu_id_hub().create_texture_id();
@@ -169,6 +171,7 @@ impl GPUTexture {
             descriptor.parent.label.clone(),
             can_gc,
         ))
+         */
     }
 }
 

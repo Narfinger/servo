@@ -71,14 +71,14 @@ impl Drop for DroppableGPUCanvasContext {
 pub(crate) struct GPUCanvasContext {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    canvas: HTMLCanvasElementOrOffscreenCanvas,
+    //canvas: HTMLCanvasElementOrOffscreenCanvas,
     #[ignore_malloc_size_of = "manual writing is hard"]
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configuration-slot>
-    configuration: RefCell<Option<GPUCanvasConfiguration>>,
+    //configuration: RefCell<Option<GPUCanvasConfiguration>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-texturedescriptor-slot>
     texture_descriptor: RefCell<Option<GPUTextureDescriptor>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-currenttexture-slot>
-    current_texture: MutNullableDom<GPUTexture>,
+    //current_texture: MutNullableDom<GPUTexture>,
     /// Set if image is cleared
     /// (usually done by [`GPUCanvasContext::replace_drawing_buffer`])
     cleared: Cell<bool>,
@@ -109,10 +109,10 @@ impl GPUCanvasContext {
 
         Self {
             reflector_: Reflector::new(),
-            canvas,
-            configuration: RefCell::new(None),
+            //canvas,
+            //configuration: RefCell::new(None),
             texture_descriptor: RefCell::new(None),
-            current_texture: MutNullableDom::default(),
+            //current_texture: MutNullableDom::default(),
             cleared: Cell::new(true),
             droppable: DroppableGPUCanvasContext {
                 context_id,
@@ -123,14 +123,14 @@ impl GPUCanvasContext {
 
     pub(crate) fn new<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
         global: &G,
-        canvas: &HTMLCanvasElement,
+        //canvas: &HTMLCanvasElement,
         channel: WebGPU,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object(
             Box::new(GPUCanvasContext::new_inherited(
                 global,
-                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
+                //                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
                 channel,
             )),
             global,
@@ -264,7 +264,7 @@ impl GPUCanvasContext {
         })
     }
 }
-
+/*
 impl CanvasContext for GPUCanvasContext {
     type ID = WebGPUContextId;
 
@@ -321,7 +321,7 @@ impl CanvasContext for GPUCanvasContext {
         self.canvas.mark_as_dirty();
     }
 }
-
+ */
 /*
 impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>

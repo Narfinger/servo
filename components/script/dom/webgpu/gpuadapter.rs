@@ -188,15 +188,17 @@ impl GPUAdapter {
     }
 }
 
-impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
+impl<D: DomTypes> GPUAdapterMethods<D> for GPUAdapter {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
         &self,
         descriptor: &GPUDeviceDescriptor,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<<D as script_bindings::DomTypes>::Promise> {
+        todo!()
         // Step 2
+        /*
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let callback = callback_promise(
             &promise,
@@ -255,24 +257,38 @@ impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
         }
         // Step 5
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-features>
-    fn Features(&self) -> DomRoot<GPUSupportedFeatures> {
+    fn Features(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUSupportedFeatures>,
+    > {
         DomRoot::from_ref(&self.features)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-limits>
-    fn Limits(&self) -> DomRoot<GPUSupportedLimits> {
+    fn Limits(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUSupportedLimits>,
+    > {
         DomRoot::from_ref(&self.limits)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-info>
-    fn Info(&self) -> DomRoot<GPUAdapterInfo> {
+    fn Info(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUAdapterInfo>,
+    > {
         DomRoot::from_ref(&self.info)
     }
 }
 
+/*
 impl RoutedPromiseListener<WebGPUDeviceResponse> for GPUAdapter {
     /// <https://www.w3.org/TR/webgpu/#dom-gpuadapter-requestdevice>
     fn handle_response(
@@ -337,3 +353,4 @@ impl RoutedPromiseListener<WebGPUDeviceResponse> for GPUAdapter {
         }
     }
 }
+ */

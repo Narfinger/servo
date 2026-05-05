@@ -185,14 +185,14 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setpipeline>
-    fn SetPipeline(&self, pipeline: &GPURenderPipeline) {
+    fn SetPipeline(&self, pipeline: &<D as script_bindings::DomTypes>::GPURenderPipeline) {
         self.send_render_command(RenderCommand::SetPipeline(pipeline.id().0))
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer,
+        buffer: &<D as script_bindings::DomTypes>::GPUBuffer,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,

@@ -78,8 +78,8 @@ pub(crate) struct GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-usage>
     usage: GPUFlagsConstant,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-pending_map-slot>
-    #[conditional_malloc_size_of]
-    pending_map: DomRefCell<Option<Rc<Promise>>>,
+    //#[conditional_malloc_size_of]
+    //pending_map: DomRefCell<Option<Rc<Promise>>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-mapping-slot>
     mapping: DomRefCell<Option<ActiveBufferMapping>>,
 }
@@ -100,7 +100,7 @@ impl GPUBuffer {
             label: DomRefCell::new(label),
             device: Dom::from_ref(device),
             buffer,
-            pending_map: DomRefCell::new(None),
+            //pending_map: DomRefCell::new(None),
             size,
             usage,
             mapping: DomRefCell::new(mapping),
@@ -249,8 +249,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
         size: Option<GPUSize64>,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<()> {
-        Rc::new(())
+    ) -> std::rc::Rc<<D as script_bindings::DomTypes>::Promise> {
+        todo!()
         /*
         let promise = Promise::new_in_current_realm(comp, can_gc);
         // Step 2
@@ -302,7 +302,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-getmappedrange>
     fn GetMappedRange(
         &self,
-        _cx: JSContext,
+        _cx: script_bindings::script_runtime::JSContext,
         offset: GPUSize64,
         size: Option<GPUSize64>,
         can_gc: CanGc,
@@ -375,7 +375,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     }
 }
 
-impl<P> GPUBuffer {
+impl GPUBuffer {
     fn map_failure(&self, p: &Rc<P>, can_gc: CanGc) {
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {

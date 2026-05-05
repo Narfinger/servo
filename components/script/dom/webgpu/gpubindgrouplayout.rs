@@ -101,12 +101,14 @@ impl GPUBindGroupLayout {
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
     ) -> Fallible<DomRoot<GPUBindGroupLayout>> {
-        let entries = descriptor
-            .entries
-            .iter()
-            .map(|bgle| convert_bind_group_layout_entry(bgle, device))
-            .collect::<Fallible<Result<Vec<_>, _>>>()?;
-
+        /*
+               let entries = descriptor
+                   .entries
+                   .iter()
+                   .map(|bgle| convert_bind_group_layout_entry(bgle, device))
+                   .collect::<Fallible<Result<Vec<_>, _>>>()?;
+        */
+        let entries = Ok(vec![]);
         let desc = match entries {
             Ok(entries) => Some(BindGroupLayoutDescriptor {
                 label: (&descriptor.parent).convert(),

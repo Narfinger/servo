@@ -59,7 +59,12 @@ impl GPUCompilationInfo {
 
 impl<D: DomTypes> GPUCompilationInfoMethods<D> for GPUCompilationInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationinfo-messages>
-    fn Messages(&self, cx: JSContext, can_gc: CanGc, retval: MutableHandleValue) {
-        to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)
+    fn Messages(
+        &self,
+        cx: script_bindings::script_runtime::JSContext,
+        can_gc: CanGc,
+        retval: MutableHandleValue,
+    ) {
+        //to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)
     }
 }
