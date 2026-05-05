@@ -12,10 +12,14 @@ use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUDeviceLostReason, GPUDeviceMethods, GPUErrorFilter, GPURenderBundleEncoderDescriptor,
-    GPURenderPipelineDescriptor, GPUTextureFormat, GPUVertexStepMode,
+    GPUBindGroupDescriptor, GPUBindGroupLayoutDescriptor, GPUBufferDescriptor,
+    GPUCommandEncoderDescriptor, GPUComputePipelineDescriptor, GPUDeviceLostReason,
+    GPUDeviceMethods, GPUErrorFilter, GPURenderBundleEncoderDescriptor,
+    GPURenderPipelineDescriptor, GPUSamplerDescriptor, GPUShaderModuleDescriptor,
+    GPUTextureDescriptor, GPUTextureFormat, GPUVertexStepMode,
 };
 use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
+use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::inheritance::HasParent;
 use script_bindings::realms::InRealm;
@@ -23,6 +27,7 @@ use script_bindings::reflector::reflect_dom_object;
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
+use script_bindings::trace::RootedTraceableBox;
 use script_bindings::{DomObject, DomRefCell, DomTypes, cformat};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
@@ -41,9 +46,19 @@ use super::gpusupportedlimits::GPUSupportedLimits;
 use crate::gpuadapter::GPUAdapter;
 use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpucomputepipeline::GPUComputePipeline;
+use crate::gpuerror::GPUError;
+use crate::gpupipelinelayout::GPUPipelineLayout;
 use crate::gpuqueue::GPUQueue;
 use crate::gpurenderbundleencoder::GPURenderBundleEncoder;
+use crate::gpurenderpipeline::GPURenderPipeline;
+use crate::gpusampler::GPUSampler;
+use crate::gpushadermodule::GPUShaderModule;
 use crate::gpusupportedfeatures::GPUSupportedFeatures;
+use crate::gputexture::GPUTexture;
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUDevice {
     #[no_trace]
@@ -66,7 +81,7 @@ impl Drop for DroppableGPUDevice {
 
 #[dom_struct2]
 pub(crate) struct GPUDevice {
-    eventtarget: EventTarget,
+    //eventtarget: EventTarget,
     adapter: Dom<GPUAdapter>,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
@@ -119,7 +134,7 @@ impl GPUDevice {
         lost_promise: Rc<Promise>,
     ) -> Self {
         Self {
-            eventtarget: EventTarget::new_inherited(),
+            //eventtarget: EventTarget::new_inherited(),
             adapter: Dom::from_ref(adapter),
             extensions: Heap::default(),
             features: Dom::from_ref(features),
@@ -196,7 +211,7 @@ impl GPUDevice {
 
     /// <https://gpuweb.github.io/gpuweb/#eventdef-gpudevice-uncapturederror>
     pub(crate) fn fire_uncaptured_error(&self, error: webgpu_traits::Error) {
-        let this = Trusted::new(self);
+        //let this = Trusted::new(self);
 
         // Queue a global task, using the webgpu task source, to fire an event named
         // uncapturederror at a GPUDevice using GPUUncapturedErrorEvent.
@@ -384,7 +399,7 @@ impl GPUDevice {
 
     /// <https://gpuweb.github.io/gpuweb/#lose-the-device>
     pub(crate) fn lose(&self, reason: GPUDeviceLostReason, msg: String) {
-        let this = Trusted::new(self);
+        //let this = Trusted::new(self);
 
         // Queue a global task, using the webgpu task source, to resolve device.lost
         // promise with a new GPUDeviceLostInfo with reason and message.
@@ -405,22 +420,38 @@ impl GPUDevice {
 
 impl<D: DomTypes> GPUDeviceMethods<D> for GPUDevice {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-features>
-    fn Features(&self) -> DomRoot<GPUSupportedFeatures> {
+    fn Features(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUSupportedFeatures>,
+    > {
         DomRoot::from_ref(&self.features)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-limits>
-    fn Limits(&self) -> DomRoot<GPUSupportedLimits> {
+    fn Limits(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUSupportedLimits>,
+    > {
         DomRoot::from_ref(&self.limits)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-adapterinfo>
-    fn AdapterInfo(&self) -> DomRoot<GPUAdapterInfo> {
+    fn AdapterInfo(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUAdapterInfo>,
+    > {
         DomRoot::from_ref(&self.adapter_info)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-queue>
-    fn GetQueue(&self) -> DomRoot<GPUQueue> {
+    fn GetQueue(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUQueue>,
+    > {
         DomRoot::from_ref(&self.default_queue)
     }
 
@@ -497,6 +528,9 @@ impl<D: DomTypes> GPUDeviceMethods<D> for GPUDevice {
         comp: InRealm,
         can_gc: CanGc,
     ) -> Rc<Promise> {
+        todo!()
+        /*
+         *
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let callback = callback_promise(
             &promise,
@@ -505,6 +539,7 @@ impl<D: DomTypes> GPUDeviceMethods<D> for GPUDevice {
         );
         GPUComputePipeline::create(self, descriptor, Some(callback));
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcommandencoder>
@@ -648,6 +683,7 @@ impl RoutedPromiseListener<WebGPUPoppedErrorScopeResponse> for GPUDevice {
     }
 }
 
+/*
 impl RoutedPromiseListener<WebGPUComputePipelineResponse> for GPUDevice {
     fn handle_response(
         &self,
@@ -731,3 +767,4 @@ impl RoutedPromiseListener<WebGPURenderPipelineResponse> for GPUDevice {
         }
     }
 }
+*/

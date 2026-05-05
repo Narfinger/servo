@@ -247,7 +247,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
-    fn DrawIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DrawIndirect(&self, buffer: &<D as script_bindings::DomTypes>::GPUBuffer, offset: u64) {
         self.send_render_command(RenderCommand::DrawIndirect {
             buffer_id: buffer.id().0,
             offset,
@@ -255,7 +255,11 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
-    fn DrawIndexedIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DrawIndexedIndirect(
+        &self,
+        buffer: &<D as script_bindings::DomTypes>::GPUBuffer,
+        offset: u64,
+    ) {
         self.send_render_command(RenderCommand::DrawIndexedIndirect {
             buffer_id: buffer.id().0,
             offset,
@@ -263,7 +267,14 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-executebundles>
-    fn ExecuteBundles(&self, bundles: Vec<DomRoot<GPURenderBundle>>) {
+    fn ExecuteBundles(
+        &self,
+        bundles: std::vec::Vec<
+            script_bindings::root::Root<
+                script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPURenderBundle>,
+            >,
+        >,
+    ) {
         let bundle_ids: Vec<_> = bundles.iter().map(|b| b.id().0).collect();
         self.send_render_command(RenderCommand::ExecuteBundles(bundle_ids))
     }

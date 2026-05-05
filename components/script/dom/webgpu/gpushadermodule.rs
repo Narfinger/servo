@@ -157,6 +157,7 @@ impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule {
     }
 }
 
+/*
 impl RoutedPromiseListener<Option<ShaderCompilationInfo>> for GPUShaderModule {
     fn handle_response(
         &self,
@@ -168,3 +169,4 @@ impl RoutedPromiseListener<Option<ShaderCompilationInfo>> for GPUShaderModule {
         promise.resolve_native(&info, CanGc::from_cx(cx));
     }
 }
+ */
