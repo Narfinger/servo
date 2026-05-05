@@ -168,21 +168,21 @@ pub(crate) fn expand_dom_object2(
             unsafe fn to_jsval(&self,
                                 cx: *mut js::jsapi::JSContext,
                                 rval: js::rust::MutableHandleValue) {
-                let object = script_bindings::DomObject::reflector(self).get_jsobject();
+                let object = crate::DomObject::reflector(self).get_jsobject();
                 object.to_jsval(cx, rval)
             }
         }
 
-        impl #impl_generics script_bindings::DomObject for #name #ty_generics #where_clause {
+        impl #impl_generics crate::DomObject for #name #ty_generics #where_clause {
             type ReflectorType = #reflector_type;
 
             #[inline]
-            fn reflector(&self) -> &script_bindings::Reflector<Self::ReflectorType> {
+            fn reflector(&self) -> &crate::Reflector<Self::ReflectorType> {
                 self.#first_field_name.reflector()
             }
         }
 
-        impl #impl_generics script_bindings::MutDomObject for #name #ty_generics #where_clause {
+        impl #impl_generics crate::MutDomObject for #name #ty_generics #where_clause {
             unsafe fn init_reflector<Actual>(&self, obj: *mut js::jsapi::JSObject) {
                 self.#first_field_name.init_reflector::<Actual>(obj);
             }

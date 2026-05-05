@@ -46,3 +46,9 @@ pub(crate) mod gpuvalidationerror;
 #[expect(dead_code)]
 pub(crate) mod identityhub;
 pub(crate) mod wgsllanguagefeatures;
+
+/// Reexports for macro
+pub(crate) use script_bindings::DomObject;
+pub(crate) use script_bindings::MutDomObject;
+pub(crate) use script_bindings::inheritance::HasParent;
+pub(crate) use script_bindings::reflector::Reflector;

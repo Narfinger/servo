@@ -14,12 +14,13 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Error;
+use script_bindings::inheritance::HasParent;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
-use script_bindings::{DomTypes, JSTraceable};
+use script_bindings::{DomObject, DomTypes, JSTraceable};
 use servo_constellation_traits::ScriptToConstellationMessage;
 use webgpu_traits::WebGPUAdapterResponse;
 use wgpu_types::PowerPreference;
@@ -31,15 +32,15 @@ use crate::gpuadapter::GPUAdapter;
 #[expect(clippy::upper_case_acronyms)]
 pub(crate) struct GPU {
     reflector_: Reflector,
-    /// Same object for <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
+    // Same object for <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
+    //wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
 }
 
 impl GPU {
     pub(crate) fn new_inherited() -> GPU {
         GPU {
             reflector_: Reflector::new(),
-            wgsl_language_features: MutNullableDom::default(),
+            //wgsl_language_features: MutNullableDom::default(),
         }
     }
 

@@ -214,7 +214,7 @@ fn assert_not_impl_traceable_sub(ty: &syn::Type) -> proc_macro2::TokenStream {
             #[expect(dead_code)]
             struct Invalid0;
             // forbids JSTraceable
-            impl<T> NoTraceOnJSTraceable<Invalid0> for T where T: ?Sized + crate::JSTraceable {}
+            impl<T> NoTraceOnJSTraceable<Invalid0> for T where T: ?Sized + script_bindings::JSTraceable {}
 
             #[expect(dead_code)]
             struct Invalid2;
@@ -275,7 +275,9 @@ fn js_traceable_derive_sub(s: synstructure::Structure) -> proc_macro2::TokenStre
                 }
                 return None;
             } else if attr.path().is_ident("custom_trace") {
-                return Some(quote!(<dyn crate::CustomTraceable>::trace(#binding, tracer);));
+                return Some(
+                    quote!(<dyn script_bindings::CustomTraceable>::trace(#binding, tracer);),
+                );
             }
         }
         Some(quote!(#binding.trace(tracer);))
@@ -301,6 +303,7 @@ fn js_traceable_derive_sub(s: synstructure::Structure) -> proc_macro2::TokenStre
             #[expect(unused_variables, unused_imports)]
             unsafe fn trace(&self, tracer: *mut js::jsapi::JSTracer) {
                 use script_bindings::JSTraceable;
+                use script_bindings::CustomTraceable;
                 match *self {
                     #match_body
                 }

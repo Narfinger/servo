@@ -21,11 +21,12 @@ use script_bindings::codegen::GenericUnionTypes::{
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::{Error, Fallible};
+use script_bindings::inheritance::HasParent;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
-use script_bindings::{DomTypes, cformat};
+use script_bindings::{DomObject, DomTypes, cformat};
 use servo_base::{Epoch, generic_channel};
 use webgpu_traits::{
     ContextConfiguration, PRESENTATION_BUFFER_COUNT, PendingTexture, WebGPU, WebGPUContextId,
@@ -34,7 +35,7 @@ use webgpu_traits::{
 use webrender_api::{ImageFormat, ImageKey};
 use wgpu_core::id;
 
-use super::gpuconvert::convert_texture_descriptor;
+//use super::gpuconvert::convert_texture_descriptor;
 use super::gputexture::GPUTexture;
 
 /// <https://gpuweb.github.io/gpuweb/#supported-context-formats>

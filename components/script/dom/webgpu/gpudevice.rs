@@ -17,12 +17,13 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
 use script_bindings::error::{Error, Fallible};
+use script_bindings::inheritance::HasParent;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::reflect_dom_object;
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
-use script_bindings::{DomRefCell, DomTypes, cformat};
+use script_bindings::{DomObject, DomRefCell, DomTypes, cformat};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
     WebGPUPoppedErrorScopeResponse, WebGPUQueue, WebGPURenderPipeline,
@@ -43,7 +44,6 @@ use crate::gpubindgroup::GPUBindGroup;
 use crate::gpuqueue::GPUQueue;
 use crate::gpurenderbundleencoder::GPURenderBundleEncoder;
 use crate::gpusupportedfeatures::GPUSupportedFeatures;
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUDevice {
     #[no_trace]

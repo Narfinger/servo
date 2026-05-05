@@ -8,18 +8,18 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePassEncoderMethods;
 use script_bindings::conversions::DerivedFrom;
+use script_bindings::inheritance::HasParent;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
-use script_bindings::{DomRefCell, DomTypes};
+use script_bindings::{DomObject, DomRefCell, DomTypes};
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
 use crate::gpucomputepipeline::GPUComputePipeline;
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 struct DroppableGPUComputePassEncoder {
     #[no_trace]

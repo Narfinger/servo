@@ -18,20 +18,20 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::{Error, Fallible};
+use script_bindings::inheritance::HasParent;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
-use script_bindings::{DomRefCell, DomTypes};
+use script_bindings::{DomObject, DomRefCell, DomTypes};
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
 use crate::gpudevice::GPUDevice;
-
 #[derive(JSTraceableInSub, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
     // TODO(sagudev): Use GenericSharedMemory when https://github.com/servo/ipc-channel/pull/356 lands

@@ -14,12 +14,13 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Error;
+use script_bindings::inheritance::HasParent;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
-use script_bindings::{DomTypes, cformat};
+use script_bindings::{DomObject, DomTypes, cformat};
 use webgpu_traits::{
     RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest,
 };

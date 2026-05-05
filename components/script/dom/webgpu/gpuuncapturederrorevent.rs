@@ -6,15 +6,16 @@ use dom_struct::{dom_struct, dom_struct2};
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods,
 };
 use script_bindings::conversions::DerivedFrom;
+use script_bindings::inheritance::HasParent;
 use script_bindings::reflector::reflect_dom_object_with_proto;
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
+use script_bindings::{DomObject, DomTypes};
 use stylo_atoms::Atom;
 
 use crate::gpuerror::GPUError;

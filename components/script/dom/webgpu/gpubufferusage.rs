@@ -5,8 +5,9 @@
 use dom_struct::{dom_struct, dom_struct2};
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomObject;
+use script_bindings::inheritance::HasParent;
 use script_bindings::reflector::Reflector;
-
 #[dom_struct2]
 pub(crate) struct GPUBufferUsage {
     reflector_: Reflector,

@@ -11,11 +11,12 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
+use script_bindings::inheritance::HasParent;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
-use script_bindings::{DomRefCell, DomTypes};
+use script_bindings::{DomObject, DomRefCell, DomTypes};
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPUComputePipeline, WebGPUComputePipelineResponse,

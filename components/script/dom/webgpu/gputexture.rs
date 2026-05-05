@@ -14,15 +14,16 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
+use script_bindings::inheritance::HasParent;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
-use script_bindings::{DomRefCell, DomTypes};
+use script_bindings::{DomObject, DomRefCell, DomTypes, JSTraceable};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
-use super::gpuconvert::convert_texture_descriptor;
+//use super::gpuconvert::convert_texture_descriptor;
 use crate::gpudevice::GPUDevice;
 use crate::gputextureview::GPUTextureView;
 

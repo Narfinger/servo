@@ -75,11 +75,11 @@ pub fn dom_struct2(args: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     // Work around https://github.com/rust-lang/rust/issues/46489
-    let attributes: TokenStream = attributes.to_string().parse().unwrap();
+    let attributes: TokenStream = attributes.to_string().parse().expect("PARSY 1");
 
     let output: TokenStream = attributes.into_iter().chain(input).collect();
 
-    let item: Item = syn::parse(output).unwrap();
+    let item: Item = syn::parse(output).expect("PARSY2");
 
     if let Item::Struct(s) = item {
         let expanded_dom_object = expand_dom_object2(s.clone(), associated_memory);
