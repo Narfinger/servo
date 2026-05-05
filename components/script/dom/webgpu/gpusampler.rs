@@ -115,7 +115,7 @@ impl GPUSampler {
             mipmap_filter: descriptor.mipmapFilter.convert(),
             lod_min_clamp: *descriptor.lodMinClamp,
             lod_max_clamp: *descriptor.lodMaxClamp,
-            compare: descriptor.compare.map(Convert::convert),
+            compare: descriptor.compare, /*.map(Convert::convert)*/
             anisotropy_clamp: 1,
             border_color: None,
         };

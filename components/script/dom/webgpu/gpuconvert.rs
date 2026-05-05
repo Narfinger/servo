@@ -27,6 +27,7 @@ use wgpu_types::{self, AstcBlock, AstcChannel};
 
 use crate::gpudevice::GPUDevice;
 
+/*
 impl Convert<wgpu_types::TextureFormat> for GPUTextureFormat {
     fn convert(self) -> wgpu_types::TextureFormat {
         match self {
@@ -687,3 +688,4 @@ impl Convert<wgpu_types::TextureDimension> for GPUTextureDimension {
         }
     }
 }
+ */

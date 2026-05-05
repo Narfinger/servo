@@ -216,6 +216,7 @@ impl GPUQueueMethods<crate::DomTypeHolder> for GPUQueue {
     }
 }
 
+/*
 impl RoutedPromiseListener<()> for GPUQueue {
     fn handle_response(
         &self,
@@ -226,3 +227,4 @@ impl RoutedPromiseListener<()> for GPUQueue {
         promise.resolve_native(&(), CanGc::from_cx(cx));
     }
 }
+ */

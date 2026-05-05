@@ -321,6 +321,7 @@ impl CanvasContext for GPUCanvasContext {
     }
 }
 
+/*
 impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
@@ -416,3 +417,4 @@ impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
         Ok(current_texture)
     }
 }
+ */

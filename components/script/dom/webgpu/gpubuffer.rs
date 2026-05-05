@@ -37,7 +37,7 @@ pub(crate) struct ActiveBufferMapping {
     // TODO(sagudev): Use GenericSharedMemory when https://github.com/servo/ipc-channel/pull/356 lands
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-data>
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-views>
-    pub(crate) data: DataBlock,
+    //pub(crate) data: DataBlock,
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-mode>
     mode: GPUMapModeFlags,
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-range>
@@ -57,7 +57,7 @@ impl ActiveBufferMapping {
             .try_into()
             .map_err(|_| Error::Range(c"Over usize".to_owned()))?;
         Ok(Self {
-            data: DataBlock::new_zeroed(size),
+            //data: DataBlock::new_zeroed(size),
             mode,
             range,
         })
@@ -249,7 +249,9 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
         size: Option<GPUSize64>,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<()> {
+        Rc::new(())
+        /*
         let promise = Promise::new_in_current_realm(comp, can_gc);
         // Step 2
         if self.pending_map.borrow().is_some() {
@@ -294,6 +296,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
         }
         // Step 6
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-getmappedrange>
@@ -372,8 +375,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     }
 }
 
-impl GPUBuffer {
-    fn map_failure(&self, p: &Rc<Promise>, can_gc: CanGc) {
+impl<P> GPUBuffer {
+    fn map_failure(&self, p: &Rc<P>, can_gc: CanGc) {
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
             assert!(p.is_rejected());
@@ -392,7 +395,7 @@ impl GPUBuffer {
         }
     }
 
-    fn map_success(&self, p: &Rc<Promise>, wgpu_mapping: Mapping, can_gc: CanGc) {
+    fn map_success(&self, p: &Rc<P>, wgpu_mapping: Mapping, can_gc: CanGc) {
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
             assert!(p.is_rejected());
@@ -429,6 +432,8 @@ impl GPUBuffer {
     }
 }
 
+/*
+ *
 impl RoutedPromiseListener<Result<Mapping, BufferAccessError>> for GPUBuffer {
     fn handle_response(
         &self,
@@ -442,3 +447,4 @@ impl RoutedPromiseListener<Result<Mapping, BufferAccessError>> for GPUBuffer {
         }
     }
 }
+ */

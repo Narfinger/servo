@@ -58,7 +58,10 @@ impl<D: DomTypes> GPUMethods<D> for GPU {
         options: &GPURequestAdapterOptions,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<()> {
+        Rc::new(())
+        /*
+         *
         let global = &self.global();
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
@@ -87,6 +90,7 @@ impl<D: DomTypes> GPUMethods<D> for GPU {
             promise.reject_error(Error::Operation(None), can_gc);
         }
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-getpreferredcanvasformat>
@@ -106,6 +110,8 @@ impl<D: DomTypes> GPUMethods<D> for GPU {
     }
 }
 
+/*
+ *
 impl RoutedPromiseListener<WebGPUAdapterResponse> for GPU {
     fn handle_response(
         &self,
@@ -142,3 +148,5 @@ impl RoutedPromiseListener<WebGPUAdapterResponse> for GPU {
         }
     }
 }
+
+ */

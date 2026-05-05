@@ -8,7 +8,7 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCommandEncoderDescriptor, GPUCommandEncoderMethods, GPUImageCopyBuffer, GPUImageCopyTexture,
-    GPURenderPassDescriptor,
+    GPURenderPassDescriptor, GPUSize64,
 };
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::error::Fallible;
@@ -23,6 +23,7 @@ use webgpu_traits::{
 };
 use wgpu_core::command as wgpu_com;
 
+use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucomputepassencoder::GPUComputePassEncoder;
 use crate::gpuconvert::convert_load_op;

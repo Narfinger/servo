@@ -19,14 +19,14 @@ use script_bindings::str::DOMString;
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct2]
 pub(crate) struct GPUPipelineError {
-    exception: DOMException,
+    //exception: DOMException,
     reason: GPUPipelineErrorReason,
 }
 
 impl GPUPipelineError {
     fn new_inherited(message: DOMString, reason: GPUPipelineErrorReason) -> Self {
         Self {
-            exception: DOMException::new_inherited(message, "GPUPipelineError".into()),
+            //exception: DOMException::new_inherited(message, "GPUPipelineError".into()),
             reason,
         }
     }

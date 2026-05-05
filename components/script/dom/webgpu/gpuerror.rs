@@ -84,7 +84,7 @@ impl GPUError {
     }
 }
 
-impl<D> GPUErrorMethods<D: DomTypes> for GPUError {
+impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

@@ -256,7 +256,12 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderbundleencoder-finish>
-    fn Finish(&self, descriptor: &GPURenderBundleDescriptor) -> DomRoot<GPURenderBundle> {
+    fn Finish(
+        &self,
+        descriptor: &GPURenderBundleDescriptor,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPURenderBundle>,
+    > {
         let desc = wgpu_types::RenderBundleDescriptor {
             label: (&descriptor.parent).convert(),
         };

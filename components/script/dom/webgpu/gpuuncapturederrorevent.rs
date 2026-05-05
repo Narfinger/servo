@@ -76,7 +76,11 @@ impl<D: DomTypes> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent 
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-error>
-    fn Error(&self) -> DomRoot<GPUError> {
+    fn Error(
+        &self,
+    ) -> script_bindings::root::Root<
+        script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUError>,
+    > {
         DomRoot::from_ref(&self.gpu_error)
     }
 

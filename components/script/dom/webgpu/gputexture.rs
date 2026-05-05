@@ -186,7 +186,12 @@ impl<D: DomTypes> GPUTextureMethods<D> for GPUTexture {
     fn CreateView(
         &self,
         descriptor: &GPUTextureViewDescriptor,
-    ) -> Fallible<DomRoot<GPUTextureView>> {
+    ) -> std::result::Result<
+        script_bindings::root::Root<
+            script_bindings::root::Dom<<D as script_bindings::DomTypes>::GPUTextureView>,
+        >,
+        script_bindings::error::Error,
+    > {
         let desc = if !matches!(descriptor.mipLevelCount, Some(0)) &&
             !matches!(descriptor.arrayLayerCount, Some(0))
         {
