@@ -50,6 +50,7 @@ use webrender_api::{
     ImageDescriptorFlags, ImageFormat, ImageKey,
 };
 
+use crate::Promise;
 use crate::document_loader::{LoadBlocker, LoadType};
 use crate::dom::audio::audiotrack::AudioTrack;
 use crate::dom::audio::audiotracklist::AudioTrackList;
@@ -93,7 +94,6 @@ use crate::dom::medialist::MediaList;
 use crate::dom::mediastream::MediaStream;
 use crate::dom::node::{Node, NodeDamage, NodeTraits, UnbindContext};
 use crate::dom::performance::performanceresourcetiming::InitiatorType;
-use crate::dom::promise::Promise;
 use crate::dom::texttrack::TextTrack;
 use crate::dom::texttracklist::TextTrackList;
 use crate::dom::timeranges::{TimeRanges, TimeRangesContainer};

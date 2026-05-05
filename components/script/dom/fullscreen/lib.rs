@@ -8,6 +8,7 @@ use embedder_traits::EmbedderMsg;
 use html5ever::{local_name, ns};
 use servo_config::pref;
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::NodeBinding::GetRootNodeOptions;
 use crate::dom::bindings::codegen::Bindings::NodeBinding::Node_Binding::NodeMethods;
 use crate::dom::bindings::codegen::Bindings::ShadowRootBinding::ShadowRootMethods;
@@ -24,7 +25,6 @@ use crate::dom::event::event::{EventBubbles, EventCancelable, EventComposed};
 use crate::dom::event::eventtarget::EventTarget;
 use crate::dom::node::NodeTraits;
 use crate::dom::node::node::Node;
-use crate::dom::promise::Promise;
 use crate::dom::shadowroot::ShadowRoot;
 use crate::dom::types::HTMLDialogElement;
 use crate::messaging::{CommonScriptMsg, MainThreadScriptMsg};

@@ -7,10 +7,10 @@ use std::ptr::NonNull;
 use js::jsapi::{GetCurrentRealmOrNull, JSAutoRealm};
 use js::realm::{AutoRealm, CurrentRealm};
 
-use crate::DomTypes;
 use crate::interfaces::GlobalScopeHelpers;
 use crate::reflector::DomObject;
 use crate::script_runtime::JSContext;
+use crate::{DomTypes, get_cx};
 
 pub struct AlreadyInRealm(());
 
@@ -65,11 +65,8 @@ impl InRealm<'_> {
     }
 }
 
-pub fn enter_realm<D: DomTypes>(object: &impl DomObject) -> JSAutoRealm {
-    JSAutoRealm::new(
-        *D::GlobalScope::get_cx(),
-        object.reflector().get_jsobject().get(),
-    )
+pub fn enter_realm(object: &impl DomObject) -> JSAutoRealm {
+    JSAutoRealm::new(*get_cx(), object.reflector().get_jsobject().get())
 }
 
 pub fn enter_auto_realm<'cx, D: DomTypes>(

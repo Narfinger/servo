@@ -34,11 +34,11 @@ use rustc_hash::FxHashMap;
 use script_bindings::reflector::{DomObject, Reflector};
 use script_bindings::script_runtime::CanGc;
 
+use crate::Promise;
 use crate::dom::bindings::conversions::ToJSValConvertible;
 use crate::dom::bindings::error::Error;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::bindings::trace::trace_reflector;
-use crate::dom::promise::Promise;
 use crate::task::TaskOnce;
 
 mod dummy {

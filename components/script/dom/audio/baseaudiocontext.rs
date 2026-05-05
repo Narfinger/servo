@@ -24,6 +24,7 @@ use servo_media::audio::graph::NodeId;
 use servo_media::{ClientContextId, ServoMedia};
 use uuid::Uuid;
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::audio::analysernode::AnalyserNode;
 use crate::dom::audio::audiobuffer::AudioBuffer;
@@ -66,7 +67,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{DomRoot, MutNullableDom};
 use crate::dom::domexception::{DOMErrorName, DOMException};
 use crate::dom::eventtarget::EventTarget;
-use crate::dom::promise::Promise;
 use crate::realms::InRealm;
 use crate::script_runtime::CanGc;
 

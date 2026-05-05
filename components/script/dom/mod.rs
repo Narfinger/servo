@@ -326,9 +326,6 @@ pub(crate) mod plugin;
 pub(crate) mod pluginarray;
 pub(crate) mod processinginstruction;
 pub(crate) mod processingoptions;
-#[expect(dead_code)]
-pub(crate) mod promise;
-pub(crate) mod promisenativehandler;
 pub(crate) mod quotaexceedederror;
 pub(crate) mod radionodelist;
 pub(crate) mod range;

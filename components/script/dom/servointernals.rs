@@ -19,12 +19,12 @@ use script_bindings::str::USVString;
 use servo_config::prefs::{self, PrefValue, Preferences};
 use servo_constellation_traits::ScriptToConstellationMessage;
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::ServoInternalsBinding::ServoInternalsMethods;
 use crate::dom::bindings::import::base::SafeJSContext;
 use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::realms::{AlreadyInRealm, InRealm};
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::CanGc;

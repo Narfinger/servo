@@ -75,6 +75,7 @@ use stylo_atoms::Atom;
 use time::Duration as TimeDuration;
 use url::{Host, Position};
 
+use crate::Promise;
 use crate::animations::Animations;
 use crate::document_loader::{DocumentLoader, LoadType};
 use crate::dom::animationtimeline::AnimationTimeline;
@@ -172,7 +173,6 @@ use crate::dom::pagetransitionevent::PageTransitionEvent;
 use crate::dom::performance::performanceentry::PerformanceEntry;
 use crate::dom::performance::performancepainttiming::PerformancePaintTiming;
 use crate::dom::processinginstruction::ProcessingInstruction;
-use crate::dom::promise::Promise;
 use crate::dom::range::Range;
 use crate::dom::resizeobserver::{ResizeObservationDepth, ResizeObserver};
 use crate::dom::scrolling_box::{ScrollAxisState, ScrollingBox};

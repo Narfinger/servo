@@ -17,6 +17,7 @@ use js::rust::{CustomAutoRooterGuard, HandleObject, HandleValue, MutableHandleVa
 use js::typedarray::{self, HeapUint8ClampedArray};
 use script_bindings::cformat;
 use script_bindings::interfaces::TestBindingHelpers;
+use script_bindings::promisenativehandler::Callback;
 use script_bindings::record::Record;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto_and_cx};
 use servo_config::prefs;
@@ -50,12 +51,11 @@ use crate::dom::bindings::weakref::MutableWeakRef;
 use crate::dom::blob::Blob;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::node::Node;
-use crate::dom::promise::Promise;
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::dom::url::URL;
 use crate::realms::InRealm;
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 use crate::timers::OneshotTimerCallback;
+use crate::{Promise, PromiseNativeHandler};
 
 #[dom_struct]
 pub(crate) struct TestBinding {

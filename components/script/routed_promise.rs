@@ -10,8 +10,8 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use servo_base::generic_channel::GenericCallback;
 
+use crate::Promise;
 use crate::dom::bindings::refcounted::{Trusted, TrustedPromise};
-use crate::dom::promise::Promise;
 use crate::task_source::TaskSource;
 
 pub(crate) trait RoutedPromiseListener<R: Serialize + DeserializeOwned + Send> {

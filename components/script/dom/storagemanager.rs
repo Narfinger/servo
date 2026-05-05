@@ -8,6 +8,7 @@ use dom_struct::dom_struct;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use servo_base::generic_channel::GenericCallback;
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::PermissionStatusBinding::{
     PermissionName, PermissionState,
 };
@@ -20,7 +21,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::permissions::request_permission_to_use;
-use crate::dom::promise::Promise;
 use crate::realms::InRealm;
 use crate::script_runtime::CanGc;
 use crate::task_source::SendableTaskSource;

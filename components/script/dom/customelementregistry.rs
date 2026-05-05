@@ -24,7 +24,6 @@ use script_bindings::reflector::{DomObject, Reflector, reflect_dom_object};
 use script_bindings::settings_stack::{run_a_callback, run_a_script};
 
 use super::bindings::trace::HashMapTracedValues;
-use crate::DomTypeHolder;
 use crate::dom::bindings::callback::{CallbackContainer, ExceptionHandling};
 use crate::dom::bindings::codegen::Bindings::CustomElementRegistryBinding::{
     CustomElementConstructor, CustomElementRegistryMethods, ElementDefinitionOptions,
@@ -47,12 +46,12 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::html::htmlelement::HTMLElement;
 use crate::dom::html::htmlformelement::{FormControl, HTMLFormElement};
 use crate::dom::node::{Node, NodeTraits, ShadowIncluding};
-use crate::dom::promise::Promise;
 use crate::dom::window::Window;
 use crate::microtask::Microtask;
 use crate::realms::{InRealm, enter_auto_realm};
 use crate::script_runtime::{CanGc, JSContext};
 use crate::script_thread::ScriptThread;
+use crate::{DomTypeHolder, Promise};
 
 /// <https://dom.spec.whatwg.org/#concept-element-custom-element-state>
 #[derive(Clone, Copy, Default, Eq, JSTraceable, MallocSizeOf, PartialEq)]

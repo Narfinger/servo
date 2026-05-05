@@ -37,6 +37,8 @@ use servo_canvas_traits::webgl::{
 use servo_config::pref;
 use webrender_api::ImageKey;
 
+#[cfg(feature = "webxr")]
+use crate::Promise;
 use crate::canvas_context::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use crate::dom::bindings::codegen::Bindings::ANGLEInstancedArraysBinding::ANGLEInstancedArraysConstants;
 use crate::dom::bindings::codegen::Bindings::EXTBlendMinmaxBinding::EXTBlendMinmaxConstants;
@@ -61,8 +63,6 @@ use crate::dom::event::{Event, EventBubbles, EventCancelable};
 #[cfg(feature = "webgl_backtrace")]
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::node::NodeTraits;
-#[cfg(feature = "webxr")]
-use crate::dom::promise::Promise;
 use crate::dom::webgl::extensions::WebGLExtensions;
 use crate::dom::webgl::validations::WebGLValidator;
 use crate::dom::webgl::validations::tex_image_2d::{

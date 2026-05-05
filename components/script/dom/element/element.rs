@@ -62,6 +62,7 @@ use xml5ever::serialize::TraversalScope::{
     ChildrenOnly as XmlChildrenOnly, IncludeNode as XmlIncludeNode,
 };
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::activation::Activatable;
 use crate::dom::attr::{Attr, is_relevant_attribute};
@@ -149,7 +150,6 @@ use crate::dom::node::{
     NodeTraits, ShadowIncluding, UnbindContext,
 };
 use crate::dom::nodelist::NodeList;
-use crate::dom::promise::Promise;
 use crate::dom::range::Range;
 use crate::dom::raredata::ElementRareData;
 use crate::dom::scrolling_box::{ScrollAxisState, ScrollingBox};

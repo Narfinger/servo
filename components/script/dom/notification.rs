@@ -33,6 +33,7 @@ use super::bindings::refcounted::{Trusted, TrustedPromise};
 use super::bindings::reflector::DomGlobal;
 use super::performanceresourcetiming::InitiatorType;
 use super::permissionstatus::PermissionStatus;
+use crate::Promise;
 use crate::dom::bindings::callback::ExceptionHandling;
 use crate::dom::bindings::codegen::Bindings::NotificationBinding::{
     NotificationAction, NotificationDirection, NotificationMethods, NotificationOptions,
@@ -53,7 +54,6 @@ use crate::dom::csp::{GlobalCspReporting, Violation};
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::permissions::{PermissionAlgorithm, Permissions, descriptor_permission_state};
-use crate::dom::promise::Promise;
 use crate::dom::serviceworkerglobalscope::ServiceWorkerGlobalScope;
 use crate::dom::serviceworkerregistration::ServiceWorkerRegistration;
 use crate::fetch::{RequestWithGlobalScope, create_a_potential_cors_request};

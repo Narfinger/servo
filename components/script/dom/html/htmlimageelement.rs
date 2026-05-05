@@ -39,6 +39,7 @@ use style::values::specified::source_size_list::SourceSizeList;
 use style_traits::ParsingMode;
 use url::Url;
 
+use crate::Promise;
 use crate::css::parser_context_for_anonymous_content;
 use crate::document_loader::{LoadBlocker, LoadType};
 use crate::dom::activation::Activatable;
@@ -77,7 +78,6 @@ use crate::dom::node::{
     BindContext, MoveContext, Node, NodeDamage, NodeTraits, ShadowIncluding, UnbindContext,
 };
 use crate::dom::performance::performanceresourcetiming::InitiatorType;
-use crate::dom::promise::Promise;
 use crate::dom::virtualmethods::VirtualMethods;
 use crate::dom::window::Window;
 use crate::fetch::{RequestWithGlobalScope, create_a_potential_cors_request};

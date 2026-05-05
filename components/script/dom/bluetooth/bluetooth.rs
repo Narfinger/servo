@@ -33,7 +33,7 @@ use crate::dom::bluetoothuuid::{BluetoothServiceUUID, BluetoothUUID, UUID};
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::permissions::{descriptor_permission_state, PermissionAlgorithm};
-use crate::dom::promise::Promise;
+use crate::Promise;
 use crate::script_runtime::CanGc;
 use crate::task::TaskOnce;
 use dom_struct::dom_struct;

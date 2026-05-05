@@ -11,6 +11,7 @@ use script_bindings::reflector::reflect_dom_object_with_proto_and_cx;
 use servo_base::id::PipelineId;
 use servo_media::audio::context::{LatencyCategory, ProcessingState, RealTimeAudioContextOptions};
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::audio::baseaudiocontext::{BaseAudioContext, BaseAudioContextOptions};
 use crate::dom::audio::mediaelementaudiosourcenode::MediaElementAudioSourceNode;
@@ -33,7 +34,6 @@ use crate::dom::bindings::root::DomRoot;
 use crate::dom::html::htmlmediaelement::HTMLMediaElement;
 use crate::dom::mediastream::MediaStream;
 use crate::dom::mediastreamtrack::MediaStreamTrack;
-use crate::dom::promise::Promise;
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
 

@@ -12,6 +12,7 @@ use servo_media::ServoMedia;
 use servo_media::streams::MediaStreamType;
 use servo_media::streams::capture::{Constrain, ConstrainRange, MediaTrackConstraintSet};
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::MediaDevicesBinding::{
     MediaDevicesMethods, MediaStreamConstraints,
@@ -27,7 +28,6 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::media::mediadeviceinfo::MediaDeviceInfo;
 use crate::dom::media::mediastream::MediaStream;
 use crate::dom::media::mediastreamtrack::MediaStreamTrack;
-use crate::dom::promise::Promise;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]

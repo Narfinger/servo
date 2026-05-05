@@ -11,11 +11,11 @@ use js::jsval::ObjectValue;
 use js::rust::HandleValue as SafeHandleValue;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 
+use crate::Promise;
 use crate::dom::bindings::error::Error;
 use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::dom::stream::defaultteereadrequest::DefaultTeeReadRequest;
 use crate::dom::stream::readablestreamdefaultreader::ReadRequest;
 use crate::dom::types::{ReadableStream, ReadableStreamDefaultReader};

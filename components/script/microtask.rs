@@ -15,6 +15,7 @@ use js::realm::AutoRealm;
 use script_bindings::cell::DomRefCell;
 use servo_base::id::PipelineId;
 
+use crate::WaitForAllSuccessStepsMicrotask;
 use crate::dom::bindings::callback::ExceptionHandling;
 use crate::dom::bindings::codegen::Bindings::PromiseBinding::PromiseJobCallback;
 use crate::dom::bindings::codegen::Bindings::VoidFunctionBinding::VoidFunction;
@@ -22,7 +23,6 @@ use crate::dom::bindings::root::DomRoot;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::html::htmlimageelement::ImageElementMicrotask;
 use crate::dom::html::htmlmediaelement::MediaElementMicrotask;
-use crate::dom::promise::WaitForAllSuccessStepsMicrotask;
 use crate::dom::stream::byteteereadintorequest::ByteTeeReadIntoRequestMicrotask;
 use crate::dom::stream::byteteereadrequest::ByteTeeReadRequestMicrotask;
 use crate::dom::stream::defaultteereadrequest::DefaultTeeReadRequestMicrotask;
@@ -39,6 +39,11 @@ pub(crate) struct MicrotaskQueue {
     performing_a_microtask_checkpoint: Cell<bool>,
 }
 
+pub(crate) trait MicrotaskRunnable {
+    fn handler(&self, _cx: &mut js::context::JSContext) {}
+    fn enter_realm<'cx>(&self, cx: &'cx mut js::context::JSContext) -> AutoRealm<'cx>;
+}
+
 #[derive(JSTraceable, MallocSizeOf)]
 pub(crate) enum Microtask {
     Promise(EnqueuedPromiseCallback),
@@ -53,9 +58,14 @@ pub(crate) enum Microtask {
     NotifyMutationObservers,
 }
 
-pub(crate) trait MicrotaskRunnable {
-    fn handler(&self, _cx: &mut js::context::JSContext) {}
-    fn enter_realm<'cx>(&self, cx: &'cx mut js::context::JSContext) -> AutoRealm<'cx>;
+impl MicrotaskRunnable for WaitForAllSuccessStepsMicrotask {
+    fn handler(&self, _cx: &mut JSContext) {
+        (self.success_steps)(vec![]);
+    }
+
+    fn enter_realm<'cx>(&self, cx: &'cx mut JSContext) -> AutoRealm<'cx> {
+        enter_auto_realm(cx, &*self.global)
+    }
 }
 
 /// A promise callback scheduled to run during the next microtask checkpoint (#4283).

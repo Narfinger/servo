@@ -20,6 +20,7 @@ use servo_base::id::{OffscreenCanvasId, OffscreenCanvasIndex};
 use servo_canvas_traits::webgl::{GLContextAttributes, WebGLVersion};
 use servo_constellation_traits::{BlobImpl, TransferableOffscreenCanvas};
 
+use crate::Promise;
 use crate::canvas_context::{CanvasContext, OffscreenRenderingContext};
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::OffscreenCanvasBinding::{
@@ -42,7 +43,6 @@ use crate::dom::html::htmlcanvaselement::HTMLCanvasElement;
 use crate::dom::imagebitmap::ImageBitmap;
 use crate::dom::imagebitmaprenderingcontext::ImageBitmapRenderingContext;
 use crate::dom::offscreencanvasrenderingcontext2d::OffscreenCanvasRenderingContext2D;
-use crate::dom::promise::Promise;
 use crate::dom::types::{WebGLRenderingContext, Window};
 use crate::dom::webgl::webgl2renderingcontext::WebGL2RenderingContext;
 use crate::script_runtime::CanGc;

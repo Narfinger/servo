@@ -17,6 +17,7 @@ use servo_bluetooth_traits::{
     BluetoothServiceMsg,
 };
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::BluetoothDeviceBinding::BluetoothDeviceMethods;
 use crate::dom::bindings::codegen::Bindings::BluetoothRemoteGATTServerBinding::BluetoothRemoteGATTServerMethods;
@@ -33,7 +34,6 @@ use crate::dom::bluetoothremotegattserver::BluetoothRemoteGATTServer;
 use crate::dom::bluetoothremotegattservice::BluetoothRemoteGATTService;
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::script_runtime::CanGc;
 
 #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]

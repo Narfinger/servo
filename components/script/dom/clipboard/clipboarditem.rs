@@ -12,6 +12,7 @@ use js::context::JSContext;
 use js::realm::CurrentRealm;
 use js::rust::{HandleObject, HandleValue as SafeHandleValue, MutableHandleValue};
 use script_bindings::cell::DomRefCell;
+use script_bindings::promisenativehandler::Callback;
 use script_bindings::record::Record;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto_and_cx};
 use servo_constellation_traits::BlobImpl;
@@ -28,10 +29,9 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::bindings::str::DOMString;
 use crate::dom::blob::Blob;
-use crate::dom::promise::Promise;
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
+use crate::{Promise, PromiseNativeHandler};
 
 /// The fulfillment handler for the reacting to representationDataPromise part of
 /// <https://w3c.github.io/clipboard-apis/#dom-clipboarditem-gettype>.

@@ -200,3 +200,27 @@ impl DomHelpers<crate::DomTypeHolder> for crate::DomTypeHolder {
         report_pending_exception(cx, realm, can_gc)
     }
 }
+
+/*
+ *
+
+impl FromJSValConvertibleRc for Promise {
+    #[expect(unsafe_code)]
+    unsafe fn from_jsval(
+        cx: *mut RawJSContext,
+        value: HandleValue,
+    ) -> Result<ConversionResult<Rc<Promise>>, ()> {
+        if value.get().is_null() {
+            return Ok(ConversionResult::Failure(c"null not allowed".into()));
+        }
+
+        let cx = unsafe { SafeJSContext::from_ptr(cx) };
+        let in_realm_proof = AlreadyInRealm::assert_for_cx(cx);
+
+        let global_scope = unsafe { from_context(*cx, InRealm::Already(&in_realm_proof)) };
+
+        let promise = Promise::new_resolved(&*global_scope, cx, value, CanGc::deprecated_note());
+        Ok(ConversionResult::Success(promise))
+    }
+}
+*/

@@ -15,6 +15,7 @@ use webxr_api::{
     MockViewInit, MockViewsInit, MockWorld, TargetRayMode, Triangle, Visibility,
 };
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::DOMPointBinding::DOMPointInit;
 use crate::dom::bindings::codegen::Bindings::FakeXRDeviceBinding::{
@@ -33,7 +34,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::fakexrinputcontroller::{FakeXRInputController, init_to_mock_buttons};
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]

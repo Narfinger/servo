@@ -9,11 +9,11 @@ use script_bindings::realms::{AlreadyInRealm, InRealm};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::str::{DOMString, USVString};
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::CredentialBinding::CredentialMethods;
 use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
 

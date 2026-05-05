@@ -30,6 +30,8 @@ use url::Host;
 use webrender_api::ImageKey;
 
 use super::validations::types::TexImageTarget;
+#[cfg(feature = "webxr")]
+use crate::Promise;
 use crate::canvas_context::CanvasContext;
 use crate::dom::bindings::codegen::Bindings::WebGL2RenderingContextBinding::{
     WebGL2RenderingContextConstants as constants, WebGL2RenderingContextMethods,
@@ -47,8 +49,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
 use crate::dom::bindings::str::DOMString;
 use crate::dom::globalscope::GlobalScope;
-#[cfg(feature = "webxr")]
-use crate::dom::promise::Promise;
 use crate::dom::webgl::validations::WebGLValidator;
 use crate::dom::webgl::validations::tex_image_2d::{
     TexImage2DValidator, TexImage2DValidatorResult, TexStorageValidator, TexStorageValidatorResult,

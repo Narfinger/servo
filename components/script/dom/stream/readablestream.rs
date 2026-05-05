@@ -51,7 +51,8 @@ use crate::dom::stream::byteteeunderlyingsource::{ByteTeeCancelAlgorithm, ByteTe
 use crate::dom::stream::countqueuingstrategy::{extract_high_water_mark, extract_size_algorithm};
 use crate::dom::stream::readablestreamgenericreader::ReadableStreamGenericReader;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::{wait_for_all_promise, Promise};
+use script_bindings::promise::{wait_for_all_promise};
+use crate::Promise;
 use crate::dom::stream::readablebytestreamcontroller::ReadableByteStreamController;
 use crate::dom::stream::readablestreambyobreader::ReadableStreamBYOBReader;
 use crate::dom::stream::readablestreamdefaultcontroller::ReadableStreamDefaultController;
@@ -64,7 +65,8 @@ use script_bindings::codegen::GenericBindings::MessagePortBinding::MessagePortMe
 use crate::dom::messageport::MessagePort;
 use crate::realms::{enter_auto_realm};
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
+use script_bindings::promisenativehandler::{Callback};
+use crate::PromiseNativeHandler;
 use crate::dom::bindings::transferable::Transferable;
 use crate::dom::bindings::structuredclone::StructuredData;
 

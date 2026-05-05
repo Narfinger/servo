@@ -13,6 +13,7 @@ use servo_constellation_traits::{
     Job, JobError, JobResult, JobResultValue, JobType, ScriptToConstellationMessage,
 };
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::ServiceWorkerContainerBinding::{
     RegistrationOptions, ServiceWorkerContainerMethods,
 };
@@ -23,8 +24,13 @@ use crate::dom::bindings::root::{DomRoot, MutNullableDom};
 use crate::dom::bindings::str::USVString;
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::globalscope::GlobalScope;
+<<<<<<< HEAD
 use crate::dom::idbfactory::IDBFactory;
 use crate::dom::promise::Promise;
+||||||| parent of 9b633aa0fa4 (try 1)
+use crate::dom::promise::Promise;
+=======
+>>>>>>> 9b633aa0fa4 (try 1)
 use crate::dom::serviceworker::ServiceWorker;
 use crate::dom::serviceworkerregistration::ServiceWorkerRegistration;
 use crate::realms::{InRealm, enter_realm};

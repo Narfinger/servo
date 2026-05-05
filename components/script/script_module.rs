@@ -54,6 +54,7 @@ use script_bindings::cformat;
 use script_bindings::domstring::BytesView;
 use script_bindings::error::Fallible;
 use script_bindings::reflector::DomObject;
+use script_bindings::promisenativehandler::{Callback, PromiseNativeHandler};
 use script_bindings::settings_stack::run_a_callback;
 use script_bindings::trace::CustomTraceable;
 use serde_json::{Map as JsonMap, Value as JsonValue};
@@ -61,7 +62,6 @@ use servo_base::id::PipelineId;
 use servo_config::pref;
 use servo_url::{ImmutableOrigin, ServoUrl};
 
-use crate::DomTypeHolder;
 use crate::dom::bindings::conversions::SafeToJSValConvertible;
 use crate::dom::bindings::error::{
     Error, ErrorToJsval, report_pending_exception, throw_dom_exception,
@@ -75,8 +75,6 @@ use crate::dom::csp::{GlobalCspReporting, Violation};
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::html::htmlscriptelement::{SCRIPT_JS_MIMES, substitute_with_local_script};
 use crate::dom::performance::performanceresourcetiming::InitiatorType;
-use crate::dom::promise::Promise;
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::dom::types::{Console, DedicatedWorkerGlobalScope, WorkerGlobalScope};
 use crate::dom::window::Window;
 use crate::module_loading::{
@@ -86,6 +84,7 @@ use crate::network_listener::{self, FetchResponseListener, ResourceTimingListene
 use crate::realms::{InRealm, enter_auto_realm};
 use crate::script_runtime::{CanGc, IntroductionType};
 use crate::task::NonSendTaskBox;
+use crate::{DomTypeHolder, Promise};
 
 pub(crate) fn gen_type_error(
     cx: &mut JSContext,

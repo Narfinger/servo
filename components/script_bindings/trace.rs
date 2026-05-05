@@ -106,6 +106,10 @@ pub unsafe trait CustomTraceable {
     unsafe fn trace(&self, trc: *mut JSTracer);
 }
 
+unsafe impl<T> CustomTraceable for PhantomData<T> {
+    unsafe fn trace(&self, _trc: *mut JSTracer) {}
+}
+
 unsafe impl<T: CustomTraceable> CustomTraceable for Box<T> {
     #[inline]
     unsafe fn trace(&self, trc: *mut JSTracer) {

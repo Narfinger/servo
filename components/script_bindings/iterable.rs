@@ -22,7 +22,9 @@ use crate::conversions::IDLInterface;
 use crate::error::Fallible;
 use crate::interfaces::DomHelpers;
 use crate::realms::InRealm;
-use crate::reflector::{DomGlobalGeneric, DomObjectIteratorWrap, DomObjectWrap, Reflector};
+use crate::reflector::{
+    DomGlobalGeneric, DomObject, DomObjectIteratorWrap, DomObjectWrap, Reflector,
+};
 use crate::root::{Dom, DomRoot, Root};
 use crate::script_runtime::{CanGc, JSContext};
 use crate::trace::{NoTrace, RootedTraceableBox};

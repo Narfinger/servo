@@ -17,6 +17,7 @@ use js::rust::{HandleObject, HandleValue as SafeHandleValue, HandleValue, Mutabl
 use js::typedarray::Uint8;
 use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::promisenativehandler::Callback;
 
 use crate::dom::bindings::buffer_source::create_buffer_source;
 use crate::dom::bindings::callback::ExceptionHandling;
@@ -28,8 +29,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
 use crate::dom::bindings::trace::RootedTraceableBox;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::dom::stream::readablestream::ReadableStream;
 use crate::dom::stream::readablestreamdefaultreader::ReadRequest;
 use crate::dom::stream::underlyingsourcecontainer::{
@@ -37,6 +36,7 @@ use crate::dom::stream::underlyingsourcecontainer::{
 };
 use crate::realms::enter_auto_realm;
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
+use crate::{Promise, PromiseNativeHandler};
 
 /// The fulfillment handler for
 /// <https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed>

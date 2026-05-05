@@ -59,7 +59,9 @@ use rustc_hash::{FxBuildHasher, FxHashMap};
 use script_bindings::cell::{DomRefCell, RefMut};
 use script_bindings::interfaces::GlobalScopeHelpers;
 use script_bindings::reflector::DomObject;
+use script_bindings::root::Root;
 use script_bindings::settings_stack::run_a_script;
+use script_bindings::{BindingMicroTask, GlobalScopeTrait};
 use servo_base::generic_channel;
 use servo_base::generic_channel::{GenericCallback, GenericSend};
 use servo_base::id::{
@@ -84,7 +86,6 @@ use super::bindings::codegen::Bindings::WebGPUBinding::GPUDeviceLostReason;
 use super::bindings::trace::{HashMapTracedValues, RootedTraceableBox};
 use super::serviceworkerglobalscope::ServiceWorkerGlobalScope;
 use super::transformstream::CrossRealmTransform;
-use crate::DomTypeHolder;
 use crate::dom::bindings::codegen::Bindings::BroadcastChannelBinding::BroadcastChannelMethods;
 use crate::dom::bindings::codegen::Bindings::EventSourceBinding::EventSource_Binding::EventSourceMethods;
 use crate::dom::bindings::codegen::Bindings::FunctionBinding::Function;
@@ -126,7 +127,6 @@ use crate::dom::messageport::MessagePort;
 use crate::dom::paintworkletglobalscope::PaintWorkletGlobalScope;
 use crate::dom::performance::performance::Performance;
 use crate::dom::performance::performanceentry::EntryType;
-use crate::dom::promise::Promise;
 use crate::dom::readablestream::{CrossRealmTransformReadable, ReadableStream};
 use crate::dom::serviceworker::ServiceWorker;
 use crate::dom::serviceworkerregistration::ServiceWorkerRegistration;
@@ -158,6 +158,7 @@ use crate::timers::{
     TimerEventId, TimerSource,
 };
 use crate::unminify::unminified_path;
+use crate::{DomTypeHolder, Promise};
 
 #[derive(JSTraceable, MallocSizeOf)]
 pub(crate) struct AutoCloseWorker {
@@ -414,6 +415,31 @@ pub(crate) struct GlobalScope {
     #[no_trace]
     fetch_group: RefCell<FetchGroup>,
 }
+
+impl GlobalScopeTrait<DomTypeHolder> for GlobalScope {
+    fn enqueue_microtask(&self, job: BindingMicroTask<DomTypeHolder>) {
+        self.enqueue_microtask(job.into());
+    }
+}
+
+impl From<BindingMicroTask<DomTypeHolder>> for Microtask {
+    fn from(value: BindingMicroTask<DomTypeHolder>) -> Self {
+        match value {
+            BindingMicroTask::Promise(value) => Microtask::WaitForAllSuccessSteps(value),
+        }
+    }
+}
+
+/*
+ *
+impl<GlobalScope> From<BindingMicroTask<GlobalScope>> for Microtask {
+    fn from(value: BindingMicroTask<GlobalScope>) -> Self {
+        match value {
+            BindingMicroTask::Promise(value) => Microtask::WaitForAllSuccessSteps(value),
+        }
+    }
+}
+ */
 
 /// A wrapper for glue-code between the ipc router and the event-loop.
 struct MessageListener {

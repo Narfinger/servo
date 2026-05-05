@@ -15,7 +15,9 @@ use js::realm::CurrentRealm;
 use js::rust::{HandleObject as SafeHandleObject, HandleValue as SafeHandleValue};
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::promisenativehandler::{Callback, PromiseNativeHandler};
 
+use crate::Promise;
 use crate::dom::bindings::callback::ExceptionHandling;
 use crate::dom::bindings::codegen::Bindings::TransformStreamDefaultControllerBinding::TransformStreamDefaultControllerMethods;
 use crate::dom::bindings::codegen::Bindings::TransformerBinding::{
@@ -36,8 +38,6 @@ use crate::dom::encoding::textencoderstream::{
     Encoder, encode_and_enqueue_a_chunk, encode_and_flush,
 };
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::dom::types::{DecompressionStream, TransformStream};
 use crate::realms::enter_auto_realm;
 use crate::script_runtime::CanGc;

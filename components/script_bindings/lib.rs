@@ -36,6 +36,8 @@ mod mem;
 mod namespace;
 pub mod num;
 pub mod principals;
+pub mod promise;
+pub mod promisenativehandler;
 pub mod proxyhandler;
 pub mod realms;
 pub mod record;
@@ -89,11 +91,79 @@ pub mod codegen {
     }
 }
 
+use js::context::JSContext;
 // These trait exports are public, because they are used in the DOM bindings.
 // Since they are used in derive macros,
 // it is useful that they are accessible at the root of the crate.
 pub(crate) use js::gc::Traceable as JSTraceable;
+use js::jsapi::{JSContext as SomeOtherJSContext, JSObject};
+use js::rust::{Runtime, get_object_class};
+use js::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 
 pub use crate::codegen::DomTypes::DomTypes;
+use crate::conversions::{DerivedFrom, root_from_object};
+use crate::inheritance::Castable;
+pub(crate) use crate::inheritance::HasParent;
+use crate::promise::WaitForAllSuccessStepsMicrotask;
+use crate::realms::InRealm;
+use crate::reflector::{DomGlobalGeneric, DomObjectWrap};
 pub(crate) use crate::reflector::{DomObject, MutDomObject, Reflector};
+use crate::root::DomRoot;
+use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 pub(crate) use crate::trace::CustomTraceable;
+
+pub(crate) fn reflect_dom_object<D, G, T>(
+    obj: Box<T>,
+    global: &D::GlobalScope,
+    _can_gc: CanGc,
+) -> DomRoot<T>
+where
+    D: DomTypes,
+    T: DomObject + reflector::DomObjectWrap<D>,
+{
+    let global_scope: &<D as DomTypes>::GlobalScope = global.upcast();
+    let mut cx = unsafe { crate::script_runtime::temp_cx() };
+    unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
+}
+
+#[expect(unsafe_code)]
+pub(crate) fn get_cx() -> SafeJSContext {
+    let cx = Runtime::get()
+        .expect("Can't obtain context after runtime shutdown")
+        .as_ptr();
+    unsafe { SafeJSContext::from_ptr(cx) }
+}
+
+pub enum BindingMicroTask<D: DomTypes> {
+    Promise(WaitForAllSuccessStepsMicrotask<D>),
+}
+
+pub trait GlobalScopeTrait<D: DomTypes> {
+    fn enqueue_microtask(&self, job: BindingMicroTask<D>);
+}
+
+#[expect(unsafe_code)]
+pub(crate) unsafe fn from_context<D: DomTypes>(
+    cx: *mut SomeOtherJSContext,
+    _realm: InRealm,
+) -> DomRoot<D::GlobalScope> {
+    let global = unsafe { js::jsapi::CurrentGlobalOrNull(cx) };
+    assert!(!global.is_null());
+    unsafe { global_scope_from_global::<D>(global, cx) }
+}
+
+#[expect(unsafe_code)]
+unsafe fn global_scope_from_global<D: DomTypes>(
+    global: *mut JSObject,
+    cx: *mut SomeOtherJSContext,
+) -> DomRoot<D::GlobalScope> {
+    unsafe {
+        assert!(!global.is_null());
+        let clasp = get_object_class(global);
+        assert_ne!(
+            ((*clasp).flags & (JSCLASS_IS_DOMJSCLASS | JSCLASS_IS_GLOBAL)),
+            0
+        );
+        root_from_object(global, cx).unwrap()
+    }
+}

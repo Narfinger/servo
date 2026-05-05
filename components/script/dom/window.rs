@@ -168,7 +168,6 @@ use crate::dom::messageevent::MessageEvent;
 use crate::dom::navigator::Navigator;
 use crate::dom::node::{Node, NodeDamage, NodeTraits, from_untrusted_node_address};
 use crate::dom::performance::performance::Performance;
-use crate::dom::promise::Promise;
 use crate::dom::reporting::reportingendpoint::{ReportingEndpoint, SendReportsToEndpoints};
 use crate::dom::reporting::reportingobserver::ReportingObserver;
 use crate::dom::screen::Screen;
@@ -199,7 +198,7 @@ use crate::task_source::SendableTaskSource;
 use crate::timers::{IsInterval, TimerCallback};
 use crate::unminify::unminified_path;
 use crate::webdriver_handlers::{find_node_by_unique_id_in_document, jsval_to_webdriver};
-use crate::{fetch, window_named_properties};
+use crate::{Promise, fetch, window_named_properties};
 
 /// A callback to call when a response comes back from the `ImageCache`.
 ///

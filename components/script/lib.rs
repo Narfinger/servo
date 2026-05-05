@@ -81,6 +81,11 @@ pub use script_runtime::JSEngineSetup;
 pub use script_thread::ScriptThread;
 pub use serviceworker_manager::ServiceWorkerManager;
 
+pub(crate) type Promise = script_bindings::promise::Promise<DomTypeHolder>;
+pub(crate) type PromiseNativeHandler =
+    script_bindings::promisenativehandler::PromiseNativeHandler<DomTypeHolder>;
+pub(crate) type WaitForAllSuccessStepsMicrotask =
+    script_bindings::promise::WaitForAllSuccessStepsMicrotask<DomTypeHolder>;
 pub(crate) use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
 // These trait exports are public, because they are used in the DOM bindings.
 // Since they are used in derive macros,

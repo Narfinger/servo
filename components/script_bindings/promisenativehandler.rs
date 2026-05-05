@@ -2,39 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use js::realm::CurrentRealm;
-use js::rust::HandleValue;
+use js::rust::{HandleValue, Trace};
 use malloc_size_of::MallocSizeOf;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
 
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::trace::JSTraceable;
-use crate::dom::globalscope::GlobalScope;
+use crate::root::DomRoot;
 use crate::script_runtime::CanGc;
+use crate::trace::CustomTraceable;
+use crate::{DomObject, DomTypes, Reflector, reflect_dom_object};
 
 /// Types that implement the `Callback` trait follow the same rooting requirements
 /// as types that use the `#[dom_struct]` attribute.
 /// Prefer storing `Dom<T>` members inside them instead of `DomRoot<T>`
 /// to minimize redundant work by the garbage collector.
-pub(crate) trait Callback: JSTraceable + MallocSizeOf {
+pub trait Callback: crate::JSTraceable + MallocSizeOf {
     fn callback(&self, cx: &mut CurrentRealm, v: HandleValue);
 }
 
 #[dom_struct]
-pub(crate) struct PromiseNativeHandler {
+pub struct PromiseNativeHandler<D: DomTypes> {
     reflector: Reflector,
     resolve: Option<Box<dyn Callback>>,
     reject: Option<Box<dyn Callback>>,
+    phantom: PhantomData<D>,
 }
 
-impl PromiseNativeHandler {
-    pub(crate) fn new(
-        global: &GlobalScope,
+impl<D: DomTypes> PromiseNativeHandler<D> {
+    pub fn new(
+        global: &D::GlobalScope,
         resolve: Option<Box<dyn Callback>>,
         reject: Option<Box<dyn Callback>>,
         can_gc: CanGc,
-    ) -> DomRoot<PromiseNativeHandler> {
+    ) -> DomRoot<PromiseNativeHandler<D>> {
+        todo!()
+        /*
         reflect_dom_object(
             Box::new(PromiseNativeHandler {
                 reflector: Reflector::new(),
@@ -44,19 +48,20 @@ impl PromiseNativeHandler {
             global,
             can_gc,
         )
+         */
     }
 
-    fn callback(callback: &Option<Box<dyn Callback>>, cx: &mut CurrentRealm, v: HandleValue) {
-        if let Some(ref callback) = *callback {
-            callback.callback(cx, v)
-        }
+    pub fn resolved_callback(&self, cx: &mut CurrentRealm, v: HandleValue) {
+        callback(&self.resolve, cx, v)
     }
 
-    pub(crate) fn resolved_callback(&self, cx: &mut CurrentRealm, v: HandleValue) {
-        PromiseNativeHandler::callback(&self.resolve, cx, v)
+    pub fn rejected_callback(&self, cx: &mut CurrentRealm, v: HandleValue) {
+        callback(&self.reject, cx, v)
     }
+}
 
-    pub(crate) fn rejected_callback(&self, cx: &mut CurrentRealm, v: HandleValue) {
-        PromiseNativeHandler::callback(&self.reject, cx, v)
+fn callback(callback: &Option<Box<dyn Callback>>, cx: &mut CurrentRealm, v: HandleValue) {
+    if let Some(ref callback) = *callback {
+        callback.callback(cx, v)
     }
 }

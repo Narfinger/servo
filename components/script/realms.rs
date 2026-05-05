@@ -9,7 +9,7 @@ pub(crate) use script_bindings::realms::{AlreadyInRealm, InRealm};
 use script_bindings::reflector::DomObject;
 
 pub(crate) fn enter_realm(object: &impl DomObject) -> JSAutoRealm {
-    script_bindings::realms::enter_realm::<crate::DomTypeHolder>(object)
+    script_bindings::realms::enter_realm(object)
 }
 
 pub(crate) fn enter_auto_realm<'cx>(

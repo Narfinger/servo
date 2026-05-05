@@ -29,6 +29,7 @@ use servo_url::ServoUrl;
 use timers::TimerEventRequest;
 use uuid::Uuid;
 
+use crate::Promise;
 use crate::body::BodyMixin;
 use crate::dom::abortsignal::AbortAlgorithm;
 use crate::dom::bindings::codegen::Bindings::AbortSignalBinding::AbortSignalMethods;
@@ -50,7 +51,6 @@ use crate::dom::fetchlaterresult::FetchLaterResult;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::headers::Guard;
 use crate::dom::performance::performanceresourcetiming::InitiatorType;
-use crate::dom::promise::Promise;
 use crate::dom::request::Request;
 use crate::dom::response::Response;
 use crate::dom::serviceworkerglobalscope::ServiceWorkerGlobalScope;

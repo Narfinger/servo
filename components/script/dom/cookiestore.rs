@@ -23,6 +23,7 @@ use servo_base::id::CookieStoreId;
 use servo_url::ServoUrl;
 use time::OffsetDateTime;
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::CookieStoreBinding::{
     CookieInit, CookieListItem, CookieStoreDeleteOptions, CookieStoreGetOptions, CookieStoreMethods,
 };
@@ -34,7 +35,6 @@ use crate::dom::bindings::str::USVString;
 use crate::dom::document::get_registrable_domain_suffix_of_or_is_equal_to;
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::dom::window::Window;
 use crate::task_source::SendableTaskSource;
 

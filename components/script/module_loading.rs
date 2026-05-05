@@ -26,19 +26,17 @@ use net_traits::request::{Destination, Referrer};
 use script_bindings::reflector::DomObject;
 use script_bindings::settings_stack::run_a_callback;
 use servo_url::ServoUrl;
-
-use crate::DomTypeHolder;
 use crate::dom::bindings::error::Error;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::promisenativehandler::{Callback, PromiseNativeHandler};
+use script_bindings::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::realms::enter_auto_realm;
 use crate::script_module::{
     ModuleFetchClient, ModuleHandler, ModuleObject, ModuleTree, RethrowError, ScriptFetchOptions,
     fetch_a_single_module_script, gen_type_error, module_script_from_reference_private,
 };
 use crate::script_runtime::{CanGc, IntroductionType};
+use crate::{DomTypeHolder, Promise};
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct OnRejectedHandler {

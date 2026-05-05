@@ -37,6 +37,7 @@ use style::thread_state::{self, ThreadState};
 use swapper::{Swapper, swapper};
 use uuid::Uuid;
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::RequestBinding::RequestCredentials;
 use crate::dom::bindings::codegen::Bindings::WindowBinding::Window_Binding::WindowMethods;
@@ -50,7 +51,6 @@ use crate::dom::bindings::str::USVString;
 use crate::dom::bindings::trace::{CustomTraceable, JSTraceable, RootedTraceableBox};
 use crate::dom::csp::Violation;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 #[cfg(feature = "testbinding")]
 use crate::dom::testworkletglobalscope::TestWorkletTask;
 use crate::dom::window::Window;

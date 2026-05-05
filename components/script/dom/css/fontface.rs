@@ -17,6 +17,7 @@ use style::properties::font_face::Descriptors;
 use style::stylesheets::{CssRuleType, FontFaceRule, UrlExtraData};
 use style_traits::{ParsingMode, ToCss};
 
+use crate::Promise;
 use crate::css::parser_context_for_document_with_reporter;
 use crate::dom::bindings::codegen::Bindings::FontFaceBinding::{
     FontFaceDescriptors, FontFaceLoadStatus, FontFaceMethods,
@@ -32,7 +33,6 @@ use crate::dom::bindings::str::DOMString;
 use crate::dom::css::fontfaceset::FontFaceSet;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::node::NodeTraits;
-use crate::dom::promise::Promise;
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
 

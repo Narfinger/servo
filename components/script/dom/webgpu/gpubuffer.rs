@@ -16,6 +16,7 @@ use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
+use crate::Promise;
 use crate::conversions::Convert;
 use crate::dom::bindings::buffer_source::DataBlock;
 use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
@@ -27,7 +28,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
 use crate::dom::webgpu::gpudevice::GPUDevice;
 use crate::realms::InRealm;
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};

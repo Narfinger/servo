@@ -17,6 +17,7 @@ use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto_and_cx
 use servo_url::ServoUrl;
 use url::Position;
 
+use crate::Promise;
 use crate::body::{
     BodyMixin, BodyType, Extractable, ExtractedBody, clone_body_stream_for_dom_body, consume_body,
 };
@@ -32,7 +33,6 @@ use crate::dom::bindings::root::{DomRoot, MutNullableDom};
 use crate::dom::bindings::str::{ByteString, USVString, serialize_jsval_to_json_utf8};
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::headers::{Guard, Headers, is_obs_text, is_vchar};
-use crate::dom::promise::Promise;
 use crate::dom::stream::readablestream::ReadableStream;
 use crate::dom::stream::underlyingsourcecontainer::UnderlyingSourceType;
 use crate::script_runtime::{CanGc, StreamConsumer};

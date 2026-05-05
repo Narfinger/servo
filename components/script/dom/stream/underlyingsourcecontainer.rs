@@ -13,6 +13,7 @@ use js::rust::{Handle as SafeHandle, HandleObject, HandleValue as SafeHandleValu
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 
 use super::byteteeunderlyingsource::ByteTeeUnderlyingSource;
+use crate::Promise;
 use crate::dom::bindings::callback::ExceptionHandling;
 use crate::dom::bindings::codegen::Bindings::UnderlyingSourceBinding::UnderlyingSource as JsUnderlyingSource;
 use crate::dom::bindings::codegen::UnionTypes::ReadableStreamDefaultControllerOrReadableByteStreamController as Controller;
@@ -21,7 +22,6 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::messageport::MessagePort;
-use crate::dom::promise::Promise;
 use crate::dom::stream::defaultteeunderlyingsource::DefaultTeeUnderlyingSource;
 use crate::dom::stream::transformstream::TransformStream;
 use crate::script_runtime::CanGc;
