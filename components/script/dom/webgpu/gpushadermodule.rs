@@ -140,7 +140,7 @@ impl GPUShaderModule {
     }
 }
 
-impl GPUShaderModuleMethods<crate::DomTypeHolder> for GPUShaderModule {
+impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

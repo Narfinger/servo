@@ -143,7 +143,7 @@ impl GPUPipelineLayout {
     }
 }
 
-impl GPUPipelineLayoutMethods<crate::DomTypeHolder> for GPUPipelineLayout {
+impl<D: DomTypes> GPUPipelineLayoutMethods<D> for GPUPipelineLayout {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

@@ -5,13 +5,13 @@
 use dom_struct::dom_struct2;
 use jstraceable_derive::JSTraceableInSub;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
 use script_bindings::conversions::DerivedFrom;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
+use script_bindings::{DomTypes, JSTraceable};
 
 #[dom_struct2]
 pub(crate) struct GPUAdapterInfo {
@@ -93,7 +93,10 @@ impl GPUAdapterInfo {
     }
 }
 
-impl GPUAdapterInfoMethods<crate::DomTypeHolder> for GPUAdapterInfo {
+impl<D> GPUAdapterInfoMethods<D> for GPUAdapterInfo
+where
+    D: DomTypes,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-vendor>
     fn Vendor(&self) -> DOMString {
         self.vendor.clone()

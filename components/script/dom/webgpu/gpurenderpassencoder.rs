@@ -112,7 +112,7 @@ impl GPURenderPassEncoder {
     }
 }
 
-impl GPURenderPassEncoderMethods<crate::DomTypeHolder> for GPURenderPassEncoder {
+impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

@@ -45,7 +45,7 @@ impl GPUDeviceLostInfo {
     }
 }
 
-impl GPUDeviceLostInfoMethods<crate::DomTypeHolder> for GPUDeviceLostInfo {
+impl<D: DomTypes> GPUDeviceLostInfoMethods<D> for GPUDeviceLostInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevicelostinfo-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

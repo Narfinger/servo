@@ -188,7 +188,7 @@ impl Drop for GPUBuffer {
     }
 }
 
-impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
+impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
         // Step 1

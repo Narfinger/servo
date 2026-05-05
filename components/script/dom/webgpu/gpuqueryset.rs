@@ -15,7 +15,7 @@ pub(crate) struct GPUQuerySet {
 }
 
 // TODO: wgpu does not expose right fields right now
-impl GPUQuerySetMethods<crate::DomTypeHolder> for GPUQuerySet {
+impl<D: DomTypes> GPUQuerySetMethods<D> for GPUQuerySet {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueryset-destroy>
     fn Destroy(&self) {
         todo!()

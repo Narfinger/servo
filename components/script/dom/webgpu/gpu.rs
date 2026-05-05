@@ -9,7 +9,6 @@ use js::jsapi::HandleObject;
 use jstraceable_derive::JSTraceableInSub;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
 };
@@ -20,6 +19,7 @@ use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
+use script_bindings::{DomTypes, JSTraceable};
 use servo_constellation_traits::ScriptToConstellationMessage;
 use webgpu_traits::WebGPUAdapterResponse;
 use wgpu_types::PowerPreference;
@@ -51,7 +51,7 @@ impl GPU {
     }
 }
 
-impl GPUMethods<crate::DomTypeHolder> for GPU {
+impl<D: DomTypes> GPUMethods<D> for GPU {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,

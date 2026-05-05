@@ -43,7 +43,7 @@ impl GPUOutOfMemoryError {
     }
 }
 
-impl GPUOutOfMemoryErrorMethods<crate::DomTypeHolder> for GPUOutOfMemoryError {
+impl<D: DomTypes> GPUOutOfMemoryErrorMethods<D> for GPUOutOfMemoryError {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
     fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
         global: &G,

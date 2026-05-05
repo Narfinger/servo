@@ -321,7 +321,7 @@ impl CanvasContext for GPUCanvasContext {
     }
 }
 
-impl GPUCanvasContextMethods<crate::DomTypeHolder> for GPUCanvasContext {
+impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
         RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)

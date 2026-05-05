@@ -56,7 +56,7 @@ impl GPUPipelineError {
     }
 }
 
-impl GPUPipelineErrorMethods<crate::DomTypeHolder> for GPUPipelineError {
+impl<D: DomTypes> GPUPipelineErrorMethods<D> for GPUPipelineError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-constructor>
     fn Constructor(
         global: &G,

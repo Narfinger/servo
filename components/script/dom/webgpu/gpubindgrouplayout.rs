@@ -140,7 +140,7 @@ impl GPUBindGroupLayout {
     }
 }
 
-impl GPUBindGroupLayoutMethods<crate::DomTypeHolder> for GPUBindGroupLayout {
+impl<D: DomTypes> GPUBindGroupLayoutMethods<D> for GPUBindGroupLayout {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

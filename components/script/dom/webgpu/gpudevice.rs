@@ -22,7 +22,7 @@ use script_bindings::reflector::reflect_dom_object;
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
-use script_bindings::{DomRefCell, cformat};
+use script_bindings::{DomRefCell, DomTypes, cformat};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
     WebGPUPoppedErrorScopeResponse, WebGPUQueue, WebGPURenderPipeline,
@@ -403,7 +403,7 @@ impl GPUDevice {
     }
 }
 
-impl GPUDeviceMethods<crate::DomTypeHolder> for GPUDevice {
+impl<D: DomTypes> GPUDeviceMethods<D> for GPUDevice {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-features>
     fn Features(&self) -> DomRoot<GPUSupportedFeatures> {
         DomRoot::from_ref(&self.features)

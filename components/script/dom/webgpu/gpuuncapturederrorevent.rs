@@ -63,7 +63,7 @@ impl GPUUncapturedErrorEvent {
     }
 }
 
-impl GPUUncapturedErrorEventMethods<crate::DomTypeHolder> for GPUUncapturedErrorEvent {
+impl<D: DomTypes> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-gpuuncapturederrorevent>
     fn Constructor<D: DomTypes, G: DerivedFrom<D::GlobalScope>>(
         global: &G,

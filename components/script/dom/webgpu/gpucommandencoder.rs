@@ -114,7 +114,7 @@ impl GPUCommandEncoder {
     }
 }
 
-impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
+impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
