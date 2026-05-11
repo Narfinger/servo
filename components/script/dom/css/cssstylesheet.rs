@@ -25,6 +25,7 @@ use style::stylesheets::{
 use super::cssrulelist::{CSSRuleList, RulesSource};
 use super::stylesheet::StyleSheet;
 use super::stylesheetlist::StyleSheetListOwner;
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::CSSStyleSheetBinding::{
     CSSStyleSheetInit, CSSStyleSheetMethods,
 };
@@ -41,7 +42,6 @@ use crate::dom::element::Element;
 use crate::dom::html::htmlstyleelement::HTMLStyleElement;
 use crate::dom::medialist::MediaList;
 use crate::dom::node::NodeTraits;
-use crate::dom::types::Promise;
 use crate::dom::window::Window;
 use crate::script_runtime::CanGc;
 use crate::test::TrustedPromise;

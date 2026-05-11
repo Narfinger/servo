@@ -39,11 +39,13 @@ impl<D: DomTypes> PromiseNativeHandler<D> {
     ) -> DomRoot<PromiseNativeHandler<D>> {
         todo!()
         /*
+         *
         reflect_dom_object(
             Box::new(PromiseNativeHandler {
                 reflector: Reflector::new(),
                 resolve,
                 reject,
+                phantom: PhantomData,
             }),
             global,
             can_gc,

@@ -16,6 +16,7 @@ use script_bindings::reflector::{Reflector, reflect_dom_object};
 use servo_base::id::{ImageBitmapId, ImageBitmapIndex};
 use servo_constellation_traits::SerializableImageBitmap;
 
+use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::ImageBitmapBinding::{
     ImageBitmapMethods, ImageBitmapOptions, ImageBitmapSource, ImageOrientation, PremultiplyAlpha,
     ResizeQuality,
@@ -26,7 +27,6 @@ use crate::dom::bindings::serializable::Serializable;
 use crate::dom::bindings::structuredclone::StructuredData;
 use crate::dom::bindings::transferable::Transferable;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::Promise;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]

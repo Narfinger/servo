@@ -7,6 +7,7 @@ use std::collections::VecDeque;
 use std::ptr::{self};
 use std::rc::Rc;
 
+use script_bindings::promise::wait_for_all_promise;
 use servo_base::generic_channel::GenericSharedMemory;
 use servo_base::id::{MessagePortId, MessagePortIndex};
 use servo_constellation_traits::MessagePortImpl;
@@ -51,7 +52,6 @@ use crate::dom::stream::byteteeunderlyingsource::{ByteTeeCancelAlgorithm, ByteTe
 use crate::dom::stream::countqueuingstrategy::{extract_high_water_mark, extract_size_algorithm};
 use crate::dom::stream::readablestreamgenericreader::ReadableStreamGenericReader;
 use crate::dom::globalscope::GlobalScope;
-use script_bindings::promise::{wait_for_all_promise};
 use crate::Promise;
 use crate::dom::stream::readablebytestreamcontroller::ReadableByteStreamController;
 use crate::dom::stream::readablestreambyobreader::ReadableStreamBYOBReader;

@@ -22,7 +22,6 @@ use servo_constellation_traits::TransformStreamData;
 
 use super::readablestream::CrossRealmTransformReadable;
 use super::writablestream::CrossRealmTransformWritable;
-use crate::Promise;
 use crate::dom::bindings::codegen::Bindings::QueuingStrategyBinding::{
     QueuingStrategy, QueuingStrategySize,
 };
@@ -42,9 +41,10 @@ use crate::dom::stream::transformstreamdefaultcontroller::TransformerType;
 use crate::dom::stream::underlyingsourcecontainer::UnderlyingSourceType;
 use crate::dom::stream::writablestream::create_writable_stream;
 use crate::dom::stream::writablestreamdefaultcontroller::UnderlyingSinkType;
-use crate::dom::types::{PromiseNativeHandler, TransformStreamDefaultController, WritableStream};
+use crate::dom::types::{TransformStreamDefaultController, WritableStream};
 use crate::realms::enter_auto_realm;
 use crate::script_runtime::CanGc;
+use crate::{Promise, PromiseNativeHandler};
 
 impl js::gc::Rootable for TransformBackPressureChangePromiseFulfillment {}
 

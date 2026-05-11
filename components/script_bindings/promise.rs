@@ -606,11 +606,15 @@ fn wait_for_all<D>(
 }
 
 /// <https://webidl.spec.whatwg.org/#waiting-for-all-promise>
-pub(crate) fn wait_for_all_promise<D: DomTypes>(
+pub fn wait_for_all_promise<D>(
     cx: &mut CurrentRealm,
     global: &D::GlobalScope,
     promises: Vec<Rc<Promise<D>>>,
-) -> Rc<Promise<D>> {
+) -> Rc<Promise<D>>
+where
+    D: DomTypes,
+    <D as crate::codegen::DomTypes::DomTypes>::GlobalScope: GlobalScopeTrait<D>,
+{
     // Let promise be a new promise of type Promise<sequence<T>> in realm.
     let promise = Promise::new2(cx, global);
     let success_promise = promise.clone();
