@@ -133,7 +133,7 @@ impl CryptoKey {
         usages: Vec<KeyUsage>,
         handle: Handle,
     ) -> DomRoot<CryptoKey> {
-        let crypto_key = reflect_dom_object_with_cx(
+        let crypto_key = reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CryptoKey::new_inherited(
                 key_type,
                 extractable,

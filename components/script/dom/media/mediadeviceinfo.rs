@@ -48,7 +48,7 @@ impl MediaDeviceInfo {
         label: &str,
         group_id: &str,
     ) -> DomRoot<MediaDeviceInfo> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(MediaDeviceInfo::new_inherited(
                 device_id, kind, label, group_id,
             )),

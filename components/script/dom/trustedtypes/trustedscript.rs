@@ -37,7 +37,11 @@ impl TrustedScript {
     }
 
     pub(crate) fn new(cx: &mut JSContext, data: DOMString, global: &GlobalScope) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(Box::new(Self::new_inherited(data)), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(data)),
+            global,
+            cx,
+        )
     }
 
     pub(crate) fn get_trusted_type_compliant_string(

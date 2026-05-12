@@ -45,7 +45,7 @@ impl CSSImportRule {
         parent_stylesheet: &CSSStyleSheet,
         import_rule: Arc<Locked<ImportRule>>,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(parent_stylesheet, import_rule)),
             window,
             cx,

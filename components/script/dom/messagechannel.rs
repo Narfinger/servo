@@ -39,7 +39,7 @@ impl MessageChannel {
         incumbent.entangle_ports(*port1.message_port_id(), *port2.message_port_id());
 
         // Steps 4-6
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(MessageChannel::new_inherited(&port1, &port2)),
             incumbent,
             proto,

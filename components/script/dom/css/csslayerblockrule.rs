@@ -45,7 +45,7 @@ impl CSSLayerBlockRule {
         parent_stylesheet: &CSSStyleSheet,
         layerblockrule: Arc<LayerBlockRule>,
     ) -> DomRoot<CSSLayerBlockRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSLayerBlockRule::new_inherited(
                 parent_stylesheet,
                 layerblockrule,

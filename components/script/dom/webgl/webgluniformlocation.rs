@@ -55,7 +55,7 @@ impl WebGLUniformLocation {
         type_: u32,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(
                 id,
                 context_id,

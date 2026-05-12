@@ -32,7 +32,7 @@ impl CSSStyleValue {
         value: String,
         can_gc: CanGc,
     ) -> DomRoot<CSSStyleValue> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(CSSStyleValue::new_inherited(value)),
             global,
             can_gc,

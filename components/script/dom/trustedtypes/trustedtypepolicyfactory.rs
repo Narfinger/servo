@@ -69,7 +69,11 @@ impl TrustedTypePolicyFactory {
     }
 
     pub(crate) fn new(cx: &mut js::context::JSContext, global: &GlobalScope) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(Box::new(Self::new_inherited()), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited()),
+            global,
+            cx,
+        )
     }
 
     /// <https://www.w3.org/TR/trusted-types/#create-trusted-type-policy-algorithm>

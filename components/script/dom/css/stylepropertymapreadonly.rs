@@ -56,7 +56,7 @@ impl StylePropertyMapReadOnly {
             values.push(Dom::from_ref(&*value));
         }
         let iter = keys.into_iter().zip(values.iter().cloned());
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(StylePropertyMapReadOnly::new_inherited(iter)),
             global,
             can_gc,

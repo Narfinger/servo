@@ -63,7 +63,7 @@ impl StorageEvent {
         url: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<StorageEvent> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(StorageEvent::new_inherited(None, None, None, url, None)),
             window,
             proto,
@@ -113,7 +113,7 @@ impl StorageEvent {
         storageArea: Option<&Storage>,
         can_gc: CanGc,
     ) -> DomRoot<StorageEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(StorageEvent::new_inherited(
                 key,
                 oldValue,

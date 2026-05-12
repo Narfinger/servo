@@ -37,7 +37,8 @@ impl DebuggerSetBreakpointEvent {
             script_id,
             offset,
         });
-        let result = reflect_dom_object(result, debugger_global, can_gc);
+        let result =
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(result, debugger_global, can_gc);
         result
             .event
             .init_event("setBreakpoint".into(), false, false);

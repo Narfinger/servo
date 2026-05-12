@@ -62,7 +62,7 @@ impl SecurityPolicyViolationEvent {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<SecurityPolicyViolationEvent> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(SecurityPolicyViolationEvent::new_inherited(init)),
             global,
             proto,

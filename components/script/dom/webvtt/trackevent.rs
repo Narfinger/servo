@@ -79,7 +79,7 @@ impl TrackEvent {
         track: &Option<VideoTrackOrAudioTrackOrTextTrack>,
         can_gc: CanGc,
     ) -> DomRoot<TrackEvent> {
-        let te = reflect_dom_object_with_proto(
+        let te = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TrackEvent::new_inherited(track)),
             window,
             proto,

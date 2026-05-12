@@ -426,7 +426,11 @@ impl IDBRequest {
     }
 
     pub fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<IDBRequest> {
-        reflect_dom_object(Box::new(IDBRequest::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(IDBRequest::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 
     pub fn set_source(&self, source: Option<&IDBObjectStore>) {

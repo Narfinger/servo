@@ -142,7 +142,7 @@ impl TransformStreamDefaultController {
         transformer_type: TransformerType,
         can_gc: CanGc,
     ) -> DomRoot<TransformStreamDefaultController> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TransformStreamDefaultController::new_inherited(
                 transformer_type,
             )),

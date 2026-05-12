@@ -140,7 +140,12 @@ impl Event {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<Event> {
-        reflect_dom_object_with_proto(Box::new(Event::new_inherited()), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(Event::new_inherited()),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     pub(crate) fn new(

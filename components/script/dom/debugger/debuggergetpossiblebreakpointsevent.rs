@@ -31,7 +31,8 @@ impl DebuggerGetPossibleBreakpointsEvent {
             event: Event::new_inherited(),
             spidermonkey_id,
         });
-        let result = reflect_dom_object(result, debugger_global, can_gc);
+        let result =
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(result, debugger_global, can_gc);
         result
             .event
             .init_event("getPossibleBreakpoints".into(), false, false);

@@ -101,7 +101,7 @@ impl WebGLContextEvent {
         status_message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<WebGLContextEvent> {
-        let event = reflect_dom_object_with_proto(
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLContextEvent::new_inherited(status_message)),
             window,
             proto,

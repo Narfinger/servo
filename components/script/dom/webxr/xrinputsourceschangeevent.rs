@@ -73,7 +73,7 @@ impl XRInputSourcesChangeEvent {
         removed: &[DomRoot<XRInputSource>],
         can_gc: CanGc,
     ) -> DomRoot<XRInputSourcesChangeEvent> {
-        let changeevent = reflect_dom_object_with_proto(
+        let changeevent = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRInputSourcesChangeEvent::new_inherited(session)),
             window,
             proto,

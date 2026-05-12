@@ -50,7 +50,7 @@ impl CSSKeyframeRule {
         parent_stylesheet: &CSSStyleSheet,
         keyframerule: Arc<Locked<Keyframe>>,
     ) -> DomRoot<CSSKeyframeRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSKeyframeRule::new_inherited(
                 parent_stylesheet,
                 keyframerule,

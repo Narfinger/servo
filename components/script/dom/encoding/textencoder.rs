@@ -41,7 +41,7 @@ impl TextEncoder {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TextEncoder> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TextEncoder::new_inherited()),
             global,
             proto,

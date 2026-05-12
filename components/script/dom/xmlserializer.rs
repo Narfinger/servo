@@ -35,7 +35,7 @@ impl XMLSerializer {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<XMLSerializer> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XMLSerializer::new_inherited(window)),
             window,
             proto,

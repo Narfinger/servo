@@ -111,7 +111,12 @@ impl AudioBuffer {
         initial_data: Option<&[Vec<f32>]>,
     ) -> DomRoot<AudioBuffer> {
         let buffer = AudioBuffer::new_inherited(number_of_channels, length, sample_rate);
-        let buffer = reflect_dom_object_with_proto_and_cx(Box::new(buffer), global, proto, cx);
+        let buffer = reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(buffer),
+            global,
+            proto,
+            cx,
+        );
         buffer.set_initial_data(initial_data);
         buffer
     }

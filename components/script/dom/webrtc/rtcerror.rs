@@ -55,7 +55,7 @@ impl RTCError {
         message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<RTCError> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(RTCError::new_inherited(init, message)),
             window,
             proto,

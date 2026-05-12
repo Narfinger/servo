@@ -64,7 +64,7 @@ impl XRSystem {
     }
 
     pub(crate) fn new(window: &Window, can_gc: CanGc) -> DomRoot<XRSystem> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRSystem::new_inherited(window.pipeline_id())),
             window,
             can_gc,

@@ -34,7 +34,11 @@ impl WorkerLocation {
         url: ServoUrl,
         can_gc: CanGc,
     ) -> DomRoot<WorkerLocation> {
-        reflect_dom_object(Box::new(WorkerLocation::new_inherited(url)), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(WorkerLocation::new_inherited(url)),
+            global,
+            can_gc,
+        )
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-workerlocation-origin

@@ -39,7 +39,7 @@ impl FileReaderSync {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<FileReaderSync> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(FileReaderSync::new_inherited()),
             global,
             proto,

@@ -27,7 +27,7 @@ impl OESTextureFloatLinear {
 impl WebGLExtension for OESTextureFloatLinear {
     type Extension = OESTextureFloatLinear;
     fn new(ctx: &WebGLRenderingContext, can_gc: CanGc) -> DomRoot<OESTextureFloatLinear> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(OESTextureFloatLinear::new_inherited()),
             &*ctx.global(),
             can_gc,

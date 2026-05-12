@@ -96,7 +96,7 @@ impl CustomElementRegistry {
     }
 
     pub(crate) fn new(window: &Window, can_gc: CanGc) -> DomRoot<CustomElementRegistry> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(CustomElementRegistry::new_inherited(window)),
             window,
             can_gc,

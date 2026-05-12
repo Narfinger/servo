@@ -131,7 +131,7 @@ impl UnderlyingSourceContainer {
         // TODO: setting the underlying source dict as the prototype of the
         // `UnderlyingSourceContainer`, as it is later used as the "this" in Call_.
         // Is this a good idea?
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(UnderlyingSourceContainer::new_inherited(
                 underlying_source_type,
             )),

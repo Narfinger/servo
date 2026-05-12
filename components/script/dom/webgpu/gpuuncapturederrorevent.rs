@@ -49,7 +49,7 @@ impl GPUUncapturedErrorEvent {
         init: &GPUUncapturedErrorEventInit,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        let event = reflect_dom_object_with_proto(
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(GPUUncapturedErrorEvent::new_inherited(init)),
             global,
             proto,

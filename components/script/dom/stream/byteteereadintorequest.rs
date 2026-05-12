@@ -79,7 +79,7 @@ impl ByteTeeReadIntoRequest {
         global: &GlobalScope,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ByteTeeReadIntoRequest {
                 reflector_: Reflector::new(),
                 for_branch2,

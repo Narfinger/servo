@@ -41,7 +41,8 @@ impl DebuggerAddDebuggeeEvent {
             pipeline_id: Dom::from_ref(pipeline_id),
             worker_id,
         });
-        let result = reflect_dom_object(result, debugger_global, can_gc);
+        let result =
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(result, debugger_global, can_gc);
         result.event.init_event("addDebuggee".into(), false, false);
 
         // Convert the debuggee global’s reflector to a Value, wrapping it from its originating realm (debuggee realm)

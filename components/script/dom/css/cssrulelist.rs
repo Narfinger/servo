@@ -93,7 +93,7 @@ impl CSSRuleList {
         parent_stylesheet: &CSSStyleSheet,
         rules: RulesSource,
     ) -> DomRoot<CSSRuleList> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSRuleList::new_inherited(parent_stylesheet, rules)),
             window,
             cx,

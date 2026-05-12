@@ -48,7 +48,7 @@ impl FormDataEvent {
         form_data: &FormData,
         can_gc: CanGc,
     ) -> DomRoot<FormDataEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(FormDataEvent {
                 event: Event::new_inherited(),
                 form_data: Dom::from_ref(form_data),

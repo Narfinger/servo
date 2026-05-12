@@ -54,7 +54,7 @@ impl VideoTrack {
         track_list: Option<&VideoTrackList>,
         can_gc: CanGc,
     ) -> DomRoot<VideoTrack> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(VideoTrack::new_inherited(
                 id, kind, label, language, track_list,
             )),

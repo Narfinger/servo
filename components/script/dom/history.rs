@@ -64,7 +64,11 @@ impl History {
     }
 
     pub(crate) fn new(window: &Window, can_gc: CanGc) -> DomRoot<History> {
-        let dom_root = reflect_dom_object(Box::new(History::new_inherited(window)), window, can_gc);
+        let dom_root = reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(History::new_inherited(window)),
+            window,
+            can_gc,
+        );
         dom_root.state.set(NullValue());
         dom_root
     }

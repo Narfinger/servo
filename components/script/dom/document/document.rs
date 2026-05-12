@@ -3865,7 +3865,7 @@ impl Document {
         creation_sandboxing_flag_set: SandboxingFlagSet,
         can_gc: CanGc,
     ) -> DomRoot<Document> {
-        let document = reflect_dom_object_with_proto(
+        let document = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Document::new_inherited(
                 window,
                 has_browsing_context,

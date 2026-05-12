@@ -65,7 +65,7 @@ impl XRReferenceSpaceEvent {
         transform: Option<&XRRigidTransform>,
         can_gc: CanGc,
     ) -> DomRoot<XRReferenceSpaceEvent> {
-        let trackevent = reflect_dom_object_with_proto(
+        let trackevent = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRReferenceSpaceEvent::new_inherited(space, transform)),
             window,
             proto,

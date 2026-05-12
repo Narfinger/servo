@@ -60,7 +60,7 @@ impl LargestContentfulPaint {
         can_gc: CanGc,
     ) -> DomRoot<LargestContentfulPaint> {
         let entry = LargestContentfulPaint::new_inherited(render_time, size, url);
-        reflect_dom_object(Box::new(entry), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(entry), global, can_gc)
     }
 }
 

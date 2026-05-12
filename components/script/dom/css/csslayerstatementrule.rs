@@ -47,7 +47,7 @@ impl CSSLayerStatementRule {
         parent_stylesheet: &CSSStyleSheet,
         layerstatementrule: Arc<LayerStatementRule>,
     ) -> DomRoot<CSSLayerStatementRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSLayerStatementRule::new_inherited(
                 parent_stylesheet,
                 layerstatementrule,

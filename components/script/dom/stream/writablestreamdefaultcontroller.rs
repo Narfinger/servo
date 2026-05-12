@@ -381,7 +381,7 @@ impl WritableStreamDefaultController {
         strategy_size: Rc<QueuingStrategySize>,
         can_gc: CanGc,
     ) -> DomRoot<WritableStreamDefaultController> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WritableStreamDefaultController::new_inherited(
                 global,
                 underlying_sink_type,

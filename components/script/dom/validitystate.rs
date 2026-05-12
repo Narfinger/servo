@@ -92,7 +92,7 @@ impl ValidityState {
     }
 
     pub(crate) fn new(window: &Window, element: &Element, can_gc: CanGc) -> DomRoot<ValidityState> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ValidityState::new_inherited(element)),
             window,
             can_gc,

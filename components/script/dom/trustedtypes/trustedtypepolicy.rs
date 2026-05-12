@@ -79,7 +79,11 @@ impl TrustedTypePolicy {
         options: &TrustedTypePolicyOptions,
         global: &GlobalScope,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(Box::new(Self::new_inherited(name, options)), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(name, options)),
+            global,
+            cx,
+        )
     }
 
     /// <https://w3c.github.io/trusted-types/dist/spec/#get-trusted-type-policy-value-algorithm>

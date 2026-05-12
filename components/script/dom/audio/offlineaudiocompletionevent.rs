@@ -63,7 +63,9 @@ impl OfflineAudioCompletionEvent {
         can_gc: CanGc,
     ) -> DomRoot<OfflineAudioCompletionEvent> {
         let event = Box::new(OfflineAudioCompletionEvent::new_inherited(rendered_buffer));
-        let ev = reflect_dom_object_with_proto(event, window, proto, can_gc);
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            event, window, proto, can_gc,
+        );
         {
             let event = ev.upcast::<Event>();
             event.init_event(type_, bool::from(bubbles), bool::from(cancelable));

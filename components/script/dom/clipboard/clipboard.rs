@@ -90,7 +90,11 @@ impl Clipboard {
     }
 
     pub(crate) fn new(cx: &mut JSContext, global: &GlobalScope) -> DomRoot<Clipboard> {
-        reflect_dom_object_with_cx(Box::new(Clipboard::new_inherited()), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Clipboard::new_inherited()),
+            global,
+            cx,
+        )
     }
 }
 

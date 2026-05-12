@@ -32,7 +32,7 @@ impl XRViewport {
         viewport: Rect<i32, Viewport>,
         can_gc: CanGc,
     ) -> DomRoot<XRViewport> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRViewport::new_inherited(viewport)),
             global,
             can_gc,

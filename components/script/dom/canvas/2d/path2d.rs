@@ -196,7 +196,12 @@ impl Path2DMethods<crate::DomTypeHolder> for Path2D {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<Path2D> {
-        reflect_dom_object_with_proto(Box::new(Self::new()), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new()),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     /// <https://html.spec.whatwg.org/multipage/#dom-path2d-dev>
@@ -206,7 +211,12 @@ impl Path2DMethods<crate::DomTypeHolder> for Path2D {
         can_gc: CanGc,
         other: &Path2D,
     ) -> DomRoot<Path2D> {
-        reflect_dom_object_with_proto(Box::new(Self::new_with_path(other)), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_with_path(other)),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     /// <https://html.spec.whatwg.org/multipage/#dom-path2d-dev>
@@ -216,7 +226,7 @@ impl Path2DMethods<crate::DomTypeHolder> for Path2D {
         can_gc: CanGc,
         path_string: DOMString,
     ) -> DomRoot<Path2D> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_with_str(&path_string.str())),
             global,
             proto,

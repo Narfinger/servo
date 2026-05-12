@@ -25,7 +25,8 @@ impl DebuggerInterruptEvent {
         let result = Box::new(Self {
             event: Event::new_inherited(),
         });
-        let result = reflect_dom_object(result, debugger_global, can_gc);
+        let result =
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(result, debugger_global, can_gc);
         result.event.init_event("interrupt".into(), false, false);
 
         result

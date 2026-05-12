@@ -123,7 +123,7 @@ impl DOMStringMap {
     }
 
     pub(crate) fn new(element: &HTMLElement, can_gc: CanGc) -> DomRoot<DOMStringMap> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DOMStringMap::new_inherited(element)),
             &*element.owner_window(),
             can_gc,

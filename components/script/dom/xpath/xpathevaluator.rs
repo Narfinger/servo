@@ -40,7 +40,7 @@ impl XPathEvaluator {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<XPathEvaluator> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XPathEvaluator::new_inherited(window)),
             window,
             proto,

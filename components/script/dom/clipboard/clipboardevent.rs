@@ -64,7 +64,7 @@ impl ClipboardEvent {
         clipboard_data: Option<&DataTransfer>,
         can_gc: CanGc,
     ) -> DomRoot<ClipboardEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(ClipboardEvent::new_inherited()),
             window,
             proto,

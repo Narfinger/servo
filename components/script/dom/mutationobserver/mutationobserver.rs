@@ -78,7 +78,12 @@ impl MutationObserver {
         can_gc: CanGc,
     ) -> DomRoot<MutationObserver> {
         let boxed_observer = Box::new(MutationObserver::new_inherited(callback));
-        reflect_dom_object_with_proto(boxed_observer, global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            boxed_observer,
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     fn new_inherited(callback: Rc<MutationCallback>) -> MutationObserver {

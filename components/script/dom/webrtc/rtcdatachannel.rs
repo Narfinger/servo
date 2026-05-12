@@ -127,7 +127,7 @@ impl RTCDataChannel {
         servo_media_id: Option<DataChannelId>,
         can_gc: CanGc,
     ) -> DomRoot<RTCDataChannel> {
-        let rtc_data_channel = reflect_dom_object(
+        let rtc_data_channel = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(RTCDataChannel::new_inherited(
                 peer_connection,
                 label,

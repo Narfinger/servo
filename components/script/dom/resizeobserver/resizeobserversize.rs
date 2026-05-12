@@ -55,7 +55,12 @@ impl ResizeObserverSize {
         can_gc: CanGc,
     ) -> DomRoot<ResizeObserverSize> {
         let observer_size = Box::new(ResizeObserverSize::new_inherited(size_impl));
-        reflect_dom_object_with_proto(observer_size, window, None, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            observer_size,
+            window,
+            None,
+            can_gc,
+        )
     }
 }
 

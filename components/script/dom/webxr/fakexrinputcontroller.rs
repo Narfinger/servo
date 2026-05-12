@@ -52,7 +52,7 @@ impl FakeXRInputController {
         id: InputId,
         can_gc: CanGc,
     ) -> DomRoot<FakeXRInputController> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(FakeXRInputController::new_inherited(sender, id)),
             global,
             can_gc,

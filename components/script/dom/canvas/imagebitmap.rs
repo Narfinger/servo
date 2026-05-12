@@ -55,7 +55,7 @@ impl ImageBitmap {
         bitmap_data: Snapshot,
         can_gc: CanGc,
     ) -> DomRoot<ImageBitmap> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ImageBitmap::new_inherited(bitmap_data)),
             global,
             can_gc,

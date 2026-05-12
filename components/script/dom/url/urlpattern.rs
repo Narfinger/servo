@@ -59,7 +59,7 @@ impl URLPattern {
         let pattern = urlpattern::UrlPattern::parse(pattern_init, options)
             .map_err(|error| Error::Type(cformat!("{error}")))?;
 
-        let url_pattern = reflect_dom_object_with_proto(
+        let url_pattern = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(URLPattern::new_inherited(pattern)),
             global,
             proto,

@@ -49,7 +49,7 @@ impl XRJointSpace {
         hand_joint: XRHandJoint,
         can_gc: CanGc,
     ) -> DomRoot<XRJointSpace> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(session, input, joint, hand_joint)),
             global,
             can_gc,

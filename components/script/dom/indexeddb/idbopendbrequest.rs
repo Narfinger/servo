@@ -121,7 +121,11 @@ impl IDBOpenDBRequest {
     }
 
     pub fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<IDBOpenDBRequest> {
-        reflect_dom_object(Box::new(IDBOpenDBRequest::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(IDBOpenDBRequest::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 
     pub(crate) fn get_id(&self) -> Uuid {

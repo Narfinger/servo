@@ -35,7 +35,7 @@ impl XRHitTestSource {
         session: &XRSession,
         can_gc: CanGc,
     ) -> DomRoot<XRHitTestSource> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRHitTestSource::new_inherited(id, session)),
             window,
             can_gc,

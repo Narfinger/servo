@@ -131,7 +131,7 @@ impl XPathResult {
         result_type: XPathResultType,
         value: XPathResultValue,
     ) -> DomRoot<XPathResult> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XPathResult::new_inherited(window, result_type, value)),
             window,
             proto,

@@ -65,7 +65,7 @@ impl GPURenderBundleEncoder {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPURenderBundleEncoder::new_inherited(
                 render_bundle_encoder,
                 device,

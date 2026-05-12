@@ -40,7 +40,7 @@ impl GPUError {
         message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(GPUError::new_inherited(message)),
             global,
             proto,

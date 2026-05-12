@@ -40,7 +40,7 @@ impl DissimilarOriginLocation {
         window: &DissimilarOriginWindow,
         can_gc: CanGc,
     ) -> DomRoot<DissimilarOriginLocation> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DissimilarOriginLocation::new_inherited(window)),
             window,
             can_gc,

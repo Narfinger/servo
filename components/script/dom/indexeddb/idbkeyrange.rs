@@ -32,7 +32,11 @@ impl IDBKeyRange {
     }
 
     pub fn new(global: &GlobalScope, inner: IndexedDBKeyRange, can_gc: CanGc) -> DomRoot<Self> {
-        reflect_dom_object(Box::new(IDBKeyRange::new_inherited(inner)), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(IDBKeyRange::new_inherited(inner)),
+            global,
+            can_gc,
+        )
     }
 
     pub fn inner(&self) -> &IndexedDBKeyRange {

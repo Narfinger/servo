@@ -61,7 +61,7 @@ impl BluetoothRemoteGATTDescriptor {
         uuid: DOMString,
         instance_id: String,
     ) -> DomRoot<BluetoothRemoteGATTDescriptor> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(BluetoothRemoteGATTDescriptor::new_inherited(
                 characteristic,
                 uuid,

@@ -257,7 +257,7 @@ impl CSSStyleDeclaration {
         modification_access: CSSModificationAccess,
         can_gc: CanGc,
     ) -> DomRoot<CSSStyleDeclaration> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(CSSStyleDeclaration::new_inherited(
                 owner,
                 pseudo,

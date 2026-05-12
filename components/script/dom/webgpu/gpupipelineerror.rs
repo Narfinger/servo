@@ -37,7 +37,7 @@ impl GPUPipelineError {
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(message, reason)),
             global,
             proto,

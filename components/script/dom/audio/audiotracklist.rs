@@ -43,7 +43,7 @@ impl AudioTrackList {
         media_element: Option<&HTMLMediaElement>,
         can_gc: CanGc,
     ) -> DomRoot<AudioTrackList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(AudioTrackList::new_inherited(tracks, media_element)),
             window,
             can_gc,

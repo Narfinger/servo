@@ -946,7 +946,7 @@ impl ReadableStream {
         proto: Option<SafeHandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<ReadableStream> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(ReadableStream::new_inherited()),
             global,
             proto,

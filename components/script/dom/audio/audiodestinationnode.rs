@@ -46,7 +46,7 @@ impl AudioDestinationNode {
         can_gc: CanGc,
     ) -> DomRoot<AudioDestinationNode> {
         let node = AudioDestinationNode::new_inherited(context, options);
-        reflect_dom_object(Box::new(node), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(node), global, can_gc)
     }
 }
 

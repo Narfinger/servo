@@ -50,7 +50,7 @@ impl HTMLOptionsCollection {
         filter: Box<dyn CollectionFilter + 'static>,
         can_gc: CanGc,
     ) -> DomRoot<HTMLOptionsCollection> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(HTMLOptionsCollection::new_inherited(select, filter)),
             window,
             can_gc,

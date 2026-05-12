@@ -170,7 +170,11 @@ impl Navigator {
     }
 
     pub(crate) fn new(window: &Window, can_gc: CanGc) -> DomRoot<Navigator> {
-        reflect_dom_object(Box::new(Navigator::new_inherited()), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(Navigator::new_inherited()),
+            window,
+            can_gc,
+        )
     }
 
     #[cfg(feature = "webxr")]

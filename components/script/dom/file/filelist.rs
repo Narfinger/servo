@@ -39,7 +39,7 @@ impl FileList {
         files: Vec<DomRoot<File>>,
         can_gc: CanGc,
     ) -> DomRoot<FileList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(FileList::new_inherited(
                 files.iter().map(|r| Dom::from_ref(&**r)).collect(),
             )),
@@ -53,7 +53,7 @@ impl FileList {
         files: Vec<DomRoot<File>>,
         can_gc: CanGc,
     ) -> DomRoot<FileList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(FileList::new_inherited(
                 files.iter().map(|r| Dom::from_ref(&**r)).collect(),
             )),

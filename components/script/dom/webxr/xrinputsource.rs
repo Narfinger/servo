@@ -79,7 +79,7 @@ impl XRInputSource {
         info: InputSource,
         can_gc: CanGc,
     ) -> DomRoot<XRInputSource> {
-        let source = reflect_dom_object(
+        let source = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRInputSource::new_inherited(window, session, info, can_gc)),
             window,
             can_gc,

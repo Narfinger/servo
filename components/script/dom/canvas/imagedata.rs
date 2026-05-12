@@ -144,7 +144,7 @@ impl ImageData {
             // 8. Otherwise, initialize the colorSpace attribute of imageData to "srgb".
             .unwrap_or(PredefinedColorSpace::Srgb);
 
-        Ok(reflect_dom_object_with_proto(
+        Ok(reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(ImageData {
                 reflector_: Reflector::new(),
                 width,

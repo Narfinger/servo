@@ -42,7 +42,7 @@ impl PasswordCredential {
         password: USVString,
         can_gc: CanGc,
     ) -> DomRoot<PasswordCredential> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(PasswordCredential::new_inherited(id, origin, password)),
             global,
             can_gc,
@@ -57,7 +57,7 @@ impl PasswordCredential {
         password: USVString,
         can_gc: CanGc,
     ) -> DomRoot<PasswordCredential> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(PasswordCredential::new_inherited(id, origin, password)),
             global,
             proto,

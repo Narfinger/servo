@@ -72,7 +72,7 @@ impl GPUTextureView {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<GPUTextureView> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUTextureView::new_inherited(
                 channel,
                 texture_view,

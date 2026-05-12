@@ -65,7 +65,7 @@ impl PaintRenderingContext2D {
         global: &PaintWorkletGlobalScope,
         can_gc: CanGc,
     ) -> Option<DomRoot<PaintRenderingContext2D>> {
-        Some(reflect_dom_object(
+        Some(reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(PaintRenderingContext2D::new_inherited(global)?),
             global,
             can_gc,

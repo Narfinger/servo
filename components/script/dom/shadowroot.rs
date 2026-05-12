@@ -161,7 +161,7 @@ impl ShadowRoot {
         is_user_agent_widget: IsUserAgentWidget,
         can_gc: CanGc,
     ) -> DomRoot<ShadowRoot> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ShadowRoot::new_inherited(
                 host,
                 document,

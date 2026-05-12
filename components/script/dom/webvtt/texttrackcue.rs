@@ -53,7 +53,7 @@ impl TextTrackCue {
         track: Option<&TextTrack>,
         can_gc: CanGc,
     ) -> DomRoot<TextTrackCue> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TextTrackCue::new_inherited(id, start_time, end_time, track)),
             window,
             can_gc,

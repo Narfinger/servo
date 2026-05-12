@@ -33,7 +33,11 @@ impl CompositionEvent {
     }
 
     pub(crate) fn new_uninitialized(window: &Window, can_gc: CanGc) -> DomRoot<CompositionEvent> {
-        reflect_dom_object(Box::new(CompositionEvent::new_inherited()), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(CompositionEvent::new_inherited()),
+            window,
+            can_gc,
+        )
     }
 
     #[expect(clippy::too_many_arguments)]
@@ -64,7 +68,7 @@ impl CompositionEvent {
         data: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<CompositionEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(CompositionEvent {
                 uievent: UIEvent::new_inherited(),
                 data,

@@ -47,7 +47,7 @@ impl MutationRecord {
             None,
             None,
         ));
-        reflect_dom_object(record, &*target.owner_window(), can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(record, &*target.owner_window(), can_gc)
     }
 
     pub(crate) fn character_data_mutated(
@@ -55,7 +55,7 @@ impl MutationRecord {
         old_value: Option<DOMString>,
         can_gc: CanGc,
     ) -> DomRoot<MutationRecord> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(MutationRecord::new_inherited(
                 "characterData",
                 target,
@@ -86,7 +86,7 @@ impl MutationRecord {
         let removed_nodes =
             removed_nodes.map(|list| NodeList::new_simple_list_slice(&window, list, can_gc));
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(MutationRecord::new_inherited(
                 "childList",
                 target,

@@ -123,7 +123,7 @@ impl Range {
         end_offset: u32,
         can_gc: CanGc,
     ) -> DomRoot<Range> {
-        let range = reflect_dom_object_with_proto(
+        let range = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Range::new_inherited(
                 start_container,
                 start_offset,

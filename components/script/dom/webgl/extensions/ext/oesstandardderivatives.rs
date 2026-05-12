@@ -29,7 +29,7 @@ impl OESStandardDerivatives {
 impl WebGLExtension for OESStandardDerivatives {
     type Extension = OESStandardDerivatives;
     fn new(ctx: &WebGLRenderingContext, can_gc: CanGc) -> DomRoot<OESStandardDerivatives> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(OESStandardDerivatives::new_inherited()),
             &*ctx.global(),
             can_gc,

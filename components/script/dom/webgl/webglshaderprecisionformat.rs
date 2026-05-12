@@ -36,7 +36,7 @@ impl WebGLShaderPrecisionFormat {
         precision: i32,
         can_gc: CanGc,
     ) -> DomRoot<WebGLShaderPrecisionFormat> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLShaderPrecisionFormat::new_inherited(
                 range_min, range_max, precision,
             )),

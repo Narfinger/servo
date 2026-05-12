@@ -51,7 +51,7 @@ impl PerformanceNavigationTiming {
         document: &Document,
         can_gc: CanGc,
     ) -> DomRoot<PerformanceNavigationTiming> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(PerformanceNavigationTiming::new_inherited(
                 fetch_start,
                 document,

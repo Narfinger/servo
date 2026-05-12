@@ -114,7 +114,7 @@ impl Worklet {
         global_type: WorkletGlobalScopeType,
     ) -> DomRoot<Worklet> {
         debug!("Creating worklet {:?}.", global_type);
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Worklet::new_inherited(window, global_type)),
             window,
             cx,

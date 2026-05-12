@@ -430,7 +430,7 @@ impl TransformStream {
         proto: Option<SafeHandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TransformStream> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TransformStream::new_inherited()),
             global,
             proto,

@@ -49,7 +49,7 @@ impl VisibilityStateEntry {
         timestamp: CrossProcessInstant,
         can_gc: CanGc,
     ) -> DomRoot<VisibilityStateEntry> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(VisibilityStateEntry::new_inherited(state, timestamp)),
             global,
             can_gc,

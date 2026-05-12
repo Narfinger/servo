@@ -362,7 +362,11 @@ impl TextEncoderStream {
         transform.set_up(cx, global, transformer_type)?;
 
         // Step 6. Set this’s transform to transformStream.
-        Ok(reflect_dom_object_with_proto_and_cx(
+        Ok(reflect_dom_object_with_proto_and_cx::<
+            crate::DomTypeHolder,
+            _,
+            _,
+        >(
             Box::new(TextEncoderStream::new_inherited(&transform)),
             global,
             proto,

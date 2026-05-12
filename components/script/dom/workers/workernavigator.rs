@@ -43,7 +43,11 @@ impl WorkerNavigator {
     }
 
     pub(crate) fn new(global: &WorkerGlobalScope, can_gc: CanGc) -> DomRoot<WorkerNavigator> {
-        reflect_dom_object(Box::new(WorkerNavigator::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(WorkerNavigator::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 }
 

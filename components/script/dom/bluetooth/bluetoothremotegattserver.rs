@@ -45,7 +45,7 @@ impl BluetoothRemoteGATTServer {
         global: &GlobalScope,
         device: &BluetoothDevice,
     ) -> DomRoot<BluetoothRemoteGATTServer> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(BluetoothRemoteGATTServer::new_inherited(device)),
             global,
             cx,

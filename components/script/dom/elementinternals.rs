@@ -96,7 +96,7 @@ impl ElementInternals {
 
     pub(crate) fn new(element: &HTMLElement, can_gc: CanGc) -> DomRoot<ElementInternals> {
         let global = element.owner_window();
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ElementInternals::new_inherited(element)),
             &*global,
             can_gc,

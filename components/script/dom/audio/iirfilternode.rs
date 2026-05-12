@@ -89,7 +89,7 @@ impl IIRFilterNode {
         can_gc: CanGc,
     ) -> Fallible<DomRoot<IIRFilterNode>> {
         let node = IIRFilterNode::new_inherited(window, context, options)?;
-        Ok(reflect_dom_object_with_proto(
+        Ok(reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(node),
             window,
             proto,

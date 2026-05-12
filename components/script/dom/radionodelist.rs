@@ -39,7 +39,7 @@ impl RadioNodeList {
         window: &Window,
         list_type: NodeListType,
     ) -> DomRoot<RadioNodeList> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(RadioNodeList::new_inherited(list_type)),
             window,
             cx,

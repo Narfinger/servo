@@ -31,7 +31,7 @@ impl DOMStringList {
         strings: Vec<DOMString>,
         can_gc: CanGc,
     ) -> DomRoot<DOMStringList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DOMStringList::new_inherited(strings)),
             global,
             can_gc,

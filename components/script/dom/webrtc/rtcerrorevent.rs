@@ -53,7 +53,7 @@ impl RTCErrorEvent {
         error: &RTCError,
         can_gc: CanGc,
     ) -> DomRoot<RTCErrorEvent> {
-        let event = reflect_dom_object_with_proto(
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(RTCErrorEvent::new_inherited(error)),
             window,
             proto,

@@ -118,7 +118,7 @@ impl WebGLShader {
         shader_type: u32,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLShader::new_inherited(context, id, shader_type)),
             &*context.global(),
             can_gc,

@@ -65,7 +65,7 @@ impl FormData {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<FormData> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(FormData::new_inherited(form_datums)),
             global,
             proto,

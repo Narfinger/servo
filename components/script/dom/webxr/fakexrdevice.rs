@@ -59,7 +59,7 @@ impl FakeXRDevice {
         sender: GenericSender<MockDeviceMsg>,
         can_gc: CanGc,
     ) -> DomRoot<FakeXRDevice> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(FakeXRDevice::new_inherited(sender)),
             global,
             can_gc,

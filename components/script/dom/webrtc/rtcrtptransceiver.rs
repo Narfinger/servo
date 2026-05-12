@@ -41,7 +41,7 @@ impl RTCRtpTransceiver {
         direction: RTCRtpTransceiverDirection,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(global, direction, can_gc)),
             global,
             can_gc,

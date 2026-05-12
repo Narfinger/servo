@@ -107,7 +107,7 @@ impl GPUTexture {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUTexture::new_inherited(
                 texture,
                 device,

@@ -57,7 +57,7 @@ impl DataTransferItem {
         data_store: Rc<RefCell<Option<DragDataStore>>>,
         id: u16,
     ) -> DomRoot<DataTransferItem> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(DataTransferItem::new_inherited(data_store, id)),
             global,
             cx,

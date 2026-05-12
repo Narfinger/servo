@@ -72,7 +72,7 @@ impl ServiceWorkerRegistration {
         registration_id: ServiceWorkerRegistrationId,
         can_gc: CanGc,
     ) -> DomRoot<ServiceWorkerRegistration> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ServiceWorkerRegistration::new_inherited(
                 scope,
                 registration_id,

@@ -51,7 +51,7 @@ impl BluetoothPermissionResult {
         global: &GlobalScope,
         status: &PermissionStatus,
     ) -> DomRoot<BluetoothPermissionResult> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(BluetoothPermissionResult::new_inherited(status)),
             global,
             CanGc::from_cx(cx),

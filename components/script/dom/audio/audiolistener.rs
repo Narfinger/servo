@@ -169,7 +169,7 @@ impl AudioListener {
         can_gc: CanGc,
     ) -> DomRoot<AudioListener> {
         let node = AudioListener::new_inherited(window, context, can_gc);
-        reflect_dom_object(Box::new(node), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(node), window, can_gc)
     }
 }
 

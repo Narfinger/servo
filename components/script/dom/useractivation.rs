@@ -32,7 +32,11 @@ impl UserActivation {
     }
 
     pub(crate) fn new(cx: &mut JSContext, global: &GlobalScope) -> DomRoot<UserActivation> {
-        reflect_dom_object_with_cx(Box::new(UserActivation::new_inherited()), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(UserActivation::new_inherited()),
+            global,
+            cx,
+        )
     }
 
     /// <https://html.spec.whatwg.org/multipage/#activation-notification>

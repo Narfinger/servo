@@ -15,7 +15,7 @@ use crate::realms::{AlreadyInRealm, InRealm};
 use crate::script_runtime::JSContext;
 
 /// A container with a list of conditions.
-pub(crate) struct Guard<T: Clone + Copy> {
+pub struct Guard<T: Clone + Copy> {
     conditions: &'static [Condition],
     value: T,
 }

@@ -864,7 +864,7 @@ macro_rules! impl_performance_entry_struct(
                     duration,
                     $( $field_name, )*
                 );
-                reflect_dom_object(Box::new(entry), global, CanGc::deprecated_note())
+                reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(entry), global, CanGc::deprecated_note())
             }
         }
     );

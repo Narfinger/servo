@@ -43,7 +43,7 @@ impl CSSNamespaceRule {
         parent_stylesheet: &CSSStyleSheet,
         namespacerule: Arc<NamespaceRule>,
     ) -> DomRoot<CSSNamespaceRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSNamespaceRule::new_inherited(
                 parent_stylesheet,
                 namespacerule,

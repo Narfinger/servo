@@ -36,7 +36,11 @@ impl WakeLockSentinel {
         global: &GlobalScope,
         type_: WakeLockType,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(Box::new(Self::new_inherited(type_)), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(type_)),
+            global,
+            cx,
+        )
     }
 }
 

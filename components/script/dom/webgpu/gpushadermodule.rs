@@ -82,7 +82,7 @@ impl GPUShaderModule {
         promise: Rc<Promise>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUShaderModule::new_inherited(
                 channel,
                 shader_module,

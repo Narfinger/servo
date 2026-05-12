@@ -39,7 +39,7 @@ impl TextTrackList {
         tracks: &[&TextTrack],
         can_gc: CanGc,
     ) -> DomRoot<TextTrackList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TextTrackList::new_inherited(tracks)),
             window,
             can_gc,

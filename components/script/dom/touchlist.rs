@@ -26,7 +26,11 @@ impl TouchList {
     }
 
     pub(crate) fn new(window: &Window, touches: &[&Touch], can_gc: CanGc) -> DomRoot<TouchList> {
-        reflect_dom_object(Box::new(TouchList::new_inherited(touches)), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(TouchList::new_inherited(touches)),
+            window,
+            can_gc,
+        )
     }
 }
 

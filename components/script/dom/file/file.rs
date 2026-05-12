@@ -61,7 +61,7 @@ impl File {
         modified: Option<SystemTime>,
         can_gc: CanGc,
     ) -> DomRoot<File> {
-        let file = reflect_dom_object_with_proto(
+        let file = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(File::new_inherited(&blob_impl, name, modified)),
             global,
             proto,

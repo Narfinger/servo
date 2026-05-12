@@ -71,7 +71,7 @@ impl DefaultTeeUnderlyingSource {
         tee_cancel_algorithm: DefaultTeeCancelAlgorithm,
         can_gc: CanGc,
     ) -> DomRoot<DefaultTeeUnderlyingSource> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DefaultTeeUnderlyingSource {
                 reflector_: Reflector::new(),
                 reader: Dom::from_ref(reader),

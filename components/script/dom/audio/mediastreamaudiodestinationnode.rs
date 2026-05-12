@@ -74,12 +74,11 @@ impl MediaStreamAudioDestinationNode {
         options: &AudioNodeOptions,
     ) -> Fallible<DomRoot<MediaStreamAudioDestinationNode>> {
         let node = MediaStreamAudioDestinationNode::new_inherited(cx, context, options)?;
-        Ok(reflect_dom_object_with_proto_and_cx(
-            Box::new(node),
-            window,
-            proto,
-            cx,
-        ))
+        Ok(reflect_dom_object_with_proto_and_cx::<
+            crate::DomTypeHolder,
+            _,
+            _,
+        >(Box::new(node), window, proto, cx))
     }
 }
 

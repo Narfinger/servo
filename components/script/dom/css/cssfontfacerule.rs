@@ -42,7 +42,7 @@ impl CSSFontFaceRule {
         parent_stylesheet: &CSSStyleSheet,
         fontfacerule: Arc<Locked<FontFaceRule>>,
     ) -> DomRoot<CSSFontFaceRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSFontFaceRule::new_inherited(
                 parent_stylesheet,
                 fontfacerule,

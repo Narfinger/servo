@@ -175,7 +175,7 @@ impl GPUDevice {
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
         let adapter_info = GPUAdapterInfo::clone_from(global, &adapter.Info(), can_gc);
         let lost_promise = Promise::new(global, can_gc);
-        let device = reflect_dom_object(
+        let device = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUDevice::new_inherited(
                 channel,
                 adapter,

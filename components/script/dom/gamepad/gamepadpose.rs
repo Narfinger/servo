@@ -46,7 +46,11 @@ impl GamepadPose {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<GamepadPose> {
-        reflect_dom_object(Box::new(GamepadPose::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(GamepadPose::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 }
 

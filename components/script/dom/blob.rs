@@ -54,7 +54,7 @@ impl Blob {
         blob_impl: BlobImpl,
         can_gc: CanGc,
     ) -> DomRoot<Blob> {
-        let dom_blob = reflect_dom_object_with_proto(
+        let dom_blob = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Blob::new_inherited(&blob_impl)),
             global,
             proto,
@@ -70,7 +70,7 @@ impl Blob {
         blob_impl: BlobImpl,
         cx: &mut js::context::JSContext,
     ) -> DomRoot<Blob> {
-        let dom_blob = reflect_dom_object_with_proto_and_cx(
+        let dom_blob = reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Blob::new_inherited(&blob_impl)),
             global,
             proto,

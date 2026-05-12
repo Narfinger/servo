@@ -68,7 +68,7 @@ impl VTTCue {
         text: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(start_time, end_time, text)),
             window,
             proto,

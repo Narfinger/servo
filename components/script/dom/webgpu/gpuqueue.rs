@@ -56,7 +56,7 @@ impl GPUQueue {
         queue: WebGPUQueue,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUQueue::new_inherited(channel, queue)),
             global,
             can_gc,

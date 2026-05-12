@@ -55,7 +55,9 @@ impl CommandEvent {
         can_gc: CanGc,
     ) -> DomRoot<CommandEvent> {
         let event = Box::new(CommandEvent::new_inherited(source, command));
-        let event = reflect_dom_object_with_proto(event, window, proto, can_gc);
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            event, window, proto, can_gc,
+        );
         {
             let event = event.upcast::<Event>();
             event.init_event(type_, bool::from(bubbles), bool::from(cancelable));

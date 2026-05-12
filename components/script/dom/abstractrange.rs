@@ -45,7 +45,7 @@ impl AbstractRange {
         end_offset: u32,
         can_gc: CanGc,
     ) -> DomRoot<AbstractRange> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(AbstractRange::new_inherited(
                 start_container,
                 start_offset,

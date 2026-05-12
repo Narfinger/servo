@@ -96,7 +96,7 @@ impl Response {
         global: &GlobalScope,
         proto: Option<HandleObject>,
     ) -> DomRoot<Response> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Response::new_inherited(cx, global)),
             global,
             proto,

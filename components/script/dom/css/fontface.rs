@@ -281,7 +281,7 @@ impl FontFace {
             None
         };
 
-        let font_face_rule = reflect_dom_object_with_proto(
+        let font_face_rule = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(
                 global,
                 font_family,

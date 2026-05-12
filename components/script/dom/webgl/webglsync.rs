@@ -84,7 +84,7 @@ impl WebGLSync {
         context.send_command(WebGLCommand::FenceSync(sender));
         let sync_id = receiver.recv().unwrap();
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLSync::new_inherited(context, sync_id)),
             &*context.global(),
             can_gc,

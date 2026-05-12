@@ -29,7 +29,11 @@ impl WebGLExtension for EXTShaderTextureLod {
     type Extension = Self;
 
     fn new(ctx: &WebGLRenderingContext, can_gc: CanGc) -> DomRoot<Self> {
-        reflect_dom_object(Box::new(Self::new_inherited()), &*ctx.global(), can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited()),
+            &*ctx.global(),
+            can_gc,
+        )
     }
 
     fn spec() -> WebGLExtensionSpec {

@@ -87,7 +87,7 @@ impl WebGLTransformFeedback {
         context.send_command(WebGLCommand::CreateTransformFeedback(sender));
         let id = receiver.recv().unwrap();
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLTransformFeedback::new_inherited(context, id)),
             &*context.global(),
             can_gc,

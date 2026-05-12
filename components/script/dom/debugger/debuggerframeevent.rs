@@ -37,7 +37,8 @@ impl DebuggerFrameEvent {
             start,
             count,
         });
-        let result = reflect_dom_object(result, debugger_global, can_gc);
+        let result =
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(result, debugger_global, can_gc);
         result.event.init_event("frames".into(), false, false);
 
         result

@@ -48,7 +48,7 @@ impl TestBindingPairIterable {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TestBindingPairIterable> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TestBindingPairIterable {
                 reflector: Reflector::new(),
                 map: DomRefCell::new(vec![]),

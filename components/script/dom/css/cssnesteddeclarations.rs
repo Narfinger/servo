@@ -49,7 +49,7 @@ impl CSSNestedDeclarations {
         parent_stylesheet: &CSSStyleSheet,
         nesteddeclarationsrule: Arc<Locked<NestedDeclarationsRule>>,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(
                 parent_stylesheet,
                 nesteddeclarationsrule,

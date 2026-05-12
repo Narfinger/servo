@@ -51,7 +51,7 @@ impl RTCTrackEvent {
         cancelable: bool,
         track: &MediaStreamTrack,
     ) -> DomRoot<RTCTrackEvent> {
-        let trackevent = reflect_dom_object_with_proto_and_cx(
+        let trackevent = reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(RTCTrackEvent::new_inherited(track)),
             window,
             proto,

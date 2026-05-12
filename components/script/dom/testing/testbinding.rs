@@ -76,7 +76,7 @@ impl TestBinding {
         global: &GlobalScope,
         proto: Option<HandleObject>,
     ) -> DomRoot<TestBinding> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(TestBinding::new_inherited()),
             global,
             proto,

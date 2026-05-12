@@ -186,8 +186,9 @@ impl WebGL2RenderingContext {
         attrs: GLContextAttributes,
         can_gc: CanGc,
     ) -> Option<DomRoot<WebGL2RenderingContext>> {
-        WebGL2RenderingContext::new_inherited(window, canvas, size, attrs, can_gc)
-            .map(|ctx| reflect_dom_object(Box::new(ctx), window, can_gc))
+        WebGL2RenderingContext::new_inherited(window, canvas, size, attrs, can_gc).map(|ctx| {
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(ctx), window, can_gc)
+        })
     }
 
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {

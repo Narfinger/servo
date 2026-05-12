@@ -52,7 +52,7 @@ impl SubmitEvent {
         submitter: Option<DomRoot<HTMLElement>>,
         can_gc: CanGc,
     ) -> DomRoot<SubmitEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(SubmitEvent::new_inherited(submitter)),
             window,
             proto,

@@ -71,7 +71,7 @@ impl GPURenderBundle {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPURenderBundle::new_inherited(
                 render_bundle,
                 device,

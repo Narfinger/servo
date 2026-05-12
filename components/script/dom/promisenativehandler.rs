@@ -35,7 +35,7 @@ impl PromiseNativeHandler {
         reject: Option<Box<dyn Callback>>,
         can_gc: CanGc,
     ) -> DomRoot<PromiseNativeHandler> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(PromiseNativeHandler {
                 reflector: Reflector::new(),
                 resolve,

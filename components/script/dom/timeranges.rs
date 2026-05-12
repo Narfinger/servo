@@ -145,7 +145,11 @@ impl TimeRanges {
         ranges: TimeRangesContainer,
         can_gc: CanGc,
     ) -> DomRoot<TimeRanges> {
-        reflect_dom_object(Box::new(TimeRanges::new_inherited(ranges)), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(TimeRanges::new_inherited(ranges)),
+            window,
+            can_gc,
+        )
     }
 }
 

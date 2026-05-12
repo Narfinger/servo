@@ -36,7 +36,7 @@ impl WGSLLanguageFeatures {
             .iter()
             .map(|le| le.to_ident().into())
             .collect();
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Self {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),

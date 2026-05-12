@@ -54,7 +54,11 @@ impl Location {
     }
 
     pub(crate) fn new(cx: &mut JSContext, window: &Window) -> DomRoot<Location> {
-        reflect_dom_object_with_cx(Box::new(Location::new_inherited(window)), window, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Location::new_inherited(window)),
+            window,
+            cx,
+        )
     }
 
     /// <https://html.spec.whatwg.org/multipage/#location-object-navigate>

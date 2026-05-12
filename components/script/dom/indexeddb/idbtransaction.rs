@@ -156,7 +156,7 @@ impl IDBTransaction {
         serial_number: u64,
         can_gc: CanGc,
     ) -> DomRoot<IDBTransaction> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(IDBTransaction::new_inherited(
                 connection,
                 mode,

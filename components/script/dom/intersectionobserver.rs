@@ -160,7 +160,7 @@ impl IntersectionObserver {
         // > 2. Set this’s internal [[callback]] slot to callback.
         // > 3. ... set this’s internal [[rootMargin]] slot to that.
         // > 4. ... set this’s internal [[scrollMargin]] slot to that.
-        let observer = reflect_dom_object_with_proto_and_cx(
+        let observer = reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(
                 window,
                 callback,

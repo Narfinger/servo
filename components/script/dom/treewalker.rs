@@ -51,7 +51,7 @@ impl TreeWalker {
         filter: Filter,
         can_gc: CanGc,
     ) -> DomRoot<TreeWalker> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TreeWalker::new_inherited(root_node, what_to_show, filter)),
             document.window(),
             can_gc,

@@ -52,7 +52,7 @@ impl ExtendableEvent {
         cancelable: bool,
         can_gc: CanGc,
     ) -> DomRoot<ExtendableEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(ExtendableEvent::new_inherited()),
             worker,
             proto,

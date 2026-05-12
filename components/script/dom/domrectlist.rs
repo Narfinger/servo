@@ -35,7 +35,7 @@ impl DOMRectList {
         rects: Vec<DomRoot<DOMRect>>,
         can_gc: CanGc,
     ) -> DomRoot<DOMRectList> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(DOMRectList::new_inherited(rects)),
             window,
             None,

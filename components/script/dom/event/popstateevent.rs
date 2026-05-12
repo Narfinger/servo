@@ -43,7 +43,7 @@ impl PopStateEvent {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<PopStateEvent> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(PopStateEvent::new_inherited()),
             window,
             proto,

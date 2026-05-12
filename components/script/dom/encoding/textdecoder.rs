@@ -59,7 +59,7 @@ impl TextDecoder {
         ignoreBOM: bool,
         can_gc: CanGc,
     ) -> DomRoot<TextDecoder> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TextDecoder::new_inherited(encoding, fatal, ignoreBOM)),
             global,
             proto,

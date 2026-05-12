@@ -44,7 +44,7 @@ impl HashChangeEvent {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<HashChangeEvent> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(HashChangeEvent::new_inherited(String::new(), String::new())),
             window,
             proto,
@@ -77,7 +77,7 @@ impl HashChangeEvent {
         new_url: String,
         can_gc: CanGc,
     ) -> DomRoot<HashChangeEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(HashChangeEvent::new_inherited(old_url, new_url)),
             window,
             proto,

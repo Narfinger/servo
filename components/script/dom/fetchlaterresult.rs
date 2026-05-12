@@ -35,7 +35,7 @@ impl FetchLaterResult {
         deferred_record_id: DeferredFetchRecordId,
         can_gc: CanGc,
     ) -> DomRoot<FetchLaterResult> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(FetchLaterResult::new_inherited(deferred_record_id)),
             window,
             can_gc,

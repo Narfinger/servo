@@ -45,7 +45,7 @@ impl InputEvent {
         input_type: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<InputEvent> {
-        let event = reflect_dom_object_with_proto(
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(InputEvent {
                 uievent: UIEvent::new_inherited(),
                 data,

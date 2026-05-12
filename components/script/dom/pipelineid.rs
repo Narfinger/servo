@@ -23,7 +23,7 @@ impl PipelineId {
         pipeline_id: servo_base::id::PipelineId,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self {
                 reflector_: Reflector::new(),
                 inner: pipeline_id,

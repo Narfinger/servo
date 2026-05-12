@@ -51,7 +51,7 @@ impl MediaMetadata {
         init: &MediaMetadataInit,
         can_gc: CanGc,
     ) -> DomRoot<MediaMetadata> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(MediaMetadata::new_inherited(init)),
             global,
             proto,

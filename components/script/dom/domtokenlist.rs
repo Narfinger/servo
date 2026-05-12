@@ -47,7 +47,7 @@ impl DOMTokenList {
         local_name: &LocalName,
         supported_tokens: Option<Vec<Atom>>,
     ) -> DomRoot<DOMTokenList> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(DOMTokenList::new_inherited(
                 element,
                 local_name.clone(),

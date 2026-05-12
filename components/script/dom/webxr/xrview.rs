@@ -67,7 +67,7 @@ impl XRView {
         let transform: RigidTransform3D<f32, V, BaseSpace> = view.transform.then(to_base);
         let transform = XRRigidTransform::new(window, cast_transform(transform), can_gc);
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRView::new_inherited(
                 session,
                 &transform,

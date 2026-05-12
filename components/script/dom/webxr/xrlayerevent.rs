@@ -39,7 +39,7 @@ impl XRLayerEvent {
         layer: &XRLayer,
         can_gc: CanGc,
     ) -> DomRoot<XRLayerEvent> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRLayerEvent::new_inherited(layer)),
             window,
             proto,

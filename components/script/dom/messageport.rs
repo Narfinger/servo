@@ -59,7 +59,11 @@ impl MessagePort {
     /// <https://html.spec.whatwg.org/multipage/#create-a-new-messageport-object>
     pub(crate) fn new(owner: &GlobalScope, can_gc: CanGc) -> DomRoot<MessagePort> {
         let port_id = MessagePortId::new();
-        reflect_dom_object(Box::new(MessagePort::new_inherited(port_id)), owner, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(MessagePort::new_inherited(port_id)),
+            owner,
+            can_gc,
+        )
     }
 
     /// Create a new port for an incoming transfer-received one.
@@ -69,7 +73,7 @@ impl MessagePort {
         entangled_port: Option<MessagePortId>,
         can_gc: CanGc,
     ) -> DomRoot<MessagePort> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(MessagePort {
                 message_port_id: transferred_port,
                 eventtarget: EventTarget::new_inherited(),

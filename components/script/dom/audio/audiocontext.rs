@@ -92,7 +92,12 @@ impl AudioContext {
     ) -> Fallible<DomRoot<AudioContext>> {
         let pipeline_id = window.pipeline_id();
         let context = AudioContext::new_inherited(options, pipeline_id)?;
-        let context = reflect_dom_object_with_proto_and_cx(Box::new(context), window, proto, cx);
+        let context = reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(context),
+            window,
+            proto,
+            cx,
+        );
         context.resume();
         Ok(context)
     }

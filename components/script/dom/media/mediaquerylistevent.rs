@@ -43,7 +43,7 @@ impl MediaQueryListEvent {
             media,
             matches: Cell::new(matches),
         });
-        reflect_dom_object_with_proto(ev, global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(ev, global, proto, can_gc)
     }
 
     pub(crate) fn new(

@@ -50,7 +50,7 @@ impl PerformancePaintTiming {
         can_gc: CanGc,
     ) -> DomRoot<PerformancePaintTiming> {
         let entry = PerformancePaintTiming::new_inherited(metric_type, start_time);
-        reflect_dom_object(Box::new(entry), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(entry), global, can_gc)
     }
 }
 

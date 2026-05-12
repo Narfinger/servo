@@ -70,7 +70,7 @@ impl TouchEvent {
         target_touches: &TouchList,
         can_gc: CanGc,
     ) -> DomRoot<TouchEvent> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TouchEvent::new_inherited(
                 touches,
                 changed_touches,

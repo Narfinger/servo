@@ -196,7 +196,7 @@ impl WritableStream {
         proto: Option<SafeHandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<WritableStream> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(WritableStream::new_inherited()),
             global,
             proto,

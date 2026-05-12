@@ -182,7 +182,7 @@ impl DOMException {
     ) -> DomRoot<DOMException> {
         let (message, name) = DOMException::get_error_data_by_code(code);
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DOMException::new_inherited(message, name)),
             global,
             can_gc,
@@ -197,7 +197,7 @@ impl DOMException {
     ) -> DomRoot<DOMException> {
         let (_, name) = DOMException::get_error_data_by_code(code);
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DOMException::new_inherited(DOMString::from(message), name)),
             global,
             can_gc,
@@ -219,7 +219,7 @@ impl DOMExceptionMethods<crate::DomTypeHolder> for DOMException {
         message: DOMString,
         name: DOMString,
     ) -> Result<DomRoot<DOMException>, Error> {
-        Ok(reflect_dom_object_with_proto(
+        Ok(reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(DOMException::new_inherited(message, name)),
             global,
             proto,

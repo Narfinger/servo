@@ -35,7 +35,7 @@ impl TestBindingMaplikeWithInterface {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TestBindingMaplikeWithInterface> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TestBindingMaplikeWithInterface {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(IndexMap::new()),

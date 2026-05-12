@@ -232,11 +232,11 @@ impl<D: DomTypes, T: DomObject> DomGlobalGeneric<D> for T {}
 pub trait DomObjectWrap<D: DomTypes>: Sized + DomObject + DomGlobalGeneric<D> {
     /// Function pointer to the general wrap function type
     #[expect(clippy::type_complexity)]
-    const WRAP: unsafe fn(
-        &mut js::context::JSContext,
-        &D::GlobalScope,
-        Option<HandleObject>,
-        Box<Self>,
+    unsafe fn WRAP(
+        cx: &mut js::context::JSContext,
+        global: &D::GlobalScope,
+        handle: Option<HandleObject>,
+        t: Box<Self>,
     ) -> Root<Dom<Self>>;
 }
 
@@ -245,11 +245,11 @@ pub trait DomObjectWrap<D: DomTypes>: Sized + DomObject + DomGlobalGeneric<D> {
 pub trait DomObjectIteratorWrap<D: DomTypes>: DomObjectWrap<D> + JSTraceable + Iterable {
     /// Function pointer to the wrap function for `IterableIterator<T>`
     #[expect(clippy::type_complexity)]
-    const ITER_WRAP: unsafe fn(
-        &mut js::context::JSContext,
-        &D::GlobalScope,
-        Option<HandleObject>,
-        Box<IterableIterator<D, Self>>,
+    unsafe fn ITER_WRAP(
+        cx: &mut js::context::JSContext,
+        global: &D::GlobalScope,
+        handle: Option<HandleObject>,
+        t: Box<IterableIterator<D, Self>>,
     ) -> Root<Dom<IterableIterator<D, Self>>>;
 }
 

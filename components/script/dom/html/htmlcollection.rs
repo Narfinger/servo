@@ -134,7 +134,11 @@ impl HTMLCollection {
         root: &Node,
         filter: Box<dyn CollectionFilter + 'static>,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(Box::new(Self::new_inherited(root, filter)), window, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(root, filter)),
+            window,
+            cx,
+        )
     }
 
     /// Create a new  [`HTMLCollection`] that just filters element using a static function.
@@ -181,7 +185,7 @@ impl HTMLCollection {
         root: &Node,
         source: Box<dyn CollectionSource + 'static>,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited_with_source(root, source)),
             window,
             cx,

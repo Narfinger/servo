@@ -32,7 +32,7 @@ impl TextTrackCueList {
         cues: &[&TextTrackCue],
         can_gc: CanGc,
     ) -> DomRoot<TextTrackCueList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TextTrackCueList::new_inherited(cues)),
             window,
             can_gc,

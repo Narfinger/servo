@@ -54,7 +54,7 @@ impl IDBCursorWithValue {
         key_only: bool,
         can_gc: CanGc,
     ) -> DomRoot<IDBCursorWithValue> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(IDBCursorWithValue::new_inherited(
                 transaction,
                 direction,

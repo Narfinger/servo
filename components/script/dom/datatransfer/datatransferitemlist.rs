@@ -45,7 +45,7 @@ impl DataTransferItemList {
         data_store: Rc<RefCell<Option<DragDataStore>>>,
         can_gc: CanGc,
     ) -> DomRoot<DataTransferItemList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DataTransferItemList::new_inherited(data_store)),
             window,
             can_gc,

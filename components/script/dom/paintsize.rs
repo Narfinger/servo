@@ -34,7 +34,11 @@ impl PaintSize {
         size: Size2D<f32, CSSPixel>,
         can_gc: CanGc,
     ) -> DomRoot<PaintSize> {
-        reflect_dom_object(Box::new(PaintSize::new_inherited(size)), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(PaintSize::new_inherited(size)),
+            global,
+            can_gc,
+        )
     }
 }
 

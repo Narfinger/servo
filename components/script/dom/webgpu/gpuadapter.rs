@@ -102,7 +102,7 @@ impl GPUAdapter {
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
         let limits = GPUSupportedLimits::new(global, limits, can_gc);
         let info = GPUAdapter::create_adapter_info(global, info, &features, &limits, can_gc);
-        let dom_root = reflect_dom_object(
+        let dom_root = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUAdapter::new_inherited(
                 channel, name, &features, &limits, &info, adapter,
             )),

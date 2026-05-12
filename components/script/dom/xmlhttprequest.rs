@@ -282,7 +282,7 @@ impl XMLHttpRequest {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<XMLHttpRequest> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XMLHttpRequest::new_inherited(global, can_gc)),
             global,
             proto,

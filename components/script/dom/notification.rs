@@ -131,7 +131,7 @@ impl Notification {
         fallback_timestamp: u64,
         proto: Option<HandleObject>,
     ) -> DomRoot<Self> {
-        let notification = reflect_dom_object_with_proto_and_cx(
+        let notification = reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Notification::new_inherited(
                 global,
                 title,

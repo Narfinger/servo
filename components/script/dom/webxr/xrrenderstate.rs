@@ -58,7 +58,7 @@ impl XRRenderState {
         layers: Vec<&XRLayer>,
         can_gc: CanGc,
     ) -> DomRoot<XRRenderState> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRRenderState::new_inherited(
                 depth_near,
                 depth_far,

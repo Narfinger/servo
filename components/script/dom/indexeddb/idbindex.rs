@@ -52,7 +52,7 @@ impl IDBIndex {
         key_path: KeyPath,
         can_gc: CanGc,
     ) -> DomRoot<IDBIndex> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(IDBIndex::new_inherited(
                 object_store,
                 name,

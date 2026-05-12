@@ -190,7 +190,11 @@ impl SubtleCrypto {
         cx: &mut js::context::JSContext,
         global: &GlobalScope,
     ) -> DomRoot<SubtleCrypto> {
-        reflect_dom_object_with_cx(Box::new(SubtleCrypto::new_inherited()), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(SubtleCrypto::new_inherited()),
+            global,
+            cx,
+        )
     }
 
     /// Queue a global task on the crypto task source, given realm's global object, to resolve

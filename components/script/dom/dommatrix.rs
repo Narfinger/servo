@@ -53,7 +53,12 @@ impl DOMMatrix {
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         let dommatrix = Self::new_inherited(is2D, matrix);
-        reflect_dom_object_with_proto(Box::new(dommatrix), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(dommatrix),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     pub(crate) fn new_inherited(is2D: bool, matrix: Transform3D<f64>) -> Self {

@@ -41,7 +41,7 @@ impl XPathExpression {
         can_gc: CanGc,
         parsed_expression: Expression,
     ) -> DomRoot<XPathExpression> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XPathExpression::new_inherited(window, parsed_expression)),
             window,
             proto,

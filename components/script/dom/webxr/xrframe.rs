@@ -55,7 +55,7 @@ impl XRFrame {
         data: Frame,
         can_gc: CanGc,
     ) -> DomRoot<XRFrame> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRFrame::new_inherited(session, data)),
             window,
             can_gc,

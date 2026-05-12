@@ -48,7 +48,7 @@ impl HTMLFormControlsCollection {
         form: &HTMLFormElement,
         filter: Box<dyn CollectionFilter + 'static>,
     ) -> DomRoot<HTMLFormControlsCollection> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(HTMLFormControlsCollection::new_inherited(form, filter)),
             window,
             cx,

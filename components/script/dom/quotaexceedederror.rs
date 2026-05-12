@@ -52,7 +52,7 @@ impl QuotaExceededError {
         requested: Option<Finite<f64>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(message, quota, requested)),
             global,
             can_gc,
@@ -94,7 +94,7 @@ impl QuotaExceededErrorMethods<crate::DomTypeHolder> for QuotaExceededError {
         {
             return Err(Error::Range(c"requested is less than quota".to_owned()));
         }
-        Ok(reflect_dom_object_with_proto(
+        Ok(reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(QuotaExceededError::new_inherited(
                 message,
                 options.quota,

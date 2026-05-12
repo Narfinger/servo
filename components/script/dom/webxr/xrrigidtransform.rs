@@ -59,7 +59,7 @@ impl XRRigidTransform {
         transform: ApiRigidTransform,
         can_gc: CanGc,
     ) -> DomRoot<XRRigidTransform> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRRigidTransform::new_inherited(transform)),
             window,
             proto,

@@ -36,7 +36,11 @@ impl CustomStateSet {
     }
 
     pub(crate) fn new(window: &Window, element: &HTMLElement, can_gc: CanGc) -> DomRoot<Self> {
-        reflect_dom_object(Box::new(Self::new_inherited(element)), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(element)),
+            window,
+            can_gc,
+        )
     }
 
     /// Returns a borrowed version of the set without the usual Ref wrapper.

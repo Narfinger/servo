@@ -74,7 +74,7 @@ impl IDBDatabase {
         version: u64,
         can_gc: CanGc,
     ) -> DomRoot<IDBDatabase> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(IDBDatabase::new_inherited(name, id, version)),
             global,
             can_gc,

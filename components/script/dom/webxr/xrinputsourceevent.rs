@@ -62,7 +62,7 @@ impl XRInputSourceEvent {
         source: &XRInputSource,
         can_gc: CanGc,
     ) -> DomRoot<XRInputSourceEvent> {
-        let trackevent = reflect_dom_object_with_proto(
+        let trackevent = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRInputSourceEvent::new_inherited(frame, source)),
             window,
             proto,

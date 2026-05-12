@@ -59,7 +59,7 @@ impl RTCPeerConnectionIceEvent {
         trusted: bool,
         can_gc: CanGc,
     ) -> DomRoot<RTCPeerConnectionIceEvent> {
-        let e = reflect_dom_object_with_proto(
+        let e = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(RTCPeerConnectionIceEvent::new_inherited(candidate, url)),
             window,
             proto,

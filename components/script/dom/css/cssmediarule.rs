@@ -47,7 +47,7 @@ impl CSSMediaRule {
         parent_stylesheet: &CSSStyleSheet,
         mediarule: Arc<MediaRule>,
     ) -> DomRoot<CSSMediaRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSMediaRule::new_inherited(parent_stylesheet, mediarule)),
             window,
             cx,

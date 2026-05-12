@@ -101,7 +101,7 @@ impl StyleSheetList {
         doc_or_sr: StyleSheetListOwner,
         can_gc: CanGc,
     ) -> DomRoot<StyleSheetList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(StyleSheetList::new_inherited(doc_or_sr)),
             window,
             can_gc,

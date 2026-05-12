@@ -61,12 +61,11 @@ impl MediaStreamTrackAudioSourceNode {
         track: &MediaStreamTrack,
     ) -> Fallible<DomRoot<MediaStreamTrackAudioSourceNode>> {
         let node = MediaStreamTrackAudioSourceNode::new_inherited(context, track)?;
-        Ok(reflect_dom_object_with_proto_and_cx(
-            Box::new(node),
-            window,
-            proto,
-            cx,
-        ))
+        Ok(reflect_dom_object_with_proto_and_cx::<
+            crate::DomTypeHolder,
+            _,
+            _,
+        >(Box::new(node), window, proto, cx))
     }
 }
 

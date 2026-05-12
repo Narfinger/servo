@@ -166,7 +166,7 @@ impl XRSession {
         };
         let render_state = XRRenderState::new(window, 0.1, 1000.0, ivfov, None, Vec::new(), can_gc);
         let input_sources = XRInputSourceArray::new(window, can_gc);
-        let ret = reflect_dom_object(
+        let ret = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRSession::new_inherited(
                 session,
                 &render_state,

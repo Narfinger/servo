@@ -193,7 +193,7 @@ impl DomHelpers<crate::DomTypeHolder> for crate::DomTypeHolder {
         T: DomObject + DomObjectWrap<crate::DomTypeHolder>,
         U: DerivedFrom<GlobalScope>,
     {
-        reflect_dom_object(obj, global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(obj, global, can_gc)
     }
 
     fn report_pending_exception(cx: SafeJSContext, realm: InRealm, can_gc: CanGc) {

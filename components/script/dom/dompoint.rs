@@ -53,7 +53,7 @@ impl DOMPoint {
         z: f64,
         w: f64,
     ) -> DomRoot<DOMPoint> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(DOMPoint::new_inherited(x, y, z, w)),
             global,
             proto,

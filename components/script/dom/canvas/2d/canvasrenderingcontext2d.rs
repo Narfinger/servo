@@ -73,7 +73,9 @@ impl CanvasRenderingContext2D {
             HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
             size,
         )
-        .map(|context| reflect_dom_object(Box::new(context), global, can_gc))
+        .map(|context| {
+            reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(context), global, can_gc)
+        })
     }
 
     pub(crate) fn take_missing_image_urls(&self) -> Vec<ServoUrl> {

@@ -24,14 +24,14 @@ pub mod conversions;
 pub mod domstring;
 pub mod error;
 mod finalize;
-mod guard;
+pub mod guard;
 mod import;
 pub mod inheritance;
 pub mod interface;
 pub mod interfaces;
 pub mod iterable;
 pub mod like;
-mod lock;
+pub mod lock;
 mod mem;
 mod namespace;
 pub mod num;
@@ -48,6 +48,7 @@ pub mod structuredclone;
 pub mod trace;
 pub mod utils;
 pub mod weakref;
+pub mod wrap;
 
 #[allow(non_snake_case, unsafe_op_in_unsafe_fn)]
 pub mod codegen {

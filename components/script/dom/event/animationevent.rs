@@ -54,7 +54,7 @@ impl AnimationEvent {
         init: &AnimationEventInit,
         can_gc: CanGc,
     ) -> DomRoot<AnimationEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(AnimationEvent::new_inherited(init)),
             window,
             proto,

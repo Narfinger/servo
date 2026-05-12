@@ -45,7 +45,11 @@ impl XRTest {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<XRTest> {
-        reflect_dom_object(Box::new(XRTest::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(XRTest::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 
     fn device_obtained(

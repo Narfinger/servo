@@ -196,7 +196,7 @@ impl ReadableStreamBYOBReader {
         proto: Option<SafeHandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<ReadableStreamBYOBReader> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(ReadableStreamBYOBReader::new_inherited(global, can_gc)),
             global,
             proto,
@@ -214,7 +214,7 @@ impl ReadableStreamBYOBReader {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<ReadableStreamBYOBReader> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(global, can_gc)),
             global,
             can_gc,

@@ -29,7 +29,7 @@ impl WEBGLColorBufferFloat {
 impl WebGLExtension for WEBGLColorBufferFloat {
     type Extension = WEBGLColorBufferFloat;
     fn new(ctx: &WebGLRenderingContext, can_gc: CanGc) -> DomRoot<WEBGLColorBufferFloat> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WEBGLColorBufferFloat::new_inherited()),
             &*ctx.global(),
             can_gc,

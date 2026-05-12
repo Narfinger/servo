@@ -67,7 +67,7 @@ impl ServiceWorker {
         worker_id: ServiceWorkerId,
         can_gc: CanGc,
     ) -> DomRoot<ServiceWorker> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ServiceWorker::new_inherited(
                 script_url.as_str(),
                 scope_url,

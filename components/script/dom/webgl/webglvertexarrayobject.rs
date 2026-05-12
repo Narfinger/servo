@@ -34,7 +34,7 @@ impl WebGLVertexArrayObject {
         id: Option<WebGLVertexArrayId>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLVertexArrayObject::new_inherited(context, id)),
             &*context.global(),
             can_gc,

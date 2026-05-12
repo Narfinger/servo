@@ -43,7 +43,7 @@ impl SharedWorker {
         port: &MessagePort,
         cx: &mut js::context::JSContext,
     ) -> DomRoot<SharedWorker> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(SharedWorker::new_inherited(port)),
             global,
             proto,

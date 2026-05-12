@@ -77,7 +77,7 @@ impl ChannelSplitterNode {
         can_gc: CanGc,
     ) -> Fallible<DomRoot<ChannelSplitterNode>> {
         let node = ChannelSplitterNode::new_inherited(window, context, options)?;
-        Ok(reflect_dom_object_with_proto(
+        Ok(reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(node),
             window,
             proto,

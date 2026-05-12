@@ -47,7 +47,7 @@ impl DOMImplementation {
 
     pub(crate) fn new(document: &Document, can_gc: CanGc) -> DomRoot<DOMImplementation> {
         let window = document.window();
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DOMImplementation::new_inherited(document)),
             window,
             can_gc,

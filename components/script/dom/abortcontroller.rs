@@ -43,7 +43,7 @@ impl AbortController {
         // Step 1. Let signal be a new AbortSignal object.
         let signal = AbortSignal::new_with_proto(global, None, can_gc);
         // Step 2. Set this’s signal to signal.
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(AbortController::new_inherited(&signal)),
             global,
             proto,

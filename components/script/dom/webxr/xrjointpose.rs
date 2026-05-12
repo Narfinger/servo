@@ -35,7 +35,7 @@ impl XRJointPose {
         can_gc: CanGc,
     ) -> DomRoot<XRJointPose> {
         let transform = XRRigidTransform::new(window, pose, can_gc);
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRJointPose::new_inherited(&transform, radius)),
             window,
             can_gc,

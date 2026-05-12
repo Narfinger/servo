@@ -56,7 +56,7 @@ impl XRBoundedReferenceSpace {
         offset: &XRRigidTransform,
         can_gc: CanGc,
     ) -> DomRoot<XRBoundedReferenceSpace> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRBoundedReferenceSpace::new_inherited(session, offset)),
             global,
             can_gc,

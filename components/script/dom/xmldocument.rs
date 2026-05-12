@@ -96,7 +96,7 @@ impl XMLDocument {
         custom_element_reaction_stack: Rc<CustomElementReactionStack>,
         can_gc: CanGc,
     ) -> DomRoot<XMLDocument> {
-        let doc = reflect_dom_object(
+        let doc = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XMLDocument::new_inherited(
                 window,
                 has_browsing_context,

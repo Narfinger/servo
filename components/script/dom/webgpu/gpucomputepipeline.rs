@@ -80,7 +80,7 @@ impl GPUComputePipeline {
         device: &GPUDevice,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUComputePipeline::new_inherited(
                 compute_pipeline,
                 label,

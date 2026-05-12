@@ -54,7 +54,7 @@ impl CSSStyleRule {
         parent_stylesheet: &CSSStyleSheet,
         stylerule: Arc<Locked<StyleRule>>,
     ) -> DomRoot<CSSStyleRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSStyleRule::new_inherited(parent_stylesheet, stylerule)),
             window,
             cx,

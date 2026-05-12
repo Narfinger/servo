@@ -128,7 +128,8 @@ impl MessageEvent {
             lastEventId,
             ports,
         ));
-        let ev = reflect_dom_object_with_proto(ev, global, proto, can_gc);
+        let ev =
+            reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(ev, global, proto, can_gc);
         ev.data.set(data.get());
 
         ev

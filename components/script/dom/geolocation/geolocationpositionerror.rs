@@ -31,7 +31,11 @@ impl GeolocationPositionError {
     }
 
     fn new(global: &GlobalScope, code: u16, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
-        reflect_dom_object(Box::new(Self::new_inherited(code, message)), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(code, message)),
+            global,
+            can_gc,
+        )
     }
 
     pub(crate) fn permission_denied(

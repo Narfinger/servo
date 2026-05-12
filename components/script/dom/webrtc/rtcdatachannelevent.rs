@@ -53,7 +53,7 @@ impl RTCDataChannelEvent {
         channel: &RTCDataChannel,
         can_gc: CanGc,
     ) -> DomRoot<RTCDataChannelEvent> {
-        let event = reflect_dom_object_with_proto(
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(RTCDataChannelEvent::new_inherited(channel)),
             window,
             proto,

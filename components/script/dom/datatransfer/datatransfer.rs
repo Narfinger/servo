@@ -71,7 +71,7 @@ impl DataTransfer {
     ) -> DomRoot<DataTransfer> {
         let item_list = DataTransferItemList::new(window, Rc::clone(&data_store), can_gc);
 
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(DataTransfer::new_inherited(data_store, &item_list)),
             window,
             proto,

@@ -53,7 +53,7 @@ impl DOMRectReadOnly {
         width: f64,
         height: f64,
     ) -> DomRoot<DOMRectReadOnly> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(DOMRectReadOnly::new_inherited(x, y, width, height)),
             global,
             proto,
@@ -67,7 +67,7 @@ impl DOMRectReadOnly {
         proto: Option<HandleObject>,
         dictionary: &DOMRectInit,
     ) -> DomRoot<DOMRectReadOnly> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(create_a_domrectreadonly_from_the_dictionary(dictionary)),
             global,
             proto,
@@ -115,7 +115,7 @@ impl DOMRectReadOnlyMethods<crate::DomTypeHolder> for DOMRectReadOnly {
     ) -> DomRoot<DOMRectReadOnly> {
         let dom_rect = create_a_domrectreadonly_from_the_dictionary(other);
 
-        reflect_dom_object_with_cx(Box::new(dom_rect), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(Box::new(dom_rect), global, cx)
     }
 
     /// <https://drafts.fxtf.org/geometry/#dom-domrectreadonly-x>

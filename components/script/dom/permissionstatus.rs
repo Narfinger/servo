@@ -37,7 +37,7 @@ impl PermissionStatus {
         query: &PermissionDescriptor,
         can_gc: CanGc,
     ) -> DomRoot<PermissionStatus> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(PermissionStatus::new_inherited(query.name)),
             global,
             can_gc,

@@ -146,7 +146,7 @@ impl XRHand {
                 )
             })
         });
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRHand::new_inherited(source, &spaces)),
             global,
             can_gc,

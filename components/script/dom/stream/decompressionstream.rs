@@ -65,7 +65,7 @@ impl DecompressionStream {
         transform: &TransformStream,
         format: CompressionFormat,
     ) -> DomRoot<DecompressionStream> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(DecompressionStream::new_inherited(transform, format)),
             global,
             proto,

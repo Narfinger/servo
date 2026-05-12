@@ -155,7 +155,11 @@ impl Bluetooth {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<Bluetooth> {
-        reflect_dom_object(Box::new(Bluetooth::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(Bluetooth::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 
     fn get_bluetooth_thread(&self) -> GenericSender<BluetoothRequest> {

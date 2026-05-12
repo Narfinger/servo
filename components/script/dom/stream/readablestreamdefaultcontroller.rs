@@ -375,7 +375,7 @@ impl ReadableStreamDefaultController {
         strategy_size: Rc<QueuingStrategySize>,
         can_gc: CanGc,
     ) -> DomRoot<ReadableStreamDefaultController> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ReadableStreamDefaultController::new_inherited(
                 global,
                 underlying_source,

@@ -77,7 +77,7 @@ impl GPURenderPipeline {
         device: &GPUDevice,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPURenderPipeline::new_inherited(
                 render_pipeline,
                 label,

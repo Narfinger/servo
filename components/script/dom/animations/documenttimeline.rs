@@ -40,7 +40,7 @@ impl DocumentTimeline {
     ) -> DomRoot<Self> {
         let duration_since_time_origin =
             CrossProcessInstant::now() - window.navigation_start() - origin_time;
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Self {
                 animation_timeline: AnimationTimeline::new_inherited(duration_since_time_origin),
                 origin_offset: origin_time,
@@ -57,7 +57,7 @@ impl DocumentTimeline {
         } else {
             CrossProcessInstant::now() - window.navigation_start()
         };
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self {
                 animation_timeline: AnimationTimeline::new_inherited(duration),
                 origin_offset: Duration::ZERO,

@@ -135,7 +135,11 @@ impl TextDecoderStream {
         let transform_stream = TransformStream::new_with_proto(global, None, CanGc::from_cx(cx));
         transform_stream.set_up(cx, global, transformer_type)?;
 
-        Ok(reflect_dom_object_with_proto_and_cx(
+        Ok(reflect_dom_object_with_proto_and_cx::<
+            crate::DomTypeHolder,
+            _,
+            _,
+        >(
             Box::new(TextDecoderStream::new_inherited(decoder, &transform_stream)),
             global,
             proto,

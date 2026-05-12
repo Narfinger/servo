@@ -53,7 +53,7 @@ impl MediaList {
         parent_stylesheet: &CSSStyleSheet,
         media_queries: Arc<Locked<StyleMediaList>>,
     ) -> DomRoot<MediaList> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(MediaList::new_inherited(parent_stylesheet, media_queries)),
             window,
             cx,

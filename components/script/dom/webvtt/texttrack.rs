@@ -66,7 +66,7 @@ impl TextTrack {
         track_list: Option<&TextTrackList>,
         can_gc: CanGc,
     ) -> DomRoot<TextTrack> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(TextTrack::new_inherited(
                 id, kind, label, language, mode, track_list,
             )),

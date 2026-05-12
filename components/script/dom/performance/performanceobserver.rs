@@ -72,7 +72,12 @@ impl PerformanceObserver {
         can_gc: CanGc,
     ) -> DomRoot<PerformanceObserver> {
         let observer = PerformanceObserver::new_inherited(callback, DomRefCell::new(entries));
-        reflect_dom_object_with_proto(Box::new(observer), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(observer),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     /// Buffer a new performance entry.

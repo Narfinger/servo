@@ -70,7 +70,7 @@ impl IDBVersionChangeEvent {
         new_version: Option<u64>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(IDBVersionChangeEvent::new_inherited(
                 old_version,
                 new_version,

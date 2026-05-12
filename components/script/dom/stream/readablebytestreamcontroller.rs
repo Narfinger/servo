@@ -255,7 +255,7 @@ impl ReadableByteStreamController {
         global: &GlobalScope,
         can_gc: CanGc,
     ) -> DomRoot<ReadableByteStreamController> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ReadableByteStreamController::new_inherited(
                 underlying_source_type,
                 strategy_hwm,

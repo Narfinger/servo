@@ -71,12 +71,11 @@ impl MediaElementAudioSourceNode {
         cx: &mut js::context::JSContext,
     ) -> Fallible<DomRoot<MediaElementAudioSourceNode>> {
         let node = MediaElementAudioSourceNode::new_inherited(context, media_element, cx)?;
-        Ok(reflect_dom_object_with_proto_and_cx(
-            Box::new(node),
-            window,
-            proto,
-            cx,
-        ))
+        Ok(reflect_dom_object_with_proto_and_cx::<
+            crate::DomTypeHolder,
+            _,
+            _,
+        >(Box::new(node), window, proto, cx))
     }
 }
 

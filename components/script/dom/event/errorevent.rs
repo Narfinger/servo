@@ -52,7 +52,12 @@ impl ErrorEvent {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<ErrorEvent> {
-        reflect_dom_object_with_proto(Box::new(ErrorEvent::new_inherited()), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(ErrorEvent::new_inherited()),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]

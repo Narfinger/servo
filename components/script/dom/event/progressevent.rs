@@ -77,7 +77,7 @@ impl ProgressEvent {
         total: Finite<f64>,
         can_gc: CanGc,
     ) -> DomRoot<ProgressEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(ProgressEvent::new_inherited(
                 length_computable,
                 loaded,

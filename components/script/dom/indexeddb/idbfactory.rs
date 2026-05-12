@@ -227,7 +227,11 @@ impl IDBFactory {
     }
 
     pub fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<IDBFactory> {
-        reflect_dom_object(Box::new(IDBFactory::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(IDBFactory::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 
     /// Setup the callback to the backend service, if this hasn't been done already.

@@ -50,7 +50,11 @@ impl NodeList {
         list_type: NodeListType,
         can_gc: CanGc,
     ) -> DomRoot<NodeList> {
-        reflect_dom_object(Box::new(NodeList::new_inherited(list_type)), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(NodeList::new_inherited(list_type)),
+            window,
+            can_gc,
+        )
     }
 
     pub(crate) fn new_simple_list<T>(window: &Window, iter: T, can_gc: CanGc) -> DomRoot<NodeList>

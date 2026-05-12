@@ -75,7 +75,7 @@ impl Request {
         url: ServoUrl,
         can_gc: CanGc,
     ) -> DomRoot<Request> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Request::new_inherited(global, url)),
             global,
             proto,

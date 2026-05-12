@@ -165,7 +165,7 @@ impl Performance {
         navigation_start: CrossProcessInstant,
         can_gc: CanGc,
     ) -> DomRoot<Performance> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Performance::new_inherited(navigation_start)),
             global,
             can_gc,

@@ -68,7 +68,7 @@ impl RTCIceCandidate {
         username_fragment: Option<DOMString>,
         can_gc: CanGc,
     ) -> DomRoot<RTCIceCandidate> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(RTCIceCandidate::new_inherited(
                 candidate,
                 sdp_m_id,

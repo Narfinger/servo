@@ -530,7 +530,7 @@ impl EventSource {
         with_credentials: bool,
         can_gc: CanGc,
     ) -> DomRoot<EventSource> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(EventSource::new_inherited(url, with_credentials)),
             global,
             proto,

@@ -45,7 +45,7 @@ impl CSSSupportsRule {
         parent_stylesheet: &CSSStyleSheet,
         supportsrule: Arc<SupportsRule>,
     ) -> DomRoot<CSSSupportsRule> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CSSSupportsRule::new_inherited(
                 parent_stylesheet,
                 supportsrule,

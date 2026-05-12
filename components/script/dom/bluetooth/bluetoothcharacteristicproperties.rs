@@ -66,7 +66,7 @@ impl BluetoothCharacteristicProperties {
         reliableWrite: bool,
         writableAuxiliaries: bool,
     ) -> DomRoot<BluetoothCharacteristicProperties> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(BluetoothCharacteristicProperties::new_inherited(
                 broadcast,
                 read,

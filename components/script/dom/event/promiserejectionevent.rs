@@ -75,7 +75,7 @@ impl PromiseRejectionEvent {
         reason: HandleValue,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(PromiseRejectionEvent::new_inherited()),
             global,
             proto,

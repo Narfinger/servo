@@ -66,7 +66,9 @@ impl CloseEvent {
         can_gc: CanGc,
     ) -> DomRoot<CloseEvent> {
         let event = Box::new(CloseEvent::new_inherited(wasClean, code, reason));
-        let ev = reflect_dom_object_with_proto(event, global, proto, can_gc);
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            event, global, proto, can_gc,
+        );
         {
             let event = ev.upcast::<Event>();
             event.init_event(type_, bool::from(bubbles), bool::from(cancelable));

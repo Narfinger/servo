@@ -33,7 +33,7 @@ impl TestBindingSetlikeWithPrimitive {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TestBindingSetlikeWithPrimitive> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TestBindingSetlikeWithPrimitive {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(IndexSet::new()),

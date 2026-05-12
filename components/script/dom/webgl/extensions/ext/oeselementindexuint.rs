@@ -29,7 +29,7 @@ impl WebGLExtension for OESElementIndexUint {
     type Extension = Self;
 
     fn new(ctx: &WebGLRenderingContext, can_gc: CanGc) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(OESElementIndexUint::new_inherited()),
             &*ctx.global(),
             can_gc,

@@ -35,7 +35,7 @@ impl GPUDeviceLostInfo {
         reason: GPUDeviceLostReason,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUDeviceLostInfo::new_inherited(message, reason)),
             global,
             can_gc,

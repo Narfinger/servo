@@ -55,7 +55,7 @@ impl TransitionEvent {
         init: &TransitionEventInit,
         can_gc: CanGc,
     ) -> DomRoot<TransitionEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TransitionEvent::new_inherited(init)),
             window,
             proto,

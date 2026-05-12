@@ -52,7 +52,7 @@ impl MediaQueryList {
         media_query_list: MediaList,
         can_gc: CanGc,
     ) -> DomRoot<MediaQueryList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(MediaQueryList::new_inherited(document, media_query_list)),
             document.window(),
             can_gc,

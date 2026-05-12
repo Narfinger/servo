@@ -79,7 +79,7 @@ impl DefaultTeeReadRequest {
         tee_underlying_source: &DefaultTeeUnderlyingSource,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(DefaultTeeReadRequest {
                 reflector_: Reflector::new(),
                 stream: Dom::from_ref(stream),

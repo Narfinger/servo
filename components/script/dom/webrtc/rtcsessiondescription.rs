@@ -38,7 +38,7 @@ impl RTCSessionDescription {
         sdp: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<RTCSessionDescription> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(RTCSessionDescription::new_inherited(ty, sdp)),
             window,
             proto,

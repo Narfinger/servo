@@ -145,7 +145,7 @@ impl IDBObjectStore {
         can_gc: CanGc,
         transaction: &IDBTransaction,
     ) -> DomRoot<IDBObjectStore> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(IDBObjectStore::new_inherited(
                 db_name,
                 name,

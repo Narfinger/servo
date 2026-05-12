@@ -65,7 +65,7 @@ impl CanvasPattern {
         repeat: RepetitionStyle,
         origin_clean: bool,
     ) -> DomRoot<CanvasPattern> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(CanvasPattern::new_inherited(
                 surface_data,
                 surface_size,

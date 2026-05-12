@@ -106,7 +106,7 @@ impl MouseEvent {
         window: &Window,
         proto: Option<HandleObject>,
     ) -> DomRoot<MouseEvent> {
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(MouseEvent::new_inherited()),
             window,
             proto,

@@ -42,7 +42,7 @@ impl NavigationPreloadManager {
         can_gc: CanGc,
     ) -> DomRoot<NavigationPreloadManager> {
         let manager = NavigationPreloadManager::new_inherited(registration);
-        reflect_dom_object(Box::new(manager), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(manager), global, can_gc)
     }
 }
 

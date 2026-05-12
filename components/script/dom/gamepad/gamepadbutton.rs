@@ -37,7 +37,7 @@ impl GamepadButton {
         touched: bool,
         can_gc: CanGc,
     ) -> DomRoot<GamepadButton> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GamepadButton::new_inherited(pressed, touched)),
             window,
             can_gc,

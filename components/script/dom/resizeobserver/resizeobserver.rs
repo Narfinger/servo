@@ -77,7 +77,9 @@ impl ResizeObserver {
         callback: Rc<ResizeObserverCallback>,
     ) -> DomRoot<ResizeObserver> {
         let observer = Box::new(ResizeObserver::new_inherited(callback));
-        reflect_dom_object_with_proto_and_cx(observer, window, proto, cx)
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
+            observer, window, proto, cx,
+        )
     }
 
     /// Step 2 of <https://drafts.csswg.org/resize-observer/#gather-active-observations-h>

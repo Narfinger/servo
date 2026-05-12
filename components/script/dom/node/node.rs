@@ -2802,7 +2802,7 @@ impl Node {
         N: DerivedFrom<Node> + DomObject + DomObjectWrap<crate::DomTypeHolder>,
     {
         let window = document.window();
-        reflect_dom_object_with_proto_and_cx(node, window, proto, cx)
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(node, window, proto, cx)
     }
 
     pub(crate) fn new_inherited(doc: &Document) -> Node {

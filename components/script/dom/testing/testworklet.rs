@@ -44,7 +44,7 @@ impl TestWorklet {
         proto: Option<HandleObject>,
     ) -> DomRoot<TestWorklet> {
         let worklet = Worklet::new(cx, window, WorkletGlobalScopeType::Test);
-        reflect_dom_object_with_proto_and_cx(
+        reflect_dom_object_with_proto_and_cx::<crate::DomTypeHolder, _, _>(
             Box::new(TestWorklet::new_inherited(&worklet)),
             window,
             proto,

@@ -38,7 +38,7 @@ impl XRHitTestResult {
         frame: &XRFrame,
         can_gc: CanGc,
     ) -> DomRoot<XRHitTestResult> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRHitTestResult::new_inherited(result, frame)),
             window,
             can_gc,

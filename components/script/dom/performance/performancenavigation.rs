@@ -27,7 +27,7 @@ impl PerformanceNavigation {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<PerformanceNavigation> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(PerformanceNavigation::new_inherited()),
             global,
             can_gc,

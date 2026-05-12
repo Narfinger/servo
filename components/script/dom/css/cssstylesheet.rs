@@ -115,7 +115,7 @@ impl CSSStyleSheet {
         constructor_document: Option<&Document>,
         can_gc: CanGc,
     ) -> DomRoot<CSSStyleSheet> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(CSSStyleSheet::new_inherited(
                 owner,
                 type_,
@@ -141,7 +141,7 @@ impl CSSStyleSheet {
         constructor_document: Option<&Document>,
         can_gc: CanGc,
     ) -> DomRoot<CSSStyleSheet> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(CSSStyleSheet::new_inherited(
                 owner,
                 type_,

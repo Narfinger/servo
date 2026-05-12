@@ -58,7 +58,7 @@ impl GamepadEvent {
         gamepad: &Gamepad,
         can_gc: CanGc,
     ) -> DomRoot<GamepadEvent> {
-        let ev = reflect_dom_object_with_proto(
+        let ev = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(GamepadEvent::new_inherited(gamepad)),
             window,
             proto,

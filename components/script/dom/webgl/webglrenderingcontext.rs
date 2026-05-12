@@ -319,7 +319,11 @@ impl WebGLRenderingContext {
             size,
             attrs,
         ) {
-            Ok(ctx) => Some(reflect_dom_object(Box::new(ctx), window, can_gc)),
+            Ok(ctx) => Some(reflect_dom_object::<crate::DomTypeHolder, _, _>(
+                Box::new(ctx),
+                window,
+                can_gc,
+            )),
             Err(msg) => {
                 error!("Couldn't create WebGLRenderingContext: {}", msg);
                 let event = WebGLContextEvent::new(

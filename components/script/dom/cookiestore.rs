@@ -126,7 +126,7 @@ impl CookieStore {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<CookieStore> {
-        let store = reflect_dom_object(
+        let store = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(CookieStore::new_inherited(
                 global.resource_threads().core_thread.clone(),
             )),

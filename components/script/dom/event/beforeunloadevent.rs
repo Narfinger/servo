@@ -32,7 +32,11 @@ impl BeforeUnloadEvent {
     }
 
     pub(crate) fn new_uninitialized(window: &Window, can_gc: CanGc) -> DomRoot<BeforeUnloadEvent> {
-        reflect_dom_object(Box::new(BeforeUnloadEvent::new_inherited()), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(BeforeUnloadEvent::new_inherited()),
+            window,
+            can_gc,
+        )
     }
 
     pub(crate) fn new(

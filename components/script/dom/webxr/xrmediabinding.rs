@@ -38,7 +38,7 @@ impl XRMediaBinding {
         session: &XRSession,
         can_gc: CanGc,
     ) -> DomRoot<XRMediaBinding> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRMediaBinding::new_inherited(session)),
             global,
             proto,

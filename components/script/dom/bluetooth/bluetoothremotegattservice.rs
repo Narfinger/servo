@@ -57,7 +57,7 @@ impl BluetoothRemoteGATTService {
         isPrimary: bool,
         instanceID: String,
     ) -> DomRoot<BluetoothRemoteGATTService> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(BluetoothRemoteGATTService::new_inherited(
                 device, uuid, isPrimary, instanceID,
             )),

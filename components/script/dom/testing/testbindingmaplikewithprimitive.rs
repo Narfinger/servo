@@ -34,7 +34,7 @@ impl TestBindingMaplikeWithPrimitive {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TestBindingMaplikeWithPrimitive> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TestBindingMaplikeWithPrimitive {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(IndexMap::new()),

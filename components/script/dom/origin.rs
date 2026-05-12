@@ -45,7 +45,7 @@ impl Origin {
         origin: ImmutableOrigin,
         can_gc: CanGc,
     ) -> DomRoot<Origin> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(Origin::new_inherited(origin)),
             global,
             proto,

@@ -554,7 +554,7 @@ impl ServoParser {
         encoding_of_container_document: Option<&'static Encoding>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ServoParser::new_inherited(
                 document,
                 tokenizer,

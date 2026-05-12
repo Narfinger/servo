@@ -40,7 +40,7 @@ impl Credential {
         credential_type: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Credential> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Credential::new_inherited(id, credential_type)),
             global,
             can_gc,

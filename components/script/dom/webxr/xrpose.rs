@@ -33,7 +33,11 @@ impl XRPose {
         can_gc: CanGc,
     ) -> DomRoot<XRPose> {
         let transform = XRRigidTransform::new(window, transform, can_gc);
-        reflect_dom_object(Box::new(XRPose::new_inherited(&transform)), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(XRPose::new_inherited(&transform)),
+            window,
+            can_gc,
+        )
     }
 }
 

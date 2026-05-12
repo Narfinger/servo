@@ -43,7 +43,7 @@ impl VideoTrackList {
         media_element: Option<&HTMLMediaElement>,
         can_gc: CanGc,
     ) -> DomRoot<VideoTrackList> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(VideoTrackList::new_inherited(tracks, media_element)),
             window,
             can_gc,

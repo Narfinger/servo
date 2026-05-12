@@ -28,7 +28,11 @@ impl Screen {
     }
 
     pub(crate) fn new(window: &Window, can_gc: CanGc) -> DomRoot<Screen> {
-        reflect_dom_object(Box::new(Screen::new_inherited(window)), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(Screen::new_inherited(window)),
+            window,
+            can_gc,
+        )
     }
 
     /// Retrives [`ScreenMetrics`] from the embedder.

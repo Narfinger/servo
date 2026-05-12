@@ -22,7 +22,7 @@ impl XMLHttpRequestUpload {
         }
     }
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<XMLHttpRequestUpload> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XMLHttpRequestUpload::new_inherited()),
             global,
             can_gc,

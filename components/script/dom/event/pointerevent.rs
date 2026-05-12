@@ -82,7 +82,7 @@ impl PointerEvent {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<PointerEvent> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(PointerEvent::new_inherited()),
             window,
             proto,

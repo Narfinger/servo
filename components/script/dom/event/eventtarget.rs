@@ -425,7 +425,7 @@ impl EventTarget {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<EventTarget> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(EventTarget::new_inherited()),
             global,
             proto,

@@ -58,7 +58,12 @@ impl URL {
         url: ServoUrl,
         can_gc: CanGc,
     ) -> DomRoot<URL> {
-        reflect_dom_object_with_proto(Box::new(URL::new_inherited(url)), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(URL::new_inherited(url)),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     pub(crate) fn query_pairs(&self) -> Vec<(String, String)> {

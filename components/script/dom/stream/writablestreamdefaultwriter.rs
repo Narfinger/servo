@@ -53,7 +53,7 @@ impl WritableStreamDefaultWriter {
         proto: Option<SafeHandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<WritableStreamDefaultWriter> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(WritableStreamDefaultWriter::new_inherited(global, can_gc)),
             global,
             proto,

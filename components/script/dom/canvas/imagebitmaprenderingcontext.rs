@@ -64,7 +64,7 @@ impl ImageBitmapRenderingContext {
         canvas: &RootedHTMLCanvasElementOrOffscreenCanvas,
         can_gc: CanGc,
     ) -> DomRoot<ImageBitmapRenderingContext> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ImageBitmapRenderingContext::new_inherited(
                 HTMLCanvasElementOrOffscreenCanvas::from(canvas),
             )),

@@ -42,7 +42,7 @@ impl Storage {
         storage_type: WebStorageType,
         can_gc: CanGc,
     ) -> DomRoot<Storage> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Storage::new_inherited(storage_type)),
             global,
             can_gc,

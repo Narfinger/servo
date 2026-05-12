@@ -103,7 +103,7 @@ impl GamepadHapticActuator {
         supported_haptic_effects: GamepadSupportedHapticEffects,
         can_gc: CanGc,
     ) -> DomRoot<GamepadHapticActuator> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GamepadHapticActuator::new_inherited(
                 gamepad_index,
                 supported_haptic_effects,

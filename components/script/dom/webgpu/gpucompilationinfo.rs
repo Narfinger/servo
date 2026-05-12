@@ -34,7 +34,12 @@ impl GPUCompilationInfo {
         msg: Vec<DomRoot<GPUCompilationMessage>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(Box::new(Self::new_inherited(msg)), global, None, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(Self::new_inherited(msg)),
+            global,
+            None,
+            can_gc,
+        )
     }
 
     pub(crate) fn from(

@@ -54,7 +54,7 @@ impl DOMRect {
         height: f64,
         can_gc: CanGc,
     ) -> DomRoot<DOMRect> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(DOMRect::new_inherited(x, y, width, height)),
             global,
             proto,
@@ -84,7 +84,11 @@ impl DOMRectMethods<crate::DomTypeHolder> for DOMRect {
     fn FromRect(cx: &mut JSContext, global: &GlobalScope, other: &DOMRectInit) -> DomRoot<DOMRect> {
         let rect = create_a_domrectreadonly_from_the_dictionary(other);
 
-        reflect_dom_object_with_cx(Box::new(Self { rect }), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(Self { rect }),
+            global,
+            cx,
+        )
     }
 
     /// <https://drafts.fxtf.org/geometry/#dom-domrect-x>

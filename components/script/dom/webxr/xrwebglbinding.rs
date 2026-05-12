@@ -56,7 +56,7 @@ impl XRWebGLBinding {
         context: &WebGLRenderingContext,
         can_gc: CanGc,
     ) -> DomRoot<XRWebGLBinding> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRWebGLBinding::new_inherited(session, context)),
             global,
             proto,

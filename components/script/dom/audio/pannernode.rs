@@ -206,7 +206,7 @@ impl PannerNode {
         can_gc: CanGc,
     ) -> Fallible<DomRoot<PannerNode>> {
         let node = PannerNode::new_inherited(window, context, options, can_gc)?;
-        Ok(reflect_dom_object_with_proto(
+        Ok(reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(node),
             window,
             proto,

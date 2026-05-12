@@ -56,7 +56,7 @@ impl XRSpace {
         is_grip_space: bool,
         can_gc: CanGc,
     ) -> DomRoot<XRSpace> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRSpace::new_inputspace_inner(session, input, is_grip_space)),
             global,
             can_gc,

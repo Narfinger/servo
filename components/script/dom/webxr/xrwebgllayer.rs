@@ -90,7 +90,7 @@ impl XRWebGLLayer {
         layer_id: Option<LayerId>,
         can_gc: CanGc,
     ) -> DomRoot<XRWebGLLayer> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRWebGLLayer::new_inherited(
                 session,
                 context,

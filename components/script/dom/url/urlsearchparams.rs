@@ -52,7 +52,7 @@ impl URLSearchParams {
         url: Option<&URL>,
         can_gc: CanGc,
     ) -> DomRoot<URLSearchParams> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(URLSearchParams::new_inherited(url)),
             global,
             proto,

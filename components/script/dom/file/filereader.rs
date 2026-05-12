@@ -194,7 +194,12 @@ impl FileReader {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<FileReader> {
-        reflect_dom_object_with_proto(Box::new(FileReader::new_inherited()), global, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(FileReader::new_inherited()),
+            global,
+            proto,
+            can_gc,
+        )
     }
 
     // https://w3c.github.io/FileAPI/#dfn-error-steps

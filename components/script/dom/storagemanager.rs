@@ -38,7 +38,11 @@ impl StorageManager {
     }
 
     pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<StorageManager> {
-        reflect_dom_object(Box::new(StorageManager::new_inherited()), global, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
+            Box::new(StorageManager::new_inherited()),
+            global,
+            can_gc,
+        )
     }
 
     fn origin_cannot_obtain_local_storage_shelf(&self) -> bool {

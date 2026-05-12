@@ -83,7 +83,7 @@ impl WebGLQuery {
         context.send_command(WebGLCommand::GenerateQuery(sender));
         let id = receiver.recv().unwrap();
 
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(context, id)),
             &*context.global(),
             can_gc,

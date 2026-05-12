@@ -58,7 +58,12 @@ impl UIEvent {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<UIEvent> {
-        reflect_dom_object_with_proto(Box::new(UIEvent::new_inherited()), window, proto, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(UIEvent::new_inherited()),
+            window,
+            proto,
+            can_gc,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]

@@ -52,7 +52,7 @@ impl Selection {
     }
 
     pub(crate) fn new(cx: &mut JSContext, document: &Document) -> DomRoot<Selection> {
-        reflect_dom_object_with_cx(
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
             Box::new(Selection::new_inherited(document)),
             &*document.global(),
             cx,

@@ -74,7 +74,7 @@ impl ResizeObserverEntry {
             content_box_size,
             device_pixel_content_box_size,
         ));
-        reflect_dom_object_with_proto(entry, window, None, can_gc)
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(entry, window, None, can_gc)
     }
 }
 

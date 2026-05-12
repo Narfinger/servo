@@ -33,7 +33,7 @@ impl XRInputSourceArray {
     }
 
     pub(crate) fn new(window: &Window, can_gc: CanGc) -> DomRoot<XRInputSourceArray> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(XRInputSourceArray::new_inherited()),
             window,
             can_gc,

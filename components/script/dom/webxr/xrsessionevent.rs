@@ -52,7 +52,7 @@ impl XRSessionEvent {
         session: &XRSession,
         can_gc: CanGc,
     ) -> DomRoot<XRSessionEvent> {
-        let trackevent = reflect_dom_object_with_proto(
+        let trackevent = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(XRSessionEvent::new_inherited(session)),
             window,
             proto,

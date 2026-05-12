@@ -89,7 +89,7 @@ impl ByteTeeUnderlyingSource {
         byte_tee_pull_algorithm: ByteTeePullAlgorithm,
         can_gc: CanGc,
     ) -> DomRoot<ByteTeeUnderlyingSource> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(ByteTeeUnderlyingSource {
                 reflector_: Reflector::new(),
                 reader,

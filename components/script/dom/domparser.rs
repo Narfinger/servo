@@ -39,7 +39,7 @@ impl DOMParser {
     }
 
     fn new(window: &Window, proto: Option<HandleObject>, can_gc: CanGc) -> DomRoot<DOMParser> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(DOMParser::new_inherited(window)),
             window,
             proto,

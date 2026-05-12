@@ -109,7 +109,12 @@ impl AnalyserNode {
         can_gc: CanGc,
     ) -> Fallible<DomRoot<AnalyserNode>> {
         let (node, recv) = AnalyserNode::new_inherited(window, context, options)?;
-        let object = reflect_dom_object_with_proto(Box::new(node), window, proto, can_gc);
+        let object = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            Box::new(node),
+            window,
+            proto,
+            can_gc,
+        );
         let task_source = window
             .as_global_scope()
             .task_manager()

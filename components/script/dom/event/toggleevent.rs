@@ -76,7 +76,9 @@ impl ToggleEvent {
         can_gc: CanGc,
     ) -> DomRoot<ToggleEvent> {
         let event = Box::new(ToggleEvent::new_inherited(old_state, new_state, source));
-        let event = reflect_dom_object_with_proto(event, window, proto, can_gc);
+        let event = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
+            event, window, proto, can_gc,
+        );
         {
             let event = event.upcast::<Event>();
             event.init_event(type_, bool::from(bubbles), bool::from(cancelable));

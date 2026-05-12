@@ -76,7 +76,7 @@ impl GPURenderPassEncoder {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPURenderPassEncoder::new_inherited(
                 channel,
                 render_pass,

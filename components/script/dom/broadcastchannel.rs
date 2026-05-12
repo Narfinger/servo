@@ -37,7 +37,7 @@ impl BroadcastChannel {
         name: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<BroadcastChannel> {
-        let channel = reflect_dom_object_with_proto(
+        let channel = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(BroadcastChannel::new_inherited(name)),
             global,
             proto,

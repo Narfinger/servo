@@ -109,7 +109,7 @@ impl AbortSignal {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<AbortSignal> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(AbortSignal::new_inherited()),
             global,
             proto,

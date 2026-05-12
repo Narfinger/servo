@@ -115,7 +115,7 @@ impl IDBCursor {
         key_only: bool,
         can_gc: CanGc,
     ) -> DomRoot<IDBCursor> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(IDBCursor::new_inherited(
                 transaction,
                 direction,

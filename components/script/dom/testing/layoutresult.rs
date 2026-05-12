@@ -46,7 +46,7 @@ impl LayoutResult {
         possibly_moved_fragment_count: u32,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(
                 phases,
                 rebuilt_fragment_count,

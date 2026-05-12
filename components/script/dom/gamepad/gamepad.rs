@@ -119,7 +119,7 @@ impl Gamepad {
         let vibration_actuator =
             GamepadHapticActuator::new(window, gamepad_id, supported_haptic_effects, can_gc);
         let index = if xr { -1 } else { 0 };
-        let gamepad = reflect_dom_object(
+        let gamepad = reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Gamepad::new_inherited(
                 gamepad_id,
                 id,

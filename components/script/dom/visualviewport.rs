@@ -71,7 +71,7 @@ impl VisualViewport {
         viewport_size: Size2D<f32, CSSPixel>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(Self::new_inherited(
                 window,
                 Rect::from_size(viewport_size),

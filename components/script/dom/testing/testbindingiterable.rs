@@ -28,7 +28,7 @@ impl TestBindingIterable {
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<TestBindingIterable> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(TestBindingIterable {
                 reflector: Reflector::new(),
                 vals: DomRefCell::new(vec![]),

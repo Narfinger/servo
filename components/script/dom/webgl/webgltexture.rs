@@ -172,7 +172,7 @@ impl WebGLTexture {
         id: WebGLTextureId,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLTexture::new_inherited(
                 context,
                 id,
@@ -191,7 +191,7 @@ impl WebGLTexture {
         session: &XRSession,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(WebGLTexture::new_inherited(context, id, Some(session))),
             &*context.global(),
             can_gc,

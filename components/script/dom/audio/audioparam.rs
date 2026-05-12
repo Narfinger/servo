@@ -91,7 +91,7 @@ impl AudioParam {
             min_value,
             max_value,
         );
-        reflect_dom_object(Box::new(audio_param), window, can_gc)
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(Box::new(audio_param), window, can_gc)
     }
 
     fn message_node(&self, message: AudioNodeMessage) {

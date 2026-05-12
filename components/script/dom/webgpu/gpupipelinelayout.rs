@@ -79,7 +79,7 @@ impl GPUPipelineLayout {
         bgls: Vec<WebGPUBindGroupLayout>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object::<crate::DomTypeHolder, _, _>(
             Box::new(GPUPipelineLayout::new_inherited(
                 channel,
                 pipeline_layout,

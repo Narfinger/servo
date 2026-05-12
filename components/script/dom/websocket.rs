@@ -136,7 +136,7 @@ impl WebSocket {
         sender: LazyCallback<WebSocketDomAction>,
         can_gc: CanGc,
     ) -> DomRoot<WebSocket> {
-        let websocket = reflect_dom_object_with_proto(
+        let websocket = reflect_dom_object_with_proto::<crate::DomTypeHolder, _, _>(
             Box::new(WebSocket::new_inherited(url, sender)),
             global,
             proto,

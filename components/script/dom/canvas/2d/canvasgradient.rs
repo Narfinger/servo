@@ -47,7 +47,11 @@ impl CanvasGradient {
         cx: &mut JSContext,
         style: CanvasGradientStyle,
     ) -> DomRoot<CanvasGradient> {
-        reflect_dom_object_with_cx(Box::new(CanvasGradient::new_inherited(style)), global, cx)
+        reflect_dom_object_with_cx::<crate::DomTypeHolder, _, _>(
+            Box::new(CanvasGradient::new_inherited(style)),
+            global,
+            cx,
+        )
     }
 }
 
