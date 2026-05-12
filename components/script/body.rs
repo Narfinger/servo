@@ -22,8 +22,8 @@ use mime_multipart_hyper1::{Node, read_multipart_body};
 use net_traits::request::{
     BodyChunkRequest, BodyChunkResponse, BodySource as NetBodySource, RequestBody,
 };
-use script_bindings::reflector::DomObject;
 use script_bindings::promisenativehandler::{Callback, PromiseNativeHandler};
+use script_bindings::reflector::DomObject;
 use servo_base::generic_channel::GenericSharedMemory;
 use servo_constellation_traits::BlobImpl;
 use url::form_urlencoded;
@@ -292,7 +292,7 @@ impl TransmitBodyConnectHandler {
                 }));
 
                 let handler =
-                    PromiseNativeHandler::new(&global, promise_handler.take().map(|h| Box::new(h) as Box<_>), rejection_handler.take().map(|h| Box::new(h) as Box<_>), CanGc::from_cx(cx));
+                    PromiseNativeHandler::new(&*global, promise_handler.take().map(|h| Box::new(h) as Box<_>), rejection_handler.take().map(|h| Box::new(h) as Box<_>), CanGc::from_cx(cx));
 
                 let mut realm = enter_auto_realm(cx, &*global);
                 let realm = &mut realm.current_realm();

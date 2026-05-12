@@ -2711,7 +2711,20 @@ class CGAssertInheritance(CGThing):
             "selfName": selfName,
         }
 
-        return f"""
+        if self.descriptor.name == "PromiseNativeHandler":
+            return f"""
+impl<D: DomTypes> script_bindings::promisenativehandler::{args['selfName']}<D> {{
+    fn __assert_parent_type(&self) {{
+        use crate::dom::bindings::inheritance::HasParent;
+        // If this type assertion fails, make sure the first field of your
+        // DOM struct is of the correct type -- it must be the parent class.
+        let _: &{args['parentName']} = self.as_parent();
+    }}
+}}
+"""
+        else:
+
+            return f"""
 impl {args['selfName']} {{
     fn __assert_parent_type(&self) {{
         use crate::dom::bindings::inheritance::HasParent;
@@ -3528,7 +3541,19 @@ class CGIDLInterface(CGThing):
             check = f"ptr::eq(class, unsafe {{ &{bindingModule}::Class.get().dom_class }})"
         # Get DFS-ordered ID range for this interface (set by PrototypeList generation).
         proto_first, proto_last = _proto_ranges.get(name, (0, 65535))
-        return f"""
+        if self.descriptor.name == "PromiseNativeHandler":
+            return f"""
+impl<D: DomTypes> IDLInterface for script_bindings::promisenativehandler::{name}<D> {{
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {{
+        {check}
+    }}
+    const PROTO_FIRST: u16 = {proto_first};
+    const PROTO_LAST: u16 = {proto_last};
+}}
+"""
+        else:
+            return f"""
 impl IDLInterface for {name} {{
     #[inline]
     fn derives(class: &'static DOMClass) -> bool {{
@@ -3574,7 +3599,19 @@ class CGDomObjectWrap(CGThing):
     def define(self) -> str:
         ifaceName = self.descriptor.interface.identifier.name
         bindingModule = f"crate::dom::bindings::codegen::GenericBindings::{toBindingPath(self.descriptor)}"
-        return f"""
+        if self.descriptor.name == "PromiseNativeHandler":
+            return f"""
+impl<D: DomTypes> DomObjectWrap<crate::DomTypeHolder> for script_bindings::promisenativehandler::{firstCap(ifaceName)}<crate::DomTypeHolder> {{
+    const WRAP: unsafe fn(
+        &mut JSContext,
+        &GlobalScope,
+        Option<HandleObject>,
+        Box<Self>,
+    ) -> Root<Dom<Self>> = {bindingModule}::Wrap::<crate::DomTypeHolder>;
+}}
+"""
+        else:
+            return f"""
 impl DomObjectWrap<crate::DomTypeHolder> for {firstCap(ifaceName)} {{
     const WRAP: unsafe fn(
         &mut JSContext,
@@ -7288,7 +7325,17 @@ class CGForbidDrop(CGThing):
     def __init__(self, descriptor: Descriptor) -> None:
         CGThing.__init__(self)
         assert not descriptor.allowDropImpl
-        self.code = f"""
+
+        if descriptor.name == "PromiseNativeHandler":
+            self.code = f"""
+            use script_bindings::DomTypes;
+impl<D: DomTypes> Drop for script_bindings::promisenativehandler::{firstCap(descriptor.interface.identifier.name)}<D> {{
+    fn drop(&mut self) {{
+    }}
+}}
+"""
+        else:
+            self.code = f"""
 impl Drop for {firstCap(descriptor.interface.identifier.name)} {{
     fn drop(&mut self) {{
     }}

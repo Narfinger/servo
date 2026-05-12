@@ -39,7 +39,7 @@ use crate::conversions::SafeToJSValConvertible;
 use crate::promisenativehandler::{Callback, PromiseNativeHandler};
 use crate::realms::{InRealm, enter_auto_realm, enter_realm};
 use crate::reflector::{self, DomGlobalGeneric, MutDomObject};
-use crate::root::DomRoot;
+use crate::root::{Dom, DomRoot, Root};
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 use crate::settings_stack::run_a_script;
 use crate::trace::CustomTraceable;
