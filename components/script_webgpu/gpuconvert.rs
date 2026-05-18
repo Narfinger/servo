@@ -463,6 +463,7 @@ impl Convert<wgpu_types::StencilOperation> for GPUStencilOperation {
     }
 }
 
+/*
 impl Convert<wgpu_com::TexelCopyBufferInfo> for &GPUImageCopyBuffer {
     fn convert(self) -> wgpu_com::TexelCopyBufferInfo {
         wgpu_com::TexelCopyBufferInfo {
@@ -520,7 +521,7 @@ impl TryConvert<wgpu_com::TexelCopyTextureInfo> for &GPUImageCopyTexture {
             },
         })
     }
-}
+} */
 
 impl<'a> Convert<Option<Cow<'a, str>>> for &GPUObjectDescriptorBase {
     fn convert(self) -> Option<Cow<'a, str>> {
@@ -532,9 +533,9 @@ impl<'a> Convert<Option<Cow<'a, str>>> for &GPUObjectDescriptorBase {
     }
 }
 
-pub(crate) fn convert_bind_group_layout_entry(
+pub(crate) fn convert_bind_group_layout_entry<D: DomTypes>(
     bgle: &GPUBindGroupLayoutEntry,
-    device: &GPUDevice,
+    device: &GPUDevice<D>,
 ) -> Fallible<Result<wgpu_types::BindGroupLayoutEntry, webgpu_traits::Error>> {
     let number_of_provided_bindings = bgle.buffer.is_some() as u8 +
         bgle.sampler.is_some() as u8 +
@@ -680,6 +681,7 @@ impl<'a, D: DomTypes> Convert<ProgrammableStageDescriptor<'a>> for &GPUProgramma
     }
 }
 
+/*
 impl<'a, D: DomTypes> Convert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D> {
     fn convert(self) -> BindGroupEntry<'a> {
         BindGroupEntry {
@@ -697,7 +699,7 @@ impl<'a, D: DomTypes> Convert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D> {
             },
         }
     }
-}
+} */
 
 impl Convert<wgpu_types::TextureDimension> for GPUTextureDimension {
     fn convert(self) -> wgpu_types::TextureDimension {

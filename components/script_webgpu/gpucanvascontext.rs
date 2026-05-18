@@ -13,8 +13,8 @@ use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
 use script_bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUCanvasConfiguration, GPUExtent3DDict, GPUObjectDescriptorBase, GPUTextureDescriptor,
-    GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants,
+    GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUExtent3DDict, GPUObjectDescriptorBase,
+    GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants,
 };
 use script_bindings::codegen::GenericUnionTypes::{
     HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
@@ -85,11 +85,14 @@ pub(crate) struct GPUCanvasContext<D: DomTypes> {
     droppable: DroppableGPUCanvasContext,
 }
 
-impl<D: DomTypes> GPUCanvasContext<D> {
+impl<D> GPUCanvasContext<D>
+where
+    D: DomTypes,
+{
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
     fn new_inherited(
         global: &D::GlobalScope,
-        canvas: HTMLCanvasElementOrOffscreenCanvas,
+        canvas: HTMLCanvasElementOrOffscreenCanvas<D>,
         channel: WebGPU,
     ) -> Self {
         let (sender, receiver) = generic_channel::channel().unwrap();
@@ -130,7 +133,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
         reflect_dom_object(
             Box::new(GPUCanvasContext::new_inherited(
                 global,
-                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas.into())),
+                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(DomRoot::from_ref(canvas)),
                 channel,
             )),
             global,
@@ -181,6 +184,8 @@ impl<D: DomTypes> GPUCanvasContext<D> {
         configuration: &GPUCanvasConfiguration<D>,
     ) -> GPUTextureDescriptor {
         let size = self.size();
+        todo!()
+        /*
         GPUTextureDescriptor {
             size: GPUExtent3D::GPUExtent3DDict(GPUExtent3DDict {
                 width: size.width,
@@ -200,6 +205,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
             },
             dimension: GPUTextureDimension::_2d,
         }
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-expire-the-current-texture>
@@ -332,12 +338,13 @@ where
     D::GPUTexture: From<GPUTexture<D>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
-        RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
+    fn Canvas(&self) -> HTMLCanvasElementOrOffscreenCanvas<D> {
+        todo!()
+        //HTMLCanvasElementOrOffscreenCanvas<D>::from(&self.canvas)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configure>
-    fn Configure(&self, configuration: &GPUCanvasConfiguration) -> Fallible<()> {
+    fn Configure(&self, configuration: &GPUCanvasConfiguration<D>) -> Fallible<()> {
         // 1. Let device be configuration.device
         let device = &configuration.device;
 
@@ -346,7 +353,7 @@ where
 
         // 2. Validate texture format required features of configuration.format with device.[[device]].
         // 3. Validate texture format required features of each element of configuration.viewFormats with device.[[device]].
-        let (mut wgpu_descriptor, _) = convert_texture_descriptor(&descriptor, device)?;
+        let (mut wgpu_descriptor, _) = convert_texture_descriptor(&descriptor, device.into())?;
         wgpu_descriptor.label = Some(Cow::Borrowed(
             "dummy texture for texture descriptor validation",
         ));
@@ -419,7 +426,7 @@ where
             // The content of the texture is the content of the canvas.
             self.cleared.set(false);
 
-            current_texture
+            current_texture.into()
         };
         // 6. Return this.[[currentTexture]].
         Ok(current_texture.into())

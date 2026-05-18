@@ -50,9 +50,11 @@ mod identityhub;
 mod wgsllanguagefeatures;
 
 use std::cell::UnsafeCell;
+use std::ptr;
 
 pub(crate) use js::gc::Traceable as JSTraceable;
 use jstraceable_derive::JSTraceable;
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 pub(crate) use script_bindings::DomTypes;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{AssociatedMemory, DomObject, MutDomObject, Reflector};
@@ -98,28 +100,10 @@ impl<T: DomObject> MutNullableDom<T> {
         }
     }
 
-    /// Retrieve a copy of the inner optional `Dom<T>` as `LayoutDom<T>`.
-    /// For use by layout, which can't use safe types like Temporary.
-    pub(crate) unsafe fn get_inner_as_layout(&self) -> Option<LayoutDom<'_, T>> {
-        //assert_in_layout();
-        unsafe { (*self.ptr.get()).as_ref().map(|js| js.to_layout()) }
-    }
-
     /// Get a rooted value out of this object
     pub(crate) fn get(&self) -> Option<DomRoot<T>> {
         //assert_in_script();
         unsafe { ptr::read(self.ptr.get()).map(|o| DomRoot::from_ref(&*o)) }
-    }
-
-    /// Get the `DomObject` without rooting it. Constructing an UnrootedDom. This is safe
-    /// as we take a reference to NoGC and bound the lifetime by NoGC bound. This implies that
-    /// while the `UnrootedDom` is alive we do not have a GC run.
-    #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-    pub(crate) fn get_unrooted<'a>(&self, no_gc: &'a NoGC) -> Option<UnrootedDom<'a, T>> {
-        //assert_in_script();
-        let ptr = unsafe { ptr::read(self.ptr.get()) };
-        ptr.map(|o| Dom::from_ref(&*o))
-            .map(|dom| UnrootedDom { inner: dom, no_gc })
     }
 
     /// Set this `MutNullableDom` to the given value.
@@ -171,7 +155,7 @@ impl<T: DomObject> PartialEq<Option<&T>> for MutNullableDom<T> {
 
 impl<T: DomObject> Default for MutNullableDom<T> {
     fn default() -> MutNullableDom<T> {
-        assert_in_script();
+        //assert_in_script();
         MutNullableDom {
             ptr: UnsafeCell::new(None),
         }
@@ -188,7 +172,7 @@ impl<T: DomObject> MallocSizeOf for MutNullableDom<T> {
 pub(crate) struct DataBlock(());
 
 impl DataBlock {
-    fn new_zeroed(size: uszie) -> DataBlock {
+    fn new_zeroed(size: usize) -> DataBlock {
         DataBlock(())
     }
 }

@@ -25,6 +25,7 @@ use webgpu_traits::{
 };
 use wgpu_core::command as wgpu_com;
 
+use crate::Convert;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucomputepassencoder::GPUComputePassEncoder;
@@ -264,7 +265,7 @@ where
         &self,
         source: &D::GPUBuffer,
         source_offset: GPUSize64,
-        destination: &GPUBuffer,
+        destination: &D::GPUBuffer,
         destination_offset: GPUSize64,
         size: GPUSize64,
     ) {
@@ -288,7 +289,7 @@ where
         &self,
         source: &GPUImageCopyBuffer<D>,
         destination: &GPUImageCopyTexture<D>,
-        copy_size: D::GPUExtent3D,
+        copy_size: RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -310,7 +311,7 @@ where
         &self,
         source: &GPUImageCopyTexture<D>,
         destination: &GPUImageCopyBuffer<D>,
-        copy_size: D::GPUExtent3D,
+        copy_size: RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -332,7 +333,7 @@ where
         &self,
         source: &GPUImageCopyTexture<D>,
         destination: &GPUImageCopyTexture<D>,
-        copy_size: GPUExtent3D,
+        copy_size: RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
         self.droppable
             .channel
