@@ -8,6 +8,7 @@ use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use script_bindings::root::DomRoot;
 use webgpu_traits::ShaderCompilationInfo;

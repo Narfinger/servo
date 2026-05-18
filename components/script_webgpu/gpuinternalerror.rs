@@ -43,14 +43,18 @@ impl<D: DomTypes> GPUInternalError {
     }
 }
 
-impl<D: DomTypes> GPUInternalErrorMethods<D> for GPUInternalError {
+impl<D> GPUInternalErrorMethods<D> for GPUInternalError
+where
+    D: DomTypes,
+    D::GPUInternalError: From<GPUInternalError>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUInternalError-GPUInternalError>
     fn Constructor(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,
-    ) -> DomRoot<Self> {
-        Self::new_with_proto(global, proto, message, can_gc)
+    ) -> DomRoot<D::GPUInternalError> {
+        Self::new_with_proto(global, proto, message, can_gc).into()
     }
 }

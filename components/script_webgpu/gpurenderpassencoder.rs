@@ -11,6 +11,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUIndexFormat, GPURenderPassEncoderMethods,
 };
+use script_bindings::num::Finite;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;

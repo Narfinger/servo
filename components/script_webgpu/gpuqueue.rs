@@ -8,6 +8,7 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
@@ -19,18 +20,18 @@ use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUQueue {
+pub(crate) struct GPUQueue<D: DomTypes> {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in webgpu"]
     #[no_trace]
     channel: WebGPU,
-    device: DomRefCell<Option<Dom<GPUDevice>>>,
+    device: DomRefCell<Option<Dom<GPUDevice<D>>>>,
     label: DomRefCell<USVString>,
     #[no_trace]
     queue: WebGPUQueue,
 }
 
-impl GPUQueue {
+impl<D: DomTypes> GPUQueue<D> {
     fn new_inherited(channel: WebGPU, queue: WebGPUQueue) -> Self {
         GPUQueue {
             channel,
@@ -42,7 +43,7 @@ impl GPUQueue {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         queue: WebGPUQueue,
         can_gc: CanGc,
@@ -55,7 +56,7 @@ impl GPUQueue {
     }
 }
 
-impl GPUQueue {
+impl<D: DomTypes> GPUQueue<D> {
     pub(crate) fn set_device(&self, device: &GPUDevice) {
         *self.device.borrow_mut() = Some(Dom::from_ref(device));
     }
@@ -65,7 +66,7 @@ impl GPUQueue {
     }
 }
 
-impl GPUQueueMethods<crate::DomTypeHolder> for GPUQueue {
+impl GPUQueueMethods<crate::DomTypeHolder> for GPUQueue<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

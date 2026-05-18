@@ -102,11 +102,11 @@ impl<D: DomTypes> GPUShaderModule<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createshadermodule>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: RootedTraceableBox<GPUShaderModuleDescriptor>,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> DomRoot<GPUShaderModule> {
+    ) -> DomRoot<GPUShaderModule<D>> {
         let program_id = device.global().wgpu_id_hub().create_shader_module_id();
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let shader_module = GPUShaderModule::new(

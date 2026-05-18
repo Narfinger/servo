@@ -47,7 +47,7 @@ impl Drop for DroppableGPUTextureView {
 pub(crate) struct GPUTextureView<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    texture: Dom<GPUTexture>,
+    texture: Dom<GPUTexture<D>>,
     droppable: DroppableGPUTextureView,
     phantom: PhantomData<D>,
 }
@@ -56,9 +56,9 @@ impl<D: DomTypes> GPUTextureView<D> {
     fn new_inherited(
         channel: WebGPU,
         texture_view: WebGPUTextureView,
-        texture: &GPUTexture,
+        texture: &GPUTexture<D>,
         label: USVString,
-    ) -> GPUTextureView {
+    ) -> GPUTextureView<D> {
         Self {
             reflector_: Reflector::new(),
             texture: Dom::from_ref(texture),
@@ -75,10 +75,10 @@ impl<D: DomTypes> GPUTextureView<D> {
         global: &D::GlobalScope,
         channel: WebGPU,
         texture_view: WebGPUTextureView,
-        texture: &GPUTexture,
+        texture: &GPUTexture<D>,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<GPUTextureView> {
+    ) -> DomRoot<GPUTextureView<D>> {
         reflect_dom_object(
             Box::new(GPUTextureView::new_inherited(
                 channel,
@@ -92,13 +92,13 @@ impl<D: DomTypes> GPUTextureView<D> {
     }
 }
 
-impl GPUTextureView {
+impl<D: DomTypes> GPUTextureView<D> {
     pub(crate) fn id(&self) -> WebGPUTextureView {
         self.droppable.texture_view
     }
 }
 
-impl<D: DomTypes> GPUTextureViewMethods<D> for GPUTextureView {
+impl<D: DomTypes> GPUTextureViewMethods<D> for GPUTextureView<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

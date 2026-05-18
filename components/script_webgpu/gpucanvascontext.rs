@@ -140,7 +140,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
 }
 
 // Abstract ops from spec
-impl GPUCanvasContext {
+impl<D: DomTypes> GPUCanvasContext<D> {
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {
         if let Err(error) = self.droppable.channel.0.send(WebGPURequest::SetImageKey {
             context_id: self.context_id(),
@@ -178,7 +178,7 @@ impl GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-gputexturedescriptor-for-the-canvas-and-configuration>
     fn texture_descriptor_for_canvas_and_configuration(
         &self,
-        configuration: &GPUCanvasConfiguration,
+        configuration: &GPUCanvasConfiguration<D>,
     ) -> GPUTextureDescriptor {
         let size = self.size();
         GPUTextureDescriptor {
@@ -237,7 +237,7 @@ impl GPUCanvasContext {
 }
 
 // Internal helper methods
-impl GPUCanvasContext {
+impl<D: DomTypes> GPUCanvasContext<D> {
     fn context_configuration(&self) -> Option<ContextConfiguration> {
         let configuration = self.configuration.borrow();
         let configuration = configuration.as_ref()?;
@@ -387,7 +387,7 @@ impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-getcurrenttexture>
-    fn GetCurrentTexture(&self) -> Fallible<DomRoot<GPUTexture>> {
+    fn GetCurrentTexture(&self) -> Fallible<DomRoot<GPUTexture<D>>> {
         // 1. If this.[[configuration]] is null, throw an InvalidStateError and return.
         let configuration = self.configuration.borrow();
         let Some(configuration) = configuration.as_ref() else {

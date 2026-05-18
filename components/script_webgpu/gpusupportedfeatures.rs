@@ -156,7 +156,7 @@ pub(crate) fn gpu_to_wgt_feature(feature: GPUFeatureName) -> Option<Features> {
     }
 }
 
-impl Setlike for GPUSupportedFeatures {
+impl<D: DomTypes> Setlike for GPUSupportedFeatures<D> {
     type Key = DOMString;
 
     #[inline(always)]

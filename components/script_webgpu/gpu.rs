@@ -32,7 +32,7 @@ use crate::script_runtime::CanGc;
 pub(crate) struct GPU<D: DomTypes> {
     reflector_: Reflector,
     /// Same object for <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
+    wgsl_language_features: MutNullableDom<WGSLLanguageFeatures<D>>,
 }
 
 impl<D: DomTypes> GPU<D> {
@@ -99,7 +99,7 @@ impl<D: DomTypes> GPUMethods<D> for GPU<D> {
     }
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures> {
+    fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures<D>> {
         self.wgsl_language_features
             .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
     }

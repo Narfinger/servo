@@ -64,26 +64,26 @@ impl ActiveBufferMapping {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBuffer {
+pub(crate) struct GPUBuffer<D: DomTypes> {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,
     label: DomRefCell<USVString>,
     #[no_trace]
     buffer: WebGPUBuffer,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-size>
     size: GPUSize64,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-usage>
     usage: GPUFlagsConstant,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-pending_map-slot>
     #[conditional_malloc_size_of]
-    pending_map: DomRefCell<Option<Rc<Promise>>>,
+    pending_map: DomRefCell<Option<Rc<D::Promise>>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-mapping-slot>
     mapping: DomRefCell<Option<ActiveBufferMapping>>,
 }
 
-impl GPUBuffer {
+impl<D: DomTypes> GPUBuffer<D> {
     fn new_inherited(
         channel: WebGPU,
         buffer: WebGPUBuffer,
@@ -108,7 +108,7 @@ impl GPUBuffer {
 
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         buffer: WebGPUBuffer,
         device: &GPUDevice,
@@ -128,7 +128,7 @@ impl GPUBuffer {
     }
 }
 
-impl GPUBuffer {
+impl<D: DomTypes> GPUBuffer<D> {
     pub(crate) fn id(&self) -> WebGPUBuffer {
         self.buffer
     }
@@ -181,13 +181,13 @@ impl GPUBuffer {
     }
 }
 
-impl Drop for GPUBuffer {
+impl<D: DomTypes> Drop for GPUBuffer<D> {
     fn drop(&mut self) {
         self.Destroy();
     }
 }
 
-impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
+impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
         // Step 1
@@ -370,7 +370,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     }
 }
 
-impl<D: DomTypes> GPUBuffer {
+impl<D: DomTypes> GPUBuffer<D> {
     fn map_failure(&self, p: &Rc<D::Promise>, can_gc: CanGc) {
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {

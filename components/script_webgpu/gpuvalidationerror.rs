@@ -20,7 +20,7 @@ use crate::script_runtime::CanGc;
 
 #[dom_struct]
 pub(crate) struct GPUValidationError<D: DomTypes> {
-    gpu_error: GPUError,
+    gpu_error: GPUError<D>,
     phantom: PhantomData<D>,
 }
 
@@ -47,14 +47,18 @@ impl<D: DomTypes> GPUValidationError<D> {
     }
 }
 
-impl<D: DomTypes> GPUValidationErrorMethods<D> for GPUValidationError<D> {
+impl<D> GPUValidationErrorMethods<D> for GPUValidationError<D>
+where
+    D: DomTypes,
+    D::GPUValidationError: From<GPUValidationError<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
     fn Constructor(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,
-    ) -> DomRoot<Self> {
-        Self::new_with_proto(global, proto, message, can_gc)
+    ) -> DomRoot<D::GPUValidationError> {
+        Self::new_with_proto(global, proto, message, can_gc).into()
     }
 }

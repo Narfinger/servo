@@ -61,8 +61,8 @@ pub(crate) struct GPUAdapter<D: DomTypes> {
     name: DOMString,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
-    features: Dom<GPUSupportedFeatures>,
-    limits: Dom<GPUSupportedLimits>,
+    features: Dom<GPUSupportedFeatures<D>>,
+    limits: Dom<GPUSupportedLimits<D>>,
     info: Dom<GPUAdapterInfo<D>>,
     droppable: DroppableGPUAdapter,
 }
@@ -71,9 +71,9 @@ impl<D: DomTypes> GPUAdapter<D> {
     fn new_inherited(
         channel: WebGPU,
         name: DOMString,
-        features: &GPUSupportedFeatures,
-        limits: &GPUSupportedLimits,
-        info: &GPUAdapterInfo,
+        features: &GPUSupportedFeatures<D>,
+        limits: &GPUSupportedLimits<D>,
+        info: &GPUAdapterInfo<D>,
         adapter: WebGPUAdapter,
     ) -> Self {
         Self {
@@ -117,9 +117,9 @@ impl<D: DomTypes> GPUAdapter<D> {
     fn create_adapter_info(
         global: &D::GlobalScope,
         info: AdapterInfo,
-        features: &GPUSupportedFeatures,
+        features: &GPUSupportedFeatures<D>,
         can_gc: CanGc,
-    ) -> DomRoot<GPUAdapterInfo> {
+    ) -> DomRoot<GPUAdapterInfo<D>> {
         // Step 2. If the vendor is known, set adapterInfo.vendor to the name of adapter’s vendor as
         // a normalized identifier string. To preserve privacy, the user agent may instead set
         // adapterInfo.vendor to the empty string or a reasonable approximation of the vendor as a
@@ -183,7 +183,13 @@ impl<D: DomTypes> GPUAdapter<D> {
     }
 }
 
-impl<D: DomTypes> GPUAdapterMethods<D> for GPUAdapter<D> {
+impl<D> GPUAdapterMethods<D> for GPUAdapter<D>
+where
+    D: DomTypes,
+    D::GPUSupportedFeatures: From<GPUSupportedFeatures<D>>,
+    D::GPUSupportedLimits: From<GPUSupportedLimits<D>>,
+    D::GPUAdapterInfo: From<GPUAdapterInfo<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
         &self,
@@ -257,18 +263,18 @@ impl<D: DomTypes> GPUAdapterMethods<D> for GPUAdapter<D> {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-features>
-    fn Features(&self) -> DomRoot<GPUSupportedFeatures> {
-        DomRoot::from_ref(&self.features)
+    fn Features(&self) -> DomRoot<D::GPUSupportedFeatures> {
+        DomRoot::from_ref(&self.features.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-limits>
-    fn Limits(&self) -> DomRoot<GPUSupportedLimits> {
-        DomRoot::from_ref(&self.limits)
+    fn Limits(&self) -> DomRoot<D::GPUSupportedLimits> {
+        DomRoot::from_ref(&self.limits.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-info>
-    fn Info(&self) -> DomRoot<GPUAdapterInfo> {
-        DomRoot::from_ref(&self.info)
+    fn Info(&self) -> DomRoot<D::GPUAdapterInfo> {
+        DomRoot::from_ref(&self.info.into())
     }
 }
 

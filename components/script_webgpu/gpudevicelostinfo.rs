@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -17,18 +19,20 @@ use script_bindings::str::DOMString;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUDeviceLostInfo {
+pub(crate) struct GPUDeviceLostInfo<D: DomTypes> {
     reflector_: Reflector,
     message: DOMString,
     reason: GPUDeviceLostReason,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUDeviceLostInfo {
+impl<D: DomTypes> GPUDeviceLostInfo<D> {
     fn new_inherited(message: DOMString, reason: GPUDeviceLostReason) -> Self {
         Self {
             reflector_: Reflector::new(),
             message,
             reason,
+            phantom: PhantomData,
         }
     }
 
@@ -46,7 +50,7 @@ impl<D: DomTypes> GPUDeviceLostInfo {
     }
 }
 
-impl<D: DomTypes> GPUDeviceLostInfoMethods<D> for GPUDeviceLostInfo {
+impl<D: DomTypes> GPUDeviceLostInfoMethods<D> for GPUDeviceLostInfo<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevicelostinfo-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

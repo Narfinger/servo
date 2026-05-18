@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use std::borrow::Cow;
+use std::marker::PhantomData;
 
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
@@ -52,6 +53,7 @@ pub(crate) struct GPUBindGroupLayout<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUBindGroupLayout,
+    phantom: PhantomData<D>,
 }
 
 impl<D: DomTypes> GPUBindGroupLayout<D> {
@@ -67,6 +69,7 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
                 channel,
                 bind_group_layout,
             },
+            phantom: PhantomData,
         }
     }
 
@@ -96,10 +99,10 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBindGroupLayout>> {
+    ) -> Fallible<DomRoot<GPUBindGroupLayout<D>>> {
         let entries = descriptor
             .entries
             .iter()

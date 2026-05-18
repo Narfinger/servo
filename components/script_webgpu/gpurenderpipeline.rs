@@ -62,7 +62,7 @@ impl<D: DomTypes> GPURenderPipeline<D> {
     fn new_inherited(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
     ) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -80,7 +80,7 @@ impl<D: DomTypes> GPURenderPipeline<D> {
         global: &D::GlobalScope,
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object(
@@ -102,7 +102,7 @@ impl<D: DomTypes> GPURenderPipeline<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: RenderPipelineDescriptor<'static>,
         async_sender: Option<GenericCallback<WebGPURenderPipelineResponse>>,
     ) -> Fallible<WebGPURenderPipeline> {
@@ -123,7 +123,11 @@ impl<D: DomTypes> GPURenderPipeline<D> {
     }
 }
 
-impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline<D> {
+impl<D> GPURenderPipelineMethods<D> for GPURenderPipeline<D>
+where
+    D: DomTypes,
+    D::GPUBindGroupLayout: From<GPUBindGroupLayout<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -135,7 +139,7 @@ impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline<D> {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
-    fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<GPUBindGroupLayout>> {
+    fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<D::GPUBindGroupLayout>> {
         let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
@@ -159,5 +163,6 @@ impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline<D> {
             USVString::default(),
             CanGc::deprecated_note(),
         ))
+        .into()
     }
 }

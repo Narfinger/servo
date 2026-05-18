@@ -19,7 +19,8 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::reflect_dom_object;
-use script_bindings::root::DomRoot;
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use script_bindings::{DomTypes, cformat};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
@@ -35,6 +36,7 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
+use crate::gpuadapter::GPUAdapter;
 use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpubuffer::GPUBuffer;
@@ -65,19 +67,19 @@ impl Drop for DroppableGPUDevice {
 }
 
 #[dom_struct]
-pub(crate) struct GPUDevice {
-    eventtarget: EventTarget,
-    adapter: Dom<GPUAdapter>,
+pub(crate) struct GPUDevice<D: DomTypes> {
+    eventtarget: D::EventTarget,
+    adapter: Dom<GPUAdapter<D>>,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
-    features: Dom<GPUSupportedFeatures>,
-    limits: Dom<GPUSupportedLimits>,
-    adapter_info: Dom<GPUAdapterInfo>,
+    features: Dom<GPUSupportedFeatures<D>>,
+    limits: Dom<GPUSupportedLimits<D>>,
+    adapter_info: Dom<GPUAdapterInfo<D>>,
     label: DomRefCell<USVString>,
     default_queue: Dom<GPUQueue>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-lost>
     #[conditional_malloc_size_of]
-    lost_promise: DomRefCell<Rc<Promise>>,
+    lost_promise: DomRefCell<Rc<D::Promise>>,
     valid: Cell<bool>,
     droppable: DroppableGPUDevice,
 }
@@ -96,7 +98,7 @@ impl PipelineLayout {
     }
 }
 
-impl GPUDevice {
+impl<D: DomTypes> GPUDevice<D> {
     #[allow(clippy::too_many_arguments)]
     fn new_inherited(
         channel: WebGPU,
@@ -107,10 +109,10 @@ impl GPUDevice {
         device: WebGPUDevice,
         queue: &GPUQueue,
         label: String,
-        lost_promise: Rc<Promise>,
+        lost_promise: Rc<D::Promise>,
     ) -> Self {
         Self {
-            eventtarget: EventTarget::new_inherited(),
+            eventtarget: D::EventTarget::new_inherited(),
             adapter: Dom::from_ref(adapter),
             extensions: Heap::default(),
             features: Dom::from_ref(features),
@@ -126,7 +128,7 @@ impl GPUDevice {
 
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         adapter: &GPUAdapter,
         extensions: HandleObject,

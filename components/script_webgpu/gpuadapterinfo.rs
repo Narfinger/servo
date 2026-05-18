@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -24,6 +26,7 @@ pub(crate) struct GPUAdapterInfo<D: DomTypes> {
     subgroup_min_size: u32,
     subgroup_max_size: u32,
     is_fallback_adapter: bool,
+    phantom: PhantomData<D>,
 }
 
 impl<D: DomTypes> GPUAdapterInfo<D> {
@@ -45,6 +48,7 @@ impl<D: DomTypes> GPUAdapterInfo<D> {
             subgroup_min_size,
             subgroup_max_size,
             is_fallback_adapter,
+            phantom: PhantomData,
         }
     }
 
@@ -77,7 +81,7 @@ impl<D: DomTypes> GPUAdapterInfo<D> {
 
     pub(crate) fn clone_from(
         global: &D::GlobalScope,
-        info: &GPUAdapterInfo,
+        info: &GPUAdapterInfo<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         Self::new(

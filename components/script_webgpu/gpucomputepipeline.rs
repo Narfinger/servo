@@ -8,7 +8,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePipelineMethods;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUComputePipelineDescriptor, GPUComputePipelineMethods,
+};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -40,13 +42,14 @@ impl Drop for DroppableGPUCommandBuffer {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandBuffer {
+pub(crate) struct GPUCommandBuffer<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUCommandBuffer,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUCommandBuffer {
+impl<D: DomTypes> GPUCommandBuffer<D> {
     fn new_inherited(
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
@@ -59,6 +62,7 @@ impl<D: DomTypes> GPUCommandBuffer {
                 channel,
                 command_buffer,
             },
+            phantom: PhantomData,
         }
     }
 
@@ -81,13 +85,13 @@ impl<D: DomTypes> GPUCommandBuffer {
     }
 }
 
-impl GPUCommandBuffer {
+impl<D: DomTypes> GPUCommandBuffer<D> {
     pub(crate) fn id(&self) -> WebGPUCommandBuffer {
         self.droppable.command_buffer
     }
 }
 
-impl<D: DomTypes> GPUCommandBufferMethods<D> for GPUCommandBuffer {
+impl<D: DomTypes> GPUCommandBufferMethods<D> for GPUCommandBuffer<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

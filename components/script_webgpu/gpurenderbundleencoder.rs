@@ -28,21 +28,21 @@ use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPURenderBundleEncoder {
+pub(crate) struct GPURenderBundleEncoder<D: DomTypes> {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     #[ignore_malloc_size_of = "defined in wgpu-core"]
     #[no_trace]
     render_bundle_encoder: DomRefCell<Option<RenderBundleEncoder>>,
     label: DomRefCell<USVString>,
 }
 
-impl<D: DomTypes> GPURenderBundleEncoder {
+impl<D: DomTypes> GPURenderBundleEncoder<D> {
     fn new_inherited(
         render_bundle_encoder: RenderBundleEncoder,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         channel: WebGPU,
         label: USVString,
     ) -> Self {
@@ -58,7 +58,7 @@ impl<D: DomTypes> GPURenderBundleEncoder {
     pub(crate) fn new(
         global: &D::GlobalScope,
         render_bundle_encoder: RenderBundleEncoder,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         channel: WebGPU,
         label: USVString,
         can_gc: CanGc,
@@ -76,7 +76,7 @@ impl<D: DomTypes> GPURenderBundleEncoder {
     }
 }
 
-impl GPURenderBundleEncoder {
+impl<D: DomTypes> GPURenderBundleEncoder<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderbundleencoder>
     pub(crate) fn create(
         device: &GPUDevice,
@@ -128,7 +128,7 @@ impl GPURenderBundleEncoder {
     }
 }
 
-impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder {
+impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -165,7 +165,7 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer,
+        buffer: &GPUBuffer<D>,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,

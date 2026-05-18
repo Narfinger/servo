@@ -9,8 +9,9 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUCommandBufferDescriptor, GPUCommandEncoderMethods, GPUComputePassDescriptor,
-    GPUImageCopyBuffer, GPUImageCopyTexture, GPURenderPassDescriptor, GPUSize64,
+    GPUCommandBufferDescriptor, GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
+    GPUComputePassDescriptor, GPUImageCopyBuffer, GPUImageCopyTexture, GPURenderPassDescriptor,
+    GPUSize64,
 };
 use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 use script_bindings::error::Fallible;
@@ -132,7 +133,11 @@ impl GPUCommandEncoder {
     }
 }
 
-impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
+impl<D> GPUCommandEncoderMethods<D> for GPUCommandEncoder
+where
+    D: DomTypes,
+    D::GPUComputePassEncoder: From<GPUComputePassEncoder>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -172,6 +177,7 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
             descriptor.parent.label.clone(),
             CanGc::deprecated_note(),
         )
+        .into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-beginrenderpass>
@@ -253,9 +259,9 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertobuffer>
     fn CopyBufferToBuffer(
         &self,
-        source: &GPUBuffer,
+        source: &GPUBuffer<D>,
         source_offset: GPUSize64,
-        destination: &GPUBuffer,
+        destination: &GPUBuffer<D>,
         destination_offset: GPUSize64,
         size: GPUSize64,
     ) {
@@ -277,9 +283,9 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertotexture>
     fn CopyBufferToTexture(
         &self,
-        source: &GPUImageCopyBuffer,
-        destination: &GPUImageCopyTexture,
-        copy_size: GPUExtent3D,
+        source: &GPUImageCopyBuffer<D>,
+        destination: &GPUImageCopyTexture<D>,
+        copy_size: GPUExtent3D<D>,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -299,9 +305,9 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertotexture>
     fn CopyTextureToBuffer(
         &self,
-        source: &GPUImageCopyTexture,
-        destination: &GPUImageCopyBuffer,
-        copy_size: GPUExtent3D,
+        source: &GPUImageCopyTexture<D>,
+        destination: &GPUImageCopyBuffer<D>,
+        copy_size: GPUExtent3D<D>,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -321,8 +327,8 @@ impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#GPUCommandEncoder-copyTextureToTexture>
     fn CopyTextureToTexture(
         &self,
-        source: &GPUImageCopyTexture,
-        destination: &GPUImageCopyTexture,
+        source: &GPUImageCopyTexture<D>,
+        destination: &GPUImageCopyTexture<D>,
         copy_size: GPUExtent3D,
     ) -> Fallible<()> {
         self.droppable

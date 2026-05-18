@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::{PhantomData, PhantomPinned};
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -40,15 +42,16 @@ impl Drop for DroppableGPURenderBundle {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderBundle {
+pub(crate) struct GPURenderBundle<D: DomTypes> {
     reflector_: Reflector,
     #[no_trace]
     device: WebGPUDevice,
     label: DomRefCell<USVString>,
     droppable: DroppableGPURenderBundle,
+    phantom: PhantomData<D>,
 }
 
-impl GPURenderBundle {
+impl<D: DomTypes> GPURenderBundle<D> {
     fn new_inherited(
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
@@ -63,11 +66,12 @@ impl GPURenderBundle {
                 channel,
                 render_bundle,
             },
+            phantom: PhantomData,
         }
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
         channel: WebGPU,
@@ -87,13 +91,13 @@ impl GPURenderBundle {
     }
 }
 
-impl GPURenderBundle {
+impl<D: DomTypes> GPURenderBundle<D> {
     pub(crate) fn id(&self) -> WebGPURenderBundle {
         self.droppable.render_bundle
     }
 }
 
-impl<D: DomTypes> GPURenderBundleMethods<D> for GPURenderBundle {
+impl<D: DomTypes> GPURenderBundleMethods<D> for GPURenderBundle<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

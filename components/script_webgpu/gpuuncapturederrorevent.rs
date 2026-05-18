@@ -23,11 +23,11 @@ use crate::script_runtime::CanGc;
 pub(crate) struct GPUUncapturedErrorEvent<D: DomTypes> {
     event: D::Event,
     #[ignore_malloc_size_of = "Because it is non-owning"]
-    gpu_error: Dom<GPUError>,
+    gpu_error: Dom<GPUError<D>>,
 }
 
 impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
-    fn new_inherited(init: &GPUUncapturedErrorEventInit) -> Self {
+    fn new_inherited(init: &GPUUncapturedErrorEventInit<D>) -> Self {
         Self {
             gpu_error: Dom::from_ref(&init.error),
             event: D::Event::new_inherited(),
@@ -37,7 +37,7 @@ impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
     pub(crate) fn new(
         global: &D::GlobalScope,
         event_type: Atom,
-        init: &GPUUncapturedErrorEventInit,
+        init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         Self::new_with_proto(global, None, event_type, init, can_gc)
@@ -47,7 +47,7 @@ impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         event_type: Atom,
-        init: &GPUUncapturedErrorEventInit,
+        init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         let event = reflect_dom_object_with_proto(
@@ -63,21 +63,27 @@ impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
     }
 }
 
-impl<D: DomTypes> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent {
+impl<D> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent<D>
+where
+    D: DomTypes,
+    D::GPUUncapturedErrorEvent: From<GPUUncapturedErrorEvent<D>>,
+    D::GPUError: From<GPUError<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-gpuuncapturederrorevent>
     fn Constructor(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         event_type: DOMString,
-        init: &GPUUncapturedErrorEventInit,
-    ) -> DomRoot<Self> {
+        init: &GPUUncapturedErrorEventInit<D>,
+    ) -> DomRoot<D::GPUUncapturedErrorEvent> {
         GPUUncapturedErrorEvent::new_with_proto(global, proto, event_type.into(), init, can_gc)
+            .into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-error>
-    fn Error(&self) -> DomRoot<GPUError> {
-        DomRoot::from_ref(&self.gpu_error)
+    fn Error(&self) -> DomRoot<D::GPUError> {
+        DomRoot::from_ref(&self.gpu_error).into()
     }
 
     /// <https://dom.spec.whatwg.org/#dom-event-istrusted>

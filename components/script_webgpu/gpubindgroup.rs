@@ -51,7 +51,7 @@ pub(crate) struct GPUBindGroup<D: DomTypes> {
     label: DomRefCell<USVString>,
     #[no_trace]
     device: WebGPUDevice,
-    layout: Dom<GPUBindGroupLayout>,
+    layout: Dom<GPUBindGroupLayout<D>>,
     droppable: DroppableGPUBindGroup,
 }
 
@@ -60,7 +60,7 @@ impl<D: DomTypes> GPUBindGroup<D> {
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
-        layout: &GPUBindGroupLayout,
+        layout: &GPUBindGroupLayout<D>,
         label: USVString,
     ) -> Self {
         Self {
@@ -80,7 +80,7 @@ impl<D: DomTypes> GPUBindGroup<D> {
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
-        layout: &GPUBindGroupLayout,
+        layout: &GPUBindGroupLayout<D>,
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -94,7 +94,11 @@ impl<D: DomTypes> GPUBindGroup<D> {
     }
 }
 
-impl<D: DomTypes> GPUBindGroup<D> {
+impl<D> GPUBindGroup<D>
+where
+    D: DomTypes,
+    D::GPUBindGroupLayout: Into<GPUBindGroupLayout<D>>,
+{
     pub(crate) fn id(&self) -> &WebGPUBindGroup {
         &self.droppable.bind_group
     }
@@ -102,9 +106,9 @@ impl<D: DomTypes> GPUBindGroup<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbindgroup>
     pub(crate) fn create(
         device: &GPUDevice,
-        descriptor: &GPUBindGroupDescriptor,
+        descriptor: &GPUBindGroupDescriptor<D>,
         can_gc: CanGc,
-    ) -> DomRoot<GPUBindGroup> {
+    ) -> DomRoot<GPUBindGroup<D>> {
         let entries = descriptor
             .entries
             .iter()
@@ -135,7 +139,7 @@ impl<D: DomTypes> GPUBindGroup<D> {
             device.channel(),
             bind_group,
             device.id(),
-            &descriptor.layout,
+            &descriptor.layout.into(),
             descriptor.parent.label.clone(),
             can_gc,
         )
