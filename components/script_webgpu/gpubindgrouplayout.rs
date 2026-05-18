@@ -8,11 +8,20 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
+};
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
+use crate::gpuconvert::convert_bind_group_layout_entry;
+use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -39,13 +48,13 @@ impl Drop for DroppableGPUBindGroupLayout {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBindGroupLayout {
+pub(crate) struct GPUBindGroupLayout<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUBindGroupLayout,
 }
 
-impl GPUBindGroupLayout {
+impl<D: DomTypes> GPUBindGroupLayout<D> {
     fn new_inherited(
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
@@ -62,7 +71,7 @@ impl GPUBindGroupLayout {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
         label: USVString,
@@ -80,7 +89,7 @@ impl GPUBindGroupLayout {
     }
 }
 
-impl GPUBindGroupLayout {
+impl<D: DomTypes> GPUBindGroupLayout<D> {
     pub(crate) fn id(&self) -> WebGPUBindGroupLayout {
         self.droppable.bind_group_layout
     }
@@ -131,7 +140,7 @@ impl GPUBindGroupLayout {
     }
 }
 
-impl GPUBindGroupLayoutMethods<crate::DomTypeHolder> for GPUBindGroupLayout {
+impl<D: DomTypes> GPUBindGroupLayoutMethods<D> for GPUBindGroupLayout<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

@@ -12,8 +12,15 @@ use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
-use script_bindings::cformat;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBindGroupLayoutDescriptor, GPUDeviceMethods, GPURenderPipelineDescriptor, GPUTextureFormat,
+    GPUVertexStepMode,
+};
+use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
+use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::reflect_dom_object;
+use script_bindings::root::DomRoot;
+use script_bindings::{DomTypes, cformat};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
     WebGPUPoppedErrorScopeResponse, WebGPUQueue, WebGPURenderPipeline,
@@ -28,6 +35,13 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
+use crate::gpuadapterinfo::GPUAdapterInfo;
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpupipelinelayout::GPUPipelineLayout;
+use crate::gpuqueue::GPUQueue;
+use crate::gpurenderpipeline::GPURenderPipeline;
+use crate::gpusupportedfeatures::GPUSupportedFeatures;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -360,8 +374,8 @@ impl GPUDevice {
 
         // Queue a global task, using the webgpu task source, to resolve device.lost
         // promise with a new GPUDeviceLostInfo with reason and message.
+        /*
         self.global().task_manager().webgpu_task_source().queue(
-            /*
              *
             task!(resolve_device_lost: move || {
                 let this = this.root();
@@ -375,7 +389,7 @@ impl GPUDevice {
     }
 }
 
-impl GPUDeviceMethods<crate::DomTypeHolder> for GPUDevice {
+impl<D: DomTypes> GPUDeviceMethods<D> for GPUDevice {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-features>
     fn Features(&self) -> DomRoot<GPUSupportedFeatures> {
         DomRoot::from_ref(&self.features)
@@ -579,7 +593,7 @@ impl GPUDeviceMethods<crate::DomTypeHolder> for GPUDevice {
     }
 
     // https://gpuweb.github.io/gpuweb/#dom-gpudevice-onuncapturederror
-    event_handler!(uncapturederror, GetOnuncapturederror, SetOnuncapturederror);
+    //event_handler!(uncapturederror, GetOnuncapturederror, SetOnuncapturederror);
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy>
     fn Destroy(&self) {

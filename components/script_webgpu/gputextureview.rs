@@ -6,10 +6,15 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureViewMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
 
+use crate::gputexture::GPUTexture;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -44,7 +49,7 @@ pub(crate) struct GPUTextureView {
     droppable: DroppableGPUTextureView,
 }
 
-impl GPUTextureView {
+impl<D: DomTypes> GPUTextureView {
     fn new_inherited(
         channel: WebGPU,
         texture_view: WebGPUTextureView,
@@ -63,7 +68,7 @@ impl GPUTextureView {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         texture_view: WebGPUTextureView,
         texture: &GPUTexture,
@@ -89,7 +94,7 @@ impl GPUTextureView {
     }
 }
 
-impl GPUTextureViewMethods<crate::DomTypeHolder> for GPUTextureView {
+impl<D: DomTypes> GPUTextureViewMethods<D> for GPUTextureView {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

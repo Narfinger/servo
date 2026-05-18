@@ -10,9 +10,12 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};
 
+use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]

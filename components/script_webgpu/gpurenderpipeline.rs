@@ -6,8 +6,13 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipelineMethods;
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPURenderPipeline, WebGPURenderPipelineResponse,
@@ -15,6 +20,8 @@ use webgpu_traits::{
 };
 use wgpu_core::pipeline::RenderPipelineDescriptor;
 
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -48,7 +55,7 @@ pub(crate) struct GPURenderPipeline {
     droppable: DroppableGPURenderPipeline,
 }
 
-impl GPURenderPipeline {
+impl<D: DomTypes> GPURenderPipeline {
     fn new_inherited(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
@@ -66,7 +73,7 @@ impl GPURenderPipeline {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
         device: &GPUDevice,
@@ -112,7 +119,7 @@ impl GPURenderPipeline {
     }
 }
 
-impl GPURenderPipelineMethods<crate::DomTypeHolder> for GPURenderPipeline {
+impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

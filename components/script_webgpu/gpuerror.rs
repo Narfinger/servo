@@ -7,9 +7,14 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods};
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 use webgpu_traits::{Error, ErrorFilter};
 
+use crate::gpuvalidationerror::GPUValidationError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
@@ -18,7 +23,7 @@ pub(crate) struct GPUError {
     message: DOMString,
 }
 
-impl GPUError {
+impl<D: DomTypes> GPUError {
     pub(crate) fn new_inherited(message: DOMString) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -27,12 +32,12 @@ impl GPUError {
     }
 
     #[expect(dead_code)]
-    pub(crate) fn new(global: &GlobalScope, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn new(global: &D::GlobalScope, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
         Self::new_with_proto(global, None, message, can_gc)
     }
 
     pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -45,7 +50,11 @@ impl GPUError {
         )
     }
 
-    pub(crate) fn from_error(global: &GlobalScope, error: Error, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn from_error(
+        global: &D::GlobalScope,
+        error: Error,
+        can_gc: CanGc,
+    ) -> DomRoot<Self> {
         match error {
             Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
                 global,
@@ -69,7 +78,7 @@ impl GPUError {
     }
 }
 
-impl GPUErrorMethods<crate::DomTypeHolder> for GPUError {
+impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

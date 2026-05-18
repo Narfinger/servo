@@ -8,13 +8,23 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUIndexFormat, GPURenderBundleEncoderDescriptor, GPURenderBundleEncoderMethods,
+};
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURenderBundle, WebGPURequest};
 use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
 };
 
+use crate::gpubuffer::GPUBuffer;
+use crate::gpudevice::GPUDevice;
+use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
@@ -29,7 +39,7 @@ pub(crate) struct GPURenderBundleEncoder {
     label: DomRefCell<USVString>,
 }
 
-impl GPURenderBundleEncoder {
+impl<D: DomTypes> GPURenderBundleEncoder {
     fn new_inherited(
         render_bundle_encoder: RenderBundleEncoder,
         device: &GPUDevice,
@@ -46,7 +56,7 @@ impl GPURenderBundleEncoder {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         render_bundle_encoder: RenderBundleEncoder,
         device: &GPUDevice,
         channel: WebGPU,
@@ -118,7 +128,7 @@ impl GPURenderBundleEncoder {
     }
 }
 
-impl GPURenderBundleEncoderMethods<crate::DomTypeHolder> for GPURenderBundleEncoder {
+impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

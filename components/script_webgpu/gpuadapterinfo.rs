@@ -3,15 +3,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
-
-use crate::script_runtime::CanGc;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
+
+use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUAdapterInfo {
+pub(crate) struct GPUAdapterInfo<D: DomTypes> {
     reflector_: Reflector,
     vendor: DOMString,
     architecture: DOMString,
@@ -22,7 +26,7 @@ pub(crate) struct GPUAdapterInfo {
     is_fallback_adapter: bool,
 }
 
-impl GPUAdapterInfo {
+impl<D: DomTypes> GPUAdapterInfo<D> {
     fn new_inherited(
         vendor: DOMString,
         architecture: DOMString,
@@ -46,7 +50,7 @@ impl GPUAdapterInfo {
 
     #[expect(clippy::too_many_arguments)]
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         vendor: DOMString,
         architecture: DOMString,
         device: DOMString,
@@ -72,7 +76,7 @@ impl GPUAdapterInfo {
     }
 
     pub(crate) fn clone_from(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         info: &GPUAdapterInfo,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -90,7 +94,7 @@ impl GPUAdapterInfo {
     }
 }
 
-impl GPUAdapterInfoMethods<crate::DomTypeHolder> for GPUAdapterInfo {
+impl<D: DomTypes> GPUAdapterInfoMethods<D> for GPUAdapterInfo<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-vendor>
     fn Vendor(&self) -> DOMString {
         self.vendor.clone()

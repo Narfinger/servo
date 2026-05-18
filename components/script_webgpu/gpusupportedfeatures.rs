@@ -10,9 +10,16 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUFeatureName, GPUSupportedFeaturesMethods,
+};
+use script_bindings::error::Fallible;
 use script_bindings::like::Setlike;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 use wgpu_types::Features;
 
 use crate::script_runtime::CanGc;
@@ -28,9 +35,9 @@ pub(crate) struct GPUSupportedFeatures {
     features: Features,
 }
 
-impl GPUSupportedFeatures {
+impl<D: DomTypes> GPUSupportedFeatures {
     fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
@@ -100,7 +107,7 @@ impl GPUSupportedFeatures {
 
     #[expect(non_snake_case)]
     pub(crate) fn Constructor(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
@@ -115,7 +122,7 @@ impl GPUSupportedFeatures {
     }
 }
 
-impl GPUSupportedFeaturesMethods<crate::DomTypeHolder> for GPUSupportedFeatures {
+impl<D: DomTypes> GPUSupportedFeaturesMethods<D> for GPUSupportedFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }

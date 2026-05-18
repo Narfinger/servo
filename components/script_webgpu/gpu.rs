@@ -9,45 +9,57 @@ use js::jsapi::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
+};
+use script_bindings::error::Error;
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 use servo_constellation_traits::ScriptToConstellationMessage;
+use webgpu_traits::WebGPUAdapterResponse;
+use wgpu_types::PowerPreference;
 
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
+use crate::MutNullableDom;
+use crate::gpuadapter::GPUAdapter;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
 #[expect(clippy::upper_case_acronyms)]
-pub(crate) struct GPU {
+pub(crate) struct GPU<D: DomTypes> {
     reflector_: Reflector,
     /// Same object for <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
     wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
 }
 
-impl GPU {
-    pub(crate) fn new_inherited() -> GPU {
+impl<D: DomTypes> GPU<D> {
+    pub(crate) fn new_inherited() -> GPU<D> {
         GPU {
             reflector_: Reflector::new(),
             wgsl_language_features: MutNullableDom::default(),
         }
     }
 
-    pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
+    pub(crate) fn new(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
         reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
 
-impl GPUMethods<crate::DomTypeHolder> for GPU {
+impl<D: DomTypes> GPUMethods<D> for GPU<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,
         options: &GPURequestAdapterOptions,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<D::Promise> {
         let global = &self.global();
-        let promise = Promise::new_in_current_realm(comp, can_gc);
+        let promise = D::Promise::new_in_current_realm(comp, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
-        let callback = callback_promise(&promise, self, task_source);
+        //let callback = callback_promise(&promise, self, task_source);
 
         let power_preference = match options.powerPreference {
             Some(GPUPowerPreference::Low_power) => PowerPreference::LowPower,
@@ -57,6 +69,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
         let ids = global.wgpu_id_hub().create_adapter_id();
 
         let script_to_constellation_chan = global.script_to_constellation_chan();
+        /*
         if script_to_constellation_chan
             .send(ScriptToConstellationMessage::RequestAdapter(
                 callback,
@@ -71,6 +84,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
         {
             promise.reject_error(Error::Operation(None), can_gc);
         }
+         */
         promise
     }
 
@@ -91,6 +105,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
     }
 }
 
+/*
 impl RoutedPromiseListener<WebGPUAdapterResponse> for GPU {
     fn handle_response(
         &self,
@@ -127,3 +142,4 @@ impl RoutedPromiseListener<WebGPUAdapterResponse> for GPU {
         }
     }
 }
+ */

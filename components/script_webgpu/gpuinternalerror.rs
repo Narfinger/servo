@@ -7,8 +7,13 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUInternalErrorMethods;
 use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 
+use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
@@ -16,7 +21,7 @@ pub(crate) struct GPUInternalError {
     gpu_error: GPUError,
 }
 
-impl GPUInternalError {
+impl<D: DomTypes> GPUInternalError {
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
@@ -24,7 +29,7 @@ impl GPUInternalError {
     }
 
     pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -38,10 +43,10 @@ impl GPUInternalError {
     }
 }
 
-impl GPUInternalErrorMethods<crate::DomTypeHolder> for GPUInternalError {
+impl<D: DomTypes> GPUInternalErrorMethods<D> for GPUInternalError {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUInternalError-GPUInternalError>
     fn Constructor(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,

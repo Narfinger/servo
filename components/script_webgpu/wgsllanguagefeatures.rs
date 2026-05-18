@@ -10,9 +10,13 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeaturesMethods;
 use script_bindings::like::Setlike;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 use wgpu_core::naga::front::wgsl::ImplementedLanguageExtension;
 
 use crate::script_runtime::CanGc;
@@ -25,9 +29,9 @@ pub struct WGSLLanguageFeatures {
     internal: DomRefCell<IndexSet<DOMString>>,
 }
 
-impl WGSLLanguageFeatures {
+impl<D: DomTypes> WGSLLanguageFeatures {
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -47,7 +51,7 @@ impl WGSLLanguageFeatures {
     }
 }
 
-impl WGSLLanguageFeaturesMethods<crate::DomTypeHolder> for WGSLLanguageFeatures {
+impl<D: DomTypes> WGSLLanguageFeaturesMethods<D> for WGSLLanguageFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }

@@ -6,10 +6,14 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
+use crate::gpucommandencoder::GPUCommandEncoder;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -40,7 +44,7 @@ pub(crate) struct GPUComputePassEncoder {
     droppable: DroppableGPUComputePassEncoder,
 }
 
-impl GPUComputePassEncoder {
+impl<D: DomTypes> GPUComputePassEncoder {
     fn new_inherited(
         channel: WebGPU,
         parent: &GPUCommandEncoder,
@@ -59,7 +63,7 @@ impl GPUComputePassEncoder {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         parent: &GPUCommandEncoder,
         compute_pass: WebGPUComputePass,
@@ -79,7 +83,7 @@ impl GPUComputePassEncoder {
     }
 }
 
-impl GPUComputePassEncoderMethods<crate::DomTypeHolder> for GPUComputePassEncoder {
+impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

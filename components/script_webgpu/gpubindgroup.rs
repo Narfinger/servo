@@ -8,11 +8,19 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBindGroupDescriptor, GPUBindGroupMethods,
+};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
 use wgpu_core::binding_model::BindGroupDescriptor;
 
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroup {
@@ -38,7 +46,7 @@ impl Drop for DroppableGPUBindGroup {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBindGroup {
+pub(crate) struct GPUBindGroup<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]
@@ -47,7 +55,7 @@ pub(crate) struct GPUBindGroup {
     droppable: DroppableGPUBindGroup,
 }
 
-impl GPUBindGroup {
+impl<D: DomTypes> GPUBindGroup<D> {
     fn new_inherited(
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
@@ -68,7 +76,7 @@ impl GPUBindGroup {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
@@ -86,7 +94,7 @@ impl GPUBindGroup {
     }
 }
 
-impl GPUBindGroup {
+impl<D: DomTypes> GPUBindGroup<D> {
     pub(crate) fn id(&self) -> &WebGPUBindGroup {
         &self.droppable.bind_group
     }
@@ -134,7 +142,7 @@ impl GPUBindGroup {
     }
 }
 
-impl GPUBindGroupMethods<crate::DomTypeHolder> for GPUBindGroup {
+impl<D: DomTypes> GPUBindGroupMethods<D> for GPUBindGroup<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

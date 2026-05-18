@@ -9,9 +9,16 @@ use js::jsapi::{HandleObject, Heap, JSObject};
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::cformat;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUAdapterMethods, GPUDeviceDescriptor,
+};
+use script_bindings::error::Error;
 use script_bindings::like::Setlike;
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::DOMString;
+use script_bindings::{DomTypes, cformat};
 use webgpu_traits::{
     RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest,
 };
@@ -19,6 +26,10 @@ use wgpu_types::{self, AdapterInfo, ExperimentalFeatures, MemoryHints};
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
 use super::gpusupportedlimits::set_limit;
+use crate::gpuadapterinfo::GPUAdapterInfo;
+use crate::gpudevice::GPUDevice;
+use crate::gpusupportedfeatures::gpu_to_wgt_feature;
+use crate::gpusupportedlimits::GPUSupportedLimits;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -45,18 +56,18 @@ impl Drop for DroppableGPUAdapter {
 }
 
 #[dom_struct]
-pub(crate) struct GPUAdapter {
+pub(crate) struct GPUAdapter<D: DomTypes> {
     reflector_: Reflector,
     name: DOMString,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
     features: Dom<GPUSupportedFeatures>,
     limits: Dom<GPUSupportedLimits>,
-    info: Dom<GPUAdapterInfo>,
+    info: Dom<GPUAdapterInfo<D>>,
     droppable: DroppableGPUAdapter,
 }
 
-impl GPUAdapter {
+impl<D: DomTypes> GPUAdapter<D> {
     fn new_inherited(
         channel: WebGPU,
         name: DOMString,
@@ -78,7 +89,7 @@ impl GPUAdapter {
 
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         name: DOMString,
         extensions: HandleObject,
@@ -104,7 +115,7 @@ impl GPUAdapter {
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-new-adapter-info>
     fn create_adapter_info(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         info: AdapterInfo,
         features: &GPUSupportedFeatures,
         can_gc: CanGc,
@@ -172,16 +183,18 @@ impl GPUAdapter {
     }
 }
 
-impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
+impl<D: DomTypes> GPUAdapterMethods<D> for GPUAdapter<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
         &self,
         descriptor: &GPUDeviceDescriptor,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<D::Promise> {
         // Step 2
-        let promise = Promise::new_in_current_realm(comp, can_gc);
+        let promise = D::Promise::new_in_current_realm(comp, can_gc);
+        todo!()
+        /*
         let callback = callback_promise(
             &promise,
             self,
@@ -240,6 +253,7 @@ impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
         }
         // Step 5
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-features>
@@ -258,6 +272,7 @@ impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
     }
 }
 
+/*
 impl RoutedPromiseListener<WebGPUDeviceResponse> for GPUAdapter {
     /// <https://www.w3.org/TR/webgpu/#dom-gpuadapter-requestdevice>
     fn handle_response(
@@ -325,3 +340,4 @@ impl RoutedPromiseListener<WebGPUDeviceResponse> for GPUAdapter {
         }
     }
 }
+ */

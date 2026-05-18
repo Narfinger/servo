@@ -8,11 +8,20 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUShaderModuleDescriptor, GPUShaderModuleMethods,
+};
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::str::USVString;
+use script_bindings::trace::RootedTraceableBox;
 use webgpu_traits::{ShaderCompilationInfo, WebGPU, WebGPURequest, WebGPUShaderModule};
 
 use super::gpucompilationinfo::GPUCompilationInfo;
+use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -47,12 +56,12 @@ pub(crate) struct GPUShaderModule {
     droppable: DroppableGPUShaderModule,
 }
 
-impl GPUShaderModule {
+impl<D: DomTypes> GPUShaderModule {
     fn new_inherited(
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
-        promise: Rc<Promise>,
+        promise: Rc<D::Promise>,
     ) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -66,7 +75,7 @@ impl GPUShaderModule {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
@@ -131,7 +140,7 @@ impl GPUShaderModule {
     }
 }
 
-impl GPUShaderModuleMethods<crate::DomTypeHolder> for GPUShaderModule {
+impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -148,6 +157,8 @@ impl GPUShaderModuleMethods<crate::DomTypeHolder> for GPUShaderModule {
     }
 }
 
+/*
+ *
 impl RoutedPromiseListener<Option<ShaderCompilationInfo>> for GPUShaderModule {
     fn handle_response(
         &self,
@@ -159,3 +170,4 @@ impl RoutedPromiseListener<Option<ShaderCompilationInfo>> for GPUShaderModule {
         promise.resolve_native(&info, CanGc::from_cx(cx));
     }
 }
+ */

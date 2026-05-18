@@ -8,6 +8,7 @@ use std::num::NonZeroU64;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureFormat;
 use wgpu_core::binding_model::{BindGroupEntry, BindingResource, BufferBinding};
 use wgpu_core::command as wgpu_com;
 use wgpu_core::pipeline::ProgrammableStageDescriptor;

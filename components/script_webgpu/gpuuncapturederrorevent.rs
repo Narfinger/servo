@@ -7,28 +7,35 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods,
+};
 use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::DOMString;
 use stylo_atoms::Atom;
 
+use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUUncapturedErrorEvent {
-    event: Event,
+pub(crate) struct GPUUncapturedErrorEvent<D: DomTypes> {
+    event: D::Event,
     #[ignore_malloc_size_of = "Because it is non-owning"]
     gpu_error: Dom<GPUError>,
 }
 
-impl GPUUncapturedErrorEvent {
+impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
     fn new_inherited(init: &GPUUncapturedErrorEventInit) -> Self {
         Self {
             gpu_error: Dom::from_ref(&init.error),
-            event: Event::new_inherited(),
+            event: D::Event::new_inherited(),
         }
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit,
         can_gc: CanGc,
@@ -37,7 +44,7 @@ impl GPUUncapturedErrorEvent {
     }
 
     fn new_with_proto(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit,
@@ -56,10 +63,10 @@ impl GPUUncapturedErrorEvent {
     }
 }
 
-impl GPUUncapturedErrorEventMethods<crate::DomTypeHolder> for GPUUncapturedErrorEvent {
+impl<D: DomTypes> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-gpuuncapturederrorevent>
     fn Constructor(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         event_type: DOMString,

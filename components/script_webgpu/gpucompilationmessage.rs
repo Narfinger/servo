@@ -6,7 +6,13 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCompilationMessageMethods, GPUCompilationMessageType,
+};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 use webgpu_traits::ShaderCompilationInfo;
 
 use crate::script_runtime::CanGc;
@@ -21,7 +27,7 @@ pub(crate) struct GPUCompilationMessage {
     length: u64,
 }
 
-impl GPUCompilationMessage {
+impl<D: DomTypes> GPUCompilationMessage {
     fn new_inherited(
         message: DOMString,
         mtype: GPUCompilationMessageType,
@@ -43,7 +49,7 @@ impl GPUCompilationMessage {
 
     #[expect(clippy::too_many_arguments)]
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         message: DOMString,
         mtype: GPUCompilationMessageType,
         line_num: u64,
@@ -62,7 +68,7 @@ impl GPUCompilationMessage {
     }
 
     pub(crate) fn from(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         info: ShaderCompilationInfo,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -79,7 +85,7 @@ impl GPUCompilationMessage {
     }
 }
 
-impl GPUCompilationMessageMethods<crate::DomTypeHolder> for GPUCompilationMessage {
+impl<D: DomTypes> GPUCompilationMessageMethods<D> for GPUCompilationMessage {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationmessage-message>
     fn Message(&self) -> DOMString {
         self.message.to_owned()

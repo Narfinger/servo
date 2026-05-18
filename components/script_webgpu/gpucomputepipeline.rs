@@ -6,8 +6,12 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePipelineMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPUComputePipeline, WebGPUComputePipelineResponse,
@@ -15,6 +19,8 @@ use webgpu_traits::{
 };
 use wgpu_core::pipeline::ComputePipelineDescriptor;
 
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -48,7 +54,7 @@ pub(crate) struct GPUComputePipeline {
     droppable: DroppableGPUComputePipeline,
 }
 
-impl GPUComputePipeline {
+impl<D: DomTypes> GPUComputePipeline {
     fn new_inherited(
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
@@ -66,7 +72,7 @@ impl GPUComputePipeline {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
         device: &GPUDevice,
@@ -121,7 +127,7 @@ impl GPUComputePipeline {
     }
 }
 
-impl GPUComputePipelineMethods<crate::DomTypeHolder> for GPUComputePipeline {
+impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

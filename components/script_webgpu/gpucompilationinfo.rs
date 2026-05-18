@@ -7,9 +7,12 @@ use js::rust::MutableHandleValue;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
 use webgpu_traits::ShaderCompilationInfo;
 
+use crate::gpucompilationmessage::GPUCompilationMessage;
 use crate::script_runtime::{CanGc, JSContext};
 
 #[dom_struct]
@@ -19,7 +22,7 @@ pub(crate) struct GPUCompilationInfo {
     msg: Vec<DomRoot<GPUCompilationMessage>>,
 }
 
-impl GPUCompilationInfo {
+impl<D: DomTypes> GPUCompilationInfo {
     pub(crate) fn new_inherited(msg: Vec<DomRoot<GPUCompilationMessage>>) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -28,7 +31,7 @@ impl GPUCompilationInfo {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         msg: Vec<DomRoot<GPUCompilationMessage>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -36,7 +39,7 @@ impl GPUCompilationInfo {
     }
 
     pub(crate) fn from(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         error: Option<ShaderCompilationInfo>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -52,7 +55,7 @@ impl GPUCompilationInfo {
     }
 }
 
-impl GPUCompilationInfoMethods<crate::DomTypeHolder> for GPUCompilationInfo {
+impl<D: DomTypes> GPUCompilationInfoMethods<D> for GPUCompilationInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationinfo-messages>
     fn Messages(&self, cx: JSContext, can_gc: CanGc, retval: MutableHandleValue) {
         to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)

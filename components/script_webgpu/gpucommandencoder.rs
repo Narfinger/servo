@@ -6,13 +6,29 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCommandBufferDescriptor, GPUCommandEncoderMethods, GPUComputePassDescriptor,
+    GPUImageCopyBuffer, GPUImageCopyTexture, GPURenderPassDescriptor, GPUSize64,
+};
+use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{
     WebGPU, WebGPUCommandBuffer, WebGPUCommandEncoder, WebGPUComputePass, WebGPUDevice,
     WebGPURenderPass, WebGPURequest,
 };
 use wgpu_core::command as wgpu_com;
+
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandbuffer::GPUCommandBuffer;
+use crate::gpucomputepassencoder::GPUComputePassEncoder;
+use crate::gpudevice::GPUDevice;
+use crate::gpurenderpassencoder::GPURenderPassEncoder;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUCommandEncoder {
@@ -42,7 +58,7 @@ impl Drop for DroppableGPUCommandEncoder {
     }
 }
 
-impl GPUCommandEncoder {
+impl<D: DomTypes> GPUCommandEncoder {
     pub(crate) fn new_inherited(
         channel: WebGPU,
         device: &GPUDevice,
@@ -58,7 +74,7 @@ impl GPUCommandEncoder {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         channel: WebGPU,
         device: &GPUDevice,
         encoder: WebGPUCommandEncoder,
@@ -116,7 +132,7 @@ impl GPUCommandEncoder {
     }
 }
 
-impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
+impl<D: DomTypes> GPUCommandEncoderMethods<D> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

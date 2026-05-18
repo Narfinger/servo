@@ -7,27 +7,33 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUPipelineErrorInit, GPUPipelineErrorMethods, GPUPipelineErrorReason,
+};
 use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::DomRoot;
+use script_bindings::str::DOMString;
 
 use crate::script_runtime::CanGc;
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct]
-pub(crate) struct GPUPipelineError {
-    exception: DOMException,
+pub(crate) struct GPUPipelineError<D: DomTypes> {
+    exception: D::DOMException,
     reason: GPUPipelineErrorReason,
 }
 
-impl GPUPipelineError {
+impl<D: DomTypes> GPUPipelineError<D> {
     fn new_inherited(message: DOMString, reason: GPUPipelineErrorReason) -> Self {
         Self {
-            exception: DOMException::new_inherited(message, "GPUPipelineError".into()),
+            exception: D::DOMException::new_inherited(message, "GPUPipelineError".into()),
             reason,
         }
     }
 
     pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         reason: GPUPipelineErrorReason,
@@ -42,7 +48,7 @@ impl GPUPipelineError {
     }
 
     pub(crate) fn new(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         message: DOMString,
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
@@ -51,10 +57,10 @@ impl GPUPipelineError {
     }
 }
 
-impl GPUPipelineErrorMethods<crate::DomTypeHolder> for GPUPipelineError {
+impl<D: DomTypes> GPUPipelineErrorMethods<D> for GPUPipelineError<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-constructor>
     fn Constructor(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,
