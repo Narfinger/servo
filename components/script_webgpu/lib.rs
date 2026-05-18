@@ -4,87 +4,55 @@
 
 #![cfg_attr(crown, feature(register_tool))]
 #![deny(unsafe_code)]
-#![doc = "The script crate contains all matters DOM."]
 // Register the linter `crown`, which is the Servo-specific linter for the script crate.
 #![cfg_attr(crown, register_tool(crown))]
 
-// These are used a lot so let's keep them for now
-#[macro_use]
-extern crate js;
-#[macro_use]
-extern crate jstraceable_derive;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate malloc_size_of_derive;
-#[macro_use]
-extern crate stylo_atoms;
+mod gpu;
+mod gpuadapter;
+mod gpuadapterinfo;
+mod gpubindgroup;
+mod gpubindgrouplayout;
+mod gpubuffer;
+mod gpubufferusage;
+mod gpucanvascontext;
+mod gpucolorwrite;
+mod gpucommandbuffer;
+mod gpucommandencoder;
+mod gpucompilationinfo;
+mod gpucompilationmessage;
+mod gpucomputepassencoder;
+mod gpucomputepipeline;
+mod gpuconvert;
+mod gpudevice;
+mod gpudevicelostinfo;
+mod gpuerror;
+mod gpuinternalerror;
+mod gpumapmode;
+mod gpuoutofmemoryerror;
+mod gpupipelineerror;
+mod gpupipelinelayout;
+mod gpuqueryset;
+mod gpuqueue;
+mod gpurenderbundle;
+mod gpurenderbundleencoder;
+mod gpurenderpassencoder;
+mod gpurenderpipeline;
+mod gpusampler;
+mod gpushadermodule;
+mod gpushaderstage;
+mod gpusupportedfeatures;
+mod gpusupportedlimits;
+mod gputexture;
+mod gputextureusage;
+mod gputextureview;
+mod gpuuncapturederrorevent;
+mod gpuvalidationerror;
+mod identityhub;
+mod wgsllanguagefeatures;
 
-mod animations;
-mod css;
-mod script_window_proxies;
-#[macro_use]
-mod task;
-mod body;
-pub(crate) mod clipboard_provider;
-pub(crate) mod conversions;
-mod devtools;
-pub(crate) mod document_loader;
-#[macro_use]
-mod dom;
-pub(crate) use dom::canvas_context;
-pub(crate) mod fetch;
-pub(crate) mod indexeddb;
-mod init;
-mod layout_image;
-mod url;
-
-pub(crate) mod document_collection;
-pub(crate) mod iframe_collection;
-pub(crate) mod image_animation;
-pub mod layout_dom;
-pub(crate) mod messaging;
-mod microtask;
-pub(crate) mod mime;
-mod mime_multipart;
-mod module_loading;
-mod navigation;
-mod network_listener;
-mod realms;
-mod routed_promise;
-mod script_module;
-mod script_mutation_observers;
-pub(crate) mod script_runtime;
-#[expect(unsafe_code)]
-pub(crate) mod script_thread;
-pub(crate) mod serviceworker_manager;
-mod stylesheet_loader;
-mod stylesheet_set;
-mod task_manager;
-mod task_queue;
-mod task_source;
-pub mod test;
-pub mod textinput;
-mod timers;
-mod webdriver_handlers;
-mod window_named_properties;
-mod xpath;
-
-mod unminify;
-
-mod drag_data_store;
-mod links;
-
-pub use init::init;
+pub(crate) use js::gc::Traceable as JSTraceable;
 pub(crate) use script_bindings::DomTypes;
+pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{AssociatedMemory, DomObject, MutDomObject, Reflector};
-pub use script_runtime::JSEngineSetup;
-pub use script_thread::ScriptThread;
-pub use serviceworker_manager::ServiceWorkerManager;
-
-pub(crate) use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
-// These trait exports are public, because they are used in the DOM bindings.
-// Since they are used in derive macros,
-// it is useful that they are accessible at the root of the crate.
-pub(crate) use crate::dom::bindings::inheritance::HasParent;
-pub(crate) use crate::dom::bindings::trace::{CustomTraceable, JSTraceable};
+use script_bindings::script_runtime;
+pub(crate) use script_bindings::trace::CustomTraceable;

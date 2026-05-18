@@ -3,6 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{
@@ -10,25 +13,6 @@ use webgpu_traits::{
     WebGPURenderPass, WebGPURequest,
 };
 use wgpu_core::command as wgpu_com;
-
-use crate::conversions::{Convert, TryConvert};
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUCommandBufferDescriptor, GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
-    GPUComputePassDescriptor, GPUExtent3D, GPUImageCopyBuffer, GPUImageCopyTexture,
-    GPURenderPassDescriptor, GPUSize64,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::gpuconvert::convert_load_op;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandbuffer::GPUCommandBuffer;
-use crate::dom::webgpu::gpucomputepassencoder::GPUComputePassEncoder;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpurenderpassencoder::GPURenderPassEncoder;
-use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUCommandEncoder {

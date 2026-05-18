@@ -387,10 +387,6 @@ pub(crate) mod websocket;
 mod webxr;
 #[cfg(feature = "webxr")]
 pub(crate) use self::webxr::*;
-#[cfg(feature = "webgpu")]
-pub(crate) mod webgpu;
-#[cfg(feature = "webgpu")]
-pub(crate) use self::webgpu::*;
 #[cfg(not(feature = "webgpu"))]
 pub(crate) mod gpucanvascontext;
 pub(crate) mod webcrypto;

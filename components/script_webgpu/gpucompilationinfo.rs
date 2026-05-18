@@ -4,14 +4,12 @@
 
 use dom_struct::dom_struct;
 use js::rust::MutableHandleValue;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use webgpu_traits::ShaderCompilationInfo;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUCompilationInfoMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::utils::to_frozen_array;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::GPUCompilationMessage;
 use crate::script_runtime::{CanGc, JSContext};
 
 #[dom_struct]

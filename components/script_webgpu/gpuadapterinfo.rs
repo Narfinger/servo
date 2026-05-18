@@ -5,11 +5,10 @@
 use dom_struct::dom_struct;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUAdapterInfoMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
 use crate::script_runtime::CanGc;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 
 #[dom_struct]
 pub(crate) struct GPUAdapterInfo {

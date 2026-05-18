@@ -8,6 +8,9 @@ use std::rc::Rc;
 
 use dom_struct::dom_struct;
 use js::jsapi::{HandleObject, Heap, JSObject};
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
 use script_bindings::cformat;
 use script_bindings::reflector::reflect_dom_object;
@@ -25,47 +28,6 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::EventBinding::EventInit;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUAdapterMethods, GPUBindGroupDescriptor, GPUBindGroupLayoutDescriptor, GPUBufferDescriptor,
-    GPUCommandEncoderDescriptor, GPUComputePipelineDescriptor, GPUDeviceLostReason,
-    GPUDeviceMethods, GPUErrorFilter, GPUPipelineErrorReason, GPUPipelineLayoutDescriptor,
-    GPURenderBundleEncoderDescriptor, GPURenderPipelineDescriptor, GPUSamplerDescriptor,
-    GPUShaderModuleDescriptor, GPUTextureDescriptor, GPUTextureFormat, GPUUncapturedErrorEventInit,
-    GPUVertexStepMode,
-};
-use crate::dom::bindings::codegen::UnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::refcounted::Trusted;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::bindings::trace::RootedTraceableBox;
-use crate::dom::event::Event;
-use crate::dom::eventtarget::EventTarget;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::types::GPUError;
-use crate::dom::webgpu::gpuadapter::GPUAdapter;
-use crate::dom::webgpu::gpuadapterinfo::GPUAdapterInfo;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpucomputepipeline::GPUComputePipeline;
-use crate::dom::webgpu::gpupipelinelayout::GPUPipelineLayout;
-use crate::dom::webgpu::gpuqueue::GPUQueue;
-use crate::dom::webgpu::gpurenderbundleencoder::GPURenderBundleEncoder;
-use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
-use crate::dom::webgpu::gpusampler::GPUSampler;
-use crate::dom::webgpu::gpushadermodule::GPUShaderModule;
-use crate::dom::webgpu::gpusupportedfeatures::GPUSupportedFeatures;
-use crate::dom::webgpu::gputexture::GPUTexture;
-use crate::dom::webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
-use crate::realms::InRealm;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -216,6 +178,9 @@ impl GPUDevice {
         // Queue a global task, using the webgpu task source, to fire an event named
         // uncapturederror at a GPUDevice using GPUUncapturedErrorEvent.
         self.global().task_manager().webgpu_task_source().queue(
+            /*
+             *
+
             task!(fire_uncaptured_error: move || {
                 let this = this.root();
                 let error = GPUError::from_error(&this.global(), error, CanGc::deprecated_note());
@@ -232,6 +197,7 @@ impl GPUDevice {
 
                 event.upcast::<Event>().fire(this.upcast(), CanGc::deprecated_note());
             }),
+             */
         );
     }
 
@@ -395,6 +361,8 @@ impl GPUDevice {
         // Queue a global task, using the webgpu task source, to resolve device.lost
         // promise with a new GPUDeviceLostInfo with reason and message.
         self.global().task_manager().webgpu_task_source().queue(
+            /*
+             *
             task!(resolve_device_lost: move || {
                 let this = this.root();
 
@@ -403,6 +371,7 @@ impl GPUDevice {
                 lost_promise.resolve_native(&*lost, CanGc::deprecated_note());
             }),
         );
+             */
     }
 }
 

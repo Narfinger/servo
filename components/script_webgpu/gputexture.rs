@@ -5,24 +5,15 @@
 use std::string::String;
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
-    GPUTextureMethods, GPUTextureViewDescriptor,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gputextureview::GPUTextureView;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]

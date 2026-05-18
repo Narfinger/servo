@@ -4,18 +4,12 @@
 
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::reflect_dom_object_with_proto;
 use stylo_atoms::Atom;
 
-use crate::dom::bindings::codegen::Bindings::EventBinding::Event_Binding::EventMethods;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods,
-};
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::DOMString;
-use crate::dom::event::Event;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]

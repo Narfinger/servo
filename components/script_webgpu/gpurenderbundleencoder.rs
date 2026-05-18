@@ -5,6 +5,9 @@
 use std::borrow::Cow;
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPURenderBundle, WebGPURequest};
@@ -12,21 +15,6 @@ use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
 };
 
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUIndexFormat, GPURenderBundleDescriptor, GPURenderBundleEncoderDescriptor,
-    GPURenderBundleEncoderMethods,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpurenderbundle::GPURenderBundle;
-use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]

@@ -3,24 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
-use crate::conversions::TryConvert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUColor, GPUIndexFormat, GPURenderPassEncoderMethods,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::num::Finite;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpurenderbundle::GPURenderBundle;
-use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]

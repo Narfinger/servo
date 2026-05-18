@@ -1,6 +1,5 @@
 [package]
 name = "servo-script-webgpu"
-build = "build.rs"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -11,10 +10,11 @@ repository.workspace = true
 description.workspace = true
 
 [lib]
-name = "script-webgpu"
+name = "script_webgpu"
 path = "lib.rs"
 
 [features]
+default = ["webgpu"]
 bluetooth = ['servo-bluetooth-traits', 'script_bindings/bluetooth']
 crown = ['js/crown']
 debugmozjs = ['js/debugmozjs']
