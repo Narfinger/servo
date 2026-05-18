@@ -43,12 +43,16 @@ impl<D: DomTypes> GPU<D> {
         }
     }
 
-    pub(crate) fn new(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
+    pub(crate) fn new(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU<D>> {
         reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
 
-impl<D: DomTypes> GPUMethods<D> for GPU<D> {
+impl<D: DomTypes> GPUMethods<D> for GPU<D>
+where
+    D: DomTypes,
+    D::WGSLLanguageFeatures: From<WGSLLanguageFeatures<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,
@@ -99,9 +103,10 @@ impl<D: DomTypes> GPUMethods<D> for GPU<D> {
     }
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures<D>> {
+    fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<D::WGSLLanguageFeatures> {
         self.wgsl_language_features
             .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
+            .into()
     }
 }
 

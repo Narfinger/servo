@@ -56,7 +56,7 @@ use jstraceable_derive::JSTraceable;
 pub(crate) use script_bindings::DomTypes;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{AssociatedMemory, DomObject, MutDomObject, Reflector};
-use script_bindings::root::Dom;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime;
 pub(crate) use script_bindings::trace::CustomTraceable;
 
@@ -184,3 +184,23 @@ impl<T: DomObject> MallocSizeOf for MutNullableDom<T> {
         0
     }
 }
+
+pub(crate) struct DataBlock(());
+
+impl DataBlock {
+    fn new_zeroed(size: uszie) -> DataBlock {
+        DataBlock(())
+    }
+}
+
+pub(crate) trait Convert<T> {
+    fn convert(self) -> T;
+}
+
+pub(crate) trait TryConvert<T> {
+    type Error;
+
+    fn try_convert(self) -> Result<T, Self::Error>;
+}
+
+pub(crate) struct GPUColor(());

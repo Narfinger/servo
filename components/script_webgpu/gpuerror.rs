@@ -16,7 +16,9 @@ use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 use webgpu_traits::{Error, ErrorFilter};
 
+use crate::Convert;
 use crate::gpuinternalerror::GPUInternalError;
+use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
 use crate::gpuvalidationerror::GPUValidationError;
 use crate::script_runtime::CanGc;
 
@@ -83,7 +85,7 @@ impl<D: DomTypes> GPUError<D> {
     }
 }
 
-impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
+impl<D: DomTypes> GPUErrorMethods<D> for GPUError<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

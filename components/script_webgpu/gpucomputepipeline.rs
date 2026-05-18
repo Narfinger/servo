@@ -11,6 +11,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUComputePipelineDescriptor, GPUComputePipelineMethods,
 };
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -49,18 +50,18 @@ impl Drop for DroppableGPUComputePipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePipeline {
+pub(crate) struct GPUComputePipeline<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     droppable: DroppableGPUComputePipeline,
 }
 
-impl<D: DomTypes> GPUComputePipeline {
+impl<D: DomTypes> GPUComputePipeline<D> {
     fn new_inherited(
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
     ) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -77,7 +78,7 @@ impl<D: DomTypes> GPUComputePipeline {
         global: &D::GlobalScope,
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object(
@@ -92,15 +93,15 @@ impl<D: DomTypes> GPUComputePipeline {
     }
 }
 
-impl GPUComputePipeline {
+impl<D: DomTypes> GPUComputePipeline<D> {
     pub(crate) fn id(&self) -> &WebGPUComputePipeline {
         &self.droppable.compute_pipeline
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcomputepipeline>
     pub(crate) fn create(
-        device: &GPUDevice,
-        descriptor: &GPUComputePipelineDescriptor,
+        device: &GPUDevice<D>,
+        descriptor: &GPUComputePipelineDescriptor<D>,
         async_sender: Option<GenericCallback<WebGPUComputePipelineResponse>>,
     ) -> WebGPUComputePipeline {
         let compute_pipeline_id = device.global().wgpu_id_hub().create_compute_pipeline_id();
@@ -129,7 +130,11 @@ impl GPUComputePipeline {
     }
 }
 
-impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline {
+impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline<D>
+where
+    D: DomTypes,
+    D::GPUBindGroupLayout: From<GPUBindGroupLayout<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -141,7 +146,7 @@ impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
-    fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<GPUBindGroupLayout>> {
+    fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<D::GPUBindGroupLayout>> {
         let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
@@ -165,5 +170,6 @@ impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline {
             USVString::default(),
             CanGc::deprecated_note(),
         ))
+        .into()
     }
 }

@@ -17,11 +17,11 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUInternalError {
-    gpu_error: GPUError,
+pub(crate) struct GPUInternalError<D: DomTypes> {
+    gpu_error: GPUError<D>,
 }
 
-impl<D: DomTypes> GPUInternalError {
+impl<D: DomTypes> GPUInternalError<D> {
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
@@ -43,10 +43,10 @@ impl<D: DomTypes> GPUInternalError {
     }
 }
 
-impl<D> GPUInternalErrorMethods<D> for GPUInternalError
+impl<D> GPUInternalErrorMethods<D> for GPUInternalError<D>
 where
     D: DomTypes,
-    D::GPUInternalError: From<GPUInternalError>,
+    D::GPUInternalError: From<GPUInternalError<D>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUInternalError-GPUInternalError>
     fn Constructor(

@@ -28,6 +28,7 @@ use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
+use crate::DataBlock;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::{CanGc, JSContext};
 
@@ -87,7 +88,7 @@ impl<D: DomTypes> GPUBuffer<D> {
     fn new_inherited(
         channel: WebGPU,
         buffer: WebGPUBuffer,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         size: GPUSize64,
         usage: GPUFlagsConstant,
         mapping: Option<ActiveBufferMapping>,
@@ -111,7 +112,7 @@ impl<D: DomTypes> GPUBuffer<D> {
         global: &D::GlobalScope,
         channel: WebGPU,
         buffer: WebGPUBuffer,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         size: GPUSize64,
         usage: GPUFlagsConstant,
         mapping: Option<ActiveBufferMapping>,
@@ -135,10 +136,10 @@ impl<D: DomTypes> GPUBuffer<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbuffer>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: &GPUBufferDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBuffer>> {
+    ) -> Fallible<DomRoot<GPUBuffer<D>>> {
         let desc = wgpu_types::BufferDescriptor {
             label: (&descriptor.parent).convert(),
             size: descriptor.size as wgpu_types::BufferAddress,
@@ -270,6 +271,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
             },
         };
 
+        /*
+         *
         let callback = callback_promise(
             &promise,
             self,
@@ -291,6 +294,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
             return promise;
         }
         // Step 6
+         */
         promise
     }
 

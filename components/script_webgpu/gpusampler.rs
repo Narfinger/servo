@@ -107,6 +107,9 @@ impl<D: DomTypes> GPUSampler<D> {
     ) -> DomRoot<GPUSampler<D>> {
         let sampler_id = device.global().wgpu_id_hub().create_sampler_id();
         let compare_enable = descriptor.compare.is_some();
+        todo!();
+        /*
+         *
         let desc = SamplerDescriptor {
             label: (&descriptor.parent).convert(),
             address_modes: [
@@ -145,6 +148,7 @@ impl<D: DomTypes> GPUSampler<D> {
             descriptor.parent.label.clone(),
             can_gc,
         )
+         */
     }
 }
 

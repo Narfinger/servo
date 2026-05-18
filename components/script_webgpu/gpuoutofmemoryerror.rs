@@ -17,11 +17,11 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUOutOfMemoryError {
-    gpu_error: GPUError,
+pub(crate) struct GPUOutOfMemoryError<D: DomTypes> {
+    gpu_error: GPUError<D>,
 }
 
-impl GPUOutOfMemoryError {
+impl<D: DomTypes> GPUOutOfMemoryError<D> {
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
@@ -29,7 +29,7 @@ impl GPUOutOfMemoryError {
     }
 
     pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -43,14 +43,18 @@ impl GPUOutOfMemoryError {
     }
 }
 
-impl<D: DomTypes> GPUOutOfMemoryErrorMethods<D> for GPUOutOfMemoryError {
+impl<D> GPUOutOfMemoryErrorMethods<D> for GPUOutOfMemoryError<D>
+where
+    D: DomTypes,
+    D::GPUOutOfMemoryError: From<GPUOutOfMemoryError<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
     fn Constructor(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,
-    ) -> DomRoot<Self> {
-        Self::new_with_proto(global, proto, message, can_gc)
+    ) -> DomRoot<D::GPUOutOfMemoryError> {
+        Self::new_with_proto(global, proto, message, can_gc).into()
     }
 }

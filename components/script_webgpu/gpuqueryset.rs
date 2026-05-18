@@ -7,6 +7,7 @@ use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUQuerySetMethods;
 use script_bindings::reflector::Reflector;
 use script_bindings::str::USVString;
 #[dom_struct]

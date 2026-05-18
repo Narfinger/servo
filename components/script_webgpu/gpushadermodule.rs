@@ -108,6 +108,9 @@ impl<D: DomTypes> GPUShaderModule<D> {
         can_gc: CanGc,
     ) -> DomRoot<GPUShaderModule<D>> {
         let program_id = device.global().wgpu_id_hub().create_shader_module_id();
+        todo!();
+        /*
+         *
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let shader_module = GPUShaderModule::new(
             &device.global(),
@@ -137,6 +140,7 @@ impl<D: DomTypes> GPUShaderModule<D> {
             })
             .expect("Failed to create WebGPU ShaderModule");
         shader_module
+         */
     }
 }
 
@@ -152,7 +156,7 @@ impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule<D> {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpushadermodule-getcompilationinfo>
-    fn GetCompilationInfo(&self) -> Rc<Promise> {
+    fn GetCompilationInfo(&self) -> Rc<D::Promise> {
         self.compilation_info_promise.clone()
     }
 }

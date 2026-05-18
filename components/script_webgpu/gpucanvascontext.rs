@@ -71,14 +71,14 @@ impl Drop for DroppableGPUCanvasContext {
 pub(crate) struct GPUCanvasContext<D: DomTypes> {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    canvas: D::HTMLCanvasElementOrOffscreenCanvas,
+    canvas: HTMLCanvasElementOrOffscreenCanvas<D>,
     #[ignore_malloc_size_of = "manual writing is hard"]
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configuration-slot>
-    configuration: RefCell<Option<GPUCanvasConfiguration>>,
+    configuration: RefCell<Option<GPUCanvasConfiguration<D>>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-texturedescriptor-slot>
     texture_descriptor: RefCell<Option<GPUTextureDescriptor>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-currenttexture-slot>
-    current_texture: MutNullableDom<GPUTexture>,
+    current_texture: MutNullableDom<GPUTexture<D>>,
     /// Set if image is cleared
     /// (usually done by [`GPUCanvasContext::replace_drawing_buffer`])
     cleared: Cell<bool>,
@@ -130,7 +130,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
         reflect_dom_object(
             Box::new(GPUCanvasContext::new_inherited(
                 global,
-                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
+                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas.into())),
                 channel,
             )),
             global,
@@ -266,6 +266,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
     }
 }
 
+/*
 impl CanvasContext for GPUCanvasContext {
     type ID = WebGPUContextId;
 
@@ -323,7 +324,13 @@ impl CanvasContext for GPUCanvasContext {
     }
 }
 
-impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
+ */
+
+impl<D> GPUCanvasContextMethods<D> for GPUCanvasContext<D>
+where
+    D: DomTypes,
+    D::GPUTexture: From<GPUTexture<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
         RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
@@ -387,7 +394,7 @@ impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-getcurrenttexture>
-    fn GetCurrentTexture(&self) -> Fallible<DomRoot<GPUTexture<D>>> {
+    fn GetCurrentTexture(&self) -> Fallible<DomRoot<D::GPUTexture>> {
         // 1. If this.[[configuration]] is null, throw an InvalidStateError and return.
         let configuration = self.configuration.borrow();
         let Some(configuration) = configuration.as_ref() else {
@@ -415,6 +422,6 @@ impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
             current_texture
         };
         // 6. Return this.[[currentTexture]].
-        Ok(current_texture)
+        Ok(current_texture.into())
     }
 }

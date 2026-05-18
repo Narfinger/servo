@@ -8,14 +8,30 @@ use std::num::NonZeroU64;
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureFormat;
-use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
-use script_bindings::error::Error;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUAddressMode, GPUBindGroupEntry, GPUBindGroupLayoutEntry, GPUBlendComponent, GPUBlendFactor,
+    GPUBlendOperation, GPUBufferBindingType, GPUCompareFunction, GPUCullMode, GPUFilterMode,
+    GPUFrontFace, GPUImageCopyBuffer, GPUImageCopyTexture, GPUImageDataLayout, GPUIndexFormat,
+    GPULoadOp, GPUObjectDescriptorBase, GPUPrimitiveState, GPUPrimitiveTopology,
+    GPUProgrammableStage, GPUSamplerBindingType, GPUStencilOperation, GPUStorageTextureAccess,
+    GPUStoreOp, GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
+    GPUTextureSampleType, GPUTextureViewDimension, GPUVertexFormat,
+};
+use script_bindings::codegen::GenericUnionTypes::{
+    GPUSamplerOrGPUTextureViewOrGPUBufferBinding,
+    RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
+    RangeEnforcedUnsignedLongSequenceOrGPUOrigin3DDict,
+};
+use script_bindings::error::{Error, Fallible};
 use wgpu_core::binding_model::{BindGroupEntry, BindingResource, BufferBinding};
 use wgpu_core::command as wgpu_com;
 use wgpu_core::pipeline::ProgrammableStageDescriptor;
 use wgpu_core::resource::TextureDescriptor;
 use wgpu_types::{self, AstcBlock, AstcChannel};
+
+use crate::gpudevice::GPUDevice;
+use crate::{Convert, GPUColor, TryConvert};
 
 impl Convert<wgpu_types::TextureFormat> for GPUTextureFormat {
     fn convert(self) -> wgpu_types::TextureFormat {
@@ -209,6 +225,7 @@ impl Convert<wgpu_types::TextureFormat> for GPUTextureFormat {
     }
 }
 
+/*
 impl TryConvert<wgpu_types::Extent3d> for &GPUExtent3D {
     type Error = Error;
 
@@ -236,6 +253,7 @@ impl TryConvert<wgpu_types::Extent3d> for &GPUExtent3D {
         }
     }
 }
+ */
 
 impl Convert<wgpu_types::TexelCopyBufferLayout> for &GPUImageDataLayout {
     fn convert(self) -> wgpu_types::TexelCopyBufferLayout {
@@ -591,11 +609,13 @@ pub(crate) fn convert_bind_group_layout_entry(
     }))
 }
 
-pub(crate) fn convert_texture_descriptor(
+pub(crate) fn convert_texture_descriptor<D: DomTypes>(
     descriptor: &GPUTextureDescriptor,
-    device: &GPUDevice,
+    device: &GPUDevice<D>,
 ) -> Fallible<(TextureDescriptor<'static>, wgpu_types::Extent3d)> {
     let size = (&descriptor.size).try_convert()?;
+    todo!()
+    /*
     let desc = TextureDescriptor {
         label: (&descriptor.parent).convert(),
         size,
@@ -611,6 +631,7 @@ pub(crate) fn convert_texture_descriptor(
             .collect::<Fallible<_>>()?,
     };
     Ok((desc, size))
+     */
 }
 
 impl TryConvert<wgpu_types::Color> for &GPUColor {
@@ -641,7 +662,7 @@ impl TryConvert<wgpu_types::Color> for &GPUColor {
     }
 }
 
-impl<'a> Convert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage {
+impl<'a, D: DomTypes> Convert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage<D> {
     fn convert(self) -> ProgrammableStageDescriptor<'a> {
         ProgrammableStageDescriptor {
             module: self.module.id().0,
@@ -659,7 +680,7 @@ impl<'a> Convert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage {
     }
 }
 
-impl<'a> Convert<BindGroupEntry<'a>> for &GPUBindGroupEntry {
+impl<'a, D: DomTypes> Convert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D> {
     fn convert(self) -> BindGroupEntry<'a> {
         BindGroupEntry {
             binding: self.binding,

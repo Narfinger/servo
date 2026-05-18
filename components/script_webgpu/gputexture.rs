@@ -54,7 +54,7 @@ impl Drop for DroppableGPUTexture {
 pub(crate) struct GPUTexture<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     #[no_trace]
     #[ignore_malloc_size_of = "External type"]
     texture_size: wgpu_types::Extent3d,

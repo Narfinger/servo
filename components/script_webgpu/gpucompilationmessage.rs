@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -17,7 +19,7 @@ use webgpu_traits::ShaderCompilationInfo;
 
 use crate::script_runtime::CanGc;
 #[dom_struct]
-pub(crate) struct GPUCompilationMessage {
+pub(crate) struct GPUCompilationMessage<D: DomTypes> {
     reflector_: Reflector,
     message: DOMString,
     mtype: GPUCompilationMessageType,
@@ -25,9 +27,10 @@ pub(crate) struct GPUCompilationMessage {
     line_pos: u64,
     offset: u64,
     length: u64,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUCompilationMessage {
+impl<D: DomTypes> GPUCompilationMessage<D> {
     fn new_inherited(
         message: DOMString,
         mtype: GPUCompilationMessageType,
@@ -44,6 +47,7 @@ impl<D: DomTypes> GPUCompilationMessage {
             line_pos,
             offset,
             length,
+            phantom: PhantomData,
         }
     }
 
@@ -85,7 +89,7 @@ impl<D: DomTypes> GPUCompilationMessage {
     }
 }
 
-impl<D: DomTypes> GPUCompilationMessageMethods<D> for GPUCompilationMessage {
+impl<D: DomTypes> GPUCompilationMessageMethods<D> for GPUCompilationMessage<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationmessage-message>
     fn Message(&self) -> DOMString {
         self.message.to_owned()

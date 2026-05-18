@@ -14,7 +14,10 @@ use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpucomputepipeline::GPUComputePipeline;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -38,17 +41,17 @@ impl Drop for DroppableGPUComputePassEncoder {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePassEncoder {
+pub(crate) struct GPUComputePassEncoder<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    command_encoder: Dom<GPUCommandEncoder>,
+    command_encoder: Dom<GPUCommandEncoder<D>>,
     droppable: DroppableGPUComputePassEncoder,
 }
 
-impl<D: DomTypes> GPUComputePassEncoder {
+impl<D: DomTypes> GPUComputePassEncoder<D> {
     fn new_inherited(
         channel: WebGPU,
-        parent: &GPUCommandEncoder,
+        parent: &GPUCommandEncoder<D>,
         compute_pass: WebGPUComputePass,
         label: USVString,
     ) -> Self {
@@ -66,7 +69,7 @@ impl<D: DomTypes> GPUComputePassEncoder {
     pub(crate) fn new(
         global: &D::GlobalScope,
         channel: WebGPU,
-        parent: &GPUCommandEncoder,
+        parent: &GPUCommandEncoder<D>,
         compute_pass: WebGPUComputePass,
         label: USVString,
         can_gc: CanGc,
@@ -84,7 +87,13 @@ impl<D: DomTypes> GPUComputePassEncoder {
     }
 }
 
-impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
+impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder<D>
+where
+    D: DomTypes,
+    D::GPUBuffer: AsRef<GPUBuffer<D>>,
+    D::GPUBindGroup: AsRef<GPUBindGroup<D>>,
+    D::GPUComputePipeline: AsRef<GPUComputePipeline<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -114,7 +123,7 @@ impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-dispatchworkgroupsindirect>
-    fn DispatchWorkgroupsIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DispatchWorkgroupsIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
         if let Err(e) =
             self.droppable
                 .channel
@@ -146,7 +155,7 @@ impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
-    fn SetBindGroup(&self, index: u32, bind_group: &GPUBindGroup, offsets: Vec<u32>) {
+    fn SetBindGroup(&self, index: u32, bind_group: &D::GPUBindGroup, offsets: Vec<u32>) {
         if let Err(e) = self
             .droppable
             .channel
@@ -164,7 +173,7 @@ impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-setpipeline>
-    fn SetPipeline(&self, pipeline: &GPUComputePipeline) {
+    fn SetPipeline(&self, pipeline: &D::GPUComputePipeline) {
         if let Err(e) = self
             .droppable
             .channel

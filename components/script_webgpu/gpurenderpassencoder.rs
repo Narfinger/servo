@@ -11,13 +11,20 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUIndexFormat, GPURenderPassEncoderMethods,
 };
+use script_bindings::codegen::GenericUnionTypes::DoubleSequenceOrGPUColorDict;
+use script_bindings::error::Fallible;
 use script_bindings::num::Finite;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
+use crate::GPUColor;
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpurenderbundle::GPURenderBundle;
+use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -40,18 +47,18 @@ impl Drop for DroppableGPURenderPassEncoder {
     }
 }
 #[dom_struct]
-pub(crate) struct GPURenderPassEncoder {
+pub(crate) struct GPURenderPassEncoder<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    command_encoder: Dom<GPUCommandEncoder>,
+    command_encoder: Dom<GPUCommandEncoder<D>>,
     droppable: DroppableGPURenderPassEncoder,
 }
 
-impl<D: DomTypes> GPURenderPassEncoder {
+impl<D: DomTypes> GPURenderPassEncoder<D> {
     fn new_inherited(
         channel: WebGPU,
         render_pass: WebGPURenderPass,
-        parent: &GPUCommandEncoder,
+        parent: &GPUCommandEncoder<D>,
         label: USVString,
     ) -> Self {
         Self {
@@ -69,7 +76,7 @@ impl<D: DomTypes> GPURenderPassEncoder {
         global: &D::GlobalScope,
         channel: WebGPU,
         render_pass: WebGPURenderPass,
-        parent: &GPUCommandEncoder,
+        parent: &GPUCommandEncoder<D>,
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -101,13 +108,20 @@ impl<D: DomTypes> GPURenderPassEncoder {
     }
 }
 
-impl GPURenderPassEncoder {
+impl<D: DomTypes> GPURenderPassEncoder<D> {
     pub(crate) fn id(&self) -> WebGPURenderPass {
         self.droppable.render_pass
     }
 }
 
-impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
+impl<D> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder<D>
+where
+    D: DomTypes,
+    D::GPUBindGroup: AsRef<GPUBindGroup<D>>,
+    D::GPURenderBundle: AsRef<GPURenderBundle<D>>,
+    D::GPURenderPipeline: AsRef<GPURenderPipeline<D>>,
+    D::GPUBuffer: AsRef<GPUBuffer<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -119,7 +133,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
-    fn SetBindGroup(&self, index: u32, bind_group: &GPUBindGroup, offsets: Vec<u32>) {
+    fn SetBindGroup(&self, index: u32, bind_group: &D::GPUBindGroup, offsets: Vec<u32>) {
         self.send_render_command(RenderCommand::SetBindGroup {
             index,
             bind_group_id: bind_group.id().0,
@@ -158,7 +172,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-setblendcolor>
-    fn SetBlendConstant(&self, color: GPUColor) -> Fallible<()> {
+    fn SetBlendConstant(&self, color: DoubleSequenceOrGPUColorDict) -> Fallible<()> {
         self.send_render_command(RenderCommand::SetBlendConstant((&color).try_convert()?));
         Ok(())
     }
@@ -179,14 +193,14 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setpipeline>
-    fn SetPipeline(&self, pipeline: &GPURenderPipeline) {
+    fn SetPipeline(&self, pipeline: &D::GPURenderPipeline) {
         self.send_render_command(RenderCommand::SetPipeline(pipeline.id().0))
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer,
+        buffer: &D::GPUBuffer,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,
@@ -203,7 +217,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
-    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer, offset: u64, size: u64) {
+    fn SetVertexBuffer(&self, slot: u32, buffer: &D::GPUBuffer, offset: u64, size: u64) {
         self.send_render_command(RenderCommand::SetVertexBuffer {
             slot,
             buffer_id: buffer.id().0,
@@ -241,7 +255,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
-    fn DrawIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DrawIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
         self.send_render_command(RenderCommand::DrawIndirect {
             buffer_id: buffer.id().0,
             offset,
@@ -249,7 +263,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
-    fn DrawIndexedIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DrawIndexedIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
         self.send_render_command(RenderCommand::DrawIndexedIndirect {
             buffer_id: buffer.id().0,
             offset,
@@ -257,7 +271,7 @@ impl<D: DomTypes> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-executebundles>
-    fn ExecuteBundles(&self, bundles: Vec<DomRoot<GPURenderBundle>>) {
+    fn ExecuteBundles(&self, bundles: Vec<DomRoot<D::GPURenderBundle>>) {
         let bundle_ids: Vec<_> = bundles.iter().map(|b| b.id().0).collect();
         self.send_render_command(RenderCommand::ExecuteBundles(bundle_ids))
     }

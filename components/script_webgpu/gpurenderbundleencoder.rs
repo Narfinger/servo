@@ -11,7 +11,8 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUIndexFormat, GPURenderBundleEncoderDescriptor, GPURenderBundleEncoderMethods,
+    GPUIndexFormat, GPURenderBundleDescriptor, GPURenderBundleEncoderDescriptor,
+    GPURenderBundleEncoderMethods,
 };
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -22,8 +23,10 @@ use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
 };
 
+use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpudevice::GPUDevice;
+use crate::gpurenderbundle::GPURenderBundle;
 use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
@@ -79,10 +82,10 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
 impl<D: DomTypes> GPURenderBundleEncoder<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderbundleencoder>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: &GPURenderBundleEncoderDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPURenderBundleEncoder>> {
+    ) -> Fallible<DomRoot<GPURenderBundleEncoder<D>>> {
         let desc = RenderBundleEncoderDescriptor {
             label: (&descriptor.parent.parent).convert(),
             color_formats: Cow::Owned(
@@ -128,7 +131,14 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
     }
 }
 
-impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D> {
+impl<D> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
+where
+    D: DomTypes,
+    D::GPUBuffer: AsRef<GPUBuffer<D>>,
+    D::GPURenderPipeline: AsRef<GPURenderPipeline<D>>,
+    D::GPUBindGroup: AsRef<GPUBindGroup<D>>,
+    D::GPURenderBundle: From<GPURenderBundle<D>>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -141,7 +151,7 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
     #[expect(unsafe_code)]
-    fn SetBindGroup(&self, index: u32, bind_group: &GPUBindGroup, dynamic_offsets: Vec<u32>) {
+    fn SetBindGroup(&self, index: u32, bind_group: &D::GPUBindGroup, dynamic_offsets: Vec<u32>) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             unsafe {
                 wgpu_bundle::wgpu_render_bundle_set_bind_group(
@@ -156,7 +166,7 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setpipeline>
-    fn SetPipeline(&self, pipeline: &GPURenderPipeline) {
+    fn SetPipeline(&self, pipeline: &D::GPURenderPipeline) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_set_pipeline(encoder, pipeline.id().0);
         }
@@ -165,7 +175,7 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer<D>,
+        buffer: &D::GPUBuffer,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,
@@ -185,7 +195,7 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
-    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer, offset: u64, size: u64) {
+    fn SetVertexBuffer(&self, slot: u32, buffer: &D::GPUBuffer, offset: u64, size: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_set_vertex_buffer(
                 encoder,
@@ -232,29 +242,29 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
-    fn DrawIndirect(&self, indirect_buffer: &GPUBuffer, indirect_offset: u64) {
+    fn DrawIndirect(&self, indirect_buffer: &D::GPUBuffer, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_draw_indirect(
                 encoder,
-                indirect_buffer.id().0,
+                indirect_buffer.into().id().0,
                 indirect_offset,
             );
         }
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
-    fn DrawIndexedIndirect(&self, indirect_buffer: &GPUBuffer, indirect_offset: u64) {
+    fn DrawIndexedIndirect(&self, indirect_buffer: &D::GPUBuffer, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_draw_indexed_indirect(
                 encoder,
-                indirect_buffer.id().0,
+                indirect_buffer.into().id().0,
                 indirect_offset,
             );
         }
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderbundleencoder-finish>
-    fn Finish(&self, descriptor: &GPURenderBundleDescriptor) -> DomRoot<GPURenderBundle> {
+    fn Finish(&self, descriptor: &GPURenderBundleDescriptor) -> DomRoot<D::GPURenderBundle> {
         let desc = wgpu_types::RenderBundleDescriptor {
             label: (&descriptor.parent).convert(),
         };
@@ -280,5 +290,6 @@ impl<D: DomTypes> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
             descriptor.parent.label.clone(),
             CanGc::deprecated_note(),
         )
+        .into()
     }
 }

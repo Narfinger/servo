@@ -105,7 +105,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbindgroup>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: &GPUBindGroupDescriptor<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUBindGroup<D>> {

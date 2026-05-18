@@ -28,6 +28,7 @@ use wgpu_core::command as wgpu_com;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucomputepassencoder::GPUComputePassEncoder;
+use crate::gpuconvert::convert_load_op;
 use crate::gpudevice::GPUDevice;
 use crate::gpurenderpassencoder::GPURenderPassEncoder;
 
@@ -40,11 +41,11 @@ struct DroppableGPUCommandEncoder {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandEncoder {
+pub(crate) struct GPUCommandEncoder<D: DomTypes> {
     reflector_: Reflector,
     droppable: DroppableGPUCommandEncoder,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
 }
 
 impl Drop for DroppableGPUCommandEncoder {
@@ -59,10 +60,10 @@ impl Drop for DroppableGPUCommandEncoder {
     }
 }
 
-impl<D: DomTypes> GPUCommandEncoder {
+impl<D: DomTypes> GPUCommandEncoder<D> {
     pub(crate) fn new_inherited(
         channel: WebGPU,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         encoder: WebGPUCommandEncoder,
         label: USVString,
     ) -> Self {
@@ -77,7 +78,7 @@ impl<D: DomTypes> GPUCommandEncoder {
     pub(crate) fn new(
         global: &D::GlobalScope,
         channel: WebGPU,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         encoder: WebGPUCommandEncoder,
         label: USVString,
         can_gc: CanGc,
@@ -92,7 +93,7 @@ impl<D: DomTypes> GPUCommandEncoder {
     }
 }
 
-impl GPUCommandEncoder {
+impl<D: DomTypes> GPUCommandEncoder<D> {
     pub(crate) fn id(&self) -> WebGPUCommandEncoder {
         self.droppable.encoder
     }
@@ -103,10 +104,10 @@ impl GPUCommandEncoder {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcommandencoder>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: &GPUCommandEncoderDescriptor,
         can_gc: CanGc,
-    ) -> DomRoot<GPUCommandEncoder> {
+    ) -> DomRoot<GPUCommandEncoder<D>> {
         let command_encoder_id = device.global().wgpu_id_hub().create_command_encoder_id();
         device
             .channel()
@@ -133,10 +134,11 @@ impl GPUCommandEncoder {
     }
 }
 
-impl<D> GPUCommandEncoderMethods<D> for GPUCommandEncoder
+impl<D> GPUCommandEncoderMethods<D> for GPUCommandEncoder<D>
 where
     D: DomTypes,
-    D::GPUComputePassEncoder: From<GPUComputePassEncoder>,
+    D::GPUComputePassEncoder: From<GPUComputePassEncoder<D>>,
+    D::GPUCommandBuffer: From<GPUCommandBuffer<D>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -152,7 +154,7 @@ where
     fn BeginComputePass(
         &self,
         descriptor: &GPUComputePassDescriptor,
-    ) -> DomRoot<GPUComputePassEncoder> {
+    ) -> DomRoot<D::GPUComputePassEncoder> {
         let compute_pass_id = self.global().wgpu_id_hub().create_compute_pass_id();
 
         if let Err(e) = self
@@ -183,8 +185,8 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-beginrenderpass>
     fn BeginRenderPass(
         &self,
-        descriptor: &GPURenderPassDescriptor,
-    ) -> Fallible<DomRoot<GPURenderPassEncoder>> {
+        descriptor: &GPURenderPassDescriptor<D>,
+    ) -> Fallible<DomRoot<D::GPURenderPassEncoder>> {
         let depth_stencil_attachment = descriptor.depthStencilAttachment.as_ref().map(|ds| {
             wgpu_com::RenderPassDepthStencilAttachment {
                 depth: wgpu_com::PassChannel {
@@ -254,14 +256,15 @@ where
             descriptor.parent.label.clone(),
             CanGc::deprecated_note(),
         ))
+        .into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertobuffer>
     fn CopyBufferToBuffer(
         &self,
-        source: &GPUBuffer<D>,
+        source: &D::GPUBuffer,
         source_offset: GPUSize64,
-        destination: &GPUBuffer<D>,
+        destination: &GPUBuffer,
         destination_offset: GPUSize64,
         size: GPUSize64,
     ) {
@@ -285,7 +288,7 @@ where
         &self,
         source: &GPUImageCopyBuffer<D>,
         destination: &GPUImageCopyTexture<D>,
-        copy_size: GPUExtent3D<D>,
+        copy_size: D::GPUExtent3D,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -307,7 +310,7 @@ where
         &self,
         source: &GPUImageCopyTexture<D>,
         destination: &GPUImageCopyBuffer<D>,
-        copy_size: GPUExtent3D<D>,
+        copy_size: D::GPUExtent3D,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -347,7 +350,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-finish>
-    fn Finish(&self, descriptor: &GPUCommandBufferDescriptor) -> DomRoot<GPUCommandBuffer> {
+    fn Finish(&self, descriptor: &GPUCommandBufferDescriptor) -> DomRoot<D::GPUCommandBuffer> {
         let command_buffer_id = self.global().wgpu_id_hub().create_command_buffer_id();
         self.droppable
             .channel
@@ -370,5 +373,6 @@ where
             descriptor.parent.label.clone(),
             CanGc::deprecated_note(),
         )
+        .into()
     }
 }

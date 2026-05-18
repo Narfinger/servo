@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use std::borrow::Cow;
+use std::marker::PhantomData;
 
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
@@ -46,15 +47,16 @@ impl Drop for DroppableGPUPipelineLayout {
 }
 
 #[dom_struct]
-pub(crate) struct GPUPipelineLayout {
+pub(crate) struct GPUPipelineLayout<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]
     bind_group_layouts: Vec<WebGPUBindGroupLayout>,
     droppable: DroppableGPUPipelineLayout,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUPipelineLayout {
+impl<D: DomTypes> GPUPipelineLayout<D> {
     fn new_inherited(
         channel: WebGPU,
         pipeline_layout: WebGPUPipelineLayout,
@@ -69,6 +71,7 @@ impl<D: DomTypes> GPUPipelineLayout {
                 channel,
                 pipeline_layout,
             },
+            phantom: PhantomData,
         }
     }
 
@@ -93,7 +96,7 @@ impl<D: DomTypes> GPUPipelineLayout {
     }
 }
 
-impl GPUPipelineLayout {
+impl<D: DomTypes> GPUPipelineLayout<D> {
     pub(crate) fn id(&self) -> WebGPUPipelineLayout {
         self.droppable.pipeline_layout
     }
@@ -104,10 +107,10 @@ impl GPUPipelineLayout {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createpipelinelayout>
     pub(crate) fn create(
-        device: &GPUDevice,
-        descriptor: &GPUPipelineLayoutDescriptor,
+        device: &GPUDevice<D>,
+        descriptor: &GPUPipelineLayoutDescriptor<D>,
         can_gc: CanGc,
-    ) -> DomRoot<GPUPipelineLayout> {
+    ) -> DomRoot<GPUPipelineLayout<D>> {
         let bgls = descriptor
             .bindGroupLayouts
             .iter()
@@ -144,7 +147,7 @@ impl GPUPipelineLayout {
     }
 }
 
-impl<D: DomTypes> GPUPipelineLayoutMethods<D> for GPUPipelineLayout {
+impl<D: DomTypes> GPUPipelineLayoutMethods<D> for GPUPipelineLayout<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

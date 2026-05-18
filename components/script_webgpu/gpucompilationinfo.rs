@@ -17,14 +17,14 @@ use crate::gpucompilationmessage::GPUCompilationMessage;
 use crate::script_runtime::{CanGc, JSContext};
 
 #[dom_struct]
-pub(crate) struct GPUCompilationInfo {
+pub(crate) struct GPUCompilationInfo<D: DomTypes> {
     reflector_: Reflector,
     // currently we only get one message from wgpu
-    msg: Vec<DomRoot<GPUCompilationMessage>>,
+    msg: Vec<DomRoot<GPUCompilationMessage<D>>>,
 }
 
-impl<D: DomTypes> GPUCompilationInfo {
-    pub(crate) fn new_inherited(msg: Vec<DomRoot<GPUCompilationMessage>>) -> Self {
+impl<D: DomTypes> GPUCompilationInfo<D> {
+    pub(crate) fn new_inherited(msg: Vec<DomRoot<GPUCompilationMessage<D>>>) -> Self {
         Self {
             reflector_: Reflector::new(),
             msg,
@@ -33,7 +33,7 @@ impl<D: DomTypes> GPUCompilationInfo {
 
     pub(crate) fn new(
         global: &D::GlobalScope,
-        msg: Vec<DomRoot<GPUCompilationMessage>>,
+        msg: Vec<DomRoot<GPUCompilationMessage<D>>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object_with_proto(Box::new(Self::new_inherited(msg)), global, None, can_gc)
@@ -56,9 +56,9 @@ impl<D: DomTypes> GPUCompilationInfo {
     }
 }
 
-impl<D: DomTypes> GPUCompilationInfoMethods<D> for GPUCompilationInfo {
+impl<D: DomTypes> GPUCompilationInfoMethods<D> for GPUCompilationInfo<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationinfo-messages>
     fn Messages(&self, cx: JSContext, can_gc: CanGc, retval: MutableHandleValue) {
-        to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)
+        //to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)
     }
 }

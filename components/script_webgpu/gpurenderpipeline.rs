@@ -53,7 +53,7 @@ impl Drop for DroppableGPURenderPipeline {
 pub(crate) struct GPURenderPipeline<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     droppable: DroppableGPURenderPipeline,
     phantom: PhantomData<D>,
 }
