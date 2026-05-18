@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -41,16 +43,17 @@ impl Drop for DroppableGPUSampler {
 }
 
 #[dom_struct]
-pub(crate) struct GPUSampler {
+pub(crate) struct GPUSampler<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]
     device: WebGPUDevice,
     compare_enable: bool,
     dropppable: DroppableGPUSampler,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSampler {
+impl<D: DomTypes> GPUSampler<D> {
     fn new_inherited(
         channel: WebGPU,
         device: WebGPUDevice,
@@ -64,6 +67,7 @@ impl<D: DomTypes> GPUSampler {
             device,
             compare_enable,
             dropppable: DroppableGPUSampler { channel, sampler },
+            phantom: PhantomData,
         }
     }
 
@@ -90,7 +94,7 @@ impl<D: DomTypes> GPUSampler {
     }
 }
 
-impl GPUSampler {
+impl<D: DomTypes> GPUSampler<D> {
     pub(crate) fn id(&self) -> WebGPUSampler {
         self.dropppable.sampler
     }
@@ -144,7 +148,7 @@ impl GPUSampler {
     }
 }
 
-impl<D: DomTypes> GPUSamplerMethods<D> for GPUSampler {
+impl<D: DomTypes> GPUSamplerMethods<D> for GPUSampler<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

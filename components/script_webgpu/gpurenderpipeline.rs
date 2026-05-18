@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -48,14 +50,15 @@ impl Drop for DroppableGPURenderPipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderPipeline {
+pub(crate) struct GPURenderPipeline<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     device: Dom<GPUDevice>,
     droppable: DroppableGPURenderPipeline,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPURenderPipeline {
+impl<D: DomTypes> GPURenderPipeline<D> {
     fn new_inherited(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
@@ -69,6 +72,7 @@ impl<D: DomTypes> GPURenderPipeline {
                 channel: device.channel(),
                 render_pipeline,
             },
+            phantom: PhantomData,
         }
     }
 
@@ -91,7 +95,7 @@ impl<D: DomTypes> GPURenderPipeline {
     }
 }
 
-impl GPURenderPipeline {
+impl<D: DomTypes> GPURenderPipeline<D> {
     pub(crate) fn id(&self) -> WebGPURenderPipeline {
         self.droppable.render_pipeline
     }
@@ -119,7 +123,7 @@ impl GPURenderPipeline {
     }
 }
 
-impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline {
+impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

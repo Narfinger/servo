@@ -4,6 +4,8 @@
 
 // check-tidy: no specs after this line
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use indexmap::IndexSet;
 use js::rust::HandleObject;
@@ -25,7 +27,7 @@ use wgpu_types::Features;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUSupportedFeatures {
+pub(crate) struct GPUSupportedFeatures<D: DomTypes> {
     reflector: Reflector,
     // internal storage for features
     #[custom_trace]
@@ -33,15 +35,16 @@ pub(crate) struct GPUSupportedFeatures {
     #[ignore_malloc_size_of = "defined in wgpu-types"]
     #[no_trace]
     features: Features,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSupportedFeatures {
+impl<D: DomTypes> GPUSupportedFeatures<D> {
     fn new(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
-    ) -> DomRoot<GPUSupportedFeatures> {
+    ) -> DomRoot<GPUSupportedFeatures<D>> {
         let mut set = IndexSet::new();
         if features.contains(Features::DEPTH_CLIP_CONTROL) {
             set.insert(GPUFeatureName::Depth_clip_control);
@@ -98,6 +101,7 @@ impl<D: DomTypes> GPUSupportedFeatures {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
                 features,
+                phantom: PhantomData,
             }),
             global,
             proto,
@@ -111,18 +115,18 @@ impl<D: DomTypes> GPUSupportedFeatures {
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUSupportedFeatures>> {
+    ) -> Fallible<DomRoot<GPUSupportedFeatures<D>>> {
         Ok(GPUSupportedFeatures::new(global, proto, features, can_gc))
     }
 }
 
-impl GPUSupportedFeatures {
+impl<D: DomTypes> GPUSupportedFeatures<D> {
     pub(crate) fn wgpu_features(&self) -> &Features {
         &self.features
     }
 }
 
-impl<D: DomTypes> GPUSupportedFeaturesMethods<D> for GPUSupportedFeatures {
+impl<D: DomTypes> GPUSupportedFeaturesMethods<D> for GPUSupportedFeatures<D> {
     fn Size(&self) -> u32 {
         self.internal.size()
     }

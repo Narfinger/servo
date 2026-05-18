@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -10,7 +12,7 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureViewMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use script_bindings::root::DomRoot;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
 
@@ -42,14 +44,15 @@ impl Drop for DroppableGPUTextureView {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTextureView {
+pub(crate) struct GPUTextureView<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     texture: Dom<GPUTexture>,
     droppable: DroppableGPUTextureView,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUTextureView {
+impl<D: DomTypes> GPUTextureView<D> {
     fn new_inherited(
         channel: WebGPU,
         texture_view: WebGPUTextureView,
@@ -64,6 +67,7 @@ impl<D: DomTypes> GPUTextureView {
                 channel,
                 texture_view,
             },
+            phantom: PhantomData,
         }
     }
 

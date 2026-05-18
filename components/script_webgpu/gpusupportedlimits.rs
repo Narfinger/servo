@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use log::warn;
@@ -15,18 +17,20 @@ use wgpu_types::Limits;
 
 use crate::script_runtime::CanGc;
 #[dom_struct]
-pub(crate) struct GPUSupportedLimits {
+pub(crate) struct GPUSupportedLimits<D: DomTypes> {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in wgpu-types"]
     #[no_trace]
     limits: Limits,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSupportedLimits {
+impl<D: DomTypes> GPUSupportedLimits<D> {
     fn new_inherited(limits: Limits) -> Self {
         Self {
             reflector_: Reflector::new(),
             limits,
+            phantom: PhantomData,
         }
     }
 
@@ -35,7 +39,7 @@ impl<D: DomTypes> GPUSupportedLimits {
     }
 }
 
-impl<D: DomTypes> GPUSupportedLimitsMethods<D> for GPUSupportedLimits {
+impl<D: DomTypes> GPUSupportedLimitsMethods<D> for GPUSupportedLimits<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpusupportedlimits-maxtexturedimension1d>
     fn MaxTextureDimension1D(&self) -> u32 {
         self.limits.max_texture_dimension_1d

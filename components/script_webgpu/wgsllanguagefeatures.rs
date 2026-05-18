@@ -4,6 +4,8 @@
 
 // check-tidy: no specs after this line
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use indexmap::IndexSet;
 use js::rust::HandleObject;
@@ -22,14 +24,15 @@ use wgpu_core::naga::front::wgsl::ImplementedLanguageExtension;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub struct WGSLLanguageFeatures {
+pub struct WGSLLanguageFeatures<D: DomTypes> {
     reflector: Reflector,
     // internal storage for features
     #[custom_trace]
     internal: DomRefCell<IndexSet<DOMString>>,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> WGSLLanguageFeatures {
+impl<D: DomTypes> WGSLLanguageFeatures<D> {
     pub(crate) fn new(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
@@ -43,6 +46,7 @@ impl<D: DomTypes> WGSLLanguageFeatures {
             Box::new(Self {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
+                phantom: PhantomData,
             }),
             global,
             proto,
@@ -51,13 +55,13 @@ impl<D: DomTypes> WGSLLanguageFeatures {
     }
 }
 
-impl<D: DomTypes> WGSLLanguageFeaturesMethods<D> for WGSLLanguageFeatures {
+impl<D: DomTypes> WGSLLanguageFeaturesMethods<D> for WGSLLanguageFeatures<D> {
     fn Size(&self) -> u32 {
         self.internal.size()
     }
 }
 
-impl Setlike for WGSLLanguageFeatures {
+impl<D: DomTypes> Setlike for WGSLLanguageFeatures<D> {
     type Key = DOMString;
 
     #[inline(always)]

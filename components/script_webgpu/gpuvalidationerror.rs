@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
@@ -17,14 +19,16 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUValidationError {
+pub(crate) struct GPUValidationError<D: DomTypes> {
     gpu_error: GPUError,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUValidationError {
+impl<D: DomTypes> GPUValidationError<D> {
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
+            phantom: PhantomData,
         }
     }
 
@@ -43,7 +47,7 @@ impl<D: DomTypes> GPUValidationError {
     }
 }
 
-impl<D: DomTypes> GPUValidationErrorMethods<D> for GPUValidationError {
+impl<D: DomTypes> GPUValidationErrorMethods<D> for GPUValidationError<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
     fn Constructor(
         global: &D::GlobalScope,

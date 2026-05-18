@@ -48,15 +48,15 @@ impl Drop for DroppableGPUShaderModule {
 }
 
 #[dom_struct]
-pub(crate) struct GPUShaderModule {
+pub(crate) struct GPUShaderModule<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[ignore_malloc_size_of = "promise"]
-    compilation_info_promise: Rc<Promise>,
+    compilation_info_promise: Rc<D::Promise>,
     droppable: DroppableGPUShaderModule,
 }
 
-impl<D: DomTypes> GPUShaderModule {
+impl<D: DomTypes> GPUShaderModule<D> {
     fn new_inherited(
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
@@ -79,7 +79,7 @@ impl<D: DomTypes> GPUShaderModule {
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
-        promise: Rc<Promise>,
+        promise: Rc<D::Promise>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object(
@@ -95,7 +95,7 @@ impl<D: DomTypes> GPUShaderModule {
     }
 }
 
-impl GPUShaderModule {
+impl<D: DomTypes> GPUShaderModule<D> {
     pub(crate) fn id(&self) -> WebGPUShaderModule {
         self.droppable.shader_module
     }
@@ -140,7 +140,7 @@ impl GPUShaderModule {
     }
 }
 
-impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule {
+impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

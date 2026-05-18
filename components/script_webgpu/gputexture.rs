@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
 use std::string::String;
 
 use dom_struct::dom_struct;
@@ -50,7 +51,7 @@ impl Drop for DroppableGPUTexture {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTexture {
+pub(crate) struct GPUTexture<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     device: Dom<GPUDevice>,
@@ -63,9 +64,10 @@ pub(crate) struct GPUTexture {
     format: GPUTextureFormat,
     texture_usage: u32,
     droppable: DroppableGPUTexture,
+    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUTexture {
+impl<D: DomTypes> GPUTexture<D> {
     #[expect(clippy::too_many_arguments)]
     fn new_inherited(
         texture: WebGPUTexture,
@@ -90,6 +92,7 @@ impl<D: DomTypes> GPUTexture {
             format,
             texture_usage,
             droppable: DroppableGPUTexture { channel, texture },
+            phantom: PhantomData,
         }
     }
 
@@ -127,7 +130,7 @@ impl<D: DomTypes> GPUTexture {
     }
 }
 
-impl GPUTexture {
+impl<D: DomTypes> GPUTexture<D> {
     pub(crate) fn id(&self) -> WebGPUTexture {
         self.droppable.texture
     }
