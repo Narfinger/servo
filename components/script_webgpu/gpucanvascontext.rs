@@ -13,8 +13,9 @@ use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
 use script_bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUExtent3DDict, GPUObjectDescriptorBase,
-    GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants,
+    GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUDeviceMethods, GPUExtent3DDict,
+    GPUObjectDescriptorBase, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
+    GPUTextureUsageConstants,
 };
 use script_bindings::codegen::GenericUnionTypes::{
     HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,

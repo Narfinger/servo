@@ -22,6 +22,7 @@ use webgpu_traits::{
 };
 use wgpu_core::pipeline::ComputePipelineDescriptor;
 
+use crate::Convert;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;

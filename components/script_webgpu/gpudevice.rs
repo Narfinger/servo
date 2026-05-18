@@ -41,6 +41,7 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
+use crate::Convert;
 use crate::gpuadapter::GPUAdapter;
 use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgroup::GPUBindGroup;
@@ -114,12 +115,12 @@ impl<D: DomTypes> GPUDevice<D> {
     #[allow(clippy::too_many_arguments)]
     fn new_inherited(
         channel: WebGPU,
-        adapter: &GPUAdapter,
-        features: &GPUSupportedFeatures,
-        limits: &GPUSupportedLimits,
-        adapter_info: &GPUAdapterInfo,
+        adapter: &GPUAdapter<D>,
+        features: &GPUSupportedFeatures<D>,
+        limits: &GPUSupportedLimits<D>,
+        adapter_info: &GPUAdapterInfo<D>,
         device: WebGPUDevice,
-        queue: &GPUQueue,
+        queue: &GPUQueue<D>,
         label: String,
         lost_promise: Rc<D::Promise>,
     ) -> Self {
@@ -257,7 +258,7 @@ impl GPUDevice {
 
     pub(crate) fn get_pipeline_layout_data(
         &self,
-        layout: &GPUPipelineLayoutOrGPUAutoLayoutMode,
+        layout: &GPUPipelineLayoutOrGPUAutoLayoutMode<D>,
     ) -> PipelineLayout {
         if let GPUPipelineLayoutOrGPUAutoLayoutMode::GPUPipelineLayout(layout) = layout {
             PipelineLayout::Explicit(layout.id().0)
@@ -268,7 +269,7 @@ impl GPUDevice {
 
     pub(crate) fn parse_render_pipeline<'a>(
         &self,
-        descriptor: &GPURenderPipelineDescriptor,
+        descriptor: &GPURenderPipelineDescriptor<D>,
     ) -> Fallible<RenderPipelineDescriptor<'a>> {
         let pipeline_layout = self.get_pipeline_layout_data(&descriptor.parent.layout);
         let desc = wgpu_pipe::RenderPipelineDescriptor {

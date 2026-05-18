@@ -20,6 +20,7 @@ use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPUPipelineLayout, WebGPURequest};
 use wgpu_core::binding_model::PipelineLayoutDescriptor;
 
+use crate::Convert;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 

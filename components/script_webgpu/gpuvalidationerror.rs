@@ -12,7 +12,7 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationErrorMethods;
 use script_bindings::reflector::reflect_dom_object_with_proto;
-use script_bindings::root::DomRoot;
+use script_bindings::root::{Dom, DomRoot, Root};
 use script_bindings::str::DOMString;
 
 use crate::gpuerror::GPUError;
@@ -51,6 +51,7 @@ impl<D> GPUValidationErrorMethods<D> for GPUValidationError<D>
 where
     D: DomTypes,
     D::GPUValidationError: From<GPUValidationError<D>>,
+    Root<Dom<<D as DomTypes>::GPUValidationError>>: From<Root<Dom<GPUValidationError<D>>>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
     fn Constructor(

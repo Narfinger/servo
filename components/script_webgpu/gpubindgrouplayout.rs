@@ -21,6 +21,7 @@ use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
+use crate::Convert;
 use crate::gpuconvert::convert_bind_group_layout_entry;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;

@@ -23,6 +23,7 @@ use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
 };
 
+use crate::Convert;
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpudevice::GPUDevice;

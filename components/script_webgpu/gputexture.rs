@@ -23,6 +23,7 @@ use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
+use crate::Convert;
 use crate::gpudevice::GPUDevice;
 use crate::gputextureview::GPUTextureView;
 use crate::script_runtime::CanGc;
