@@ -15,8 +15,8 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
-use script_bindings::root::DomRoot;
+use script_bindings::reflector::{DomGlobalGeneric, DomObjectWrap, Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot, Root};
 use script_bindings::str::DOMString;
 use servo_constellation_traits::ScriptToConstellationMessage;
 use webgpu_traits::WebGPUAdapterResponse;
@@ -48,10 +48,16 @@ impl<D: DomTypes> GPU<D> {
     }
 }
 
+trait GlobalScopeTrait {
+    fn task_manager() -> ();
+}
+
 impl<D: DomTypes> GPUMethods<D> for GPU<D>
 where
+    GPU<D>: DomGlobalGeneric<D>,
     D: DomTypes,
     D::WGSLLanguageFeatures: From<WGSLLanguageFeatures<D>>,
+    D::GlobalScope: GlobalScopeTrait,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(

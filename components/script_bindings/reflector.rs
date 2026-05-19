@@ -11,7 +11,7 @@ use malloc_size_of_derive::MallocSizeOf;
 use crate::conversions::DerivedFrom;
 use crate::interfaces::GlobalScopeHelpers;
 use crate::iterable::{Iterable, IterableIterator};
-use crate::realms::InRealm;
+use crate::realms::{InRealm, enter_realm};
 use crate::root::{Dom, DomRoot, Root};
 use crate::script_runtime::{CanGc, temp_cx};
 use crate::{DomTypes, JSTraceable};
@@ -223,6 +223,14 @@ pub trait DomGlobalGeneric<D: DomTypes>: DomObject {
         Self: Sized,
     {
         D::GlobalScope::from_reflector(self, realm)
+    }
+
+    fn global(&self) -> DomRoot<D::GlobalScope>
+    where
+        Self: Sized,
+    {
+        let realm = enter_realm::<D>(self as &Self);
+        D::GlobalScope::from_reflector(self, InRealm::Entered(&realm))
     }
 }
 
