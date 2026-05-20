@@ -535,7 +535,7 @@ impl<'a> Convert<Option<Cow<'a, str>>> for &GPUObjectDescriptorBase {
 
 pub(crate) fn convert_bind_group_layout_entry<D: DomTypes>(
     bgle: &GPUBindGroupLayoutEntry,
-    device: &GPUDevice<D>,
+    device: &GPUDevice,
 ) -> Fallible<Result<wgpu_types::BindGroupLayoutEntry, webgpu_traits::Error>> {
     let number_of_provided_bindings = bgle.buffer.is_some() as u8 +
         bgle.sampler.is_some() as u8 +
@@ -612,7 +612,7 @@ pub(crate) fn convert_bind_group_layout_entry<D: DomTypes>(
 
 pub(crate) fn convert_texture_descriptor<D: DomTypes>(
     descriptor: &GPUTextureDescriptor,
-    device: &GPUDevice<D>,
+    device: &GPUDevice,
 ) -> Fallible<(TextureDescriptor<'static>, wgpu_types::Extent3d)> {
     todo!()
     /*

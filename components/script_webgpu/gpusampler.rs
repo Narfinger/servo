@@ -45,22 +45,16 @@ impl Drop for DroppableGPUSampler {
 }
 
 #[dom_struct]
-pub(crate) struct GPUSampler<D: DomTypes> {
+pub(crate) struct GPUSampler {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]
     device: WebGPUDevice,
     compare_enable: bool,
     dropppable: DroppableGPUSampler,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSampler<D>
-where
-    D: DomTypes,
-    Box<D::GPUSampler>: From<Box<GPUSampler<D>>>,
-    DomRoot<GPUSampler<D>>: From<DomRoot<D::GPUSampler>>,
-{
+impl GPUSampler {
     fn new_inherited(
         channel: WebGPU,
         device: WebGPUDevice,
@@ -74,11 +68,10 @@ where
             device,
             compare_enable,
             dropppable: DroppableGPUSampler { channel, sampler },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         device: WebGPUDevice,
@@ -86,7 +79,12 @@ where
         sampler: WebGPUSampler,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUSampler>: From<Box<GPUSampler>>,
+        DomRoot<GPUSampler>: From<DomRoot<D::GPUSampler>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUSampler::new_inherited(
                 channel,
@@ -102,17 +100,17 @@ where
     }
 }
 
-impl<D: DomTypes> GPUSampler<D> {
+impl GPUSampler {
     pub(crate) fn id(&self) -> WebGPUSampler {
         self.dropppable.sampler
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createsampler>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: &GPUSamplerDescriptor,
         can_gc: CanGc,
-    ) -> DomRoot<GPUSampler<D>> {
+    ) -> DomRoot<GPUSampler> {
         todo!();
         /*
         let sampler_id = device.global().wgpu_id_hub().create_sampler_id();
@@ -160,7 +158,7 @@ impl<D: DomTypes> GPUSampler<D> {
     }
 }
 
-impl<D: DomTypes> GPUSamplerMethods<D> for GPUSampler<D> {
+impl<D: DomTypes> GPUSamplerMethods<D> for GPUSampler {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

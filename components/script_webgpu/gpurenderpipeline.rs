@@ -52,24 +52,18 @@ impl Drop for DroppableGPURenderPipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderPipeline<D: DomTypes> {
+pub(crate) struct GPURenderPipeline {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     droppable: DroppableGPURenderPipeline,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPURenderPipeline<D>
-where
-    D: DomTypes,
-    Box<D::GPURenderPipeline>: From<Box<GPURenderPipeline<D>>>,
-    DomRoot<GPURenderPipeline<D>>: From<DomRoot<D::GPURenderPipeline>>,
-{
+impl GPURenderPipeline {
     fn new_inherited(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
     ) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -79,17 +73,21 @@ where
                 channel: device.channel(),
                 render_pipeline,
             },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPURenderPipeline>: From<Box<GPURenderPipeline>>,
+        DomRoot<GPURenderPipeline>: From<DomRoot<D::GPURenderPipeline>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderPipeline::new_inherited(
                 render_pipeline,
@@ -103,14 +101,14 @@ where
     }
 }
 
-impl<D: DomTypes> GPURenderPipeline<D> {
+impl GPURenderPipeline {
     pub(crate) fn id(&self) -> WebGPURenderPipeline {
         self.droppable.render_pipeline
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: RenderPipelineDescriptor<'static>,
         async_sender: Option<GenericCallback<WebGPURenderPipelineResponse>>,
     ) -> Fallible<WebGPURenderPipeline> {
@@ -134,10 +132,10 @@ impl<D: DomTypes> GPURenderPipeline<D> {
     }
 }
 
-impl<D> GPURenderPipelineMethods<D> for GPURenderPipeline<D>
+impl<D> GPURenderPipelineMethods<D> for GPURenderPipeline
 where
     D: DomTypes,
-    D::GPUBindGroupLayout: From<GPUBindGroupLayout<D>>,
+    D::GPUBindGroupLayout: From<GPUBindGroupLayout>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

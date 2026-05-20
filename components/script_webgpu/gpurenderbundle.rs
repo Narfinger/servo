@@ -44,21 +44,15 @@ impl Drop for DroppableGPURenderBundle {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderBundle<D: DomTypes> {
+pub(crate) struct GPURenderBundle {
     reflector_: Reflector,
     #[no_trace]
     device: WebGPUDevice,
     label: DomRefCell<USVString>,
     droppable: DroppableGPURenderBundle,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPURenderBundle<D>
-where
-    D: DomTypes,
-    Box<D::GPURenderBundle>: From<Box<GPURenderBundle<D>>>,
-    DomRoot<GPURenderBundle<D>>: From<DomRoot<D::GPURenderBundle>>,
-{
+impl GPURenderBundle {
     fn new_inherited(
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
@@ -73,18 +67,22 @@ where
                 channel,
                 render_bundle,
             },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
         channel: WebGPU,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPURenderBundle>: From<Box<GPURenderBundle>>,
+        DomRoot<GPURenderBundle>: From<DomRoot<D::GPURenderBundle>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderBundle::new_inherited(
                 render_bundle,
@@ -99,13 +97,13 @@ where
     }
 }
 
-impl<D: DomTypes> GPURenderBundle<D> {
+impl GPURenderBundle {
     pub(crate) fn id(&self) -> WebGPURenderBundle {
         self.droppable.render_bundle
     }
 }
 
-impl<D: DomTypes> GPURenderBundleMethods<D> for GPURenderBundle<D> {
+impl<D: DomTypes> GPURenderBundleMethods<D> for GPURenderBundle {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

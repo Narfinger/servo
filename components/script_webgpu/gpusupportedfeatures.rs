@@ -29,7 +29,7 @@ use wgpu_types::Features;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUSupportedFeatures<D: DomTypes> {
+pub(crate) struct GPUSupportedFeatures {
     reflector: Reflector,
     // internal storage for features
     #[custom_trace]
@@ -37,21 +37,20 @@ pub(crate) struct GPUSupportedFeatures<D: DomTypes> {
     #[ignore_malloc_size_of = "defined in wgpu-types"]
     #[no_trace]
     features: Features,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSupportedFeatures<D>
-where
-    D: DomTypes,
-    Box<D::GPUSupportedFeatures>: From<Box<GPUSupportedFeatures<D>>>,
-    DomRoot<GPUSupportedFeatures<D>>: From<DomRoot<D::GPUSupportedFeatures>>,
-{
-    fn new(
+impl GPUSupportedFeatures {
+    fn new<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
-    ) -> DomRoot<GPUSupportedFeatures<D>> {
+    ) -> DomRoot<GPUSupportedFeatures>
+    where
+        D: DomTypes,
+        Box<D::GPUSupportedFeatures>: From<Box<GPUSupportedFeatures>>,
+        DomRoot<GPUSupportedFeatures>: From<DomRoot<D::GPUSupportedFeatures>>,
+    {
         let mut set = IndexSet::new();
         if features.contains(Features::DEPTH_CLIP_CONTROL) {
             set.insert(GPUFeatureName::Depth_clip_control);
@@ -108,7 +107,6 @@ where
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
                 features,
-                phantom: PhantomData,
             }),
             global,
             proto,
@@ -118,23 +116,30 @@ where
     }
 
     #[expect(non_snake_case)]
-    pub(crate) fn Constructor(
+    pub(crate) fn Constructor<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUSupportedFeatures<D>>> {
-        Ok(GPUSupportedFeatures::new(global, proto, features, can_gc))
+    ) -> Fallible<DomRoot<GPUSupportedFeatures>>
+    where
+        D: DomTypes,
+        Box<D::GPUSupportedFeatures>: From<Box<GPUSupportedFeatures>>,
+        DomRoot<GPUSupportedFeatures>: From<DomRoot<D::GPUSupportedFeatures>>,
+    {
+        Ok(GPUSupportedFeatures::new::<D>(
+            global, proto, features, can_gc,
+        ))
     }
 }
 
-impl<D: DomTypes> GPUSupportedFeatures<D> {
+impl GPUSupportedFeatures {
     pub(crate) fn wgpu_features(&self) -> &Features {
         &self.features
     }
 }
 
-impl<D: DomTypes> GPUSupportedFeaturesMethods<D> for GPUSupportedFeatures<D> {
+impl<D: DomTypes> GPUSupportedFeaturesMethods<D> for GPUSupportedFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }
@@ -164,7 +169,7 @@ pub(crate) fn gpu_to_wgt_feature(feature: GPUFeatureName) -> Option<Features> {
     }
 }
 
-impl<D: DomTypes> Setlike for GPUSupportedFeatures<D> {
+impl Setlike for GPUSupportedFeatures {
     type Key = DOMString;
 
     #[inline(always)]

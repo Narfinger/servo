@@ -31,23 +31,18 @@ use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUQueue<D: DomTypes> {
+pub(crate) struct GPUQueue {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in webgpu"]
     #[no_trace]
     channel: WebGPU,
-    device: DomRefCell<Option<Dom<GPUDevice<D>>>>,
+    device: DomRefCell<Option<Dom<GPUDevice>>>,
     label: DomRefCell<USVString>,
     #[no_trace]
     queue: WebGPUQueue,
 }
 
-impl<D: DomTypes> GPUQueue<D>
-where
-    D: DomTypes,
-    Box<D::GPUQueue>: From<Box<GPUQueue<D>>>,
-    DomRoot<GPUQueue<D>>: From<DomRoot<D::GPUQueue>>,
-{
+impl GPUQueue {
     fn new_inherited(channel: WebGPU, queue: WebGPUQueue) -> Self {
         GPUQueue {
             channel,
@@ -58,12 +53,17 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         queue: WebGPUQueue,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUQueue>: From<Box<GPUQueue>>,
+        DomRoot<GPUQueue>: From<DomRoot<D::GPUQueue>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUQueue::new_inherited(channel, queue)),
             global,
@@ -73,13 +73,8 @@ where
     }
 }
 
-impl<D> GPUQueue<D>
-where
-    D: DomTypes,
-    D::GPUCommandBuffer: AsRef<GPUCommandBuffer<D>>,
-    D::GPUBuffer: AsRef<GPUBuffer<D>>,
-{
-    pub(crate) fn set_device(&self, device: &GPUDevice<D>) {
+impl GPUQueue {
+    pub(crate) fn set_device(&self, device: &GPUDevice) {
         *self.device.borrow_mut() = Some(Dom::from_ref(device));
     }
 
@@ -88,7 +83,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue<D> {
+impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

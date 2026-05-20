@@ -52,6 +52,7 @@ mod wgsllanguagefeatures;
 use std::cell::UnsafeCell;
 use std::ptr;
 
+use dom_struct::dom_struct;
 pub(crate) use js::gc::Traceable as JSTraceable;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -59,8 +60,8 @@ use malloc_size_of_derive::MallocSizeOf;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 use script_bindings::root::{Dom, DomRoot};
-use script_bindings::script_runtime;
 pub(crate) use script_bindings::trace::CustomTraceable;
+use script_bindings::{DomTypes, script_runtime};
 
 // A holder that provides interior mutability for GC-managed values such as
 /// `Dom<T>`, with nullability represented by an enclosing Option wrapper.
@@ -189,3 +190,10 @@ pub(crate) trait TryConvert<T> {
 }
 
 pub(crate) struct GPUColor(());
+
+#[derive(Default, MallocSizeOf)]
+pub(crate) struct PromiseStub(());
+
+unsafe impl JSTraceable for PromiseStub {
+    unsafe fn trace(&self, trc: *mut js::jsapi::JSTracer) {}
+}

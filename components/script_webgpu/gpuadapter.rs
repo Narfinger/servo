@@ -58,29 +58,24 @@ impl Drop for DroppableGPUAdapter {
 }
 
 #[dom_struct]
-pub(crate) struct GPUAdapter<D: DomTypes> {
+pub(crate) struct GPUAdapter {
     reflector_: Reflector,
     name: DOMString,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
-    features: Dom<GPUSupportedFeatures<D>>,
-    limits: Dom<GPUSupportedLimits<D>>,
-    info: Dom<GPUAdapterInfo<D>>,
+    features: Dom<GPUSupportedFeatures>,
+    limits: Dom<GPUSupportedLimits>,
+    info: Dom<GPUAdapterInfo>,
     droppable: DroppableGPUAdapter,
 }
 
-impl<D> GPUAdapter<D>
-where
-    D: DomTypes,
-    Box<D::GPUAdapter>: From<Box<GPUAdapter<D>>>,
-    DomRoot<GPUAdapter<D>>: From<DomRoot<D::GPUAdapter>>,
-{
+impl GPUAdapter {
     fn new_inherited(
         channel: WebGPU,
         name: DOMString,
-        features: &GPUSupportedFeatures<D>,
-        limits: &GPUSupportedLimits<D>,
-        info: &GPUAdapterInfo<D>,
+        features: &GPUSupportedFeatures,
+        limits: &GPUSupportedLimits,
+        info: &GPUAdapterInfo,
         adapter: WebGPUAdapter,
     ) -> Self {
         Self {
@@ -95,7 +90,7 @@ where
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         name: DOMString,
@@ -105,7 +100,12 @@ where
         info: wgpu_types::AdapterInfo,
         adapter: WebGPUAdapter,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUAdapter>: From<Box<GPUAdapter>>,
+        DomRoot<GPUAdapter>: From<DomRoot<D::GPUAdapter>>,
+    {
         todo!()
         /*
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
@@ -136,12 +136,17 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-new-adapter-info>
-    fn create_adapter_info(
+    fn create_adapter_info<D>(
         global: &D::GlobalScope,
         info: AdapterInfo,
-        features: &GPUSupportedFeatures<D>,
+        features: &GPUSupportedFeatures,
         can_gc: CanGc,
-    ) -> DomRoot<GPUAdapterInfo<D>> {
+    ) -> DomRoot<GPUAdapterInfo>
+    where
+        D: DomTypes,
+        Box<D::GPUAdapter>: From<Box<GPUAdapter>>,
+        DomRoot<GPUAdapter>: From<DomRoot<D::GPUAdapter>>,
+    {
         /*
         // Step 2. If the vendor is known, set adapterInfo.vendor to the name of adapter’s vendor as
         // a normalized identifier string. To preserve privacy, the user agent may instead set
@@ -208,12 +213,12 @@ where
     }
 }
 
-impl<D> GPUAdapterMethods<D> for GPUAdapter<D>
+impl<D> GPUAdapterMethods<D> for GPUAdapter
 where
     D: DomTypes,
-    D::GPUSupportedFeatures: From<GPUSupportedFeatures<D>>,
-    D::GPUSupportedLimits: From<GPUSupportedLimits<D>>,
-    D::GPUAdapterInfo: From<GPUAdapterInfo<D>>,
+    D::GPUSupportedFeatures: From<GPUSupportedFeatures>,
+    D::GPUSupportedLimits: From<GPUSupportedLimits>,
+    D::GPUAdapterInfo: From<GPUAdapterInfo>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(

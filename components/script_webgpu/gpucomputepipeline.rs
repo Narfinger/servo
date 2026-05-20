@@ -53,23 +53,18 @@ impl Drop for DroppableGPUComputePipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePipeline<D: DomTypes> {
+pub(crate) struct GPUComputePipeline {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     droppable: DroppableGPUComputePipeline,
 }
 
-impl<D: DomTypes> GPUComputePipeline<D>
-where
-    D: DomTypes,
-    Box<D::GPUComputePipeline>: From<Box<GPUComputePipeline<D>>>,
-    DomRoot<GPUComputePipeline<D>>: From<DomRoot<D::GPUComputePipeline>>,
-{
+impl GPUComputePipeline {
     fn new_inherited(
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
     ) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -82,13 +77,18 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUComputePipeline>: From<Box<GPUComputePipeline>>,
+        DomRoot<GPUComputePipeline>: From<DomRoot<D::GPUComputePipeline>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUComputePipeline::new_inherited(
                 compute_pipeline,
@@ -102,14 +102,14 @@ where
     }
 }
 
-impl<D: DomTypes> GPUComputePipeline<D> {
+impl GPUComputePipeline {
     pub(crate) fn id(&self) -> &WebGPUComputePipeline {
         &self.droppable.compute_pipeline
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcomputepipeline>
-    pub(crate) fn create(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice,
         descriptor: &GPUComputePipelineDescriptor<D>,
         async_sender: Option<GenericCallback<WebGPUComputePipelineResponse>>,
     ) -> WebGPUComputePipeline {
@@ -142,10 +142,10 @@ impl<D: DomTypes> GPUComputePipeline<D> {
     }
 }
 
-impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline<D>
+impl<D: DomTypes> GPUComputePipelineMethods<D> for GPUComputePipeline
 where
     D: DomTypes,
-    D::GPUBindGroupLayout: From<GPUBindGroupLayout<D>>,
+    D::GPUBindGroupLayout: From<GPUBindGroupLayout>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

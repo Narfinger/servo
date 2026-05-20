@@ -26,25 +26,24 @@ use wgpu_core::naga::front::wgsl::ImplementedLanguageExtension;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub struct WGSLLanguageFeatures<D: DomTypes> {
+pub struct WGSLLanguageFeatures {
     reflector: Reflector,
     // internal storage for features
     #[custom_trace]
     internal: DomRefCell<IndexSet<DOMString>>,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> WGSLLanguageFeatures<D>
-where
-    D: DomTypes,
-    Box<D::WGSLLanguageFeatures>: From<Box<WGSLLanguageFeatures<D>>>,
-    DomRoot<WGSLLanguageFeatures<D>>: From<DomRoot<D::WGSLLanguageFeatures>>,
-{
-    pub(crate) fn new(
+impl WGSLLanguageFeatures {
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::WGSLLanguageFeatures>: From<Box<WGSLLanguageFeatures>>,
+        DomRoot<WGSLLanguageFeatures>: From<DomRoot<D::WGSLLanguageFeatures>>,
+    {
         let set = ImplementedLanguageExtension::all()
             .iter()
             .map(|le| le.to_ident().into())
@@ -53,7 +52,6 @@ where
             Box::new(Self {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
-                phantom: PhantomData,
             }),
             global,
             proto,
@@ -63,13 +61,13 @@ where
     }
 }
 
-impl<D: DomTypes> WGSLLanguageFeaturesMethods<D> for WGSLLanguageFeatures<D> {
+impl<D: DomTypes> WGSLLanguageFeaturesMethods<D> for WGSLLanguageFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }
 }
 
-impl<D: DomTypes> Setlike for WGSLLanguageFeatures<D> {
+impl Setlike for WGSLLanguageFeatures {
     type Key = DOMString;
 
     #[inline(always)]

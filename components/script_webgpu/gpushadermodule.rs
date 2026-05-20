@@ -23,6 +23,8 @@ use script_bindings::trace::RootedTraceableBox;
 use webgpu_traits::{ShaderCompilationInfo, WebGPU, WebGPURequest, WebGPUShaderModule};
 
 use super::gpucompilationinfo::GPUCompilationInfo;
+use crate::PromiseStub;
+use crate::gpucomputepassencoder::GPUComputePassEncoder;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
@@ -50,21 +52,16 @@ impl Drop for DroppableGPUShaderModule {
 }
 
 #[dom_struct]
-pub(crate) struct GPUShaderModule<D: DomTypes> {
+pub(crate) struct GPUShaderModule {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[ignore_malloc_size_of = "promise"]
-    compilation_info_promise: Rc<D::Promise>,
+    compilation_info_promise: Rc<PromiseStub>,
     droppable: DroppableGPUShaderModule,
 }
 
-impl<D: DomTypes> GPUShaderModule<D>
-where
-    D: DomTypes,
-    Box<D::GPUShaderModule>: From<Box<GPUShaderModule<D>>>,
-    DomRoot<GPUShaderModule<D>>: From<DomRoot<D::GPUShaderModule>>,
-{
-    fn new_inherited(
+impl GPUShaderModule {
+    fn new_inherited<D: DomTypes>(
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
@@ -73,7 +70,7 @@ where
         Self {
             reflector_: Reflector::new(),
             label: DomRefCell::new(label),
-            compilation_info_promise: promise,
+            compilation_info_promise: Rc::new(PromiseStub::default()), //promise,
             droppable: DroppableGPUShaderModule {
                 channel,
                 shader_module,
@@ -81,16 +78,21 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
         promise: Rc<D::Promise>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUShaderModule>: From<Box<GPUShaderModule>>,
+        DomRoot<GPUShaderModule>: From<DomRoot<D::GPUShaderModule>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
-            Box::new(GPUShaderModule::new_inherited(
+            Box::new(GPUShaderModule::new_inherited::<D>(
                 channel,
                 shader_module,
                 label,
@@ -103,18 +105,18 @@ where
     }
 }
 
-impl<D: DomTypes> GPUShaderModule<D> {
+impl GPUShaderModule {
     pub(crate) fn id(&self) -> WebGPUShaderModule {
         self.droppable.shader_module
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createshadermodule>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: RootedTraceableBox<GPUShaderModuleDescriptor>,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> DomRoot<GPUShaderModule<D>> {
+    ) -> DomRoot<GPUShaderModule> {
         todo!();
         /*
         let program_id = device.global().wgpu_id_hub().create_shader_module_id();
@@ -152,7 +154,7 @@ impl<D: DomTypes> GPUShaderModule<D> {
     }
 }
 
-impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule<D> {
+impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -165,7 +167,8 @@ impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpushadermodule-getcompilationinfo>
     fn GetCompilationInfo(&self) -> Rc<D::Promise> {
-        self.compilation_info_promise.clone()
+        todo!()
+        //self.compilation_info_promise.clone()
     }
 }
 

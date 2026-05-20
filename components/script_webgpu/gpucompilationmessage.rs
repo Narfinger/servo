@@ -21,7 +21,7 @@ use webgpu_traits::ShaderCompilationInfo;
 
 use crate::script_runtime::CanGc;
 #[dom_struct]
-pub(crate) struct GPUCompilationMessage<D: DomTypes> {
+pub(crate) struct GPUCompilationMessage {
     reflector_: Reflector,
     message: DOMString,
     mtype: GPUCompilationMessageType,
@@ -29,15 +29,9 @@ pub(crate) struct GPUCompilationMessage<D: DomTypes> {
     line_pos: u64,
     offset: u64,
     length: u64,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUCompilationMessage<D>
-where
-    D: DomTypes,
-    Box<D::GPUCompilationMessage>: From<Box<GPUCompilationMessage<D>>>,
-    DomRoot<GPUCompilationMessage<D>>: From<DomRoot<D::GPUCompilationMessage>>,
-{
+impl GPUCompilationMessage {
     fn new_inherited(
         message: DOMString,
         mtype: GPUCompilationMessageType,
@@ -54,12 +48,11 @@ where
             line_pos,
             offset,
             length,
-            phantom: PhantomData,
         }
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D: DomTypes>(
         global: &D::GlobalScope,
         message: DOMString,
         mtype: GPUCompilationMessageType,
@@ -68,7 +61,12 @@ where
         offset: u64,
         length: u64,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUCompilationMessage>: From<Box<GPUCompilationMessage>>,
+        DomRoot<GPUCompilationMessage>: From<DomRoot<D::GPUCompilationMessage>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 message, mtype, line_num, line_pos, offset, length,
@@ -79,12 +77,17 @@ where
         )
     }
 
-    pub(crate) fn from(
+    pub(crate) fn from<D>(
         global: &D::GlobalScope,
         info: ShaderCompilationInfo,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        GPUCompilationMessage::new(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUCompilationMessage>: From<Box<GPUCompilationMessage>>,
+        DomRoot<GPUCompilationMessage>: From<DomRoot<D::GPUCompilationMessage>>,
+    {
+        GPUCompilationMessage::new::<D>(
             global,
             info.message.into(),
             GPUCompilationMessageType::Error,
@@ -97,7 +100,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUCompilationMessageMethods<D> for GPUCompilationMessage<D> {
+impl<D: DomTypes> GPUCompilationMessageMethods<D> for GPUCompilationMessage {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationmessage-message>
     fn Message(&self) -> DOMString {
         self.message.to_owned()

@@ -44,19 +44,13 @@ impl Drop for DroppableGPUCommandBuffer {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandBuffer<D: DomTypes> {
+pub(crate) struct GPUCommandBuffer {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUCommandBuffer,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUCommandBuffer<D>
-where
-    D: DomTypes,
-    Box<D::GPUCommandBuffer>: From<Box<GPUCommandBuffer<D>>>,
-    DomRoot<GPUCommandBuffer<D>>: From<DomRoot<D::GPUCommandBuffer>>,
-{
+impl GPUCommandBuffer {
     fn new_inherited(
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
@@ -69,17 +63,21 @@ where
                 channel,
                 command_buffer,
             },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUCommandBuffer>: From<Box<GPUCommandBuffer>>,
+        DomRoot<GPUCommandBuffer>: From<DomRoot<D::GPUCommandBuffer>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUCommandBuffer::new_inherited(
                 channel,
@@ -93,13 +91,13 @@ where
     }
 }
 
-impl<D: DomTypes> GPUCommandBuffer<D> {
+impl GPUCommandBuffer {
     pub(crate) fn id(&self) -> WebGPUCommandBuffer {
         self.droppable.command_buffer
     }
 }
 
-impl<D: DomTypes> GPUCommandBufferMethods<D> for GPUCommandBuffer<D> {
+impl<D: DomTypes> GPUCommandBufferMethods<D> for GPUCommandBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

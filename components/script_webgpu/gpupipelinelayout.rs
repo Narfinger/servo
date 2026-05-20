@@ -50,21 +50,15 @@ impl Drop for DroppableGPUPipelineLayout {
 }
 
 #[dom_struct]
-pub(crate) struct GPUPipelineLayout<D: DomTypes> {
+pub(crate) struct GPUPipelineLayout {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]
     bind_group_layouts: Vec<WebGPUBindGroupLayout>,
     droppable: DroppableGPUPipelineLayout,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUPipelineLayout<D>
-where
-    D: DomTypes,
-    Box<D::GPUPipelineLayout>: From<Box<GPUPipelineLayout<D>>>,
-    DomRoot<GPUPipelineLayout<D>>: From<DomRoot<D::GPUPipelineLayout>>,
-{
+impl GPUPipelineLayout {
     fn new_inherited(
         channel: WebGPU,
         pipeline_layout: WebGPUPipelineLayout,
@@ -79,18 +73,22 @@ where
                 channel,
                 pipeline_layout,
             },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         pipeline_layout: WebGPUPipelineLayout,
         label: USVString,
         bgls: Vec<WebGPUBindGroupLayout>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUPipelineLayout>: From<Box<GPUPipelineLayout>>,
+        DomRoot<GPUPipelineLayout>: From<DomRoot<D::GPUPipelineLayout>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUPipelineLayout::new_inherited(
                 channel,
@@ -105,7 +103,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUPipelineLayout<D> {
+impl GPUPipelineLayout {
     pub(crate) fn id(&self) -> WebGPUPipelineLayout {
         self.droppable.pipeline_layout
     }
@@ -115,11 +113,11 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createpipelinelayout>
-    pub(crate) fn create(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice,
         descriptor: &GPUPipelineLayoutDescriptor<D>,
         can_gc: CanGc,
-    ) -> DomRoot<GPUPipelineLayout<D>> {
+    ) -> DomRoot<GPUPipelineLayout> {
         todo!()
         /*
         let bgls = descriptor
@@ -158,7 +156,7 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
     }
 }
 
-impl<D: DomTypes> GPUPipelineLayoutMethods<D> for GPUPipelineLayout<D> {
+impl<D: DomTypes> GPUPipelineLayoutMethods<D> for GPUPipelineLayout {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

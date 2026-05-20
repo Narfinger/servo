@@ -54,10 +54,10 @@ impl Drop for DroppableGPUTexture {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTexture<D: DomTypes> {
+pub(crate) struct GPUTexture {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     #[no_trace]
     #[ignore_malloc_size_of = "External type"]
     texture_size: wgpu_types::Extent3d,
@@ -67,19 +67,13 @@ pub(crate) struct GPUTexture<D: DomTypes> {
     format: GPUTextureFormat,
     texture_usage: u32,
     droppable: DroppableGPUTexture,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUTexture<D>
-where
-    D: DomTypes,
-    Box<D::GPUTexture>: From<Box<GPUTexture<D>>>,
-    DomRoot<GPUTexture<D>>: From<DomRoot<D::GPUTexture>>,
-{
+impl GPUTexture {
     #[expect(clippy::too_many_arguments)]
     fn new_inherited(
         texture: WebGPUTexture,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         channel: WebGPU,
         texture_size: wgpu_types::Extent3d,
         mip_level_count: u32,
@@ -100,15 +94,14 @@ where
             format,
             texture_usage,
             droppable: DroppableGPUTexture { channel, texture },
-            phantom: PhantomData,
         }
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         texture: WebGPUTexture,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         channel: WebGPU,
         texture_size: wgpu_types::Extent3d,
         mip_level_count: u32,
@@ -118,7 +111,12 @@ where
         texture_usage: u32,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUTexture>: From<Box<GPUTexture>>,
+        DomRoot<GPUTexture>: From<DomRoot<D::GPUTexture>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUTexture::new_inherited(
                 texture,
@@ -139,17 +137,17 @@ where
     }
 }
 
-impl<D: DomTypes> GPUTexture<D> {
+impl GPUTexture {
     pub(crate) fn id(&self) -> WebGPUTexture {
         self.droppable.texture
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createtexture>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: &GPUTextureDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUTexture<D>>> {
+    ) -> Fallible<DomRoot<GPUTexture>> {
         todo!()
         /*
         let (desc, size) = convert_texture_descriptor(descriptor, device)?;
@@ -186,10 +184,10 @@ impl<D: DomTypes> GPUTexture<D> {
     }
 }
 
-impl<D> GPUTextureMethods<D> for GPUTexture<D>
+impl<D> GPUTextureMethods<D> for GPUTexture
 where
     D: DomTypes,
-    D::GPUTextureView: From<GPUTexture<D>>,
+    D::GPUTextureView: From<GPUTexture>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

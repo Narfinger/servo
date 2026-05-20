@@ -46,26 +46,20 @@ impl Drop for DroppableGPUTextureView {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTextureView<D: DomTypes> {
+pub(crate) struct GPUTextureView {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    texture: Dom<GPUTexture<D>>,
+    texture: Dom<GPUTexture>,
     droppable: DroppableGPUTextureView,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUTextureView<D>
-where
-    D: DomTypes,
-    Box<D::GPUTextureView>: From<Box<GPUTextureView<D>>>,
-    DomRoot<GPUTextureView<D>>: From<DomRoot<D::GPUTextureView>>,
-{
+impl GPUTextureView {
     fn new_inherited(
         channel: WebGPU,
         texture_view: WebGPUTextureView,
-        texture: &GPUTexture<D>,
+        texture: &GPUTexture,
         label: USVString,
-    ) -> GPUTextureView<D> {
+    ) -> GPUTextureView {
         Self {
             reflector_: Reflector::new(),
             texture: Dom::from_ref(texture),
@@ -74,18 +68,22 @@ where
                 channel,
                 texture_view,
             },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         texture_view: WebGPUTextureView,
-        texture: &GPUTexture<D>,
+        texture: &GPUTexture,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<GPUTextureView<D>> {
+    ) -> DomRoot<GPUTextureView>
+    where
+        D: DomTypes,
+        Box<D::GPUTextureView>: From<Box<GPUTextureView>>,
+        DomRoot<GPUTextureView>: From<DomRoot<D::GPUTextureView>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUTextureView::new_inherited(
                 channel,
@@ -100,13 +98,13 @@ where
     }
 }
 
-impl<D: DomTypes> GPUTextureView<D> {
+impl GPUTextureView {
     pub(crate) fn id(&self) -> WebGPUTextureView {
         self.droppable.texture_view
     }
 }
 
-impl<D: DomTypes> GPUTextureViewMethods<D> for GPUTextureView<D> {
+impl<D: DomTypes> GPUTextureViewMethods<D> for GPUTextureView {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

@@ -49,26 +49,21 @@ impl Drop for DroppableGPUBindGroup {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBindGroup<D: DomTypes> {
+pub(crate) struct GPUBindGroup {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]
     device: WebGPUDevice,
-    layout: Dom<GPUBindGroupLayout<D>>,
+    layout: Dom<GPUBindGroupLayout>,
     droppable: DroppableGPUBindGroup,
 }
 
-impl<D: DomTypes> GPUBindGroup<D>
-where
-    D: DomTypes,
-    Box<D::GPUBindGroup>: From<Box<GPUBindGroup<D>>>,
-    DomRoot<GPUBindGroup<D>>: From<DomRoot<D::GPUBindGroup>>,
-{
+impl GPUBindGroup {
     fn new_inherited(
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
-        layout: &GPUBindGroupLayout<D>,
+        layout: &GPUBindGroupLayout,
         label: USVString,
     ) -> Self {
         Self {
@@ -83,15 +78,20 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
-        layout: &GPUBindGroupLayout<D>,
+        layout: &GPUBindGroupLayout,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUBindGroup>: From<Box<GPUBindGroup>>,
+        DomRoot<GPUBindGroup>: From<DomRoot<D::GPUBindGroup>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUBindGroup::new_inherited(
                 channel, bind_group, device, layout, label,
@@ -103,21 +103,17 @@ where
     }
 }
 
-impl<D> GPUBindGroup<D>
-where
-    D: DomTypes,
-    D::GPUBindGroupLayout: Into<GPUBindGroupLayout<D>>,
-{
+impl GPUBindGroup {
     pub(crate) fn id(&self) -> &WebGPUBindGroup {
         &self.droppable.bind_group
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbindgroup>
-    pub(crate) fn create(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice,
         descriptor: &GPUBindGroupDescriptor<D>,
         can_gc: CanGc,
-    ) -> DomRoot<GPUBindGroup<D>> {
+    ) -> DomRoot<GPUBindGroup> {
         todo!()
         /*
         let entries = descriptor
@@ -157,7 +153,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUBindGroupMethods<D> for GPUBindGroup<D> {
+impl<D: DomTypes> GPUBindGroupMethods<D> for GPUBindGroup {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

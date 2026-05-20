@@ -22,19 +22,14 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUUncapturedErrorEvent<D: DomTypes> {
+pub(crate) struct GPUUncapturedErrorEvent {
     //event: D::Event,
     #[ignore_malloc_size_of = "Because it is non-owning"]
-    gpu_error: Dom<GPUError<D>>,
+    gpu_error: Dom<GPUError>,
 }
 
-impl<D: DomTypes> GPUUncapturedErrorEvent<D>
-where
-    D: DomTypes,
-    Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent<D>>>,
-    DomRoot<GPUUncapturedErrorEvent<D>>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
-{
-    fn new_inherited(init: &GPUUncapturedErrorEventInit<D>) -> Self {
+impl GPUUncapturedErrorEvent {
+    fn new_inherited<D: DomTypes>(init: &GPUUncapturedErrorEventInit<D>) -> Self {
         todo!()
         /*
         Self {
@@ -44,22 +39,32 @@ where
          */
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent>>,
+        DomRoot<GPUUncapturedErrorEvent>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
+    {
         Self::new_with_proto(global, None, event_type, init, can_gc)
     }
 
-    fn new_with_proto(
+    fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent>>,
+        DomRoot<GPUUncapturedErrorEvent>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
+    {
         let event = reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(GPUUncapturedErrorEvent::new_inherited(init)),
             global,
@@ -78,13 +83,13 @@ where
     }
 }
 
-impl<D> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent<D>
+impl<D> GPUUncapturedErrorEventMethods<D> for GPUUncapturedErrorEvent
 where
     D: DomTypes,
-    D::GPUUncapturedErrorEvent: From<GPUUncapturedErrorEvent<D>>,
-    D::GPUError: From<GPUError<D>>,
-    Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent<D>>>,
-    DomRoot<GPUUncapturedErrorEvent<D>>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
+    D::GPUUncapturedErrorEvent: From<GPUUncapturedErrorEvent>,
+    D::GPUError: From<GPUError>,
+    Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent>>,
+    DomRoot<GPUUncapturedErrorEvent>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-gpuuncapturederrorevent>
     fn Constructor(

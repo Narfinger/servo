@@ -25,37 +25,44 @@ use crate::gpuvalidationerror::GPUValidationError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUError<D: DomTypes> {
+pub(crate) struct GPUError {
     reflector_: Reflector,
     message: DOMString,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUError<D>
-where
-    D: DomTypes,
-    Box<D::GPUError>: From<Box<GPUError<D>>>,
-    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
-{
+impl GPUError {
     pub(crate) fn new_inherited(message: DOMString) -> Self {
         Self {
             reflector_: Reflector::new(),
             message,
-            phantom: PhantomData,
         }
     }
 
     #[expect(dead_code)]
-    pub(crate) fn new(global: &D::GlobalScope, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
-        Self::new_with_proto(global, None, message, can_gc)
+    pub(crate) fn new<D>(
+        global: &D::GlobalScope,
+        message: DOMString,
+        can_gc: CanGc,
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUError>: From<Box<GPUError>>,
+        DomRoot<GPUError>: From<DomRoot<D::GPUError>>,
+    {
+        Self::new_with_proto::<D>(global, None, message, can_gc)
     }
 
-    pub(crate) fn new_with_proto(
+    pub(crate) fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUError>: From<Box<GPUError>>,
+        DomRoot<GPUError>: From<DomRoot<D::GPUError>>,
+    {
         reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(GPUError::new_inherited(message)),
             global,
@@ -65,11 +72,16 @@ where
         )
     }
 
-    pub(crate) fn from_error(
+    pub(crate) fn from_error<D>(
         global: &D::GlobalScope,
         error: Error,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUError>: From<Box<GPUError>>,
+        DomRoot<GPUError>: From<DomRoot<D::GPUError>>,
+    {
         todo!()
         /*
         match error {
@@ -96,7 +108,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUErrorMethods<D> for GPUError<D> {
+impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

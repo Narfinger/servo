@@ -43,22 +43,17 @@ impl Drop for DroppableGPUComputePassEncoder {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePassEncoder<D: DomTypes> {
+pub(crate) struct GPUComputePassEncoder {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    command_encoder: Dom<GPUCommandEncoder<D>>,
+    command_encoder: Dom<GPUCommandEncoder>,
     droppable: DroppableGPUComputePassEncoder,
 }
 
-impl<D: DomTypes> GPUComputePassEncoder<D>
-where
-    D: DomTypes,
-    Box<D::GPUComputePassEncoder>: From<Box<GPUComputePassEncoder<D>>>,
-    DomRoot<GPUComputePassEncoder<D>>: From<DomRoot<D::GPUComputePassEncoder>>,
-{
+impl GPUComputePassEncoder {
     fn new_inherited(
         channel: WebGPU,
-        parent: &GPUCommandEncoder<D>,
+        parent: &GPUCommandEncoder,
         compute_pass: WebGPUComputePass,
         label: USVString,
     ) -> Self {
@@ -73,14 +68,19 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
-        parent: &GPUCommandEncoder<D>,
+        parent: &GPUCommandEncoder,
         compute_pass: WebGPUComputePass,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUComputePassEncoder>: From<Box<GPUComputePassEncoder>>,
+        DomRoot<GPUComputePassEncoder>: From<DomRoot<D::GPUComputePassEncoder>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUComputePassEncoder::new_inherited(
                 channel,
@@ -95,12 +95,12 @@ where
     }
 }
 
-impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder<D>
+impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder
 where
     D: DomTypes,
-    D::GPUBuffer: AsRef<GPUBuffer<D>>,
-    D::GPUBindGroup: AsRef<GPUBindGroup<D>>,
-    D::GPUComputePipeline: AsRef<GPUComputePipeline<D>>,
+    D::GPUBuffer: AsRef<GPUBuffer>,
+    D::GPUBindGroup: AsRef<GPUBindGroup>,
+    D::GPUComputePipeline: AsRef<GPUComputePipeline>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

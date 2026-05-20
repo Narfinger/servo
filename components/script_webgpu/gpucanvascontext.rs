@@ -71,31 +71,28 @@ impl Drop for DroppableGPUCanvasContext {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCanvasContext<D: DomTypes> {
+pub(crate) struct GPUCanvasContext {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    canvas: HTMLCanvasElementOrOffscreenCanvas<D>,
+    //canvas: HTMLCanvasElementOrOffscreenCanvas,
     #[ignore_malloc_size_of = "manual writing is hard"]
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configuration-slot>
-    configuration: RefCell<Option<GPUCanvasConfiguration<D>>>,
+    //configuration: RefCell<Option<GPUCanvasConfiguration>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-texturedescriptor-slot>
     texture_descriptor: RefCell<Option<GPUTextureDescriptor>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-currenttexture-slot>
-    current_texture: MutNullableDom<GPUTexture<D>>,
+    current_texture: MutNullableDom<GPUTexture>,
     /// Set if image is cleared
     /// (usually done by [`GPUCanvasContext::replace_drawing_buffer`])
     cleared: Cell<bool>,
     droppable: DroppableGPUCanvasContext,
 }
 
-impl<D> GPUCanvasContext<D>
-where
-    D: DomTypes,
-{
+impl GPUCanvasContext {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-    fn new_inherited(
+    fn new_inherited<D: DomTypes>(
         global: &D::GlobalScope,
-        canvas: HTMLCanvasElementOrOffscreenCanvas<D>,
+        //canvas: HTMLCanvasElementOrOffscreenCanvas,
         channel: WebGPU,
     ) -> Self {
         todo!()
@@ -130,7 +127,7 @@ where
          */
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D: DomTypes>(
         global: &D::GlobalScope,
         canvas: &D::HTMLCanvasElement,
         channel: WebGPU,
@@ -152,7 +149,7 @@ where
 }
 
 // Abstract ops from spec
-impl<D: DomTypes> GPUCanvasContext<D> {
+impl GPUCanvasContext {
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {
         /*
         if let Err(error) = self.droppable.channel.0.send(WebGPURequest::SetImageKey {
@@ -191,7 +188,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-gputexturedescriptor-for-the-canvas-and-configuration>
-    fn texture_descriptor_for_canvas_and_configuration(
+    fn texture_descriptor_for_canvas_and_configuration<D: DomTypes>(
         &self,
         configuration: &GPUCanvasConfiguration<D>,
     ) -> GPUTextureDescriptor {
@@ -255,11 +252,11 @@ impl<D: DomTypes> GPUCanvasContext<D> {
 }
 
 // Internal helper methods
-impl<D: DomTypes> GPUCanvasContext<D> {
+impl GPUCanvasContext {
     fn context_configuration(&self) -> Option<ContextConfiguration> {
-        let configuration = self.configuration.borrow();
-        let configuration = configuration.as_ref()?;
         todo!()
+        //let configuration = self.configuration.borrow();
+        //let configuration = configuration.as_ref()?;
         /*
          *
         Some(ContextConfiguration {
@@ -350,10 +347,10 @@ impl CanvasContext for GPUCanvasContext {
 
  */
 
-impl<D> GPUCanvasContextMethods<D> for GPUCanvasContext<D>
+impl<D> GPUCanvasContextMethods<D> for GPUCanvasContext
 where
     D: DomTypes,
-    D::GPUTexture: From<GPUTexture<D>>,
+    D::GPUTexture: From<GPUTexture>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     fn Canvas(&self) -> HTMLCanvasElementOrOffscreenCanvas<D> {
@@ -412,7 +409,7 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-unconfigure>
     fn Unconfigure(&self) {
         // 1. Set this.[[configuration]] to null.
-        self.configuration.take();
+        //self.configuration.take();
         // 2. Set this.[[textureDescriptor]] to null.
         self.current_texture.take();
         // 3. Replace the drawing buffer of this.

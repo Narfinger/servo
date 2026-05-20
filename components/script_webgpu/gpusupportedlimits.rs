@@ -19,29 +19,27 @@ use wgpu_types::Limits;
 
 use crate::script_runtime::CanGc;
 #[dom_struct]
-pub(crate) struct GPUSupportedLimits<D: DomTypes> {
+pub(crate) struct GPUSupportedLimits {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in wgpu-types"]
     #[no_trace]
     limits: Limits,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSupportedLimits<D>
-where
-    D: DomTypes,
-    Box<D::GPUSupportedLimits>: From<Box<GPUSupportedLimits<D>>>,
-    DomRoot<GPUSupportedLimits<D>>: From<DomRoot<D::GPUSupportedLimits>>,
-{
+impl GPUSupportedLimits {
     fn new_inherited(limits: Limits) -> Self {
         Self {
             reflector_: Reflector::new(),
             limits,
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn new<D>(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUSupportedLimits>: From<Box<GPUSupportedLimits>>,
+        DomRoot<GPUSupportedLimits>: From<DomRoot<D::GPUSupportedLimits>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(Self::new_inherited(limits)),
             global,
@@ -51,7 +49,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUSupportedLimitsMethods<D> for GPUSupportedLimits<D> {
+impl<D: DomTypes> GPUSupportedLimitsMethods<D> for GPUSupportedLimits {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpusupportedlimits-maxtexturedimension1d>
     fn MaxTextureDimension1D(&self) -> u32 {
         self.limits.max_texture_dimension_1d

@@ -19,7 +19,7 @@ use script_bindings::str::DOMString;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUAdapterInfo<D: DomTypes> {
+pub(crate) struct GPUAdapterInfo {
     reflector_: Reflector,
     vendor: DOMString,
     architecture: DOMString,
@@ -28,16 +28,9 @@ pub(crate) struct GPUAdapterInfo<D: DomTypes> {
     subgroup_min_size: u32,
     subgroup_max_size: u32,
     is_fallback_adapter: bool,
-    phantom: PhantomData<D>,
 }
 
-impl<D> GPUAdapterInfo<D>
-where
-    D: DomTypes,
-    GPUAdapterInfo<D>: DomObject,
-    Box<D::GPUAdapterInfo>: From<Box<GPUAdapterInfo<D>>>,
-    DomRoot<GPUAdapterInfo<D>>: From<DomRoot<D::GPUAdapterInfo>>,
-{
+impl GPUAdapterInfo {
     fn new_inherited(
         vendor: DOMString,
         architecture: DOMString,
@@ -56,12 +49,11 @@ where
             subgroup_min_size,
             subgroup_max_size,
             is_fallback_adapter,
-            phantom: PhantomData,
         }
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         vendor: DOMString,
         architecture: DOMString,
@@ -71,7 +63,13 @@ where
         subgroup_max_size: u32,
         is_fallback_adapter: bool,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        GPUAdapterInfo: DomObject,
+        Box<D::GPUAdapterInfo>: From<Box<GPUAdapterInfo>>,
+        DomRoot<GPUAdapterInfo>: From<DomRoot<D::GPUAdapterInfo>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 vendor,
@@ -88,12 +86,18 @@ where
         )
     }
 
-    pub(crate) fn clone_from(
+    pub(crate) fn clone_from<D>(
         global: &D::GlobalScope,
-        info: &GPUAdapterInfo<D>,
+        info: &GPUAdapterInfo,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        Self::new(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        GPUAdapterInfo: DomObject,
+        Box<D::GPUAdapterInfo>: From<Box<GPUAdapterInfo>>,
+        DomRoot<GPUAdapterInfo>: From<DomRoot<D::GPUAdapterInfo>>,
+    {
+        Self::new::<D>(
             global,
             info.vendor.clone(),
             info.architecture.clone(),
@@ -107,7 +111,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUAdapterInfoMethods<D> for GPUAdapterInfo<D> {
+impl<D: DomTypes> GPUAdapterInfoMethods<D> for GPUAdapterInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-vendor>
     fn Vendor(&self) -> DOMString {
         self.vendor.clone()

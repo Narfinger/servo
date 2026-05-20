@@ -21,17 +21,11 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUValidationError<D: DomTypes> {
-    gpu_error: GPUError<D>,
-    phantom: PhantomData<D>,
+pub(crate) struct GPUValidationError {
+    gpu_error: GPUError,
 }
 
-impl<D: DomTypes> GPUValidationError<D>
-where
-    D: DomTypes,
-    Box<D::GPUValidationError>: From<Box<GPUValidationError<D>>>,
-    DomRoot<GPUValidationError<D>>: From<DomRoot<D::GPUValidationError>>,
-{
+impl GPUValidationError {
     fn new_inherited(message: DOMString) -> Self {
         todo!()
         /*
@@ -42,12 +36,17 @@ where
          */
     }
 
-    pub(crate) fn new_with_proto(
+    pub(crate) fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUValidationError>: From<Box<GPUValidationError>>,
+        DomRoot<GPUValidationError>: From<DomRoot<D::GPUValidationError>>,
+    {
         reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message)),
             global,
@@ -58,14 +57,14 @@ where
     }
 }
 
-impl<D> GPUValidationErrorMethods<D> for GPUValidationError<D>
+impl<D> GPUValidationErrorMethods<D> for GPUValidationError
 where
     D: DomTypes,
-    D::GPUValidationError: From<GPUValidationError<D>>,
-    Root<Dom<<D as DomTypes>::GPUValidationError>>: From<Root<Dom<GPUValidationError<D>>>>,
+    D::GPUValidationError: From<GPUValidationError>,
+    Root<Dom<<D as DomTypes>::GPUValidationError>>: From<Root<Dom<GPUValidationError>>>,
     D: DomTypes,
-    Box<D::GPUValidationError>: From<Box<GPUValidationError<D>>>,
-    DomRoot<GPUValidationError<D>>: From<DomRoot<D::GPUValidationError>>,
+    Box<D::GPUValidationError>: From<Box<GPUValidationError>>,
+    DomRoot<GPUValidationError>: From<DomRoot<D::GPUValidationError>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
     fn Constructor(
@@ -74,6 +73,6 @@ where
         can_gc: CanGc,
         message: DOMString,
     ) -> DomRoot<D::GPUValidationError> {
-        Self::new_with_proto(global, proto, message, can_gc).into()
+        Self::new_with_proto::<D>(global, proto, message, can_gc).into()
     }
 }

@@ -34,26 +34,21 @@ use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPURenderBundleEncoder<D: DomTypes> {
+pub(crate) struct GPURenderBundleEncoder {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     #[ignore_malloc_size_of = "defined in wgpu-core"]
     #[no_trace]
     render_bundle_encoder: DomRefCell<Option<RenderBundleEncoder>>,
     label: DomRefCell<USVString>,
 }
 
-impl<D: DomTypes> GPURenderBundleEncoder<D>
-where
-    D: DomTypes,
-    Box<D::GPURenderBundleEncoder>: From<Box<GPURenderBundleEncoder<D>>>,
-    DomRoot<GPURenderBundleEncoder<D>>: From<DomRoot<D::GPURenderBundleEncoder>>,
-{
+impl GPURenderBundleEncoder {
     fn new_inherited(
         render_bundle_encoder: RenderBundleEncoder,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         channel: WebGPU,
         label: USVString,
     ) -> Self {
@@ -66,14 +61,19 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         render_bundle_encoder: RenderBundleEncoder,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         channel: WebGPU,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPURenderBundleEncoder>: From<Box<GPURenderBundleEncoder>>,
+        DomRoot<GPURenderBundleEncoder>: From<DomRoot<D::GPURenderBundleEncoder>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderBundleEncoder::new_inherited(
                 render_bundle_encoder,
@@ -88,13 +88,13 @@ where
     }
 }
 
-impl<D: DomTypes> GPURenderBundleEncoder<D> {
+impl GPURenderBundleEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderbundleencoder>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: &GPURenderBundleEncoderDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPURenderBundleEncoder<D>>> {
+    ) -> Fallible<DomRoot<GPURenderBundleEncoder>> {
         let desc = RenderBundleEncoderDescriptor {
             label: (&descriptor.parent.parent).convert(),
             color_formats: Cow::Owned(
@@ -144,13 +144,13 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
     }
 }
 
-impl<D> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder<D>
+impl<D> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder
 where
     D: DomTypes,
-    D::GPUBuffer: AsRef<GPUBuffer<D>>,
-    D::GPURenderPipeline: AsRef<GPURenderPipeline<D>>,
-    D::GPUBindGroup: AsRef<GPUBindGroup<D>>,
-    D::GPURenderBundle: From<GPURenderBundle<D>>,
+    D::GPUBuffer: AsRef<GPUBuffer>,
+    D::GPURenderPipeline: AsRef<GPURenderPipeline>,
+    D::GPUBindGroup: AsRef<GPUBindGroup>,
+    D::GPURenderBundle: From<GPURenderBundle>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

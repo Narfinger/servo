@@ -30,9 +30,9 @@ use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
-use crate::DataBlock;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::{CanGc, JSContext};
+use crate::{DataBlock, PromiseStub};
 
 #[derive(JSTraceable, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
@@ -67,35 +67,30 @@ impl ActiveBufferMapping {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBuffer<D: DomTypes> {
+pub(crate) struct GPUBuffer {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,
     label: DomRefCell<USVString>,
     #[no_trace]
     buffer: WebGPUBuffer,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-size>
     size: GPUSize64,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-usage>
     usage: GPUFlagsConstant,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-pending_map-slot>
     #[conditional_malloc_size_of]
-    pending_map: DomRefCell<Option<Rc<D::Promise>>>,
+    pending_map: DomRefCell<Option<Rc<PromiseStub>>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-mapping-slot>
     mapping: DomRefCell<Option<ActiveBufferMapping>>,
 }
 
-impl<D: DomTypes> GPUBuffer<D>
-where
-    D: DomTypes,
-    Box<D::GPUBuffer>: From<Box<GPUBuffer<D>>>,
-    DomRoot<GPUBuffer<D>>: From<DomRoot<D::GPUBuffer>>,
-{
+impl GPUBuffer {
     fn new_inherited(
         channel: WebGPU,
         buffer: WebGPUBuffer,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         size: GPUSize64,
         usage: GPUFlagsConstant,
         mapping: Option<ActiveBufferMapping>,
@@ -115,17 +110,22 @@ where
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         buffer: WebGPUBuffer,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         size: GPUSize64,
         usage: GPUFlagsConstant,
         mapping: Option<ActiveBufferMapping>,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUBuffer>: From<Box<GPUBuffer>>,
+        DomRoot<GPUBuffer>: From<DomRoot<D::GPUBuffer>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUBuffer::new_inherited(
                 channel, buffer, device, size, usage, mapping, label,
@@ -137,17 +137,17 @@ where
     }
 }
 
-impl<D: DomTypes> GPUBuffer<D> {
+impl GPUBuffer {
     pub(crate) fn id(&self) -> WebGPUBuffer {
         self.buffer
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbuffer>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: &GPUBufferDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBuffer<D>>> {
+    ) -> Fallible<DomRoot<GPUBuffer>> {
         todo!()
         /*
         let desc = wgpu_types::BufferDescriptor {
@@ -193,13 +193,16 @@ impl<D: DomTypes> GPUBuffer<D> {
     }
 }
 
-impl<D: DomTypes> Drop for GPUBuffer<D> {
+/*
+ *
+impl Drop for GPUBuffer {
     fn drop(&mut self) {
         self.Destroy();
     }
 }
+ */
 
-impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
+impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
         /*
@@ -239,7 +242,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-destroy>
     fn Destroy(&self) {
         // Step 1
-        self.Unmap();
+        //self.Unmap();
         // Step 2
         if let Err(e) = self
             .channel
@@ -391,8 +394,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
     }
 }
 
-impl<D: DomTypes> GPUBuffer<D> {
-    fn map_failure(&self, p: &Rc<D::Promise>, can_gc: CanGc) {
+impl GPUBuffer {
+    fn map_failure<D: DomTypes>(&self, p: &Rc<D::Promise>, can_gc: CanGc) {
         /*
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
@@ -413,7 +416,7 @@ impl<D: DomTypes> GPUBuffer<D> {
          */
     }
 
-    fn map_success(&self, p: &Rc<D::Promise>, wgpu_mapping: Mapping, can_gc: CanGc) {
+    fn map_success<D: DomTypes>(&self, p: &Rc<D::Promise>, wgpu_mapping: Mapping, can_gc: CanGc) {
         /*
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {

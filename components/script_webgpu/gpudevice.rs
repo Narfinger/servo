@@ -41,7 +41,6 @@ use super::gpudevicelostinfo::GPUDeviceLostInfo;
 use super::gpuerror::AsWebGpu;
 use super::gpupipelineerror::GPUPipelineError;
 use super::gpusupportedlimits::GPUSupportedLimits;
-use crate::Convert;
 use crate::gpuadapter::GPUAdapter;
 use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgroup::GPUBindGroup;
@@ -58,6 +57,7 @@ use crate::gpushadermodule::GPUShaderModule;
 use crate::gpusupportedfeatures::GPUSupportedFeatures;
 use crate::gputexture::GPUTexture;
 use crate::script_runtime::CanGc;
+use crate::{Convert, PromiseStub};
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUDevice {
@@ -80,19 +80,19 @@ impl Drop for DroppableGPUDevice {
 }
 
 #[dom_struct]
-pub(crate) struct GPUDevice<D: DomTypes> {
+pub(crate) struct GPUDevice {
     //eventtarget: D::EventTarget,
-    adapter: Dom<GPUAdapter<D>>,
+    adapter: Dom<GPUAdapter>,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
-    features: Dom<GPUSupportedFeatures<D>>,
-    limits: Dom<GPUSupportedLimits<D>>,
-    adapter_info: Dom<GPUAdapterInfo<D>>,
+    features: Dom<GPUSupportedFeatures>,
+    limits: Dom<GPUSupportedLimits>,
+    adapter_info: Dom<GPUAdapterInfo>,
     label: DomRefCell<USVString>,
-    default_queue: Dom<GPUQueue<D>>,
+    default_queue: Dom<GPUQueue>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-lost>
     #[conditional_malloc_size_of]
-    lost_promise: DomRefCell<Rc<D::Promise>>,
+    lost_promise: DomRefCell<Rc<PromiseStub>>,
     valid: Cell<bool>,
     droppable: DroppableGPUDevice,
 }
@@ -111,24 +111,24 @@ impl PipelineLayout {
     }
 }
 
-impl<D: DomTypes> GPUDevice<D>
-where
-    D: DomTypes,
-    Box<D::GPUDevice>: From<Box<GPUDevice<D>>>,
-    DomRoot<GPUDevice<D>>: From<DomRoot<D::GPUDevice>>,
-{
+impl GPUDevice {
     #[allow(clippy::too_many_arguments)]
-    fn new_inherited(
+    fn new_inherited<D>(
         channel: WebGPU,
-        adapter: &GPUAdapter<D>,
-        features: &GPUSupportedFeatures<D>,
-        limits: &GPUSupportedLimits<D>,
-        adapter_info: &GPUAdapterInfo<D>,
+        adapter: &GPUAdapter,
+        features: &GPUSupportedFeatures,
+        limits: &GPUSupportedLimits,
+        adapter_info: &GPUAdapterInfo,
         device: WebGPUDevice,
-        queue: &GPUQueue<D>,
+        queue: &GPUQueue,
         label: String,
         lost_promise: Rc<D::Promise>,
-    ) -> Self {
+    ) -> Self
+    where
+        D: DomTypes,
+        Box<D::GPUDevice>: From<Box<GPUDevice>>,
+        DomRoot<GPUDevice>: From<DomRoot<D::GPUDevice>>,
+    {
         Self {
             //eventtarget: D::EventTarget::new_inherited(),
             adapter: Dom::from_ref(adapter),
@@ -138,17 +138,17 @@ where
             adapter_info: Dom::from_ref(adapter_info),
             label: DomRefCell::new(USVString::from(label)),
             default_queue: Dom::from_ref(queue),
-            lost_promise: DomRefCell::new(lost_promise),
+            lost_promise: DomRefCell::new(Rc::new(PromiseStub::default())),
             valid: Cell::new(true),
             droppable: DroppableGPUDevice { channel, device },
         }
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
-        adapter: &GPUAdapter<D>,
+        adapter: &GPUAdapter,
         extensions: HandleObject,
         features: wgpu_types::Features,
         limits: wgpu_types::Limits,
@@ -156,7 +156,12 @@ where
         queue: WebGPUQueue,
         label: String,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUDevice>: From<Box<GPUDevice>>,
+        DomRoot<GPUDevice>: From<DomRoot<D::GPUDevice>>,
+    {
         todo!()
         /*
         let queue = GPUQueue::new(global, channel.clone(), queue, can_gc);
@@ -187,7 +192,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUDevice<D> {
+impl GPUDevice {
     pub(crate) fn id(&self) -> WebGPUDevice {
         self.droppable.device
     }
@@ -267,7 +272,7 @@ impl<D: DomTypes> GPUDevice<D> {
         //self.lost_promise.borrow().is_fulfilled()
     }
 
-    pub(crate) fn get_pipeline_layout_data(
+    pub(crate) fn get_pipeline_layout_data<D: DomTypes>(
         &self,
         layout: &GPUPipelineLayoutOrGPUAutoLayoutMode<D>,
     ) -> PipelineLayout {
@@ -281,7 +286,7 @@ impl<D: DomTypes> GPUDevice<D> {
          */
     }
 
-    pub(crate) fn parse_render_pipeline<'a>(
+    pub(crate) fn parse_render_pipeline<'a, D: DomTypes>(
         &self,
         descriptor: &GPURenderPipelineDescriptor<D>,
     ) -> Fallible<RenderPipelineDescriptor<'a>> {
@@ -418,14 +423,14 @@ impl<D: DomTypes> GPUDevice<D> {
     }
 }
 
-impl<D> GPUDeviceMethods<D> for GPUDevice<D>
+impl<D> GPUDeviceMethods<D> for GPUDevice
 where
     D: DomTypes,
-    D::GPUSupportedFeatures: From<GPUSupportedFeatures<D>>,
-    D::GPUSupportedLimits: From<GPUSupportedLimits<D>>,
-    D::GPUAdapterInfo: From<GPUAdapter<D>>,
-    D::GPUBuffer: From<GPUBuffer<D>>,
-    DomRoot<D::GPUBuffer>: From<DomRoot<GPUBuffer<D>>>,
+    D::GPUSupportedFeatures: From<GPUSupportedFeatures>,
+    D::GPUSupportedLimits: From<GPUSupportedLimits>,
+    D::GPUAdapterInfo: From<GPUAdapter>,
+    D::GPUBuffer: From<GPUBuffer>,
+    DomRoot<D::GPUBuffer>: From<DomRoot<GPUBuffer>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-features>
     fn Features(&self) -> DomRoot<D::GPUSupportedFeatures> {
@@ -460,12 +465,14 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-lost>
     fn Lost(&self) -> Rc<D::Promise> {
-        self.lost_promise.borrow().clone()
+        todo!()
+        //self.lost_promise.borrow().clone()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbuffer>
     fn CreateBuffer(&self, descriptor: &GPUBufferDescriptor) -> Fallible<DomRoot<D::GPUBuffer>> {
-        GPUBuffer::create(self, descriptor.into(), CanGc::deprecated_note()).map(|r| r.into())
+        todo!()
+        //GPUBuffer::create(self, descriptor.into(), CanGc::deprecated_note()).map(|r| r.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>

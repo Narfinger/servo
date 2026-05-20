@@ -23,21 +23,13 @@ use crate::script_runtime::CanGc;
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct]
-pub(crate) struct GPUPipelineError<D: DomTypes> {
+pub(crate) struct GPUPipelineError {
     reflector: Reflector,
     //exception: D::DOMException,
     reason: GPUPipelineErrorReason,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUPipelineError<D>
-where
-    D: DomTypes,
-    Box<D::GPUPipelineError>: From<Box<GPUPipelineError<D>>>,
-    DomRoot<GPUPipelineError<D>>: From<DomRoot<D::GPUPipelineError>>,
-    D::GPUPipelineError: From<GPUPipelineError<D>>,
-    DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError<D>>>,
-{
+impl GPUPipelineError {
     fn new_inherited(message: DOMString, reason: GPUPipelineErrorReason) -> Self {
         todo!()
         /*
@@ -49,13 +41,20 @@ where
          */
     }
 
-    pub(crate) fn new_with_proto(
+    pub(crate) fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUPipelineError>: From<Box<GPUPipelineError>>,
+        DomRoot<GPUPipelineError>: From<DomRoot<D::GPUPipelineError>>,
+        D::GPUPipelineError: From<GPUPipelineError>,
+        DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError>>,
+    {
         reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message, reason)),
             global,
@@ -65,23 +64,30 @@ where
         )
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         message: DOMString,
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        Self::new_with_proto(global, None, message, reason, can_gc)
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUPipelineError>: From<Box<GPUPipelineError>>,
+        DomRoot<GPUPipelineError>: From<DomRoot<D::GPUPipelineError>>,
+        D::GPUPipelineError: From<GPUPipelineError>,
+        DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError>>,
+    {
+        Self::new_with_proto::<D>(global, None, message, reason, can_gc)
     }
 }
 
-impl<D> GPUPipelineErrorMethods<D> for GPUPipelineError<D>
+impl<D> GPUPipelineErrorMethods<D> for GPUPipelineError
 where
     D: DomTypes,
-    Box<D::GPUPipelineError>: From<Box<GPUPipelineError<D>>>,
-    DomRoot<GPUPipelineError<D>>: From<DomRoot<D::GPUPipelineError>>,
-    D::GPUPipelineError: From<GPUPipelineError<D>>,
-    DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError<D>>>,
+    Box<D::GPUPipelineError>: From<Box<GPUPipelineError>>,
+    DomRoot<GPUPipelineError>: From<DomRoot<D::GPUPipelineError>>,
+    D::GPUPipelineError: From<GPUPipelineError>,
+    DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-constructor>
     fn Constructor(
@@ -91,7 +97,7 @@ where
         message: DOMString,
         options: &GPUPipelineErrorInit,
     ) -> DomRoot<D::GPUPipelineError> {
-        Self::new_with_proto(global, proto, message, options.reason, can_gc).into()
+        Self::new_with_proto::<D>(global, proto, message, options.reason, can_gc).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-reason>

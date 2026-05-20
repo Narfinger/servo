@@ -32,10 +32,10 @@ use crate::script_runtime::CanGc;
 
 #[dom_struct]
 #[expect(clippy::upper_case_acronyms)]
-pub(crate) struct GPU<D: DomTypes> {
+pub(crate) struct GPU {
     reflector_: Reflector,
     /// Same object for <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    wgsl_language_features: MutNullableDom<WGSLLanguageFeatures<D>>,
+    wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
 }
 
 pub trait Equivalence<D, T>
@@ -48,20 +48,20 @@ where
 {
 }
 
-impl<D> GPU<D>
-where
-    D: DomTypes,
-    Box<D::GPU>: From<Box<GPU<D>>>,
-    DomRoot<GPU<D>>: From<DomRoot<D::GPU>>,
-{
-    pub(crate) fn new_inherited() -> GPU<D> {
+impl GPU {
+    pub(crate) fn new_inherited() -> GPU {
         GPU {
             reflector_: Reflector::new(),
             wgsl_language_features: MutNullableDom::default(),
         }
     }
 
-    pub(crate) fn new(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU<D>> {
+    pub(crate) fn new<D>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU>
+    where
+        D: DomTypes,
+        Box<D::GPU>: From<Box<GPU>>,
+        DomRoot<GPU>: From<DomRoot<D::GPU>>,
+    {
         reflect_dom_object_test_with_wrap::<D, _, _>(
             Box::new(GPU::new_inherited()),
             global,
@@ -85,11 +85,11 @@ trait GlobalScopeTrait {
     fn task_manager() -> ();
 }
 
-impl<D: DomTypes> GPUMethods<D> for GPU<D>
+impl<D: DomTypes> GPUMethods<D> for GPU
 where
-    GPU<D>: DomGlobalGeneric<D>,
+    GPU: DomGlobalGeneric<D>,
     D: DomTypes,
-    D::WGSLLanguageFeatures: From<WGSLLanguageFeatures<D>>,
+    D::WGSLLanguageFeatures: From<WGSLLanguageFeatures>,
     D::GlobalScope: GlobalScopeTrait,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>

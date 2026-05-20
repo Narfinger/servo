@@ -52,19 +52,13 @@ impl Drop for DroppableGPUBindGroupLayout {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBindGroupLayout<D: DomTypes> {
+pub(crate) struct GPUBindGroupLayout {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUBindGroupLayout,
-    phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUBindGroupLayout<D>
-where
-    D: DomTypes,
-    Box<D::GPUBindGroupLayout>: From<Box<GPUBindGroupLayout<D>>>,
-    DomRoot<GPUBindGroupLayout<D>>: From<DomRoot<D::GPUBindGroupLayout>>,
-{
+impl GPUBindGroupLayout {
     fn new_inherited(
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
@@ -77,17 +71,21 @@ where
                 channel,
                 bind_group_layout,
             },
-            phantom: PhantomData,
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUBindGroupLayout>: From<Box<GPUBindGroupLayout>>,
+        DomRoot<GPUBindGroupLayout>: From<DomRoot<D::GPUBindGroupLayout>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUBindGroupLayout::new_inherited(
                 channel,
@@ -101,21 +99,21 @@ where
     }
 }
 
-impl<D: DomTypes> GPUBindGroupLayout<D> {
+impl GPUBindGroupLayout {
     pub(crate) fn id(&self) -> WebGPUBindGroupLayout {
         self.droppable.bind_group_layout
     }
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
-    pub(crate) fn create(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice,
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBindGroupLayout<D>>> {
+    ) -> Fallible<DomRoot<GPUBindGroupLayout>> {
         let entries = descriptor
             .entries
             .iter()
-            .map(|bgle| convert_bind_group_layout_entry(bgle, device))
+            .map(|bgle| convert_bind_group_layout_entry::<D>(bgle, device))
             .collect::<Fallible<Result<Vec<_>, _>>>()?;
 
         let desc = match entries {
@@ -155,7 +153,7 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
     }
 }
 
-impl<D: DomTypes> GPUBindGroupLayoutMethods<D> for GPUBindGroupLayout<D> {
+impl<D: DomTypes> GPUBindGroupLayoutMethods<D> for GPUBindGroupLayout {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

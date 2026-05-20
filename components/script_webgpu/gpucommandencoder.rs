@@ -44,11 +44,11 @@ struct DroppableGPUCommandEncoder {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandEncoder<D: DomTypes> {
+pub(crate) struct GPUCommandEncoder {
     reflector_: Reflector,
     droppable: DroppableGPUCommandEncoder,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
 }
 
 impl Drop for DroppableGPUCommandEncoder {
@@ -63,15 +63,10 @@ impl Drop for DroppableGPUCommandEncoder {
     }
 }
 
-impl<D: DomTypes> GPUCommandEncoder<D>
-where
-    D: DomTypes,
-    Box<D::GPUCommandEncoder>: From<Box<GPUCommandEncoder<D>>>,
-    DomRoot<GPUCommandEncoder<D>>: From<DomRoot<D::GPUCommandEncoder>>,
-{
+impl GPUCommandEncoder {
     pub(crate) fn new_inherited(
         channel: WebGPU,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         encoder: WebGPUCommandEncoder,
         label: USVString,
     ) -> Self {
@@ -83,14 +78,19 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         encoder: WebGPUCommandEncoder,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUCommandEncoder>: From<Box<GPUCommandEncoder>>,
+        DomRoot<GPUCommandEncoder>: From<DomRoot<D::GPUCommandEncoder>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUCommandEncoder::new_inherited(
                 channel, device, encoder, label,
@@ -102,7 +102,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUCommandEncoder<D> {
+impl GPUCommandEncoder {
     pub(crate) fn id(&self) -> WebGPUCommandEncoder {
         self.droppable.encoder
     }
@@ -113,10 +113,10 @@ impl<D: DomTypes> GPUCommandEncoder<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcommandencoder>
     pub(crate) fn create(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: &GPUCommandEncoderDescriptor,
         can_gc: CanGc,
-    ) -> DomRoot<GPUCommandEncoder<D>> {
+    ) -> DomRoot<GPUCommandEncoder> {
         todo!()
         /*
         let command_encoder_id = device.global().wgpu_id_hub().create_command_encoder_id();
@@ -146,11 +146,11 @@ impl<D: DomTypes> GPUCommandEncoder<D> {
     }
 }
 
-impl<D> GPUCommandEncoderMethods<D> for GPUCommandEncoder<D>
+impl<D> GPUCommandEncoderMethods<D> for GPUCommandEncoder
 where
     D: DomTypes,
-    D::GPUComputePassEncoder: From<GPUComputePassEncoder<D>>,
-    D::GPUCommandBuffer: From<GPUCommandBuffer<D>>,
+    D::GPUComputePassEncoder: From<GPUComputePassEncoder>,
+    D::GPUCommandBuffer: From<GPUCommandBuffer>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

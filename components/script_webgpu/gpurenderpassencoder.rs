@@ -49,23 +49,18 @@ impl Drop for DroppableGPURenderPassEncoder {
     }
 }
 #[dom_struct]
-pub(crate) struct GPURenderPassEncoder<D: DomTypes> {
+pub(crate) struct GPURenderPassEncoder {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    command_encoder: Dom<GPUCommandEncoder<D>>,
+    command_encoder: Dom<GPUCommandEncoder>,
     droppable: DroppableGPURenderPassEncoder,
 }
 
-impl<D: DomTypes> GPURenderPassEncoder<D>
-where
-    D: DomTypes,
-    Box<D::GPURenderPassEncoder>: From<Box<GPURenderPassEncoder<D>>>,
-    DomRoot<GPURenderPassEncoder<D>>: From<DomRoot<D::GPURenderPassEncoder>>,
-{
+impl GPURenderPassEncoder {
     fn new_inherited(
         channel: WebGPU,
         render_pass: WebGPURenderPass,
-        parent: &GPUCommandEncoder<D>,
+        parent: &GPUCommandEncoder,
         label: USVString,
     ) -> Self {
         Self {
@@ -79,14 +74,19 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         render_pass: WebGPURenderPass,
-        parent: &GPUCommandEncoder<D>,
+        parent: &GPUCommandEncoder,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPURenderPassEncoder>: From<Box<GPURenderPassEncoder>>,
+        DomRoot<GPURenderPassEncoder>: From<DomRoot<D::GPURenderPassEncoder>>,
+    {
         reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderPassEncoder::new_inherited(
                 channel,
@@ -116,19 +116,19 @@ where
     }
 }
 
-impl<D: DomTypes> GPURenderPassEncoder<D> {
+impl GPURenderPassEncoder {
     pub(crate) fn id(&self) -> WebGPURenderPass {
         self.droppable.render_pass
     }
 }
 
-impl<D> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder<D>
+impl<D> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder
 where
     D: DomTypes,
-    D::GPUBindGroup: AsRef<GPUBindGroup<D>>,
-    D::GPURenderBundle: AsRef<GPURenderBundle<D>>,
-    D::GPURenderPipeline: AsRef<GPURenderPipeline<D>>,
-    D::GPUBuffer: AsRef<GPUBuffer<D>>,
+    D::GPUBindGroup: AsRef<GPUBindGroup>,
+    D::GPURenderBundle: AsRef<GPURenderBundle>,
+    D::GPURenderPipeline: AsRef<GPURenderPipeline>,
+    D::GPUBuffer: AsRef<GPUBuffer>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

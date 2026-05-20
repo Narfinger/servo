@@ -19,30 +19,30 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUInternalError<D: DomTypes> {
-    gpu_error: GPUError<D>,
+pub(crate) struct GPUInternalError {
+    gpu_error: GPUError,
 }
 
-impl<D: DomTypes> GPUInternalError<D>
-where
-    D: DomTypes,
-    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
-    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
-    Box<D::GPUError>: From<Box<GPUError<D>>>,
-    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
-{
+impl GPUInternalError {
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
         }
     }
 
-    pub(crate) fn new_with_proto(
+    pub(crate) fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes,
+        Box<D::GPUInternalError>: From<Box<GPUInternalError>>,
+        DomRoot<GPUInternalError>: From<DomRoot<D::GPUInternalError>>,
+        Box<D::GPUError>: From<Box<GPUError>>,
+        DomRoot<GPUError>: From<DomRoot<D::GPUError>>,
+    {
         reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message)),
             global,
@@ -53,14 +53,14 @@ where
     }
 }
 
-impl<D> GPUInternalErrorMethods<D> for GPUInternalError<D>
+impl<D> GPUInternalErrorMethods<D> for GPUInternalError
 where
     D: DomTypes,
-    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
-    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
-    Box<D::GPUError>: From<Box<GPUError<D>>>,
-    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
-    DomRoot<D::GPUInternalError>: From<DomRoot<GPUInternalError<D>>>,
+    Box<D::GPUInternalError>: From<Box<GPUInternalError>>,
+    DomRoot<GPUInternalError>: From<DomRoot<D::GPUInternalError>>,
+    Box<D::GPUError>: From<Box<GPUError>>,
+    DomRoot<GPUError>: From<DomRoot<D::GPUError>>,
+    DomRoot<D::GPUInternalError>: From<DomRoot<GPUInternalError>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUInternalError-GPUInternalError>
     fn Constructor(
@@ -69,6 +69,6 @@ where
         can_gc: CanGc,
         message: DOMString,
     ) -> DomRoot<D::GPUInternalError> {
-        Self::new_with_proto(global, proto, message, can_gc).into()
+        Self::new_with_proto::<D>(global, proto, message, can_gc).into()
     }
 }
