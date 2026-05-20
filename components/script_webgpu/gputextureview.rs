@@ -11,7 +11,9 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureViewMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
@@ -52,7 +54,12 @@ pub(crate) struct GPUTextureView<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUTextureView<D> {
+impl<D: DomTypes> GPUTextureView<D>
+where
+    D: DomTypes,
+    Box<D::GPUTextureView>: From<Box<GPUTextureView<D>>>,
+    DomRoot<GPUTextureView<D>>: From<DomRoot<D::GPUTextureView>>,
+{
     fn new_inherited(
         channel: WebGPU,
         texture_view: WebGPUTextureView,
@@ -79,7 +86,7 @@ impl<D: DomTypes> GPUTextureView<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<GPUTextureView<D>> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUTextureView::new_inherited(
                 channel,
                 texture_view,
@@ -88,6 +95,7 @@ impl<D: DomTypes> GPUTextureView<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureViewWrap::<D>,
         )
     }
 }

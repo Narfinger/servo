@@ -11,7 +11,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationErrorMethods;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::reflector::{
+    reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::{Dom, DomRoot, Root};
 use script_bindings::str::DOMString;
 
@@ -24,12 +26,20 @@ pub(crate) struct GPUValidationError<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUValidationError<D> {
+impl<D: DomTypes> GPUValidationError<D>
+where
+    D: DomTypes,
+    Box<D::GPUValidationError>: From<Box<GPUValidationError<D>>>,
+    DomRoot<GPUValidationError<D>>: From<DomRoot<D::GPUValidationError>>,
+{
     fn new_inherited(message: DOMString) -> Self {
+        todo!()
+        /*
         Self {
             gpu_error: GPUError::new_inherited(message),
             phantom: PhantomData,
         }
+         */
     }
 
     pub(crate) fn new_with_proto(
@@ -38,11 +48,12 @@ impl<D: DomTypes> GPUValidationError<D> {
         message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message)),
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationErrorWrap::<D>,
         )
     }
 }
@@ -52,6 +63,9 @@ where
     D: DomTypes,
     D::GPUValidationError: From<GPUValidationError<D>>,
     Root<Dom<<D as DomTypes>::GPUValidationError>>: From<Root<Dom<GPUValidationError<D>>>>,
+    D: DomTypes,
+    Box<D::GPUValidationError>: From<Box<GPUValidationError<D>>>,
+    DomRoot<GPUValidationError<D>>: From<DomRoot<D::GPUValidationError>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuvalidationerror-gpuvalidationerror>
     fn Constructor(

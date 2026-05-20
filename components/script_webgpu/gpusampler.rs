@@ -13,7 +13,9 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUSamplerDescriptor, GPUSamplerMethods,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURequest, WebGPUSampler};
@@ -53,7 +55,12 @@ pub(crate) struct GPUSampler<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSampler<D> {
+impl<D: DomTypes> GPUSampler<D>
+where
+    D: DomTypes,
+    Box<D::GPUSampler>: From<Box<GPUSampler<D>>>,
+    DomRoot<GPUSampler<D>>: From<DomRoot<D::GPUSampler>>,
+{
     fn new_inherited(
         channel: WebGPU,
         device: WebGPUDevice,
@@ -80,7 +87,7 @@ impl<D: DomTypes> GPUSampler<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUSampler::new_inherited(
                 channel,
                 device,
@@ -90,6 +97,7 @@ impl<D: DomTypes> GPUSampler<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSamplerWrap::<D>,
         )
     }
 }
@@ -105,10 +113,10 @@ impl<D: DomTypes> GPUSampler<D> {
         descriptor: &GPUSamplerDescriptor,
         can_gc: CanGc,
     ) -> DomRoot<GPUSampler<D>> {
-        let sampler_id = device.global().wgpu_id_hub().create_sampler_id();
-        let compare_enable = descriptor.compare.is_some();
         todo!();
         /*
+        let sampler_id = device.global().wgpu_id_hub().create_sampler_id();
+        let compare_enable = descriptor.compare.is_some();
          *
         let desc = SamplerDescriptor {
             label: (&descriptor.parent).convert(),

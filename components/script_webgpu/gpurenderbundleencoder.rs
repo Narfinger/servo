@@ -15,7 +15,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPURenderBundleEncoderMethods,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURenderBundle, WebGPURequest};
@@ -43,7 +45,12 @@ pub(crate) struct GPURenderBundleEncoder<D: DomTypes> {
     label: DomRefCell<USVString>,
 }
 
-impl<D: DomTypes> GPURenderBundleEncoder<D> {
+impl<D: DomTypes> GPURenderBundleEncoder<D>
+where
+    D: DomTypes,
+    Box<D::GPURenderBundleEncoder>: From<Box<GPURenderBundleEncoder<D>>>,
+    DomRoot<GPURenderBundleEncoder<D>>: From<DomRoot<D::GPURenderBundleEncoder>>,
+{
     fn new_inherited(
         render_bundle_encoder: RenderBundleEncoder,
         device: &GPUDevice<D>,
@@ -67,7 +74,7 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderBundleEncoder::new_inherited(
                 render_bundle_encoder,
                 device,
@@ -76,6 +83,7 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundleEncoderWrap::<D>,
         )
     }
 }
@@ -121,6 +129,8 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
         // Handle error gracefully
         let render_bundle_encoder = RenderBundleEncoder::new(&desc, device.id().0).unwrap();
 
+        todo!()
+        /*
         Ok(GPURenderBundleEncoder::new(
             &device.global(),
             render_bundle_encoder,
@@ -128,7 +138,9 @@ impl<D: DomTypes> GPURenderBundleEncoder<D> {
             device.channel(),
             descriptor.parent.parent.label.clone(),
             can_gc,
-        ))
+        )
+        .into())
+         */
     }
 }
 
@@ -153,6 +165,8 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
     #[expect(unsafe_code)]
     fn SetBindGroup(&self, index: u32, bind_group: &D::GPUBindGroup, dynamic_offsets: Vec<u32>) {
+        /*
+         *
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             unsafe {
                 wgpu_bundle::wgpu_render_bundle_set_bind_group(
@@ -164,12 +178,13 @@ where
                 )
             };
         }
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setpipeline>
     fn SetPipeline(&self, pipeline: &D::GPURenderPipeline) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
-            wgpu_bundle::wgpu_render_bundle_set_pipeline(encoder, pipeline.id().0);
+            //wgpu_bundle::wgpu_render_bundle_set_pipeline(encoder, pipeline.id().0);
         }
     }
 
@@ -182,6 +197,7 @@ where
         size: u64,
     ) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
+            /*
             wgpu_bundle::wgpu_render_bundle_set_index_buffer(
                 encoder,
                 buffer.id().0,
@@ -192,12 +208,14 @@ where
                 offset,
                 wgpu_types::BufferSize::new(size),
             );
+             */
         }
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
     fn SetVertexBuffer(&self, slot: u32, buffer: &D::GPUBuffer, offset: u64, size: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
+            /*
             wgpu_bundle::wgpu_render_bundle_set_vertex_buffer(
                 encoder,
                 slot,
@@ -205,6 +223,7 @@ where
                 offset,
                 wgpu_types::BufferSize::new(size),
             );
+             */
         }
     }
 
@@ -245,22 +264,26 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
     fn DrawIndirect(&self, indirect_buffer: &D::GPUBuffer, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
+            /*
             wgpu_bundle::wgpu_render_bundle_draw_indirect(
                 encoder,
                 indirect_buffer.into().id().0,
                 indirect_offset,
             );
+             */
         }
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
     fn DrawIndexedIndirect(&self, indirect_buffer: &D::GPUBuffer, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
+            /*
             wgpu_bundle::wgpu_render_bundle_draw_indexed_indirect(
                 encoder,
                 indirect_buffer.into().id().0,
                 indirect_offset,
             );
+             */
         }
     }
 
@@ -270,6 +293,8 @@ where
             label: (&descriptor.parent).convert(),
         };
         let encoder = self.render_bundle_encoder.borrow_mut().take().unwrap();
+        todo!()
+        /*
         let render_bundle_id = self.global().wgpu_id_hub().create_render_bundle_id();
 
         self.channel
@@ -292,5 +317,6 @@ where
             CanGc::deprecated_note(),
         )
         .into()
+         */
     }
 }

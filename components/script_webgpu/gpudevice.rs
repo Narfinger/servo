@@ -81,7 +81,7 @@ impl Drop for DroppableGPUDevice {
 
 #[dom_struct]
 pub(crate) struct GPUDevice<D: DomTypes> {
-    eventtarget: D::EventTarget,
+    //eventtarget: D::EventTarget,
     adapter: Dom<GPUAdapter<D>>,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
@@ -89,7 +89,7 @@ pub(crate) struct GPUDevice<D: DomTypes> {
     limits: Dom<GPUSupportedLimits<D>>,
     adapter_info: Dom<GPUAdapterInfo<D>>,
     label: DomRefCell<USVString>,
-    default_queue: Dom<GPUQueue>,
+    default_queue: Dom<GPUQueue<D>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-lost>
     #[conditional_malloc_size_of]
     lost_promise: DomRefCell<Rc<D::Promise>>,
@@ -130,7 +130,7 @@ where
         lost_promise: Rc<D::Promise>,
     ) -> Self {
         Self {
-            eventtarget: D::EventTarget::new_inherited(),
+            //eventtarget: D::EventTarget::new_inherited(),
             adapter: Dom::from_ref(adapter),
             extensions: Heap::default(),
             features: Dom::from_ref(features),
@@ -193,7 +193,7 @@ impl<D: DomTypes> GPUDevice<D> {
     }
 
     pub(crate) fn queue_id(&self) -> WebGPUQueue {
-        self.default_queue.id()
+        todo!() //self.default_queue.id()
     }
 
     pub(crate) fn channel(&self) -> WebGPU {
@@ -399,11 +399,11 @@ impl<D: DomTypes> GPUDevice<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#lose-the-device>
     pub(crate) fn lose(&self, reason: GPUDeviceLostReason, msg: String) {
+        /*
         let this = Trusted::new(self);
 
         // Queue a global task, using the webgpu task source, to resolve device.lost
         // promise with a new GPUDeviceLostInfo with reason and message.
-        /*
         self.global().task_manager().webgpu_task_source().queue(
              *
             task!(resolve_device_lost: move || {
@@ -424,25 +424,28 @@ where
     D::GPUSupportedFeatures: From<GPUSupportedFeatures<D>>,
     D::GPUSupportedLimits: From<GPUSupportedLimits<D>>,
     D::GPUAdapterInfo: From<GPUAdapter<D>>,
+    D::GPUBuffer: From<GPUBuffer<D>>,
+    DomRoot<D::GPUBuffer>: From<DomRoot<GPUBuffer<D>>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-features>
     fn Features(&self) -> DomRoot<D::GPUSupportedFeatures> {
-        DomRoot::from_ref(&self.features.into())
+        todo!() //DomRoot::from_ref(&self.features).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-limits>
     fn Limits(&self) -> DomRoot<D::GPUSupportedLimits> {
-        DomRoot::from_ref(&self.limits.into())
+        todo!() //DomRoot::from_ref(&self.limits).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-adapterinfo>
     fn AdapterInfo(&self) -> DomRoot<D::GPUAdapterInfo> {
-        DomRoot::from_ref(&self.adapter_info.into())
+        todo!() //DomRoot::from_ref(&self.adapter_info).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-queue>
     fn GetQueue(&self) -> DomRoot<D::GPUQueue> {
-        DomRoot::from_ref(&self.default_queue.into())
+        todo!()
+        //DomRoot::from_ref(&self.default_queue.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
@@ -462,7 +465,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbuffer>
     fn CreateBuffer(&self, descriptor: &GPUBufferDescriptor) -> Fallible<DomRoot<D::GPUBuffer>> {
-        GPUBuffer::create(self, descriptor.into(), CanGc::deprecated_note()).into()
+        GPUBuffer::create(self, descriptor.into(), CanGc::deprecated_note()).map(|r| r.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
@@ -470,7 +473,8 @@ where
         &self,
         descriptor: &GPUBindGroupLayoutDescriptor,
     ) -> Fallible<DomRoot<D::GPUBindGroupLayout>> {
-        GPUBindGroupLayout::create(self, descriptor.into(), CanGc::deprecated_note()).into()
+        todo!()
+        //GPUBindGroupLayout::create(self, descriptor.into(), CanGc::deprecated_note()).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createpipelinelayout>
@@ -478,12 +482,14 @@ where
         &self,
         descriptor: &GPUPipelineLayoutDescriptor<D>,
     ) -> DomRoot<D::GPUPipelineLayout> {
-        GPUPipelineLayout::create(self, descriptor.into(), CanGc::deprecated_note()).into()
+        todo!()
+        //GPUPipelineLayout::create(self, descriptor.into(), CanGc::deprecated_note()).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbindgroup>
     fn CreateBindGroup(&self, descriptor: &GPUBindGroupDescriptor<D>) -> DomRoot<D::GPUBindGroup> {
-        GPUBindGroup::create(self, descriptor.into(), CanGc::deprecated_note()).into()
+        todo!()
+        //GPUBindGroup::create(self, descriptor.into(), CanGc::deprecated_note()).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createshadermodule>
@@ -493,7 +499,7 @@ where
         comp: InRealm,
         can_gc: CanGc,
     ) -> DomRoot<D::GPUShaderModule> {
-        GPUShaderModule::create(self, descriptor.into(), comp, can_gc).into()
+        todo!() //GPUShaderModule::create(self, descriptor.into(), comp, can_gc).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcomputepipeline>
@@ -501,6 +507,8 @@ where
         &self,
         descriptor: &GPUComputePipelineDescriptor<D>,
     ) -> DomRoot<D::GPUComputePipeline> {
+        todo!()
+        /*
         let compute_pipeline = GPUComputePipeline::create(self, descriptor, None);
         GPUComputePipeline::new(
             &self.global(),
@@ -510,6 +518,7 @@ where
             CanGc::deprecated_note(),
         )
         .into()
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcomputepipelineasync>
@@ -519,8 +528,9 @@ where
         comp: InRealm,
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
-        let promise = D::Promise::new_in_current_realm(comp, can_gc);
+        todo!()
         /*
+        let promise = D::Promise::new_in_current_realm(comp, can_gc);
          *
         let callback = callback_promise(
             &promise,
@@ -528,8 +538,8 @@ where
             self.global().task_manager().dom_manipulation_task_source(),
         );
         GPUComputePipeline::create(self, descriptor, Some(callback));
-         */
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcommandencoder>
@@ -537,17 +547,17 @@ where
         &self,
         descriptor: &GPUCommandEncoderDescriptor,
     ) -> DomRoot<D::GPUCommandEncoder> {
-        GPUCommandEncoder::create(self, descriptor, CanGc::deprecated_note()).into()
+        todo!() //GPUCommandEncoder::create(self, descriptor, CanGc::deprecated_note()).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createtexture>
     fn CreateTexture(&self, descriptor: &GPUTextureDescriptor) -> Fallible<DomRoot<D::GPUTexture>> {
-        GPUTexture::create(self, descriptor, CanGc::deprecated_note()).into()
+        todo!() //GPUTexture::create(self, descriptor, CanGc::deprecated_note()).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createsampler>
     fn CreateSampler(&self, descriptor: &GPUSamplerDescriptor) -> DomRoot<D::GPUSampler> {
-        GPUSampler::create(self, descriptor, CanGc::deprecated_note()).into()
+        todo!() //GPUSampler::create(self, descriptor, CanGc::deprecated_note()).into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
@@ -557,6 +567,8 @@ where
     ) -> Fallible<DomRoot<D::GPURenderPipeline>> {
         let desc = self.parse_render_pipeline(descriptor)?;
         let render_pipeline = GPURenderPipeline::create(self, desc, None)?;
+        /*
+         *
         Ok(GPURenderPipeline::new(
             &self.global(),
             render_pipeline,
@@ -565,6 +577,8 @@ where
             CanGc::deprecated_note(),
         ))
         .into()
+         */
+        todo!()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipelineasync>
@@ -574,17 +588,18 @@ where
         comp: InRealm,
         can_gc: CanGc,
     ) -> Fallible<Rc<D::Promise>> {
+        todo!()
+        /*
         let desc = self.parse_render_pipeline(descriptor)?;
         let promise = D::Promise::new_in_current_realm(comp, can_gc);
-        /*
         let callback = callback_promise(
             &promise,
             self,
             self.global().task_manager().dom_manipulation_task_source(),
         );
         GPURenderPipeline::create(self, desc, Some(callback))?;
-         */
         Ok(promise)
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderbundleencoder>
@@ -592,7 +607,7 @@ where
         &self,
         descriptor: &GPURenderBundleEncoderDescriptor,
     ) -> Fallible<DomRoot<D::GPURenderBundleEncoder>> {
-        GPURenderBundleEncoder::create(self, descriptor, CanGc::deprecated_note()).into()
+        todo!() //GPURenderBundleEncoder::create(self, descriptor, CanGc::deprecated_note())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-pusherrorscope>
@@ -613,8 +628,9 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-poperrorscope>
     fn PopErrorScope(&self, comp: InRealm, can_gc: CanGc) -> Rc<D::Promise> {
-        let promise = D::Promise::new_in_current_realm(comp, can_gc);
+        todo!()
         /*
+        let promise = D::Promise::new_in_current_realm(comp, can_gc);
         let callback = callback_promise(
             &promise,
             self,
@@ -632,12 +648,12 @@ where
         {
             warn!("Error when sending WebGPURequest::PopErrorScope");
         }
-         */
         promise
+         */
     }
 
     // https://gpuweb.github.io/gpuweb/#dom-gpudevice-onuncapturederror
-    event_handler!(uncapturederror, GetOnuncapturederror, SetOnuncapturederror);
+    //event_handler!(uncapturederror, GetOnuncapturederror, SetOnuncapturederror);
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy>
     fn Destroy(&self) {
@@ -653,6 +669,29 @@ where
                 warn!("Failed to send DestroyDevice ({:?}) ({})", self.id().0, e);
             }
         }
+    }
+
+    fn GetOnuncapturederror(
+        &self,
+        r#cx: &mut js::context::JSContext,
+    ) -> Option<
+        Rc<script_bindings::codegen::GenericBindings::EventHandlerBinding::EventHandlerNonNull<D>>,
+    > {
+        todo!()
+    }
+
+    fn SetOnuncapturederror(
+        &self,
+        r#cx: &mut js::context::JSContext,
+        r#value: Option<
+            Rc<
+                script_bindings::codegen::GenericBindings::EventHandlerBinding::EventHandlerNonNull<
+                    D,
+                >,
+            >,
+        >,
+    ) {
+        todo!()
     }
 }
 

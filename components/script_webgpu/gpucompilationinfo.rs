@@ -57,15 +57,17 @@ where
         error: Option<ShaderCompilationInfo>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
+        todo!() /*
         Self::new(
-            global,
-            if let Some(error) = error {
-                vec![GPUCompilationMessage::from(global, error, can_gc)]
-            } else {
-                Vec::new()
-            },
-            can_gc,
+        global,
+        if let Some(error) = error {
+        vec![GPUCompilationMessage::from(global, error, can_gc)]
+        } else {
+        Vec::new()
+        },
+        can_gc,
         )
+         */
     }
 }
 

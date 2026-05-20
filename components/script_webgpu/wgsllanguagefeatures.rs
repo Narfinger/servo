@@ -16,7 +16,9 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeaturesMethods;
 use script_bindings::like::Setlike;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 use wgpu_core::naga::front::wgsl::ImplementedLanguageExtension;
@@ -32,7 +34,12 @@ pub struct WGSLLanguageFeatures<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> WGSLLanguageFeatures<D> {
+impl<D: DomTypes> WGSLLanguageFeatures<D>
+where
+    D: DomTypes,
+    Box<D::WGSLLanguageFeatures>: From<Box<WGSLLanguageFeatures<D>>>,
+    DomRoot<WGSLLanguageFeatures<D>>: From<DomRoot<D::WGSLLanguageFeatures>>,
+{
     pub(crate) fn new(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
@@ -42,7 +49,7 @@ impl<D: DomTypes> WGSLLanguageFeatures<D> {
             .iter()
             .map(|le| le.to_ident().into())
             .collect();
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
@@ -51,6 +58,7 @@ impl<D: DomTypes> WGSLLanguageFeatures<D> {
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeaturesWrap::<D>,
         )
     }
 }

@@ -11,7 +11,9 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods,
 };
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::reflector::{
+    reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::DOMString;
 use stylo_atoms::Atom;
@@ -21,17 +23,25 @@ use crate::script_runtime::CanGc;
 
 #[dom_struct]
 pub(crate) struct GPUUncapturedErrorEvent<D: DomTypes> {
-    event: D::Event,
+    //event: D::Event,
     #[ignore_malloc_size_of = "Because it is non-owning"]
     gpu_error: Dom<GPUError<D>>,
 }
 
-impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
+impl<D: DomTypes> GPUUncapturedErrorEvent<D>
+where
+    D: DomTypes,
+    Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent<D>>>,
+    DomRoot<GPUUncapturedErrorEvent<D>>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
+{
     fn new_inherited(init: &GPUUncapturedErrorEventInit<D>) -> Self {
+        todo!()
+        /*
         Self {
             gpu_error: Dom::from_ref(&init.error),
             event: D::Event::new_inherited(),
         }
+         */
     }
 
     pub(crate) fn new(
@@ -50,15 +60,20 @@ impl<D: DomTypes> GPUUncapturedErrorEvent<D> {
         init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        let event = reflect_dom_object_with_proto(
+        let event = reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(GPUUncapturedErrorEvent::new_inherited(init)),
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUUncapturedErrorEventWrap::<
+                D,
+            >,
         );
+        /*
         event
             .event
             .init_event(event_type, init.parent.bubbles, init.parent.cancelable);
+             */
         event
     }
 }
@@ -68,6 +83,8 @@ where
     D: DomTypes,
     D::GPUUncapturedErrorEvent: From<GPUUncapturedErrorEvent<D>>,
     D::GPUError: From<GPUError<D>>,
+    Box<D::GPUUncapturedErrorEvent>: From<Box<GPUUncapturedErrorEvent<D>>>,
+    DomRoot<GPUUncapturedErrorEvent<D>>: From<DomRoot<D::GPUUncapturedErrorEvent>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-gpuuncapturederrorevent>
     fn Constructor(
@@ -77,17 +94,20 @@ where
         event_type: DOMString,
         init: &GPUUncapturedErrorEventInit<D>,
     ) -> DomRoot<D::GPUUncapturedErrorEvent> {
-        GPUUncapturedErrorEvent::new_with_proto(global, proto, event_type.into(), init, can_gc)
-            .into()
+        todo!()
+        //GPUUncapturedErrorEvent::new_with_proto(global, proto, event_type.into(), init, can_gc)
+        //    .into()
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuuncapturederrorevent-error>
     fn Error(&self) -> DomRoot<D::GPUError> {
-        DomRoot::from_ref(&self.gpu_error).into()
+        todo!()
+        //DomRoot::from_ref(&self.gpu_error).into()
     }
 
     /// <https://dom.spec.whatwg.org/#dom-event-istrusted>
     fn IsTrusted(&self) -> bool {
-        self.event.IsTrusted()
+        todo!()
+        //self.event.IsTrusted()
     }
 }

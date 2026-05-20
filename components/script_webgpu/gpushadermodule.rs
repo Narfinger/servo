@@ -14,7 +14,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUShaderModuleDescriptor, GPUShaderModuleMethods,
 };
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
@@ -56,7 +58,12 @@ pub(crate) struct GPUShaderModule<D: DomTypes> {
     droppable: DroppableGPUShaderModule,
 }
 
-impl<D: DomTypes> GPUShaderModule<D> {
+impl<D: DomTypes> GPUShaderModule<D>
+where
+    D: DomTypes,
+    Box<D::GPUShaderModule>: From<Box<GPUShaderModule<D>>>,
+    DomRoot<GPUShaderModule<D>>: From<DomRoot<D::GPUShaderModule>>,
+{
     fn new_inherited(
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
@@ -82,7 +89,7 @@ impl<D: DomTypes> GPUShaderModule<D> {
         promise: Rc<D::Promise>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUShaderModule::new_inherited(
                 channel,
                 shader_module,
@@ -91,6 +98,7 @@ impl<D: DomTypes> GPUShaderModule<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUShaderModuleWrap::<D>,
         )
     }
 }
@@ -107,9 +115,9 @@ impl<D: DomTypes> GPUShaderModule<D> {
         comp: InRealm,
         can_gc: CanGc,
     ) -> DomRoot<GPUShaderModule<D>> {
-        let program_id = device.global().wgpu_id_hub().create_shader_module_id();
         todo!();
         /*
+        let program_id = device.global().wgpu_id_hub().create_shader_module_id();
          *
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let shader_module = GPUShaderModule::new(

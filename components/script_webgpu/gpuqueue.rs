@@ -177,9 +177,9 @@ impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue<D> {
     fn WriteTexture(
         &self,
         destination: &GPUImageCopyTexture<D>,
-        data: (),
+        data: ArrayBufferViewOrArrayBuffer,
         data_layout: &GPUImageDataLayout,
-        size: (),
+        size: script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
         /*
                let (bytes, len) = match data {

@@ -9,7 +9,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUOutOfMemoryErrorMethods;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::reflector::{
+    reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
@@ -29,6 +31,8 @@ where
     DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
     Box<D::GPUError>: From<Box<GPUError<D>>>,
     DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+    Box<D::GPUOutOfMemoryError>: From<Box<GPUOutOfMemoryError<D>>>,
+    DomRoot<GPUOutOfMemoryError<D>>: From<DomRoot<D::GPUOutOfMemoryError>>,
 {
     fn new_inherited(message: DOMString) -> Self {
         Self {
@@ -42,11 +46,12 @@ where
         message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message)),
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUOutOfMemoryErrorWrap::<D>,
         )
     }
 }
@@ -58,6 +63,13 @@ where
     DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
     Box<D::GPUError>: From<Box<GPUError<D>>>,
     DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+    D: DomTypes,
+    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
+    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
+    Box<D::GPUError>: From<Box<GPUError<D>>>,
+    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+    Box<D::GPUOutOfMemoryError>: From<Box<GPUOutOfMemoryError<D>>>,
+    DomRoot<GPUOutOfMemoryError<D>>: From<DomRoot<D::GPUOutOfMemoryError>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
     fn Constructor(
@@ -66,6 +78,6 @@ where
         can_gc: CanGc,
         message: DOMString,
     ) -> DomRoot<D::GPUOutOfMemoryError> {
-        Self::new_with_proto(global, proto, message, can_gc).into()
+        todo!() //Self::new_with_proto(global, proto, message, can_gc)
     }
 }

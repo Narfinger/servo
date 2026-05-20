@@ -106,6 +106,8 @@ where
         adapter: WebGPUAdapter,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
+        todo!()
+        /*
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
         let limits = GPUSupportedLimits::new(global, limits, can_gc);
         let info = GPUAdapter::create_adapter_info(global, info, &features, can_gc);
@@ -130,6 +132,7 @@ where
 
         dom_root.extensions.set(*extensions);
         dom_root
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-new-adapter-info>

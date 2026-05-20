@@ -11,7 +11,9 @@ use malloc_size_of_derive::MallocSizeOf;
 use num_traits::bounds::UpperBounded;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimitsMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use wgpu_types::Limits;
 
@@ -25,7 +27,12 @@ pub(crate) struct GPUSupportedLimits<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSupportedLimits<D> {
+impl<D: DomTypes> GPUSupportedLimits<D>
+where
+    D: DomTypes,
+    Box<D::GPUSupportedLimits>: From<Box<GPUSupportedLimits<D>>>,
+    DomRoot<GPUSupportedLimits<D>>: From<DomRoot<D::GPUSupportedLimits>>,
+{
     fn new_inherited(limits: Limits) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -35,7 +42,12 @@ impl<D: DomTypes> GPUSupportedLimits<D> {
     }
 
     pub(crate) fn new(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self> {
-        reflect_dom_object(Box::new(Self::new_inherited(limits)), global, can_gc)
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+            Box::new(Self::new_inherited(limits)),
+            global,
+            can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimitsWrap::<D>,
+        )
     }
 }
 

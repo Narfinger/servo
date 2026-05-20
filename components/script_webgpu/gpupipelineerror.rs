@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::marker::PhantomData;
+
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
@@ -23,8 +25,9 @@ use crate::script_runtime::CanGc;
 #[dom_struct]
 pub(crate) struct GPUPipelineError<D: DomTypes> {
     reflector: Reflector,
-    exception: D::DOMException,
+    //exception: D::DOMException,
     reason: GPUPipelineErrorReason,
+    phantom: PhantomData<D>,
 }
 
 impl<D: DomTypes> GPUPipelineError<D>
@@ -36,11 +39,14 @@ where
     DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError<D>>>,
 {
     fn new_inherited(message: DOMString, reason: GPUPipelineErrorReason) -> Self {
+        todo!()
+        /*
         Self {
             reflector: Reflector::new(),
             exception: D::DOMException::new_inherited(message, "GPUPipelineError".into()),
             reason,
         }
+         */
     }
 
     pub(crate) fn new_with_proto(

@@ -55,6 +55,7 @@ use std::ptr;
 pub(crate) use js::gc::Traceable as JSTraceable;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use malloc_size_of_derive::MallocSizeOf;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 use script_bindings::root::{Dom, DomRoot};
@@ -168,6 +169,7 @@ impl<T: DomObject> MallocSizeOf for MutNullableDom<T> {
     }
 }
 
+#[derive(JSTraceable, MallocSizeOf)]
 pub(crate) struct DataBlock(());
 
 impl DataBlock {

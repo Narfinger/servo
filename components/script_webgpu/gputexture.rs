@@ -16,7 +16,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUTextureMethods, GPUTextureViewDescriptor,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
@@ -68,7 +70,12 @@ pub(crate) struct GPUTexture<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUTexture<D> {
+impl<D: DomTypes> GPUTexture<D>
+where
+    D: DomTypes,
+    Box<D::GPUTexture>: From<Box<GPUTexture<D>>>,
+    DomRoot<GPUTexture<D>>: From<DomRoot<D::GPUTexture>>,
+{
     #[expect(clippy::too_many_arguments)]
     fn new_inherited(
         texture: WebGPUTexture,
@@ -112,7 +119,7 @@ impl<D: DomTypes> GPUTexture<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUTexture::new_inherited(
                 texture,
                 device,
@@ -127,6 +134,7 @@ impl<D: DomTypes> GPUTexture<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureWrap::<D>,
         )
     }
 }
@@ -142,6 +150,8 @@ impl<D: DomTypes> GPUTexture<D> {
         descriptor: &GPUTextureDescriptor,
         can_gc: CanGc,
     ) -> Fallible<DomRoot<GPUTexture<D>>> {
+        todo!()
+        /*
         let (desc, size) = convert_texture_descriptor(descriptor, device)?;
 
         let texture_id = device.global().wgpu_id_hub().create_texture_id();
@@ -172,6 +182,7 @@ impl<D: DomTypes> GPUTexture<D> {
             descriptor.parent.label.clone(),
             can_gc,
         ))
+         */
     }
 }
 
@@ -228,6 +239,8 @@ where
             None
         };
 
+        todo!()
+        /*
         let texture_view_id = self.global().wgpu_id_hub().create_texture_view_id();
 
         self.droppable
@@ -252,6 +265,7 @@ where
             CanGc::deprecated_note(),
         ))
         .into()
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gputexture-destroy>

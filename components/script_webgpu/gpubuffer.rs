@@ -19,7 +19,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
@@ -84,7 +86,12 @@ pub(crate) struct GPUBuffer<D: DomTypes> {
     mapping: DomRefCell<Option<ActiveBufferMapping>>,
 }
 
-impl<D: DomTypes> GPUBuffer<D> {
+impl<D: DomTypes> GPUBuffer<D>
+where
+    D: DomTypes,
+    Box<D::GPUBuffer>: From<Box<GPUBuffer<D>>>,
+    DomRoot<GPUBuffer<D>>: From<DomRoot<D::GPUBuffer>>,
+{
     fn new_inherited(
         channel: WebGPU,
         buffer: WebGPUBuffer,
@@ -119,12 +126,13 @@ impl<D: DomTypes> GPUBuffer<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUBuffer::new_inherited(
                 channel, buffer, device, size, usage, mapping, label,
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUBufferWrap::<D>,
         )
     }
 }
@@ -140,6 +148,8 @@ impl<D: DomTypes> GPUBuffer<D> {
         descriptor: &GPUBufferDescriptor,
         can_gc: CanGc,
     ) -> Fallible<DomRoot<GPUBuffer<D>>> {
+        todo!()
+        /*
         let desc = wgpu_types::BufferDescriptor {
             label: (&descriptor.parent).convert(),
             size: descriptor.size as wgpu_types::BufferAddress,
@@ -179,6 +189,7 @@ impl<D: DomTypes> GPUBuffer<D> {
             descriptor.parent.label.clone(),
             can_gc,
         ))
+         */
     }
 }
 
@@ -191,6 +202,7 @@ impl<D: DomTypes> Drop for GPUBuffer<D> {
 impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
+        /*
         // Step 1
         let promise = self.pending_map.borrow_mut().take();
         if let Some(promise) = promise {
@@ -221,6 +233,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
         }) {
             warn!("Failed to send Buffer unmap ({:?}) ({})", self.buffer.0, e);
         }
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-destroy>
@@ -249,6 +262,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
         comp: InRealm,
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
+        todo!()
+        /*
         let promise = D::Promise::new_in_current_realm(comp, can_gc);
         // Step 2
         if self.pending_map.borrow().is_some() {
@@ -271,8 +286,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
             },
         };
 
-        /*
-         *
+
         let callback = callback_promise(
             &promise,
             self,
@@ -294,8 +308,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
             return promise;
         }
         // Step 6
-         */
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-getmappedrange>
@@ -331,6 +345,8 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
         // only mapping.range is mapped with mapping.range.start at 0
         // so we need to rebase range to mapped.range
         let rebased_offset = (offset - mapping.range.start) as usize;
+        todo!()
+        /*
         let result = mapping
             .data
             .view(rebased_offset..rebased_offset + range_size as usize, can_gc)
@@ -339,6 +355,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
 
         self.mapping.borrow_mut().replace(mapping);
         result
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
@@ -376,6 +393,7 @@ impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer<D> {
 
 impl<D: DomTypes> GPUBuffer<D> {
     fn map_failure(&self, p: &Rc<D::Promise>, can_gc: CanGc) {
+        /*
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
             assert!(p.is_rejected());
@@ -392,9 +410,11 @@ impl<D: DomTypes> GPUBuffer<D> {
         } else {
             p.reject_error(Error::Operation(None), can_gc);
         }
+         */
     }
 
     fn map_success(&self, p: &Rc<D::Promise>, wgpu_mapping: Mapping, can_gc: CanGc) {
+        /*
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
             assert!(p.is_rejected());
@@ -428,6 +448,7 @@ impl<D: DomTypes> GPUBuffer<D> {
                 p.resolve_native(&(), can_gc);
             },
         }
+         */
     }
 }
 

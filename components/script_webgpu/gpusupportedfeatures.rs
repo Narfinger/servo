@@ -19,7 +19,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Fallible;
 use script_bindings::like::Setlike;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 use wgpu_types::Features;
@@ -38,7 +40,12 @@ pub(crate) struct GPUSupportedFeatures<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUSupportedFeatures<D> {
+impl<D: DomTypes> GPUSupportedFeatures<D>
+where
+    D: DomTypes,
+    Box<D::GPUSupportedFeatures>: From<Box<GPUSupportedFeatures<D>>>,
+    DomRoot<GPUSupportedFeatures<D>>: From<DomRoot<D::GPUSupportedFeatures>>,
+{
     fn new(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
@@ -96,7 +103,7 @@ impl<D: DomTypes> GPUSupportedFeatures<D> {
         }
         */
 
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(GPUSupportedFeatures {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
@@ -106,6 +113,7 @@ impl<D: DomTypes> GPUSupportedFeatures<D> {
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedFeaturesWrap::<D>,
         )
     }
 

@@ -14,7 +14,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::codegen::GenericUnionTypes::DoubleSequenceOrGPUColorDict;
 use script_bindings::error::Fallible;
 use script_bindings::num::Finite;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
@@ -54,7 +56,12 @@ pub(crate) struct GPURenderPassEncoder<D: DomTypes> {
     droppable: DroppableGPURenderPassEncoder,
 }
 
-impl<D: DomTypes> GPURenderPassEncoder<D> {
+impl<D: DomTypes> GPURenderPassEncoder<D>
+where
+    D: DomTypes,
+    Box<D::GPURenderPassEncoder>: From<Box<GPURenderPassEncoder<D>>>,
+    DomRoot<GPURenderPassEncoder<D>>: From<DomRoot<D::GPURenderPassEncoder>>,
+{
     fn new_inherited(
         channel: WebGPU,
         render_pass: WebGPURenderPass,
@@ -80,7 +87,7 @@ impl<D: DomTypes> GPURenderPassEncoder<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderPassEncoder::new_inherited(
                 channel,
                 render_pass,
@@ -89,6 +96,7 @@ impl<D: DomTypes> GPURenderPassEncoder<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPassEncoderWrap::<D>,
         )
     }
 
@@ -134,11 +142,13 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
     fn SetBindGroup(&self, index: u32, bind_group: &D::GPUBindGroup, offsets: Vec<u32>) {
+        /*
         self.send_render_command(RenderCommand::SetBindGroup {
             index,
             bind_group_id: bind_group.id().0,
             offsets,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-setviewport>
@@ -151,6 +161,7 @@ where
         min_depth: Finite<f32>,
         max_depth: Finite<f32>,
     ) {
+        /*
         self.send_render_command(RenderCommand::SetViewport {
             x: *x,
             y: *y,
@@ -159,27 +170,30 @@ where
             min_depth: *min_depth,
             max_depth: *max_depth,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-setscissorrect>
     fn SetScissorRect(&self, x: u32, y: u32, width: u32, height: u32) {
+        /*
         self.send_render_command(RenderCommand::SetScissorRect {
             x,
             y,
             width,
             height,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-setblendcolor>
     fn SetBlendConstant(&self, color: DoubleSequenceOrGPUColorDict) -> Fallible<()> {
-        self.send_render_command(RenderCommand::SetBlendConstant((&color).try_convert()?));
+        //self.send_render_command(RenderCommand::SetBlendConstant((&color).try_convert()?));
         Ok(())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-setstencilreference>
     fn SetStencilReference(&self, reference: u32) {
-        self.send_render_command(RenderCommand::SetStencilReference(reference))
+        //self.send_render_command(RenderCommand::SetStencilReference(reference))
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-end>
@@ -194,7 +208,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setpipeline>
     fn SetPipeline(&self, pipeline: &D::GPURenderPipeline) {
-        self.send_render_command(RenderCommand::SetPipeline(pipeline.id().0))
+        //self.send_render_command(RenderCommand::SetPipeline(pipeline.id().0))
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-setindexbuffer>
@@ -205,6 +219,7 @@ where
         offset: u64,
         size: u64,
     ) {
+        /*
         self.send_render_command(RenderCommand::SetIndexBuffer {
             buffer_id: buffer.id().0,
             index_format: match index_format {
@@ -214,26 +229,31 @@ where
             offset,
             size: wgpu_types::BufferSize::new(size),
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
     fn SetVertexBuffer(&self, slot: u32, buffer: &D::GPUBuffer, offset: u64, size: u64) {
+        /*
         self.send_render_command(RenderCommand::SetVertexBuffer {
             slot,
             buffer_id: buffer.id().0,
             offset,
             size: wgpu_types::BufferSize::new(size),
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-draw>
     fn Draw(&self, vertex_count: u32, instance_count: u32, first_vertex: u32, first_instance: u32) {
+        /*
         self.send_render_command(RenderCommand::Draw {
             vertex_count,
             instance_count,
             first_vertex,
             first_instance,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexed>
@@ -245,6 +265,7 @@ where
         base_vertex: i32,
         first_instance: u32,
     ) {
+        /*
         self.send_render_command(RenderCommand::DrawIndexed {
             index_count,
             instance_count,
@@ -252,27 +273,32 @@ where
             base_vertex,
             first_instance,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
     fn DrawIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
+        /*
         self.send_render_command(RenderCommand::DrawIndirect {
             buffer_id: buffer.id().0,
             offset,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
     fn DrawIndexedIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
+        /*
         self.send_render_command(RenderCommand::DrawIndexedIndirect {
             buffer_id: buffer.id().0,
             offset,
         })
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-executebundles>
     fn ExecuteBundles(&self, bundles: Vec<DomRoot<D::GPURenderBundle>>) {
-        let bundle_ids: Vec<_> = bundles.iter().map(|b| b.id().0).collect();
-        self.send_render_command(RenderCommand::ExecuteBundles(bundle_ids))
+        //let bundle_ids: Vec<_> = bundles.iter().map(|b| b.id().0).collect();
+        //self.send_render_command(RenderCommand::ExecuteBundles(bundle_ids))
     }
 }

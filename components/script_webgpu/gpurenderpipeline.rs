@@ -12,7 +12,9 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipelineMethods;
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericCallback;
@@ -58,7 +60,12 @@ pub(crate) struct GPURenderPipeline<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPURenderPipeline<D> {
+impl<D: DomTypes> GPURenderPipeline<D>
+where
+    D: DomTypes,
+    Box<D::GPURenderPipeline>: From<Box<GPURenderPipeline<D>>>,
+    DomRoot<GPURenderPipeline<D>>: From<DomRoot<D::GPURenderPipeline>>,
+{
     fn new_inherited(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
@@ -83,7 +90,7 @@ impl<D: DomTypes> GPURenderPipeline<D> {
         device: &GPUDevice<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderPipeline::new_inherited(
                 render_pipeline,
                 label,
@@ -91,6 +98,7 @@ impl<D: DomTypes> GPURenderPipeline<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipelineWrap::<D>,
         )
     }
 }
@@ -106,6 +114,8 @@ impl<D: DomTypes> GPURenderPipeline<D> {
         descriptor: RenderPipelineDescriptor<'static>,
         async_sender: Option<GenericCallback<WebGPURenderPipelineResponse>>,
     ) -> Fallible<WebGPURenderPipeline> {
+        todo!()
+        /*
         let render_pipeline_id = device.global().wgpu_id_hub().create_render_pipeline_id();
 
         device
@@ -120,6 +130,7 @@ impl<D: DomTypes> GPURenderPipeline<D> {
             .expect("Failed to create WebGPU render pipeline");
 
         Ok(WebGPURenderPipeline(render_pipeline_id))
+         */
     }
 }
 
@@ -140,6 +151,8 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
     fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<D::GPUBindGroupLayout>> {
+        todo!()
+        /*
         let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
@@ -164,5 +177,6 @@ where
             CanGc::deprecated_note(),
         ))
         .into()
+         */
     }
 }
