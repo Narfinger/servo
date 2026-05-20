@@ -14,7 +14,9 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUPipelineLayoutDescriptor, GPUPipelineLayoutMethods,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPUPipelineLayout, WebGPURequest};
@@ -57,7 +59,12 @@ pub(crate) struct GPUPipelineLayout<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUPipelineLayout<D> {
+impl<D: DomTypes> GPUPipelineLayout<D>
+where
+    D: DomTypes,
+    Box<D::GPUPipelineLayout>: From<Box<GPUPipelineLayout<D>>>,
+    DomRoot<GPUPipelineLayout<D>>: From<DomRoot<D::GPUPipelineLayout>>,
+{
     fn new_inherited(
         channel: WebGPU,
         pipeline_layout: WebGPUPipelineLayout,
@@ -84,7 +91,7 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
         bgls: Vec<WebGPUBindGroupLayout>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUPipelineLayout::new_inherited(
                 channel,
                 pipeline_layout,
@@ -93,6 +100,7 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUPipelineLayoutWrap::<D>,
         )
     }
 }
@@ -112,6 +120,8 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
         descriptor: &GPUPipelineLayoutDescriptor<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUPipelineLayout<D>> {
+        todo!()
+        /*
         let bgls = descriptor
             .bindGroupLayouts
             .iter()
@@ -124,7 +134,6 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
             bind_group_layouts: Cow::Owned(bgls.iter().map(|l| Some(l.0)).collect::<Vec<_>>()),
             immediate_size: 0,
         };
-
         let pipeline_layout_id = device.global().wgpu_id_hub().create_pipeline_layout_id();
         device
             .channel()
@@ -145,6 +154,7 @@ impl<D: DomTypes> GPUPipelineLayout<D> {
             bgls,
             can_gc,
         )
+         */
     }
 }
 

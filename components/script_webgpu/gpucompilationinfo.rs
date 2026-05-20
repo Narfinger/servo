@@ -9,7 +9,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use webgpu_traits::ShaderCompilationInfo;
 
@@ -23,7 +25,12 @@ pub(crate) struct GPUCompilationInfo<D: DomTypes> {
     msg: Vec<DomRoot<GPUCompilationMessage<D>>>,
 }
 
-impl<D: DomTypes> GPUCompilationInfo<D> {
+impl<D: DomTypes> GPUCompilationInfo<D>
+where
+    D: DomTypes,
+    Box<D::GPUCompilationInfo>: From<Box<GPUCompilationInfo<D>>>,
+    DomRoot<GPUCompilationInfo<D>>: From<DomRoot<D::GPUCompilationInfo>>,
+{
     pub(crate) fn new_inherited(msg: Vec<DomRoot<GPUCompilationMessage<D>>>) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -36,7 +43,13 @@ impl<D: DomTypes> GPUCompilationInfo<D> {
         msg: Vec<DomRoot<GPUCompilationMessage<D>>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(Box::new(Self::new_inherited(msg)), global, None, can_gc)
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
+            Box::new(Self::new_inherited(msg)),
+            global,
+            None,
+            can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoWrap::<D>,
+        )
     }
 
     pub(crate) fn from(

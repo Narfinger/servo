@@ -12,7 +12,9 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCompilationMessageMethods, GPUCompilationMessageType,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 use webgpu_traits::ShaderCompilationInfo;
@@ -30,7 +32,12 @@ pub(crate) struct GPUCompilationMessage<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUCompilationMessage<D> {
+impl<D: DomTypes> GPUCompilationMessage<D>
+where
+    D: DomTypes,
+    Box<D::GPUCompilationMessage>: From<Box<GPUCompilationMessage<D>>>,
+    DomRoot<GPUCompilationMessage<D>>: From<DomRoot<D::GPUCompilationMessage>>,
+{
     fn new_inherited(
         message: DOMString,
         mtype: GPUCompilationMessageType,
@@ -62,12 +69,13 @@ impl<D: DomTypes> GPUCompilationMessage<D> {
         length: u64,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 message, mtype, line_num, line_pos, offset, length,
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationMessageWrap::<D>,
         )
     }
 

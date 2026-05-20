@@ -274,6 +274,83 @@ where
     unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
 }
 
+/// Create the reflector for a new DOM object and yield ownership to the
+/// reflector.
+pub fn reflect_dom_object_test_with_wrap<D, T, U>(
+    obj: Box<T>,
+    global: &U,
+    _can_gc: CanGc,
+    wrap: unsafe fn(
+        &mut js::context::JSContext,
+        &D::GlobalScope,
+        Option<HandleObject>,
+        Box<T>,
+    ) -> DomRoot<T>,
+) -> DomRoot<T>
+where
+    D: DomTypes,
+    T: DomObject,
+    U: DerivedFrom<D::GlobalScope>,
+{
+    let global_scope = global.upcast();
+    let mut cx = unsafe { temp_cx() };
+    unsafe { wrap(&mut cx, global_scope, None, obj) }
+    //unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
+}
+
+pub fn reflect_dom_object_test_with_wrap2<D, T, U, K>(
+    obj: Box<T>,
+    global: &U,
+    _can_gc: CanGc,
+    wrap: unsafe fn(
+        &mut js::context::JSContext,
+        &D::GlobalScope,
+        Option<HandleObject>,
+        Box<K>,
+    ) -> DomRoot<K>,
+) -> DomRoot<T>
+where
+    D: DomTypes,
+    T: DomObject,
+    K: DomObject,
+    U: DerivedFrom<D::GlobalScope>,
+    DomRoot<T>: From<DomRoot<K>>,
+    Box<K>: From<Box<T>>,
+{
+    let global_scope = global.upcast();
+    let mut cx = unsafe { temp_cx() };
+
+    unsafe { wrap(&mut cx, global_scope, None, obj.into()).into() }
+    //unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
+}
+
+pub fn reflect_dom_object_test_with_wrap2_with_proto<D, T, U, K>(
+    obj: Box<T>,
+    global: &U,
+    proto: Option<HandleObject>,
+    _can_gc: CanGc,
+    wrap: unsafe fn(
+        &mut js::context::JSContext,
+        &D::GlobalScope,
+        Option<HandleObject>,
+        Box<K>,
+    ) -> DomRoot<K>,
+) -> DomRoot<T>
+where
+    D: DomTypes,
+    T: DomObject,
+    K: DomObject,
+    U: DerivedFrom<D::GlobalScope>,
+    DomRoot<T>: From<DomRoot<K>>,
+    Box<K>: From<Box<T>>,
+{
+    let global_scope = global.upcast();
+    let mut cx = unsafe { temp_cx() };
+
+    unsafe { wrap(&mut cx, global_scope, proto, obj.into()).into() }
+    //unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
+}
+
 pub fn reflect_dom_object_with_proto<D, T, U>(
     obj: Box<T>,
     global: &U,

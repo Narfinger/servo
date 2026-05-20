@@ -12,7 +12,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUComputePipelineDescriptor, GPUComputePipelineMethods,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericCallback;
@@ -58,7 +60,12 @@ pub(crate) struct GPUComputePipeline<D: DomTypes> {
     droppable: DroppableGPUComputePipeline,
 }
 
-impl<D: DomTypes> GPUComputePipeline<D> {
+impl<D: DomTypes> GPUComputePipeline<D>
+where
+    D: DomTypes,
+    Box<D::GPUComputePipeline>: From<Box<GPUComputePipeline<D>>>,
+    DomRoot<GPUComputePipeline<D>>: From<DomRoot<D::GPUComputePipeline>>,
+{
     fn new_inherited(
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
@@ -82,7 +89,7 @@ impl<D: DomTypes> GPUComputePipeline<D> {
         device: &GPUDevice<D>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUComputePipeline::new_inherited(
                 compute_pipeline,
                 label,
@@ -90,6 +97,7 @@ impl<D: DomTypes> GPUComputePipeline<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePipelineWrap::<D>,
         )
     }
 }
@@ -105,6 +113,8 @@ impl<D: DomTypes> GPUComputePipeline<D> {
         descriptor: &GPUComputePipelineDescriptor<D>,
         async_sender: Option<GenericCallback<WebGPUComputePipelineResponse>>,
     ) -> WebGPUComputePipeline {
+        todo!()
+        /*
         let compute_pipeline_id = device.global().wgpu_id_hub().create_compute_pipeline_id();
 
         let pipeline_layout = device.get_pipeline_layout_data(&descriptor.parent.layout);
@@ -128,6 +138,7 @@ impl<D: DomTypes> GPUComputePipeline<D> {
             .expect("Failed to create WebGPU ComputePipeline");
 
         WebGPUComputePipeline(compute_pipeline_id)
+         */
     }
 }
 
@@ -148,6 +159,8 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
     fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<D::GPUBindGroupLayout>> {
+        todo!()
+        /*
         let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
@@ -172,5 +185,6 @@ where
             CanGc::deprecated_note(),
         ))
         .into()
+         */
     }
 }

@@ -12,7 +12,9 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUDeviceLostInfoMethods, GPUDeviceLostReason,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
@@ -26,7 +28,12 @@ pub(crate) struct GPUDeviceLostInfo<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUDeviceLostInfo<D> {
+impl<D: DomTypes> GPUDeviceLostInfo<D>
+where
+    D: DomTypes,
+    Box<D::GPUDeviceLostInfo>: From<Box<GPUDeviceLostInfo<D>>>,
+    DomRoot<GPUDeviceLostInfo<D>>: From<DomRoot<D::GPUDeviceLostInfo>>,
+{
     fn new_inherited(message: DOMString, reason: GPUDeviceLostReason) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -42,10 +49,11 @@ impl<D: DomTypes> GPUDeviceLostInfo<D> {
         reason: GPUDeviceLostReason,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUDeviceLostInfo::new_inherited(message, reason)),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUDeviceLostInfoWrap::<D>,
         )
     }
 }

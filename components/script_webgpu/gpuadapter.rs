@@ -15,7 +15,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::error::Error;
 use script_bindings::like::Setlike;
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::DOMString;
 use script_bindings::{DomTypes, cformat};
@@ -67,7 +69,12 @@ pub(crate) struct GPUAdapter<D: DomTypes> {
     droppable: DroppableGPUAdapter,
 }
 
-impl<D: DomTypes> GPUAdapter<D> {
+impl<D> GPUAdapter<D>
+where
+    D: DomTypes,
+    Box<D::GPUAdapter>: From<Box<GPUAdapter<D>>>,
+    DomRoot<GPUAdapter<D>>: From<DomRoot<D::GPUAdapter>>,
+{
     fn new_inherited(
         channel: WebGPU,
         name: DOMString,
@@ -102,13 +109,25 @@ impl<D: DomTypes> GPUAdapter<D> {
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
         let limits = GPUSupportedLimits::new(global, limits, can_gc);
         let info = GPUAdapter::create_adapter_info(global, info, &features, can_gc);
-        let dom_root = reflect_dom_object(
+
+        let dom_root: DomRoot<GPUAdapter<D>> = reflect_dom_object_test_with_wrap::<D, _, _>(
             Box::new(GPUAdapter::new_inherited(
                 channel, name, &features, &limits, &info, adapter,
             )),
             global,
             can_gc,
-        );
+            |cx, scope, proto, obj| unsafe {
+                script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterWrap::<D>(
+                    cx,
+                    scope,
+                    proto,
+                    obj.into(),
+                )
+                .into()
+            },
+        )
+        .into();
+
         dom_root.extensions.set(*extensions);
         dom_root
     }
@@ -120,6 +139,7 @@ impl<D: DomTypes> GPUAdapter<D> {
         features: &GPUSupportedFeatures<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUAdapterInfo<D>> {
+        /*
         // Step 2. If the vendor is known, set adapterInfo.vendor to the name of adapter’s vendor as
         // a normalized identifier string. To preserve privacy, the user agent may instead set
         // adapterInfo.vendor to the empty string or a reasonable approximation of the vendor as a
@@ -180,6 +200,8 @@ impl<D: DomTypes> GPUAdapter<D> {
             is_fallback_adapter,
             can_gc,
         )
+         */
+        todo!()
     }
 }
 
@@ -198,7 +220,7 @@ where
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
         // Step 2
-        let promise = D::Promise::new_in_current_realm(comp, can_gc);
+        //let promise = D::Promise::new_in_current_realm(comp, can_gc);
         todo!()
         /*
         let callback = callback_promise(
@@ -264,17 +286,20 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-features>
     fn Features(&self) -> DomRoot<D::GPUSupportedFeatures> {
-        DomRoot::from_ref(&self.features.into())
+        todo!()
+        //DomRoot::from_ref(&self.features.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-limits>
     fn Limits(&self) -> DomRoot<D::GPUSupportedLimits> {
-        DomRoot::from_ref(&self.limits.into())
+        todo!()
+        //DomRoot::from_ref(&self.limits.into())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-info>
     fn Info(&self) -> DomRoot<D::GPUAdapterInfo> {
-        DomRoot::from_ref(&self.info.into())
+        todo!()
+        //DomRoot::from_ref(&self.info.into())
     }
 }
 

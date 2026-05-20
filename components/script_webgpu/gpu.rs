@@ -15,7 +15,10 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{DomGlobalGeneric, DomObjectWrap, Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    DomGlobalGeneric, DomObject, DomObjectWrap, Reflector, reflect_dom_object,
+    reflect_dom_object_test_with_wrap,
+};
 use script_bindings::root::{Dom, DomRoot, Root};
 use script_bindings::str::DOMString;
 use servo_constellation_traits::ScriptToConstellationMessage;
@@ -35,7 +38,22 @@ pub(crate) struct GPU<D: DomTypes> {
     wgsl_language_features: MutNullableDom<WGSLLanguageFeatures<D>>,
 }
 
-impl<D: DomTypes> GPU<D> {
+pub trait Equivalence<D, T>
+where
+    Self: DomObject + Sized,
+    T: DomObject,
+    D: DomTypes,
+    Box<T>: From<Box<Self>>,
+    DomRoot<Self>: From<DomRoot<T>>,
+{
+}
+
+impl<D> GPU<D>
+where
+    D: DomTypes,
+    Box<D::GPU>: From<Box<GPU<D>>>,
+    DomRoot<GPU<D>>: From<DomRoot<D::GPU>>,
+{
     pub(crate) fn new_inherited() -> GPU<D> {
         GPU {
             reflector_: Reflector::new(),
@@ -44,7 +62,22 @@ impl<D: DomTypes> GPU<D> {
     }
 
     pub(crate) fn new(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU<D>> {
-        reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
+        reflect_dom_object_test_with_wrap::<D, _, _>(
+            Box::new(GPU::new_inherited()),
+            global,
+            can_gc,
+            |cx, scope, proto, obj| unsafe {
+                script_bindings::codegen::GenericBindings::WebGPUBinding::GPUWrap::<D>(
+                    cx,
+                    scope,
+                    proto,
+                    obj.into(),
+                )
+                .into()
+            },
+        )
+        .into()
+        //reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
 
@@ -67,6 +100,8 @@ where
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
         let global = &self.global();
+        todo!()
+        /*
         let promise = D::Promise::new_in_current_realm(comp, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
         //let callback = callback_promise(&promise, self, task_source);
@@ -79,7 +114,7 @@ where
         let ids = global.wgpu_id_hub().create_adapter_id();
 
         let script_to_constellation_chan = global.script_to_constellation_chan();
-        /*
+
         if script_to_constellation_chan
             .send(ScriptToConstellationMessage::RequestAdapter(
                 callback,
@@ -94,8 +129,8 @@ where
         {
             promise.reject_error(Error::Operation(None), can_gc);
         }
-         */
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-getpreferredcanvasformat>
@@ -110,9 +145,13 @@ where
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
     fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<D::WGSLLanguageFeatures> {
+        todo!()
+        /*
         self.wgsl_language_features
             .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
             .into()
+
+             */
     }
 }
 

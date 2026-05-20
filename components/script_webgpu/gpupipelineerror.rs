@@ -11,7 +11,9 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUPipelineErrorInit, GPUPipelineErrorMethods, GPUPipelineErrorReason,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
@@ -25,7 +27,14 @@ pub(crate) struct GPUPipelineError<D: DomTypes> {
     reason: GPUPipelineErrorReason,
 }
 
-impl<D: DomTypes> GPUPipelineError<D> {
+impl<D: DomTypes> GPUPipelineError<D>
+where
+    D: DomTypes,
+    Box<D::GPUPipelineError>: From<Box<GPUPipelineError<D>>>,
+    DomRoot<GPUPipelineError<D>>: From<DomRoot<D::GPUPipelineError>>,
+    D::GPUPipelineError: From<GPUPipelineError<D>>,
+    DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError<D>>>,
+{
     fn new_inherited(message: DOMString, reason: GPUPipelineErrorReason) -> Self {
         Self {
             reflector: Reflector::new(),
@@ -41,11 +50,12 @@ impl<D: DomTypes> GPUPipelineError<D> {
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message, reason)),
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUPipelineErrorWrap::<D>,
         )
     }
 
@@ -62,7 +72,10 @@ impl<D: DomTypes> GPUPipelineError<D> {
 impl<D> GPUPipelineErrorMethods<D> for GPUPipelineError<D>
 where
     D: DomTypes,
+    Box<D::GPUPipelineError>: From<Box<GPUPipelineError<D>>>,
+    DomRoot<GPUPipelineError<D>>: From<DomRoot<D::GPUPipelineError>>,
     D::GPUPipelineError: From<GPUPipelineError<D>>,
+    DomRoot<D::GPUPipelineError>: From<DomRoot<GPUPipelineError<D>>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-constructor>
     fn Constructor(

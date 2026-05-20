@@ -22,7 +22,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::reflect_dom_object;
+use script_bindings::reflector::{reflect_dom_object, reflect_dom_object_test_with_wrap2};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
@@ -111,7 +111,12 @@ impl PipelineLayout {
     }
 }
 
-impl<D: DomTypes> GPUDevice<D> {
+impl<D: DomTypes> GPUDevice<D>
+where
+    D: DomTypes,
+    Box<D::GPUDevice>: From<Box<GPUDevice<D>>>,
+    DomRoot<GPUDevice<D>>: From<DomRoot<D::GPUDevice>>,
+{
     #[allow(clippy::too_many_arguments)]
     fn new_inherited(
         channel: WebGPU,
@@ -152,12 +157,14 @@ impl<D: DomTypes> GPUDevice<D> {
         label: String,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
+        todo!()
+        /*
         let queue = GPUQueue::new(global, channel.clone(), queue, can_gc);
         let limits = GPUSupportedLimits::new(global, limits, can_gc);
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
         let adapter_info = GPUAdapterInfo::clone_from(global, &adapter.Info(), can_gc);
-        let lost_promise = Promise::new(global, can_gc);
-        let device = reflect_dom_object(
+        //let lost_promise = Promise::new(global, can_gc);
+        let device = reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUDevice::new_inherited(
                 channel,
                 adapter,
@@ -171,14 +178,16 @@ impl<D: DomTypes> GPUDevice<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUDeviceWrap,
         );
         queue.set_device(&device);
         device.extensions.set(*extensions);
         device
+         */
     }
 }
 
-impl GPUDevice {
+impl<D: DomTypes> GPUDevice<D> {
     pub(crate) fn id(&self) -> WebGPUDevice {
         self.droppable.device
     }
@@ -202,12 +211,12 @@ impl GPUDevice {
 
     /// <https://gpuweb.github.io/gpuweb/#eventdef-gpudevice-uncapturederror>
     pub(crate) fn fire_uncaptured_error(&self, error: webgpu_traits::Error) {
+        /*
         let this = Trusted::new(self);
 
         // Queue a global task, using the webgpu task source, to fire an event named
         // uncapturederror at a GPUDevice using GPUUncapturedErrorEvent.
         self.global().task_manager().webgpu_task_source().queue(
-            /*
              *
 
             task!(fire_uncaptured_error: move || {
@@ -226,8 +235,8 @@ impl GPUDevice {
 
                 event.upcast::<Event>().fire(this.upcast(), CanGc::deprecated_note());
             }),
-             */
         );
+             */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-validate-texture-format-required-features>
@@ -253,18 +262,23 @@ impl GPUDevice {
     }
 
     pub(crate) fn is_lost(&self) -> bool {
-        self.lost_promise.borrow().is_fulfilled()
+        todo!()
+
+        //self.lost_promise.borrow().is_fulfilled()
     }
 
     pub(crate) fn get_pipeline_layout_data(
         &self,
         layout: &GPUPipelineLayoutOrGPUAutoLayoutMode<D>,
     ) -> PipelineLayout {
+        todo!()
+        /*
         if let GPUPipelineLayoutOrGPUAutoLayoutMode::GPUPipelineLayout(layout) = layout {
             PipelineLayout::Explicit(layout.id().0)
         } else {
             PipelineLayout::Implicit
         }
+         */
     }
 
     pub(crate) fn parse_render_pipeline<'a>(

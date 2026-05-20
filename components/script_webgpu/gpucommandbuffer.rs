@@ -11,7 +11,9 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandBufferMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUCommandBuffer, WebGPURequest};
@@ -49,7 +51,12 @@ pub(crate) struct GPUCommandBuffer<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUCommandBuffer<D> {
+impl<D: DomTypes> GPUCommandBuffer<D>
+where
+    D: DomTypes,
+    Box<D::GPUCommandBuffer>: From<Box<GPUCommandBuffer<D>>>,
+    DomRoot<GPUCommandBuffer<D>>: From<DomRoot<D::GPUCommandBuffer>>,
+{
     fn new_inherited(
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
@@ -73,7 +80,7 @@ impl<D: DomTypes> GPUCommandBuffer<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUCommandBuffer::new_inherited(
                 channel,
                 command_buffer,
@@ -81,6 +88,7 @@ impl<D: DomTypes> GPUCommandBuffer<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandBufferWrap::<D>,
         )
     }
 }

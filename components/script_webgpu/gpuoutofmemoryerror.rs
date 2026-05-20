@@ -14,6 +14,7 @@ use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
 use crate::gpuerror::GPUError;
+use crate::gpuinternalerror::GPUInternalError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
@@ -21,7 +22,14 @@ pub(crate) struct GPUOutOfMemoryError<D: DomTypes> {
     gpu_error: GPUError<D>,
 }
 
-impl<D: DomTypes> GPUOutOfMemoryError<D> {
+impl<D: DomTypes> GPUOutOfMemoryError<D>
+where
+    D: DomTypes,
+    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
+    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
+    Box<D::GPUError>: From<Box<GPUError<D>>>,
+    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+{
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
@@ -46,7 +54,10 @@ impl<D: DomTypes> GPUOutOfMemoryError<D> {
 impl<D> GPUOutOfMemoryErrorMethods<D> for GPUOutOfMemoryError<D>
 where
     D: DomTypes,
-    D::GPUOutOfMemoryError: From<GPUOutOfMemoryError<D>>,
+    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
+    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
+    Box<D::GPUError>: From<Box<GPUError<D>>>,
+    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
     fn Constructor(

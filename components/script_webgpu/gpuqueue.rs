@@ -17,7 +17,9 @@ use script_bindings::codegen::GenericUnionTypes::{
     ArrayBufferViewOrArrayBuffer, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
 };
 use script_bindings::error::{Error, Fallible};
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericSharedMemory;
@@ -40,7 +42,12 @@ pub(crate) struct GPUQueue<D: DomTypes> {
     queue: WebGPUQueue,
 }
 
-impl<D: DomTypes> GPUQueue<D> {
+impl<D: DomTypes> GPUQueue<D>
+where
+    D: DomTypes,
+    Box<D::GPUQueue>: From<Box<GPUQueue<D>>>,
+    DomRoot<GPUQueue<D>>: From<DomRoot<D::GPUQueue>>,
+{
     fn new_inherited(channel: WebGPU, queue: WebGPUQueue) -> Self {
         GPUQueue {
             channel,
@@ -57,10 +64,11 @@ impl<D: DomTypes> GPUQueue<D> {
         queue: WebGPUQueue,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUQueue::new_inherited(channel, queue)),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUQueueWrap::<D>,
         )
     }
 }
@@ -93,6 +101,8 @@ impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueue-submit>
     fn Submit(&self, command_buffers: Vec<DomRoot<D::GPUCommandBuffer>>) {
+        todo!()
+        /*
         let command_buffers = command_buffers.iter().map(|cb| cb.id().0).collect();
         self.channel
             .0
@@ -102,6 +112,7 @@ impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue<D> {
                 command_buffers,
             })
             .unwrap();
+             */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueue-writebuffer>
@@ -207,12 +218,14 @@ impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue<D> {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueue-onsubmittedworkdone>
     fn OnSubmittedWorkDone(&self, can_gc: CanGc) -> Rc<D::Promise> {
+        todo!();
+
+        /*
         let global = self.global();
         let promise = D::Promise::new(&global, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
         //let callback = callback_promise(&promise, self, task_source);
 
-        /*
         if let Err(e) = self
             .channel
             .0
@@ -223,8 +236,8 @@ impl<D: DomTypes> GPUQueueMethods<D> for GPUQueue<D> {
         {
             warn!("QueueOnSubmittedWorkDone failed with {e}")
         }
-         */
         promise
+         */
     }
 }
 

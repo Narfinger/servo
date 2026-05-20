@@ -9,7 +9,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUInternalErrorMethods;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::reflector::{
+    reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
@@ -21,7 +23,14 @@ pub(crate) struct GPUInternalError<D: DomTypes> {
     gpu_error: GPUError<D>,
 }
 
-impl<D: DomTypes> GPUInternalError<D> {
+impl<D: DomTypes> GPUInternalError<D>
+where
+    D: DomTypes,
+    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
+    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
+    Box<D::GPUError>: From<Box<GPUError<D>>>,
+    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+{
     fn new_inherited(message: DOMString) -> Self {
         Self {
             gpu_error: GPUError::new_inherited(message),
@@ -34,11 +43,12 @@ impl<D: DomTypes> GPUInternalError<D> {
         message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message)),
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUInternalErrorWrap::<D>,
         )
     }
 }
@@ -46,7 +56,11 @@ impl<D: DomTypes> GPUInternalError<D> {
 impl<D> GPUInternalErrorMethods<D> for GPUInternalError<D>
 where
     D: DomTypes,
-    D::GPUInternalError: From<GPUInternalError<D>>,
+    Box<D::GPUInternalError>: From<Box<GPUInternalError<D>>>,
+    DomRoot<GPUInternalError<D>>: From<DomRoot<D::GPUInternalError>>,
+    Box<D::GPUError>: From<Box<GPUError<D>>>,
+    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+    DomRoot<D::GPUInternalError>: From<DomRoot<GPUInternalError<D>>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUInternalError-GPUInternalError>
     fn Constructor(

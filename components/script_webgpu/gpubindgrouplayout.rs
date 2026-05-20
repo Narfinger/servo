@@ -15,7 +15,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
@@ -57,7 +59,12 @@ pub(crate) struct GPUBindGroupLayout<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUBindGroupLayout<D> {
+impl<D: DomTypes> GPUBindGroupLayout<D>
+where
+    D: DomTypes,
+    Box<D::GPUBindGroupLayout>: From<Box<GPUBindGroupLayout<D>>>,
+    DomRoot<GPUBindGroupLayout<D>>: From<DomRoot<D::GPUBindGroupLayout>>,
+{
     fn new_inherited(
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
@@ -81,7 +88,7 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUBindGroupLayout::new_inherited(
                 channel,
                 bind_group_layout,
@@ -89,6 +96,7 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUBindGroupLayoutWrap::<D>,
         )
     }
 }
@@ -121,6 +129,8 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
             },
         };
 
+        todo!()
+        /*
         let bind_group_layout_id = device.global().wgpu_id_hub().create_bind_group_layout_id();
         device
             .channel()
@@ -141,6 +151,7 @@ impl<D: DomTypes> GPUBindGroupLayout<D> {
             descriptor.parent.label.clone(),
             can_gc,
         ))
+         */
     }
 }
 

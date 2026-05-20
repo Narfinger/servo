@@ -614,9 +614,9 @@ pub(crate) fn convert_texture_descriptor<D: DomTypes>(
     descriptor: &GPUTextureDescriptor,
     device: &GPUDevice<D>,
 ) -> Fallible<(TextureDescriptor<'static>, wgpu_types::Extent3d)> {
-    let size = (&descriptor.size).try_convert()?;
     todo!()
     /*
+    let size = (&descriptor.size).try_convert()?;
     let desc = TextureDescriptor {
         label: (&descriptor.parent).convert(),
         size,
@@ -639,6 +639,8 @@ impl TryConvert<wgpu_types::Color> for &GPUColor {
     type Error = Error;
 
     fn try_convert(self) -> Result<wgpu_types::Color, Self::Error> {
+        todo!()
+        /*
         match self {
             GPUColor::DoubleSequence(s) => {
                 // https://gpuweb.github.io/gpuweb/#abstract-opdef-validate-gpucolor-shape
@@ -659,12 +661,15 @@ impl TryConvert<wgpu_types::Color> for &GPUColor {
                 b: *d.b,
                 a: *d.a,
             }),
-        }
+        } */
     }
 }
 
 impl<'a, D: DomTypes> Convert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage<D> {
     fn convert(self) -> ProgrammableStageDescriptor<'a> {
+        todo!()
+        /*
+         *
         ProgrammableStageDescriptor {
             module: self.module.id().0,
             entry_point: self
@@ -678,6 +683,7 @@ impl<'a, D: DomTypes> Convert<ProgrammableStageDescriptor<'a>> for &GPUProgramma
                 .unwrap_or_default(),
             zero_initialize_workgroup_memory: true,
         }
+         */
     }
 }
 

@@ -11,7 +11,9 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundleMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURenderBundle, WebGPURequest};
@@ -51,7 +53,12 @@ pub(crate) struct GPURenderBundle<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPURenderBundle<D> {
+impl<D: DomTypes> GPURenderBundle<D>
+where
+    D: DomTypes,
+    Box<D::GPURenderBundle>: From<Box<GPURenderBundle<D>>>,
+    DomRoot<GPURenderBundle<D>>: From<DomRoot<D::GPURenderBundle>>,
+{
     fn new_inherited(
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
@@ -78,7 +85,7 @@ impl<D: DomTypes> GPURenderBundle<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPURenderBundle::new_inherited(
                 render_bundle,
                 device,
@@ -87,6 +94,7 @@ impl<D: DomTypes> GPURenderBundle<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundleWrap::<D>,
         )
     }
 }

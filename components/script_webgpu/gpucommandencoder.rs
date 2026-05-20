@@ -15,7 +15,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -61,7 +63,12 @@ impl Drop for DroppableGPUCommandEncoder {
     }
 }
 
-impl<D: DomTypes> GPUCommandEncoder<D> {
+impl<D: DomTypes> GPUCommandEncoder<D>
+where
+    D: DomTypes,
+    Box<D::GPUCommandEncoder>: From<Box<GPUCommandEncoder<D>>>,
+    DomRoot<GPUCommandEncoder<D>>: From<DomRoot<D::GPUCommandEncoder>>,
+{
     pub(crate) fn new_inherited(
         channel: WebGPU,
         device: &GPUDevice<D>,
@@ -84,12 +91,13 @@ impl<D: DomTypes> GPUCommandEncoder<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUCommandEncoder::new_inherited(
                 channel, device, encoder, label,
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandEncoderWrap::<D>,
         )
     }
 }
@@ -109,6 +117,8 @@ impl<D: DomTypes> GPUCommandEncoder<D> {
         descriptor: &GPUCommandEncoderDescriptor,
         can_gc: CanGc,
     ) -> DomRoot<GPUCommandEncoder<D>> {
+        todo!()
+        /*
         let command_encoder_id = device.global().wgpu_id_hub().create_command_encoder_id();
         device
             .channel()
@@ -132,6 +142,7 @@ impl<D: DomTypes> GPUCommandEncoder<D> {
             descriptor.parent.label.clone(),
             can_gc,
         )
+         */
     }
 }
 
@@ -156,6 +167,8 @@ where
         &self,
         descriptor: &GPUComputePassDescriptor,
     ) -> DomRoot<D::GPUComputePassEncoder> {
+        todo!()
+        /*
         let compute_pass_id = self.global().wgpu_id_hub().create_compute_pass_id();
 
         if let Err(e) = self
@@ -181,6 +194,7 @@ where
             CanGc::deprecated_note(),
         )
         .into()
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-beginrenderpass>
@@ -188,6 +202,9 @@ where
         &self,
         descriptor: &GPURenderPassDescriptor<D>,
     ) -> Fallible<DomRoot<D::GPURenderPassEncoder>> {
+        todo!()
+        /*
+
         let depth_stencil_attachment = descriptor.depthStencilAttachment.as_ref().map(|ds| {
             wgpu_com::RenderPassDepthStencilAttachment {
                 depth: wgpu_com::PassChannel {
@@ -258,6 +275,7 @@ where
             CanGc::deprecated_note(),
         ))
         .into()
+        */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertobuffer>
@@ -269,6 +287,7 @@ where
         destination_offset: GPUSize64,
         size: GPUSize64,
     ) {
+        /*
         self.droppable
             .channel
             .0
@@ -282,6 +301,7 @@ where
                 device_id: self.device.id().0,
             })
             .expect("Failed to send CopyBufferToBuffer");
+             */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertotexture>
@@ -291,18 +311,19 @@ where
         destination: &GPUImageCopyTexture<D>,
         copy_size: RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
-        self.droppable
-            .channel
-            .0
-            .send(WebGPURequest::CopyBufferToTexture {
-                command_encoder_id: self.droppable.encoder.0,
-                source: source.convert(),
-                destination: destination.try_convert()?,
-                copy_size: (&copy_size).try_convert()?,
-                device_id: self.device.id().0,
-            })
-            .expect("Failed to send CopyBufferToTexture");
-
+        /*
+               self.droppable
+                   .channel
+                   .0
+                   .send(WebGPURequest::CopyBufferToTexture {
+                       command_encoder_id: self.droppable.encoder.0,
+                       source: source.convert(),
+                       destination: destination.try_convert()?,
+                       copy_size: (&copy_size).try_convert()?,
+                       device_id: self.device.id().0,
+                   })
+                   .expect("Failed to send CopyBufferToTexture");
+        */
         Ok(())
     }
 
@@ -313,18 +334,19 @@ where
         destination: &GPUImageCopyBuffer<D>,
         copy_size: RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
-        self.droppable
-            .channel
-            .0
-            .send(WebGPURequest::CopyTextureToBuffer {
-                command_encoder_id: self.droppable.encoder.0,
-                source: source.try_convert()?,
-                destination: destination.convert(),
-                copy_size: (&copy_size).try_convert()?,
-                device_id: self.device.id().0,
-            })
-            .expect("Failed to send CopyTextureToBuffer");
-
+        /*
+               self.droppable
+                   .channel
+                   .0
+                   .send(WebGPURequest::CopyTextureToBuffer {
+                       command_encoder_id: self.droppable.encoder.0,
+                       source: source.try_convert()?,
+                       destination: destination.convert(),
+                       copy_size: (&copy_size).try_convert()?,
+                       device_id: self.device.id().0,
+                   })
+                   .expect("Failed to send CopyTextureToBuffer");
+        */
         Ok(())
     }
 
@@ -335,23 +357,26 @@ where
         destination: &GPUImageCopyTexture<D>,
         copy_size: RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
     ) -> Fallible<()> {
-        self.droppable
-            .channel
-            .0
-            .send(WebGPURequest::CopyTextureToTexture {
-                command_encoder_id: self.droppable.encoder.0,
-                source: source.try_convert()?,
-                destination: destination.try_convert()?,
-                copy_size: (&copy_size).try_convert()?,
-                device_id: self.device.id().0,
-            })
-            .expect("Failed to send CopyTextureToTexture");
-
+        /*
+               self.droppable
+                   .channel
+                   .0
+                   .send(WebGPURequest::CopyTextureToTexture {
+                       command_encoder_id: self.droppable.encoder.0,
+                       source: source.try_convert()?,
+                       destination: destination.try_convert()?,
+                       copy_size: (&copy_size).try_convert()?,
+                       device_id: self.device.id().0,
+                   })
+                   .expect("Failed to send CopyTextureToTexture");
+        */
         Ok(())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-finish>
     fn Finish(&self, descriptor: &GPUCommandBufferDescriptor) -> DomRoot<D::GPUCommandBuffer> {
+        todo!()
+        /*
         let command_buffer_id = self.global().wgpu_id_hub().create_command_buffer_id();
         self.droppable
             .channel
@@ -375,5 +400,6 @@ where
             CanGc::deprecated_note(),
         )
         .into()
+         */
     }
 }

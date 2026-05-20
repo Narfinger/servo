@@ -11,7 +11,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods};
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_test_with_wrap2_with_proto, reflect_dom_object_with_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 use webgpu_traits::{Error, ErrorFilter};
@@ -29,7 +31,12 @@ pub(crate) struct GPUError<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUError<D> {
+impl<D: DomTypes> GPUError<D>
+where
+    D: DomTypes,
+    Box<D::GPUError>: From<Box<GPUError<D>>>,
+    DomRoot<GPUError<D>>: From<DomRoot<D::GPUError>>,
+{
     pub(crate) fn new_inherited(message: DOMString) -> Self {
         Self {
             reflector_: Reflector::new(),
@@ -49,11 +56,12 @@ impl<D: DomTypes> GPUError<D> {
         message: DOMString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+        reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(GPUError::new_inherited(message)),
             global,
             proto,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUErrorWrap::<D>,
         )
     }
 
@@ -62,6 +70,8 @@ impl<D: DomTypes> GPUError<D> {
         error: Error,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
+        todo!()
+        /*
         match error {
             Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
                 global,
@@ -82,6 +92,7 @@ impl<D: DomTypes> GPUError<D> {
                 can_gc,
             )),
         }
+         */
     }
 }
 

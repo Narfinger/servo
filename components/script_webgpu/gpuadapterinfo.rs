@@ -10,7 +10,9 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    DomObject, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
@@ -29,7 +31,13 @@ pub(crate) struct GPUAdapterInfo<D: DomTypes> {
     phantom: PhantomData<D>,
 }
 
-impl<D: DomTypes> GPUAdapterInfo<D> {
+impl<D> GPUAdapterInfo<D>
+where
+    D: DomTypes,
+    GPUAdapterInfo<D>: DomObject,
+    Box<D::GPUAdapterInfo>: From<Box<GPUAdapterInfo<D>>>,
+    DomRoot<GPUAdapterInfo<D>>: From<DomRoot<D::GPUAdapterInfo>>,
+{
     fn new_inherited(
         vendor: DOMString,
         architecture: DOMString,
@@ -64,7 +72,7 @@ impl<D: DomTypes> GPUAdapterInfo<D> {
         is_fallback_adapter: bool,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 vendor,
                 architecture,
@@ -76,6 +84,7 @@ impl<D: DomTypes> GPUAdapterInfo<D> {
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoWrap::<D>,
         )
     }
 

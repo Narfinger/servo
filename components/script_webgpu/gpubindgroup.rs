@@ -13,7 +13,9 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUBindGroupDescriptor, GPUBindGroupMethods,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
@@ -56,7 +58,12 @@ pub(crate) struct GPUBindGroup<D: DomTypes> {
     droppable: DroppableGPUBindGroup,
 }
 
-impl<D: DomTypes> GPUBindGroup<D> {
+impl<D: DomTypes> GPUBindGroup<D>
+where
+    D: DomTypes,
+    Box<D::GPUBindGroup>: From<Box<GPUBindGroup<D>>>,
+    DomRoot<GPUBindGroup<D>>: From<DomRoot<D::GPUBindGroup>>,
+{
     fn new_inherited(
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
@@ -85,12 +92,13 @@ impl<D: DomTypes> GPUBindGroup<D> {
         label: USVString,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
             Box::new(GPUBindGroup::new_inherited(
                 channel, bind_group, device, layout, label,
             )),
             global,
             can_gc,
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUBindGroupWrap::<D>,
         )
     }
 }
@@ -110,6 +118,8 @@ where
         descriptor: &GPUBindGroupDescriptor<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUBindGroup<D>> {
+        todo!()
+        /*
         let entries = descriptor
             .entries
             .iter()
@@ -143,7 +153,7 @@ where
             &descriptor.layout.into(),
             descriptor.parent.label.clone(),
             can_gc,
-        )
+        ) */
     }
 }
 
