@@ -1,7 +1,7 @@
+#![allow(unused)]
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
 #![cfg_attr(crown, feature(register_tool))]
 // Register the linter `crown`, which is the Servo-specific linter for the script crate.
 #![cfg_attr(crown, register_tool(crown))]
@@ -57,11 +57,23 @@ pub(crate) use js::gc::Traceable as JSTraceable;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::codegen::InheritTypes::GPUErrorTypeId;
+use script_bindings::conversions::DerivedFrom;
+use script_bindings::inheritance::Castable;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 use script_bindings::root::{Dom, DomRoot};
 pub(crate) use script_bindings::trace::CustomTraceable;
+use script_bindings::weakref::WeakReferenceable;
 use script_bindings::{DomTypes, script_runtime};
+
+use crate::gpudevice::GPUDevice;
+use crate::gpuerror::GPUError;
+use crate::gpuinternalerror::GPUInternalError;
+use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
+use crate::gpupipelineerror::GPUPipelineError;
+use crate::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
+use crate::gpuvalidationerror::GPUValidationError;
 
 // A holder that provides interior mutability for GC-managed values such as
 /// `Dom<T>`, with nullability represented by an enclosing Option wrapper.
@@ -197,3 +209,40 @@ pub(crate) struct PromiseStub(());
 unsafe impl JSTraceable for PromiseStub {
     unsafe fn trace(&self, trc: *mut js::jsapi::JSTracer) {}
 }
+
+impl WeakReferenceable for GPUDevice {}
+
+impl GPUError {
+    #[allow(dead_code)]
+    pub(crate) fn type_id(&self) -> &'static GPUErrorTypeId {
+        unsafe {
+            &script_bindings::conversions::get_dom_class(self.reflector().get_jsobject().get())
+                .unwrap()
+                .type_id
+                .gpuerror
+        }
+    }
+}
+
+/*
+impl Castable for GPUDevice {}
+impl DerivedFrom<EventTarget> for GPUDevice {}
+
+impl Castable for GPUError {}
+impl DerivedFrom<GPUError> for GPUError {}
+
+impl Castable for GPUInternalError {}
+impl DerivedFrom<GPUError> for GPUInternalError {}
+
+impl Castable for GPUOutOfMemoryError {}
+impl DerivedFrom<GPUError> for GPUOutOfMemoryError {}
+
+impl Castable for GPUPipelineError {}
+impl DerivedFrom<DOMException> for GPUPipelineError {}
+
+impl Castable for GPUUncapturedErrorEvent {}
+impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}
+
+impl Castable for GPUValidationError {}
+impl DerivedFrom<GPUError> for GPUValidationError {}
+ */

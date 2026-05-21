@@ -49,7 +49,7 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
         Option<js::rust::HandleObject>,
         Box<Self>,
     ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
-        crate::dom::bindings::codegen::GenericBindings::WebGPBinding::GPUUncapturedErrorEvent_Binding::Wrap::<
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUUncapturedErrorEvent_Binding::Wrap::<
             crate::DomTypeHolder,
         >;
 }
@@ -63,7 +63,259 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
         Option<js::rust::HandleObject>,
         Box<Self>,
     ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
-        crate::dom::bindings::codegen::GenericBindings::WebGPBinding::GPUDevice_Binding::Wrap::<
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUDevice_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gputextureview::GPUTextureView
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureView_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gputextureusage::GPUTextureUsage
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureUsage_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gputexture::GPUTexture
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUTexture_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpusupportedlimits::GPUSupportedLimits
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimits_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpusupportedfeatures::GPUSupportedFeatures
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedFeatures_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpushaderstage::GPUShaderStage
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUShaderStage_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpushadermodule::GPUShaderModule
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUShaderModule_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpurenderpipeline::GPURenderPipeline
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipeline_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpurenderpassencoder::GPURenderPassEncoder
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPassEncoder_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpurenderbundle::GPURenderBundle
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundle_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpuqueue::GPUQueue
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUQueue_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpucolorwrite::GPUColorWrite
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUColorWrite_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpucanvascontext::GPUCanvasContext
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContext_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpubuffer::GPUBuffer
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUBuffer_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpubindgroup::GPUBindGroup
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUBindGroup_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpubindgrouplayout::GPUBindGroupLayout
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUBindGroupLayout_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpuadapterinfo::GPUAdapterInfo
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfo_Binding::Wrap::<
+            crate::DomTypeHolder,
+        >;
+}
+
+impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
+    for script_webgpu::gpuadapter::GPUAdapter
+{
+    const WRAP: unsafe fn(
+        &mut js::context::JSContext,
+        &crate::dom::globalscope::GlobalScope,
+        Option<js::rust::HandleObject>,
+        Box<Self>,
+    ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapter_Binding::Wrap::<
             crate::DomTypeHolder,
         >;
 }
