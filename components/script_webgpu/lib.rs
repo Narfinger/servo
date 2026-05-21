@@ -58,22 +58,52 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::InheritTypes::GPUErrorTypeId;
-use script_bindings::conversions::DerivedFrom;
+use script_bindings::codegen::PrototypeList;
+use script_bindings::conversions::{DerivedFrom, IDLInterface};
 use script_bindings::inheritance::Castable;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 use script_bindings::root::{Dom, DomRoot};
 pub(crate) use script_bindings::trace::CustomTraceable;
+use script_bindings::utils::DOMClass;
 use script_bindings::weakref::WeakReferenceable;
 use script_bindings::{DomTypes, script_runtime};
 
+use crate::gpu::GPU;
+use crate::gpuadapter::GPUAdapter;
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucolorwrite::GPUColorWrite;
+use crate::gpucommandbuffer::GPUCommandBuffer;
+use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpucompilationinfo::GPUCompilationInfo;
+use crate::gpucompilationmessage::GPUCompilationMessage;
+use crate::gpucomputepassencoder::GPUComputePassEncoder;
+use crate::gpucomputepipeline::GPUComputePipeline;
 use crate::gpudevice::GPUDevice;
+use crate::gpudevicelostinfo::GPUDeviceLostInfo;
 use crate::gpuerror::GPUError;
 use crate::gpuinternalerror::GPUInternalError;
 use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
 use crate::gpupipelineerror::GPUPipelineError;
+use crate::gpupipelinelayout::GPUPipelineLayout;
+use crate::gpuqueryset::GPUQuerySet;
+use crate::gpuqueue::GPUQueue;
+use crate::gpurenderbundle::GPURenderBundle;
+use crate::gpurenderbundleencoder::GPURenderBundleEncoder;
+use crate::gpurenderpassencoder::GPURenderPassEncoder;
+use crate::gpurenderpipeline::GPURenderPipeline;
+use crate::gpusampler::GPUSampler;
+use crate::gpushadermodule::GPUShaderModule;
+use crate::gpusupportedfeatures::GPUSupportedFeatures;
+use crate::gpusupportedlimits::GPUSupportedLimits;
+use crate::gputexture::GPUTexture;
+use crate::gputextureusage::GPUTextureUsage;
+use crate::gputextureview::GPUTextureView;
 use crate::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
 use crate::gpuvalidationerror::GPUValidationError;
+use crate::wgsllanguagefeatures::WGSLLanguageFeatures;
 
 // A holder that provides interior mutability for GC-managed values such as
 /// `Dom<T>`, with nullability represented by an enclosing Option wrapper.
@@ -246,3 +276,404 @@ impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}
 impl Castable for GPUValidationError {}
 impl DerivedFrom<GPUError> for GPUValidationError {}
  */
+
+/////////////////////////////////////// IDL INTERFACE
+impl IDLInterface for GPU {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPU_Binding::Class
+                .get()
+                .dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 331;
+    const PROTO_LAST: u16 = 331;
+}
+
+impl IDLInterface for GPUAdapter {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapter_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 332;
+    const PROTO_LAST: u16 = 332;
+}
+
+impl IDLInterface for GPUBindGroup {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUBindGroup_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 334;
+    const PROTO_LAST: u16 = 334;
+}
+
+impl IDLInterface for GPUBindGroupLayout {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUBindGroupLayout_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 335;
+    const PROTO_LAST: u16 = 335;
+}
+
+impl IDLInterface for GPUBuffer {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUBuffer_Binding::Class
+                .get()
+                .dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 336;
+    const PROTO_LAST: u16 = 336;
+}
+
+impl IDLInterface for GPUColorWrite {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUColorWrite_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 338;
+    const PROTO_LAST: u16 = 338;
+}
+
+impl IDLInterface for GPUCommandBuffer {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandBuffer_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 339;
+    const PROTO_LAST: u16 = 339;
+}
+
+impl IDLInterface for GPUCommandEncoder {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandEncoder_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 340;
+    const PROTO_LAST: u16 = 340;
+}
+
+impl IDLInterface for GPUCompilationInfo {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfo_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 341;
+    const PROTO_LAST: u16 = 341;
+}
+
+impl IDLInterface for GPUCompilationMessage {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationMessage_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 342;
+    const PROTO_LAST: u16 = 342;
+}
+
+impl IDLInterface for GPUComputePassEncoder {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePassEncoder_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 343;
+    const PROTO_LAST: u16 = 343;
+}
+
+impl IDLInterface for GPUComputePipeline {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePipeline_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 344;
+    const PROTO_LAST: u16 = 344;
+}
+
+impl IDLInterface for GPUDevice {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUDevice_Binding::Class
+                .get()
+                .dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 175;
+    const PROTO_LAST: u16 = 175;
+}
+
+impl IDLInterface for GPUDeviceLostInfo {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUDeviceLostInfo_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 345;
+    const PROTO_LAST: u16 = 345;
+}
+
+impl IDLInterface for GPUError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        class.interface_chain[0] == PrototypeList::ID::GPUError
+    }
+    const PROTO_FIRST: u16 = 346;
+    const PROTO_LAST: u16 = 349;
+}
+
+impl IDLInterface for GPUInternalError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUInternalError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 347;
+    const PROTO_LAST: u16 = 347;
+}
+
+impl IDLInterface for GPUOutOfMemoryError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUOutOfMemoryError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 348;
+    const PROTO_LAST: u16 = 348;
+}
+
+impl IDLInterface for GPUPipelineError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUPipelineError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 55;
+    const PROTO_LAST: u16 = 55;
+}
+
+impl IDLInterface for GPUPipelineLayout {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUPipelineLayout_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 350;
+    const PROTO_LAST: u16 = 350;
+}
+
+impl IDLInterface for GPUQuerySet {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUQuerySet_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 351;
+    const PROTO_LAST: u16 = 351;
+}
+
+impl IDLInterface for GPUQueue {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUQueue_Binding::Class
+                .get()
+                .dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 352;
+    const PROTO_LAST: u16 = 352;
+}
+
+impl IDLInterface for GPURenderBundle {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundle_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 353;
+    const PROTO_LAST: u16 = 353;
+}
+
+impl IDLInterface for GPURenderBundleEncoder {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundleEncoder_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 354;
+    const PROTO_LAST: u16 = 354;
+}
+impl IDLInterface for GPURenderPassEncoder {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPassEncoder_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 355;
+    const PROTO_LAST: u16 = 355;
+}
+
+impl IDLInterface for GPURenderPipeline {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipeline_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 356;
+    const PROTO_LAST: u16 = 356;
+}
+
+impl IDLInterface for GPUSampler {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUSampler_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 357;
+    const PROTO_LAST: u16 = 357;
+}
+
+impl IDLInterface for GPUShaderModule {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUShaderModule_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 358;
+    const PROTO_LAST: u16 = 358;
+}
+
+impl IDLInterface for GPUSupportedFeatures {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedFeatures_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 360;
+    const PROTO_LAST: u16 = 360;
+}
+
+impl IDLInterface for GPUSupportedLimits {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimits_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 362;
+    const PROTO_LAST: u16 = 362;
+}
+
+impl IDLInterface for GPUTexture {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUTexture_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 363;
+    const PROTO_LAST: u16 = 363;
+}
+
+impl IDLInterface for GPUTextureUsage {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureUsage_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 364;
+    const PROTO_LAST: u16 = 364;
+}
+
+impl IDLInterface for GPUTextureView {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureView_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 365;
+    const PROTO_LAST: u16 = 365;
+}
+
+impl IDLInterface for GPUUncapturedErrorEvent {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUUncapturedErrorEvent_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 105;
+    const PROTO_LAST: u16 = 105;
+}
+
+impl IDLInterface for GPUValidationError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 349;
+    const PROTO_LAST: u16 = 349;
+}
+
+impl IDLInterface for WGSLLanguageFeatures {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeatures_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 510;
+    const PROTO_LAST: u16 = 510;
+}
+
+pub(crate) mod dom {
+    pub(crate) mod bindings {
+        pub(crate) mod codegen {
+            pub mod GenericBindings {
+                pub(crate) use script_bindings::codegen::GenericBindings::*;
+            }
+        }
+    }
+}
