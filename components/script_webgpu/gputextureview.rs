@@ -115,3 +115,9 @@ impl<D: DomTypes> GPUTextureViewMethods<D> for GPUTextureView {
         *self.label.borrow_mut() = value;
     }
 }
+
+impl From<GPUTexture> for GPUTextureView {
+    fn from(value: GPUTexture) -> Self {
+        todo!()
+    }
+}

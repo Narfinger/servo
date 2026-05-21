@@ -164,3 +164,9 @@ impl<D: DomTypes> GPUBindGroupMethods<D> for GPUBindGroup {
         *self.label.borrow_mut() = value;
     }
 }
+
+impl AsRef<GPUBindGroup> for GPUBindGroup {
+    fn as_ref(&self) -> &GPUBindGroup {
+        &self
+    }
+}

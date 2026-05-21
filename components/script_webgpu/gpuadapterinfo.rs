@@ -16,6 +16,7 @@ use script_bindings::reflector::{
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
 
+use crate::gpuadapter::GPUAdapter;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
@@ -145,5 +146,11 @@ impl<D: DomTypes> GPUAdapterInfoMethods<D> for GPUAdapterInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-isfallbackadapter>
     fn IsFallbackAdapter(&self) -> bool {
         self.is_fallback_adapter
+    }
+}
+
+impl From<GPUAdapter> for GPUAdapterInfo {
+    fn from(value: GPUAdapter) -> Self {
+        todo!()
     }
 }

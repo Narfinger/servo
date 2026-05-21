@@ -471,3 +471,9 @@ impl RoutedPromiseListener<Result<Mapping, BufferAccessError>> for GPUBuffer {
     }
 }
  */
+
+impl AsRef<GPUBuffer> for GPUBuffer {
+    fn as_ref(&self) -> &GPUBuffer {
+        &self
+    }
+}

@@ -178,3 +178,9 @@ where
          */
     }
 }
+
+impl AsRef<GPURenderPipeline> for GPURenderPipeline {
+    fn as_ref(&self) -> &GPURenderPipeline {
+        &self
+    }
+}

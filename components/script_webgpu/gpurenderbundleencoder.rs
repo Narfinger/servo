@@ -320,3 +320,9 @@ where
          */
     }
 }
+
+impl AsRef<GPURenderBundleEncoder> for GPURenderBundleEncoder {
+    fn as_ref(&self) -> &GPURenderBundleEncoder {
+        &self
+    }
+}

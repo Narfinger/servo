@@ -245,6 +245,7 @@ unsafe impl JSTraceable for PromiseStub {
 }
 
 impl WeakReferenceable for GPUDevice {}
+impl WeakReferenceable for GPUCanvasContext {}
 
 impl GPUError {
     #[allow(dead_code)]

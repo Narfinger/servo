@@ -114,3 +114,9 @@ impl<D: DomTypes> GPURenderBundleMethods<D> for GPURenderBundle {
         *self.label.borrow_mut() = value;
     }
 }
+
+impl AsRef<GPURenderBundle> for GPURenderBundle {
+    fn as_ref(&self) -> &GPURenderBundle {
+        &self
+    }
+}
