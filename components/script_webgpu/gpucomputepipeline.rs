@@ -53,7 +53,7 @@ impl Drop for DroppableGPUComputePipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePipeline {
+pub struct GPUComputePipeline {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     device: Dom<GPUDevice>,

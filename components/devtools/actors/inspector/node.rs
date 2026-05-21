@@ -23,7 +23,7 @@ use crate::protocol::ClientRequest;
 use crate::{EmptyReplyMsg, StreamId};
 
 /// Text node type constant. This is defined again to avoid depending on `script`, where it is defined originally.
-/// See `script::dom::bindings::codegen::Bindings::NodeBinding::NodeConstants`.
+/// See `script::dom::bindings::::::NodeBinding::NodeConstants`.
 const TEXT_NODE: u16 = 3;
 
 /// The maximum length of a text node for it to appear as an inline child in the inspector.

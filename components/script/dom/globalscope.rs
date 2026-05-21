@@ -62,6 +62,8 @@ use script_bindings::settings_stack::run_a_script;
 #[cfg(feature = "webgpu")]
 use script_webgpu::gpudevice::GPUDevice;
 #[cfg(feature = "webgpu")]
+use script_webgpu::gpudevicelostinfo::GPUDeviceLostReason;
+#[cfg(feature = "webgpu")]
 use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel;
 use servo_base::generic_channel::{GenericCallback, GenericSend};
@@ -83,8 +85,6 @@ use uuid::Uuid;
 use webgpu_traits::{DeviceLostReason, WebGPUDevice};
 
 use super::bindings::codegen::Bindings::MessagePortBinding::StructuredSerializeOptions;
-#[cfg(feature = "webgpu")]
-use super::bindings::codegen::Bindings::WebGPUBinding::GPUDeviceLostReason;
 use super::bindings::trace::{HashMapTracedValues, RootedTraceableBox};
 use super::serviceworkerglobalscope::ServiceWorkerGlobalScope;
 use super::transformstream::CrossRealmTransform;

@@ -41,7 +41,7 @@ fn main() {
     //    "cargo::rerun-if-changed={}",
     //    script_concrete_bindings_out_dir.display()
     //);
-    std::fs::read_dir(script_concrete_bindings_out_dir)
+    std::fs::read_dir(&script_concrete_bindings_out_dir)
         .unwrap()
         .filter_map(|res| res.map(|e| e.path()).ok())
         .filter(|path| path.is_file())
@@ -54,4 +54,22 @@ fn main() {
             )
             .unwrap();
         });
+
+    let gpu_set: Vec<&str> = vec!["WebGPUBindings"];
+    // Now we have the same as the script. Remove things we do not need.
+    std::fs::remove_file(out_dir.join("InterfaceTypes.rs"));
+    std::fs::remove_file(out_dir.join("DomTypeHolder.rs"));
+    std::fs::remove_file(out_dir.join("ConcreteInheritTypes.rs"));
+    std::fs::remove_file(out_dir.join("UnionTypes.rs"));
+    std::fs::remove_file(out_dir.join("InterfaceObjectsMapPhf.rs"));
+    for path in std::fs::read_dir(&script_concrete_bindings_out_dir)
+        .unwrap()
+        .filter_map(|res| res.map(|e| e.path()).ok())
+    {
+        if let Some(s) = path.file_name().and_then(|p| p.to_str()) {
+            if !gpu_set.iter().any(|n| s.contains(n)) {
+                std::fs::remove_file(path);
+            }
+        }
+    }
 }

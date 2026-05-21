@@ -46,3 +46,10 @@ pub(crate) mod gpuvalidationerror;
 #[expect(dead_code)]
 pub(crate) mod identityhub;
 pub(crate) mod wgsllanguagefeatures;
+
+#[allow(non_snake_case, unsafe_op_in_unsafe_fn)]
+pub mod codegen {
+    pub mod Binding {
+        include!(concat!(env!("OUT_DIR"), "/ConcreteBindings/mod.rs"));
+    }
+}
