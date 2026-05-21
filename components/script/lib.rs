@@ -77,9 +77,11 @@ mod links;
 
 pub use init::init;
 pub(crate) use script_bindings::DomTypes;
+use script_bindings::conversions::DerivedFrom;
 pub(crate) use script_bindings::reflector::{AssociatedMemory, DomObject, MutDomObject, Reflector};
 pub use script_runtime::JSEngineSetup;
 pub use script_thread::ScriptThread;
+use script_webgpu::gpudevice::GPUDevice;
 pub use serviceworker_manager::ServiceWorkerManager;
 
 pub(crate) use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
@@ -88,7 +90,10 @@ pub(crate) use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
 // it is useful that they are accessible at the root of the crate.
 pub(crate) use crate::dom::bindings::inheritance::HasParent;
 pub(crate) use crate::dom::bindings::trace::{CustomTraceable, JSTraceable};
+use crate::dom::types::EventTarget;
 
 pub(crate) mod webgpu {
     pub(crate) use script_webgpu::*;
 }
+
+impl DerivedFrom<EventTarget> for GPUDevice {}

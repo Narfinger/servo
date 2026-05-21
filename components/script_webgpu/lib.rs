@@ -62,6 +62,7 @@ use script_bindings::codegen::PrototypeList;
 use script_bindings::conversions::{DerivedFrom, IDLInterface};
 use script_bindings::inheritance::Castable;
 pub(crate) use script_bindings::inheritance::HasParent;
+use script_bindings::iterable::IteratorDerives;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 use script_bindings::root::{Dom, DomRoot};
 pub(crate) use script_bindings::trace::CustomTraceable;
@@ -71,6 +72,7 @@ use script_bindings::{DomTypes, script_runtime};
 
 use crate::gpu::GPU;
 use crate::gpuadapter::GPUAdapter;
+use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpubuffer::GPUBuffer;
@@ -96,6 +98,7 @@ use crate::gpurenderpassencoder::GPURenderPassEncoder;
 use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::gpusampler::GPUSampler;
 use crate::gpushadermodule::GPUShaderModule;
+use crate::gpushaderstage::GPUShaderStage;
 use crate::gpusupportedfeatures::GPUSupportedFeatures;
 use crate::gpusupportedlimits::GPUSupportedLimits;
 use crate::gputexture::GPUTexture;
@@ -257,6 +260,7 @@ impl GPUError {
 /*
 impl Castable for GPUDevice {}
 impl DerivedFrom<EventTarget> for GPUDevice {}
+ */
 
 impl Castable for GPUError {}
 impl DerivedFrom<GPUError> for GPUError {}
@@ -268,14 +272,13 @@ impl Castable for GPUOutOfMemoryError {}
 impl DerivedFrom<GPUError> for GPUOutOfMemoryError {}
 
 impl Castable for GPUPipelineError {}
-impl DerivedFrom<DOMException> for GPUPipelineError {}
+//impl DerivedFrom<DOMException> for GPUPipelineError {}
 
 impl Castable for GPUUncapturedErrorEvent {}
-impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}
+//impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}
 
 impl Castable for GPUValidationError {}
 impl DerivedFrom<GPUError> for GPUValidationError {}
- */
 
 /////////////////////////////////////// IDL INTERFACE
 impl IDLInterface for GPU {
@@ -676,4 +679,43 @@ pub(crate) mod dom {
             }
         }
     }
+}
+
+impl IDLInterface for GPUAdapterInfo {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfo_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 333;
+    const PROTO_LAST: u16 = 333;
+}
+
+impl IteratorDerives for GPUSupportedFeatures {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        unsafe {
+            ptr::eq(class, &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedFeaturesSetlike_Binding::Class.get().dom_class)
+        }
+    }
+}
+
+impl IteratorDerives for WGSLLanguageFeatures {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        unsafe {
+            ptr::eq(class, &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeaturesSetlike_Binding::Class.get().dom_class)
+        }
+    }
+}
+impl IDLInterface for GPUShaderStage {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUShaderStage_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 359;
+    const PROTO_LAST: u16 = 359;
 }
