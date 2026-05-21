@@ -81,16 +81,12 @@ impl GPU {
     }
 }
 
-trait GlobalScopeTrait {
-    fn task_manager() -> ();
-}
-
 impl<D: DomTypes> GPUMethods<D> for GPU
 where
     GPU: DomGlobalGeneric<D>,
     D: DomTypes,
     D::WGSLLanguageFeatures: From<WGSLLanguageFeatures>,
-    D::GlobalScope: GlobalScopeTrait,
+    //D::GlobalScope: GlobalScopeTrait,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(

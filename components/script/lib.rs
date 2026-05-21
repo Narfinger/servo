@@ -82,8 +82,10 @@ pub(crate) use script_bindings::reflector::{AssociatedMemory, DomObject, MutDomO
 pub use script_runtime::JSEngineSetup;
 pub use script_thread::ScriptThread;
 use script_webgpu::gpudevice::GPUDevice;
+use script_webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
 pub use serviceworker_manager::ServiceWorkerManager;
 
+use crate::dom::Event;
 pub(crate) use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
 // These trait exports are public, because they are used in the DOM bindings.
 // Since they are used in derive macros,
@@ -97,3 +99,4 @@ pub(crate) mod webgpu {
 }
 
 impl DerivedFrom<EventTarget> for GPUDevice {}
+impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}

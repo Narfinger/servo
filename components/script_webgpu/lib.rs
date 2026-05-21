@@ -76,6 +76,7 @@ use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpubuffer::GPUBuffer;
+use crate::gpucanvascontext::GPUCanvasContext;
 use crate::gpucolorwrite::GPUColorWrite;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
@@ -257,8 +258,8 @@ impl GPUError {
     }
 }
 
-/*
 impl Castable for GPUDevice {}
+/*
 impl DerivedFrom<EventTarget> for GPUDevice {}
  */
 
@@ -275,7 +276,6 @@ impl Castable for GPUPipelineError {}
 //impl DerivedFrom<DOMException> for GPUPipelineError {}
 
 impl Castable for GPUUncapturedErrorEvent {}
-//impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}
 
 impl Castable for GPUValidationError {}
 impl DerivedFrom<GPUError> for GPUValidationError {}
@@ -718,4 +718,15 @@ impl IDLInterface for GPUShaderStage {
     }
     const PROTO_FIRST: u16 = 359;
     const PROTO_LAST: u16 = 359;
+}
+
+impl IDLInterface for GPUCanvasContext {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContext_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 337;
+    const PROTO_LAST: u16 = 337;
 }
