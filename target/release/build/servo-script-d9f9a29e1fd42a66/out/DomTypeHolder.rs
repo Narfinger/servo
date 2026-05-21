@@ -13,7 +13,7 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder> for script_
 }
 
 impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
-    for script_webgpu::gpuadapter::GPUAdapter
+    for script_webgpu::wgsllanguagefeatures::WGSLLanguageFeatures
 {
     const WRAP: unsafe fn(
         &mut js::context::JSContext,
@@ -21,13 +21,13 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
         Option<js::rust::HandleObject>,
         Box<Self>,
     ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
-        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapter_Binding::Wrap::<
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeatures_Binding::Wrap::<
             crate::DomTypeHolder,
         >;
 }
 
 impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
-    for script_webgpu::gpuadapterinfo::GPUAdapterInfo
+    for script_webgpu::gpuvalidationerror::GPUValidationError
 {
     const WRAP: unsafe fn(
         &mut js::context::JSContext,
@@ -35,13 +35,13 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
         Option<js::rust::HandleObject>,
         Box<Self>,
     ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
-        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfo_Binding::Wrap::<
+        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationError_Binding::Wrap::<
             crate::DomTypeHolder,
         >;
 }
 
 impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
-    for script_webgpu::gpubindgroup::GPUBindGroup
+    for script_webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent
 {
     const WRAP: unsafe fn(
         &mut js::context::JSContext,
@@ -49,13 +49,13 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
         Option<js::rust::HandleObject>,
         Box<Self>,
     ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
-        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfo_Binding::Wrap::<
+        crate::dom::bindings::codegen::GenericBindings::WebGPBinding::GPUUncapturedErrorEvent_Binding::Wrap::<
             crate::DomTypeHolder,
         >;
 }
 
 impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
-    for script_webgpu::gpubindgrouplayout::GPUBindGroupLayout
+    for script_webgpu::gpudevice::GPUDevice
 {
     const WRAP: unsafe fn(
         &mut js::context::JSContext,
@@ -63,7 +63,7 @@ impl script_bindings::reflector::DomObjectWrap<crate::DomTypeHolder>
         Option<js::rust::HandleObject>,
         Box<Self>,
     ) -> script_bindings::root::Root<script_bindings::root::Dom<Self>> =
-        crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoLayout_Binding::Wrap::<
+        crate::dom::bindings::codegen::GenericBindings::WebGPBinding::GPUDevice_Binding::Wrap::<
             crate::DomTypeHolder,
         >;
 }

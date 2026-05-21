@@ -13,6 +13,7 @@ use phf_shared::{self, FmtConst};
 use serde_json::{self, Value};
 
 fn main() {
+    /*
     let start = Instant::now();
 
     let style_out_dir = PathBuf::from(env::var_os("DEP_SERVO_STYLE_CRATE_OUT_DIR").unwrap());
@@ -62,6 +63,7 @@ fn main() {
         map.build(),
     )
     .unwrap();
+     */
 }
 
 #[derive(Eq, Hash, PartialEq)]

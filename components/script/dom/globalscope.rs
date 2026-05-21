@@ -62,8 +62,6 @@ use script_bindings::settings_stack::run_a_script;
 #[cfg(feature = "webgpu")]
 use script_webgpu::gpudevice::GPUDevice;
 #[cfg(feature = "webgpu")]
-use script_webgpu::gpudevicelostinfo::GPUDeviceLostReason;
-#[cfg(feature = "webgpu")]
 use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel;
 use servo_base::generic_channel::{GenericCallback, GenericSend};
@@ -3259,6 +3257,8 @@ impl GlobalScope {
         reason: DeviceLostReason,
         msg: String,
     ) {
+        use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUDeviceLostReason;
+
         let reason = match reason {
             DeviceLostReason::Unknown => GPUDeviceLostReason::Unknown,
             DeviceLostReason::Destroyed => GPUDeviceLostReason::Destroyed,
