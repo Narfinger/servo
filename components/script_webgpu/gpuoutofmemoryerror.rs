@@ -20,7 +20,7 @@ use crate::gpuinternalerror::GPUInternalError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUOutOfMemoryError {
+pub struct GPUOutOfMemoryError {
     gpu_error: GPUError,
 }
 

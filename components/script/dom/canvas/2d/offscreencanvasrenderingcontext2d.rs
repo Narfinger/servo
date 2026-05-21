@@ -7,9 +7,9 @@ use euclid::default::Size2D;
 use js::context::JSContext;
 use pixels::Snapshot;
 use script_bindings::reflector::reflect_dom_object;
+use script_bindings::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use servo_canvas_traits::canvas::Canvas2dMsg;
 
-use crate::canvas_context::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use crate::dom::bindings::codegen::Bindings::CanvasRenderingContext2DBinding::{
     CanvasDirection, CanvasFillRule, CanvasImageSource, CanvasLineCap, CanvasLineJoin,
     CanvasRenderingContext2DMethods, CanvasTextAlign, CanvasTextBaseline,
@@ -44,7 +44,7 @@ impl OffscreenCanvasRenderingContext2D {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
     fn new_inherited(
         global: &GlobalScope,
-        canvas: HTMLCanvasElementOrOffscreenCanvas,
+        canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
         size: Size2D<u32>,
     ) -> Option<OffscreenCanvasRenderingContext2D> {
         Some(OffscreenCanvasRenderingContext2D {
@@ -78,9 +78,11 @@ impl CanvasContext for OffscreenCanvasRenderingContext2D {
         self.context.context_id()
     }
 
+    /*
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
         self.context.canvas()
     }
+     */
 
     fn resize(&self) {
         self.context.resize()
@@ -106,10 +108,13 @@ impl OffscreenCanvasRenderingContext2DMethods<crate::DomTypeHolder>
 {
     /// <https://html.spec.whatwg.org/multipage/offscreencontext2d-canvas>
     fn Canvas(&self) -> DomRoot<OffscreenCanvas> {
+        todo!()
+        /*
         match self.context.canvas() {
             Some(RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas)) => canvas,
             _ => panic!("Should not be called from onscreen canvas"),
         }
+         */
     }
 
     /// <https://html.spec.whatwg.org/multipage/#dom-context-2d-fillrect>

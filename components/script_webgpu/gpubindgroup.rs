@@ -49,7 +49,7 @@ impl Drop for DroppableGPUBindGroup {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBindGroup {
+pub struct GPUBindGroup {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]

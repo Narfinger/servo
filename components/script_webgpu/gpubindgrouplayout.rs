@@ -52,7 +52,7 @@ impl Drop for DroppableGPUBindGroupLayout {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBindGroupLayout {
+pub struct GPUBindGroupLayout {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUBindGroupLayout,

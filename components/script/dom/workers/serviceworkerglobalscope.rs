@@ -19,6 +19,8 @@ use net_traits::request::{
     CredentialsMode, Destination, InsecureRequestsPolicy, ParserMetadata, Referrer, RequestBuilder,
 };
 use rand::random;
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel::{GenericReceiver, GenericSend, GenericSender, RoutedReceiver};
 use servo_base::id::PipelineId;
 use servo_config::pref;
@@ -48,8 +50,6 @@ use crate::dom::extendableevent::ExtendableEvent;
 use crate::dom::extendablemessageevent::ExtendableMessageEvent;
 use crate::dom::global_scope_script_execution::{ErrorReporting, RethrowErrors};
 use crate::dom::globalscope::GlobalScope;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::dom::worker::TrustedWorkerAddress;
 use crate::dom::workerglobalscope::WorkerGlobalScope;
 use crate::fetch::{CspViolationsProcessor, load_whole_resource};

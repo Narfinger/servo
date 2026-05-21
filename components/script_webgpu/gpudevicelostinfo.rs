@@ -21,7 +21,7 @@ use script_bindings::str::DOMString;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUDeviceLostInfo {
+pub struct GPUDeviceLostInfo {
     reflector_: Reflector,
     message: DOMString,
     reason: GPUDeviceLostReason,

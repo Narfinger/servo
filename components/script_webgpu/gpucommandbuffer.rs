@@ -44,7 +44,7 @@ impl Drop for DroppableGPUCommandBuffer {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandBuffer {
+pub struct GPUCommandBuffer {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUCommandBuffer,

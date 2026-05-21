@@ -34,7 +34,7 @@ pub struct WGSLLanguageFeatures {
 }
 
 impl WGSLLanguageFeatures {
-    pub(crate) fn new<D>(
+    pub fn new<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,

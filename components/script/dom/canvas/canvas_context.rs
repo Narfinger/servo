@@ -7,8 +7,10 @@
 use euclid::default::Size2D;
 use pixels::Snapshot;
 use script_bindings::root::{Dom, DomRoot};
+use script_bindings::{CanvasContext, DomTypes, HTMLCanvasElementOrOffscreenCanvas};
 use webrender_api::ImageKey;
 
+use crate::DomTypeHolder;
 use crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas as RootedHTMLCanvasElementOrOffscreenCanvas;
 use crate::dom::bindings::inheritance::Castable;
 use crate::dom::node::{Node, NodeTraits};
@@ -19,14 +21,7 @@ use crate::dom::types::{
     OffscreenCanvasRenderingContext2D, WebGL2RenderingContext, WebGLRenderingContext,
 };
 
-/// Non rooted variant of [`crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas`]
-#[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
-#[derive(Clone, JSTraceable, MallocSizeOf)]
-pub(crate) enum HTMLCanvasElementOrOffscreenCanvas {
-    HTMLCanvasElement(Dom<HTMLCanvasElement>),
-    OffscreenCanvas(Dom<OffscreenCanvas>),
-}
-
+/*
 impl HTMLCanvasElementOrOffscreenCanvas {
     pub(crate) fn mark_as_dirty(&self) {
         if let HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) = self {
@@ -35,7 +30,9 @@ impl HTMLCanvasElementOrOffscreenCanvas {
     }
 }
 
-impl From<&RootedHTMLCanvasElementOrOffscreenCanvas> for HTMLCanvasElementOrOffscreenCanvas {
+impl From<&RootedHTMLCanvasElementOrOffscreenCanvas>
+    for HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>
+{
     /// Returns a traced version suitable for use as member of other DOM objects.
     fn from(
         value: &RootedHTMLCanvasElementOrOffscreenCanvas,
@@ -66,60 +63,14 @@ impl From<&HTMLCanvasElementOrOffscreenCanvas> for RootedHTMLCanvasElementOrOffs
         }
     }
 }
-
-pub(crate) trait CanvasContext {
-    type ID;
-
-    fn context_id(&self) -> Self::ID;
-
-    fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas>;
-
-    fn resize(&self);
-
-    // Resets the backing bitmap (to transparent or opaque black) without the
-    // context state reset.
-    // Used by OffscreenCanvas.transferToImageBitmap.
-    fn reset_bitmap(&self);
-
-    /// Returns none if area of canvas is zero.
-    ///
-    /// In case of other errors it returns cleared snapshot
-    fn get_image_data(&self) -> Option<Snapshot>;
-
-    fn origin_is_clean(&self) -> bool {
-        true
-    }
-
-    fn size(&self) -> Size2D<u32> {
-        self.canvas()
-            .map(|canvas| canvas.size())
-            .unwrap_or_default()
-    }
-
-    fn mark_as_dirty(&self);
-
-    fn onscreen(&self) -> bool {
-        let Some(canvas) = self.canvas() else {
-            return false;
-        };
-
-        match canvas {
-            RootedHTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
-                canvas.upcast::<Node>().is_connected()
-            },
-            // FIXME(34628): Offscreen canvases should be considered offscreen if a placeholder is set.
-            // <https://www.w3.org/TR/webgpu/#abstract-opdef-updating-the-rendering-of-a-webgpu-canvas>
-            RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(_) => false,
-        }
-    }
-}
+ */
 
 pub(crate) trait CanvasHelpers {
     fn size(&self) -> Size2D<u32>;
     fn canvas(&self) -> Option<DomRoot<HTMLCanvasElement>>;
 }
 
-impl CanvasHelpers for HTMLCanvasElementOrOffscreenCanvas {
+impl CanvasHelpers for HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder> {
     fn size(&self) -> Size2D<u32> {
         match self {
             HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
@@ -195,6 +146,7 @@ impl CanvasContext for RenderingContext {
 
     fn context_id(&self) -> Self::ID {}
 
+    /*
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
         match self {
             RenderingContext::Placeholder(offscreen_canvas) => offscreen_canvas.context()?.canvas(),
@@ -206,6 +158,7 @@ impl CanvasContext for RenderingContext {
             RenderingContext::WebGPU(context) => context.canvas(),
         }
     }
+     */
 
     fn resize(&self) {
         match self {
@@ -267,6 +220,7 @@ impl CanvasContext for RenderingContext {
         }
     }
 
+    /*
     fn size(&self) -> Size2D<u32> {
         match self {
             RenderingContext::Placeholder(offscreen_canvas) => offscreen_canvas
@@ -281,6 +235,7 @@ impl CanvasContext for RenderingContext {
             RenderingContext::WebGPU(context) => context.size(),
         }
     }
+     */
 
     fn mark_as_dirty(&self) {
         match self {
@@ -298,17 +253,20 @@ impl CanvasContext for RenderingContext {
         }
     }
 
-    fn onscreen(&self) -> bool {
+    fn onscreen<D: DomTypes>(&self) -> bool {
         match self {
-            RenderingContext::Placeholder(offscreen_canvas) => offscreen_canvas
-                .context()
-                .is_some_and(|context| context.onscreen()),
-            RenderingContext::Context2d(context) => context.onscreen(),
-            RenderingContext::BitmapRenderer(context) => context.onscreen(),
-            RenderingContext::WebGL(context) => context.onscreen(),
-            RenderingContext::WebGL2(context) => context.onscreen(),
+            RenderingContext::Placeholder(offscreen_canvas) => {
+                todo!()
+                //offscreen_canvas
+                //.context()
+                //.is_some_and(|context| context.onscreen()),
+            },
+            RenderingContext::Context2d(context) => context.onscreen::<crate::DomTypeHolder>(),
+            RenderingContext::BitmapRenderer(context) => context.onscreen::<crate::DomTypeHolder>(),
+            RenderingContext::WebGL(context) => context.onscreen::<crate::DomTypeHolder>(),
+            RenderingContext::WebGL2(context) => context.onscreen::<crate::DomTypeHolder>(),
             #[cfg(feature = "webgpu")]
-            RenderingContext::WebGPU(context) => context.onscreen(),
+            RenderingContext::WebGPU(context) => context.onscreen::<crate::DomTypeHolder>(),
         }
     }
 }
@@ -331,6 +289,7 @@ impl CanvasContext for OffscreenRenderingContext {
 
     fn context_id(&self) -> Self::ID {}
 
+    /*
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
         match self {
             OffscreenRenderingContext::Context2d(context) => context.canvas(),
@@ -340,6 +299,7 @@ impl CanvasContext for OffscreenRenderingContext {
             OffscreenRenderingContext::Detached => None,
         }
     }
+     */
 
     fn resize(&self) {
         match self {
@@ -381,6 +341,7 @@ impl CanvasContext for OffscreenRenderingContext {
         }
     }
 
+    /*
     fn size(&self) -> Size2D<u32> {
         match self {
             OffscreenRenderingContext::Context2d(context) => context.size(),
@@ -390,6 +351,7 @@ impl CanvasContext for OffscreenRenderingContext {
             OffscreenRenderingContext::Detached => Size2D::default(),
         }
     }
+     */
 
     fn mark_as_dirty(&self) {
         match self {
@@ -401,12 +363,18 @@ impl CanvasContext for OffscreenRenderingContext {
         }
     }
 
-    fn onscreen(&self) -> bool {
+    fn onscreen<D: DomTypes>(&self) -> bool {
         match self {
-            OffscreenRenderingContext::Context2d(context) => context.onscreen(),
-            OffscreenRenderingContext::BitmapRenderer(context) => context.onscreen(),
-            OffscreenRenderingContext::WebGL(context) => context.onscreen(),
-            OffscreenRenderingContext::WebGL2(context) => context.onscreen(),
+            OffscreenRenderingContext::Context2d(context) => {
+                context.onscreen::<crate::DomTypeHolder>()
+            },
+            OffscreenRenderingContext::BitmapRenderer(context) => {
+                context.onscreen::<crate::DomTypeHolder>()
+            },
+            OffscreenRenderingContext::WebGL(context) => context.onscreen::<crate::DomTypeHolder>(),
+            OffscreenRenderingContext::WebGL2(context) => {
+                context.onscreen::<crate::DomTypeHolder>()
+            },
             OffscreenRenderingContext::Detached => false,
         }
     }

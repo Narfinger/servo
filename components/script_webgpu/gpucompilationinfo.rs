@@ -19,7 +19,7 @@ use crate::gpucompilationmessage::GPUCompilationMessage;
 use crate::script_runtime::{CanGc, JSContext};
 
 #[dom_struct]
-pub(crate) struct GPUCompilationInfo {
+pub struct GPUCompilationInfo {
     reflector_: Reflector,
     // currently we only get one message from wgpu
     msg: Vec<DomRoot<GPUCompilationMessage>>,

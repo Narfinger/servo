@@ -43,7 +43,7 @@ impl Drop for DroppableGPUComputePassEncoder {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePassEncoder {
+pub struct GPUComputePassEncoder {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     command_encoder: Dom<GPUCommandEncoder>,

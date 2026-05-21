@@ -52,7 +52,7 @@ impl Drop for DroppableGPUShaderModule {
 }
 
 #[dom_struct]
-pub(crate) struct GPUShaderModule {
+pub struct GPUShaderModule {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[ignore_malloc_size_of = "promise"]

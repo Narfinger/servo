@@ -50,7 +50,7 @@ impl Drop for DroppableGPUPipelineLayout {
 }
 
 #[dom_struct]
-pub(crate) struct GPUPipelineLayout {
+pub struct GPUPipelineLayout {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]

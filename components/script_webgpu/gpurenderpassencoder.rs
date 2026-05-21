@@ -49,7 +49,7 @@ impl Drop for DroppableGPURenderPassEncoder {
     }
 }
 #[dom_struct]
-pub(crate) struct GPURenderPassEncoder {
+pub struct GPURenderPassEncoder {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     command_encoder: Dom<GPUCommandEncoder>,

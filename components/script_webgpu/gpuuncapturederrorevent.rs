@@ -22,7 +22,7 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUUncapturedErrorEvent {
+pub struct GPUUncapturedErrorEvent {
     //event: D::Event,
     #[ignore_malloc_size_of = "Because it is non-owning"]
     gpu_error: Dom<GPUError>,
@@ -39,7 +39,7 @@ impl GPUUncapturedErrorEvent {
          */
     }
 
-    pub(crate) fn new<D>(
+    pub fn new<D>(
         global: &D::GlobalScope,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit<D>,

@@ -11,7 +11,6 @@ use script_bindings::reflector::reflect_dom_object_with_proto;
 use servo_canvas_traits::webgl::{WebGLCommand, WebGLContextId, WebGLTextureId};
 use webxr_api::{ContextId as WebXRContextId, LayerId, LayerInit, Viewport};
 
-use crate::canvas_context::CanvasContext;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::WebGL2RenderingContextBinding::WebGL2RenderingContextConstants as constants;
 use crate::dom::bindings::codegen::Bindings::WebGLRenderingContextBinding::WebGLRenderingContextMethods;
@@ -124,7 +123,8 @@ impl XRWebGLLayer {
                 size.1.try_into().unwrap_or(0),
             )
         } else {
-            Size2D::from_untyped(self.context().size())
+            todo!()
+            //Size2D::from_untyped(self.context().size())
         }
     }
 
@@ -263,6 +263,8 @@ impl XRWebGLLayerMethods<crate::DomTypeHolder> for XRWebGLLayer {
         // XXXManishearth step 3: throw error if context is lost
         // XXXManishearth step 4: check XR compat flag for immersive sessions
 
+        todo!();
+        /*
         let (framebuffer, layer_id) = if session.is_immersive() {
             // Step 9.2. "Initialize layer’s framebuffer to a new opaque framebuffer created with context."
             let size = session
@@ -273,6 +275,7 @@ impl XRWebGLLayerMethods<crate::DomTypeHolder> for XRWebGLLayer {
 
             // Step 9.3. "Allocate and initialize resources compatible with session’s XR device,
             // including GPU accessible memory buffers, as required to support the compositing of layer."
+
             let context_id = WebXRContextId::from(context.context_id());
             let layer_init: LayerInit = init.convert();
             let layer_id = session
@@ -283,7 +286,8 @@ impl XRWebGLLayerMethods<crate::DomTypeHolder> for XRWebGLLayer {
             // throw an OperationError and abort these steps."
             (Some(framebuffer), Some(layer_id))
         } else {
-            (None, None)
+
+            //(None, None)
         };
 
         // Ensure that we finish setting up this layer before continuing.
@@ -300,6 +304,7 @@ impl XRWebGLLayerMethods<crate::DomTypeHolder> for XRWebGLLayer {
             layer_id,
             can_gc,
         ))
+             */
     }
 
     /// <https://www.w3.org/TR/webxr/#dom-xrwebgllayer-getnativeframebufferscalefactor>

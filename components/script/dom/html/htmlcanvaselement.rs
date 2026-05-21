@@ -13,9 +13,12 @@ use js::rust::{HandleObject, HandleValue};
 use layout_api::HTMLCanvasData;
 use pixels::{EncodedImageType, Snapshot};
 use rustc_hash::FxHashMap;
+use script_bindings::CanvasContext;
 use script_bindings::cell::{DomRefCell, Ref};
 use script_bindings::reflector::DomObject;
 use script_bindings::weakref::WeakRef;
+#[cfg(feature = "webgpu")]
+use script_webgpu::gpucanvascontext::GPUCanvasContext;
 use servo_base::Epoch;
 use servo_canvas_traits::webgl::{GLContextAttributes, WebGLVersion};
 use servo_constellation_traits::BlobImpl;
@@ -26,7 +29,7 @@ use servo_media::streams::registry::MediaStreamId;
 use style::attr::AttrValue;
 use webrender_api::ImageKey;
 
-use crate::canvas_context::{CanvasContext, RenderingContext};
+use crate::canvas_context::RenderingContext;
 use crate::conversions::Convert;
 use crate::dom::bindings::callback::ExceptionHandling;
 use crate::dom::bindings::codegen::Bindings::HTMLCanvasElementBinding::{
@@ -60,8 +63,6 @@ use crate::dom::values::UNSIGNED_LONG_MAX;
 use crate::dom::virtualmethods::VirtualMethods;
 use crate::dom::webgl::webgl2renderingcontext::WebGL2RenderingContext;
 use crate::dom::webgl::webglrenderingcontext::WebGLRenderingContext;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::gpucanvascontext::GPUCanvasContext;
 use crate::script_runtime::{CanGc, JSContext};
 
 const DEFAULT_WIDTH: u32 = 300;
@@ -347,8 +348,12 @@ impl HTMLCanvasElement {
             .recv()
             .expect("Failed to get WebGPU channel")
             .map(|channel| {
-                let context =
-                    GPUCanvasContext::new(&global_scope, self, channel, CanGc::from_cx(cx));
+                let context = GPUCanvasContext::new::<crate::DomTypeHolder>(
+                    &global_scope,
+                    self,
+                    channel,
+                    CanGc::from_cx(cx),
+                );
                 self.set_rendering_context(|| RenderingContext::WebGPU(Dom::from_ref(&*context)));
                 context
             })

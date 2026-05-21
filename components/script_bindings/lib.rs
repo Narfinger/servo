@@ -89,11 +89,75 @@ pub mod codegen {
     }
 }
 
+use euclid::default::Size2D;
 // These trait exports are public, because they are used in the DOM bindings.
 // Since they are used in derive macros,
 // it is useful that they are accessible at the root of the crate.
 pub(crate) use js::gc::Traceable as JSTraceable;
+use pixels::Snapshot;
 
 pub use crate::codegen::DomTypes::DomTypes;
 pub(crate) use crate::reflector::{DomObject, MutDomObject, Reflector};
+use crate::root::Dom;
 pub(crate) use crate::trace::CustomTraceable;
+
+/// Non rooted variant of [`crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas`]
+#[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
+#[derive(Clone, JSTraceable, MallocSizeOf)]
+pub enum HTMLCanvasElementOrOffscreenCanvas<D: DomTypes> {
+    HTMLCanvasElement(Dom<D::HTMLCanvasElement>),
+    OffscreenCanvas(Dom<D::OffscreenCanvas>),
+}
+
+pub trait CanvasContext {
+    type ID;
+
+    fn context_id(&self) -> Self::ID;
+
+    //fn canvas<D: DomTypes>(&self) -> Option<HTMLCanvasElementOrOffscreenCanvas<D>>;
+
+    fn resize(&self);
+
+    // Resets the backing bitmap (to transparent or opaque black) without the
+    // context state reset.
+    // Used by OffscreenCanvas.transferToImageBitmap.
+    fn reset_bitmap(&self);
+
+    /// Returns none if area of canvas is zero.
+    ///
+    /// In case of other errors it returns cleared snapshot
+    fn get_image_data(&self) -> Option<Snapshot>;
+
+    fn origin_is_clean(&self) -> bool {
+        true
+    }
+
+    /*
+    fn size(&self) -> Size2D<u32> {
+        self.canvas()
+            .map(|canvas| canvas.size())
+            .unwrap_or_default()
+    }
+     */
+
+    fn mark_as_dirty(&self);
+
+    fn onscreen<D: DomTypes>(&self) -> bool {
+        todo!()
+
+        /*
+        let Some(canvas) = self.canvas() else {
+            return false;
+        };
+
+        match canvas {
+            HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
+                canvas.upcast::<D::Node>().is_connected()
+            },
+            // FIXME(34628): Offscreen canvases should be considered offscreen if a placeholder is set.
+            // <https://www.w3.org/TR/webgpu/#abstract-opdef-updating-the-rendering-of-a-webgpu-canvas>
+            HTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(_) => false,
+        }
+         */
+    }
+}

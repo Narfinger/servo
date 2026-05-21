@@ -21,7 +21,7 @@ use webgpu_traits::ShaderCompilationInfo;
 
 use crate::script_runtime::CanGc;
 #[dom_struct]
-pub(crate) struct GPUCompilationMessage {
+pub struct GPUCompilationMessage {
     reflector_: Reflector,
     message: DOMString,
     mtype: GPUCompilationMessageType,

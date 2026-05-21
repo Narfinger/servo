@@ -30,6 +30,8 @@ use script_bindings::cell::{DomRefCell, Ref};
 use script_bindings::conversions::{SafeToJSValConvertible, root_from_handlevalue};
 use script_bindings::reflector::DomObject;
 use script_bindings::root::rooted_heap_handle;
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use servo_base::cross_process_instant::CrossProcessInstant;
 use servo_base::generic_channel::{GenericSend, GenericSender, RoutedReceiver};
 use servo_base::id::{PipelineId, PipelineNamespace};
@@ -77,8 +79,6 @@ use crate::dom::sharedworkerglobalscope::SharedWorkerGlobalScope;
 use crate::dom::trustedtypes::trustedscripturl::TrustedScriptURL;
 use crate::dom::trustedtypes::trustedtypepolicyfactory::TrustedTypePolicyFactory;
 use crate::dom::types::ImageBitmap;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::dom::window::{base64_atob, base64_btoa};
 use crate::dom::workerlocation::WorkerLocation;
 use crate::dom::workernavigator::WorkerNavigator;

@@ -12,6 +12,7 @@ use js::realm::CurrentRealm;
 use js::rust::{HandleObject, HandleValue};
 use pixels::{EncodedImageType, Snapshot};
 use rustc_hash::FxHashMap;
+use script_bindings::CanvasContext;
 use script_bindings::cell::{DomRefCell, Ref};
 use script_bindings::inheritance::Castable;
 use script_bindings::reflector::{DomObject, reflect_dom_object_with_proto_and_cx};
@@ -20,7 +21,7 @@ use servo_base::id::{OffscreenCanvasId, OffscreenCanvasIndex};
 use servo_canvas_traits::webgl::{GLContextAttributes, WebGLVersion};
 use servo_constellation_traits::{BlobImpl, TransferableOffscreenCanvas};
 
-use crate::canvas_context::{CanvasContext, OffscreenRenderingContext};
+use crate::canvas_context::OffscreenRenderingContext;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::OffscreenCanvasBinding::{
     ImageEncodeOptions, OffscreenCanvasMethods,
@@ -134,6 +135,8 @@ impl OffscreenCanvas {
     }
 
     pub(crate) fn get_image_data(&self) -> Option<Snapshot> {
+        todo!()
+        /*
         match self.context.borrow().as_ref() {
             Some(context) => context.get_image_data(),
             None => {
@@ -151,6 +154,7 @@ impl OffscreenCanvas {
                 }
             },
         }
+         */
     }
 
     pub(crate) fn get_or_init_2d_context(

@@ -18,8 +18,9 @@ use script_bindings::root::DomRoot;
 use wgpu_types::Limits;
 
 use crate::script_runtime::CanGc;
+
 #[dom_struct]
-pub(crate) struct GPUSupportedLimits {
+pub struct GPUSupportedLimits {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in wgpu-types"]
     #[no_trace]

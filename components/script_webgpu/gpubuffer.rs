@@ -67,7 +67,7 @@ impl ActiveBufferMapping {
 }
 
 #[dom_struct]
-pub(crate) struct GPUBuffer {
+pub struct GPUBuffer {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,

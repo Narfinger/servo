@@ -8,6 +8,6 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::reflector::Reflector;
 #[dom_struct]
-pub(crate) struct GPUShaderStage {
+pub struct GPUShaderStage {
     reflector_: Reflector,
 }

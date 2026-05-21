@@ -58,7 +58,7 @@ impl Drop for DroppableGPUAdapter {
 }
 
 #[dom_struct]
-pub(crate) struct GPUAdapter {
+pub struct GPUAdapter {
     reflector_: Reflector,
     name: DOMString,
     #[ignore_malloc_size_of = "mozjs"]

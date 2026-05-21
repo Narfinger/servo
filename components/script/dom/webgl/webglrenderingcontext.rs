@@ -24,6 +24,7 @@ use pixels::{self, Alpha, PixelFormat, Snapshot, SnapshotPixelFormat};
 use script_bindings::cell::{DomRefCell, Ref, RefMut};
 use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::reflector::{AssociatedMemory, Reflector, reflect_dom_object};
+use script_bindings::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use serde::{Deserialize, Serialize};
 use servo_base::generic_channel::GenericSharedMemory;
 use servo_base::{Epoch, generic_channel};
@@ -37,7 +38,6 @@ use servo_canvas_traits::webgl::{
 use servo_config::pref;
 use webrender_api::ImageKey;
 
-use crate::canvas_context::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use crate::dom::bindings::codegen::Bindings::ANGLEInstancedArraysBinding::ANGLEInstancedArraysConstants;
 use crate::dom::bindings::codegen::Bindings::EXTBlendMinmaxBinding::EXTBlendMinmaxConstants;
 use crate::dom::bindings::codegen::Bindings::OESVertexArrayObjectBinding::OESVertexArrayObjectConstants;
@@ -194,7 +194,7 @@ pub(crate) struct WebGLRenderingContext {
     #[ignore_malloc_size_of = "Defined in surfman"]
     #[no_trace]
     limits: GLLimits,
-    canvas: HTMLCanvasElementOrOffscreenCanvas,
+    canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
     #[ignore_malloc_size_of = "Defined in servo_canvas_traits"]
     #[no_trace]
     last_error: Cell<Option<WebGLError>>,
@@ -232,7 +232,7 @@ impl WebGLRenderingContext {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
     pub(crate) fn new_inherited(
         window: &Window,
-        canvas: HTMLCanvasElementOrOffscreenCanvas,
+        canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
         webgl_version: WebGLVersion,
         size: Size2D<u32>,
         attrs: GLContextAttributes,
@@ -312,35 +312,37 @@ impl WebGLRenderingContext {
         attrs: GLContextAttributes,
         can_gc: CanGc,
     ) -> Option<DomRoot<WebGLRenderingContext>> {
+        todo!() /*
         match WebGLRenderingContext::new_inherited(
-            window,
-            HTMLCanvasElementOrOffscreenCanvas::from(canvas),
-            webgl_version,
-            size,
-            attrs,
+        window,
+        HTMLCanvasElementOrOffscreenCanvas::from(canvas),
+        webgl_version,
+        size,
+        attrs,
         ) {
-            Ok(ctx) => Some(reflect_dom_object(Box::new(ctx), window, can_gc)),
-            Err(msg) => {
-                error!("Couldn't create WebGLRenderingContext: {}", msg);
-                let event = WebGLContextEvent::new(
-                    window,
-                    atom!("webglcontextcreationerror"),
-                    EventBubbles::DoesNotBubble,
-                    EventCancelable::Cancelable,
-                    DOMString::from(msg),
-                    can_gc,
-                );
-                match canvas {
-                    RootedHTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
-                        event.upcast::<Event>().fire(canvas.upcast(), can_gc);
-                    },
-                    RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas) => {
-                        event.upcast::<Event>().fire(canvas.upcast(), can_gc);
-                    },
-                }
-                None
-            },
+        Ok(ctx) => Some(reflect_dom_object(Box::new(ctx), window, can_gc)),
+        Err(msg) => {
+        error!("Couldn't create WebGLRenderingContext: {}", msg);
+        let event = WebGLContextEvent::new(
+        window,
+        atom!("webglcontextcreationerror"),
+        EventBubbles::DoesNotBubble,
+        EventCancelable::Cancelable,
+        DOMString::from(msg),
+        can_gc,
+        );
+        match canvas {
+        RootedHTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
+        event.upcast::<Event>().fire(canvas.upcast(), can_gc);
+        },
+        RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas) => {
+        event.upcast::<Event>().fire(canvas.upcast(), can_gc);
+        },
         }
+        None
+        },
+        }
+         */
     }
 
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {
@@ -1996,11 +1998,16 @@ impl CanvasContext for WebGLRenderingContext {
         self.droppable.webgl_sender.context_id()
     }
 
+    /*
+     *
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
-        Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
+        todo!() //Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
     }
+     */
 
     fn resize(&self) {
+        todo!()
+        /*
         let size = self.size().cast();
         let (sender, receiver) = webgl_channel().unwrap();
         self.droppable
@@ -2053,6 +2060,7 @@ impl CanvasContext for WebGLRenderingContext {
             let id = WebGLFramebufferBindingRequest::Explicit(fbo.id());
             self.send_command(WebGLCommand::BindFramebuffer(constants::FRAMEBUFFER, id));
         }
+         */
     }
 
     fn reset_bitmap(&self) {
@@ -2067,7 +2075,9 @@ impl CanvasContext for WebGLRenderingContext {
     /// <https://www.khronos.org/registry/webgl/specs/latest/1.0/#2.2>
     fn get_image_data(&self) -> Option<Snapshot> {
         handle_potential_webgl_error!(self, self.validate_framebuffer(), return None);
-        let mut size = self.size().cast();
+        todo!()
+        /*
+            let mut size = self.size().cast();
 
         let (fb_width, fb_height) = handle_potential_webgl_error!(
             self,
@@ -2091,6 +2101,7 @@ impl CanvasContext for WebGLRenderingContext {
             alpha_mode,
             data.to_vec(),
         ))
+        */
     }
 
     fn mark_as_dirty(&self) {
@@ -2105,7 +2116,7 @@ impl CanvasContext for WebGLRenderingContext {
             return;
         }
 
-        self.canvas.mark_as_dirty();
+        //self.canvas.mark_as_dirty();
     }
 }
 
@@ -2131,7 +2142,7 @@ pub(crate) fn capture_webgl_backtrace() -> WebGLCommandBacktrace {
 impl WebGLRenderingContextMethods<crate::DomTypeHolder> for WebGLRenderingContext {
     /// <https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.1>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
-        RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
+        todo!() //RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
     }
 
     /// <https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.11>

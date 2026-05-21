@@ -7,13 +7,14 @@ use euclid::default::Size2D;
 use js::context::JSContext;
 use pixels::Snapshot;
 use script_bindings::reflector::{AssociatedMemory, Reflector, reflect_dom_object};
+use script_bindings::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use servo_base::{Epoch, generic_channel};
 use servo_canvas_traits::canvas::{Canvas2dMsg, CanvasId};
 use servo_url::ServoUrl;
 use webrender_api::ImageKey;
 
 use super::canvas_state::CanvasState;
-use crate::canvas_context::{CanvasContext, CanvasHelpers, HTMLCanvasElementOrOffscreenCanvas};
+use crate::canvas_context::CanvasHelpers;
 use crate::dom::bindings::codegen::Bindings::CanvasRenderingContext2DBinding::{
     CanvasDirection, CanvasFillRule, CanvasImageSource, CanvasLineCap, CanvasLineJoin,
     CanvasRenderingContext2DMethods, CanvasTextAlign, CanvasTextBaseline,
@@ -42,7 +43,7 @@ use crate::script_runtime::CanGc;
 #[dom_struct(associated_memory)]
 pub(crate) struct CanvasRenderingContext2D {
     reflector_: Reflector<AssociatedMemory>,
-    canvas: HTMLCanvasElementOrOffscreenCanvas,
+    canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
     canvas_state: CanvasState,
 }
 
@@ -50,7 +51,7 @@ impl CanvasRenderingContext2D {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
     pub(crate) fn new_inherited(
         global: &GlobalScope,
-        canvas: HTMLCanvasElementOrOffscreenCanvas,
+        canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
         size: Size2D<u32>,
     ) -> Option<CanvasRenderingContext2D> {
         let canvas_state =
@@ -93,10 +94,14 @@ impl CanvasRenderingContext2D {
     }
 
     pub(crate) fn update_rendering(&self, canvas_epoch: Epoch) -> bool {
+        todo!()
+        /*
+         *
         if !self.onscreen() {
             return false;
         }
         self.canvas_state.update_rendering(Some(canvas_epoch))
+         */
     }
 }
 
@@ -107,14 +112,16 @@ impl CanvasContext for CanvasRenderingContext2D {
         self.canvas_state.get_canvas_id()
     }
 
+    /*
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
         Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
     }
+     */
 
     fn resize(&self) {
-        self.reflector_
-            .update_memory_size(self, self.size().cast::<usize>().area());
-        self.canvas_state.set_bitmap_dimensions(self.size().cast());
+        //self.reflector_
+        //    .update_memory_size(self, self.size().cast::<usize>().area());
+        //self.canvas_state.set_bitmap_dimensions(self.size().cast());
     }
 
     fn reset_bitmap(&self) {
@@ -137,7 +144,7 @@ impl CanvasContext for CanvasRenderingContext2D {
     }
 
     fn mark_as_dirty(&self) {
-        self.canvas.mark_as_dirty();
+        //self.canvas.mark_as_dirty();
     }
 }
 

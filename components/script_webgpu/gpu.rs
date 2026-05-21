@@ -32,7 +32,7 @@ use crate::script_runtime::CanGc;
 
 #[dom_struct]
 #[expect(clippy::upper_case_acronyms)]
-pub(crate) struct GPU {
+pub struct GPU {
     reflector_: Reflector,
     /// Same object for <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
     wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
@@ -56,7 +56,7 @@ impl GPU {
         }
     }
 
-    pub(crate) fn new<D>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU>
+    pub fn new<D>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU>
     where
         D: DomTypes,
         Box<D::GPU>: From<Box<GPU>>,

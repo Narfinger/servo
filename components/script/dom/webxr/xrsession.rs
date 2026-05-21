@@ -8,6 +8,7 @@ use std::f64::consts::{FRAC_PI_2, PI};
 use std::rc::Rc;
 use std::{mem, ptr};
 
+use script_bindings::CanvasContext;
 use script_bindings::reflector::reflect_dom_object;
 use servo_base::cross_process_instant::CrossProcessInstant;
 use dom_struct::dom_struct;
@@ -28,7 +29,6 @@ use webxr_api::{
 };
 
 use crate::conversions::Convert;
-use crate::canvas_context::CanvasContext;
 use crate::dom::bindings::trace::HashMapTracedValues;
 use crate::dom::bindings::buffer_source::create_buffer_source;
 use crate::dom::bindings::callback::ExceptionHandling;

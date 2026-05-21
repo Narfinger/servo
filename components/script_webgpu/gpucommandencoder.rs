@@ -44,7 +44,7 @@ struct DroppableGPUCommandEncoder {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandEncoder {
+pub struct GPUCommandEncoder {
     reflector_: Reflector,
     droppable: DroppableGPUCommandEncoder,
     label: DomRefCell<USVString>,

@@ -23,6 +23,8 @@ use regex::Regex;
 #[cfg(feature = "gamepad")]
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+#[cfg(feature = "webgpu")]
+use script_webgpu::gpu::GPU;
 use servo_base::generic_channel;
 use servo_config::pref;
 use servo_url::ServoUrl;
@@ -60,8 +62,6 @@ use crate::dom::servointernals::ServoInternals;
 use crate::dom::storagemanager::StorageManager;
 use crate::dom::types::UserActivation;
 use crate::dom::wakelock::WakeLock;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::gpu::GPU;
 use crate::dom::window::Window;
 #[cfg(feature = "webxr")]
 use crate::dom::xrsystem::XRSystem;
@@ -468,7 +468,7 @@ impl NavigatorMethods<crate::DomTypeHolder> for Navigator {
     #[cfg(feature = "webgpu")]
     fn Gpu(&self) -> DomRoot<GPU> {
         self.gpu
-            .or_init(|| GPU::new(&self.global(), CanGc::deprecated_note()))
+            .or_init(|| GPU::new::<crate::DomTypeHolder>(&self.global(), CanGc::deprecated_note()))
     }
 
     /// <https://html.spec.whatwg.org/multipage/#dom-navigator-hardwareconcurrency>

@@ -54,7 +54,7 @@ impl Drop for DroppableGPUTexture {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTexture {
+pub struct GPUTexture {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     device: Dom<GPUDevice>,

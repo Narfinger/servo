@@ -80,7 +80,7 @@ impl Drop for DroppableGPUDevice {
 }
 
 #[dom_struct]
-pub(crate) struct GPUDevice {
+pub struct GPUDevice {
     //eventtarget: D::EventTarget,
     adapter: Dom<GPUAdapter>,
     #[ignore_malloc_size_of = "mozjs"]
@@ -193,7 +193,7 @@ impl GPUDevice {
 }
 
 impl GPUDevice {
-    pub(crate) fn id(&self) -> WebGPUDevice {
+    pub fn id(&self) -> WebGPUDevice {
         self.droppable.device
     }
 
@@ -215,7 +215,7 @@ impl GPUDevice {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#eventdef-gpudevice-uncapturederror>
-    pub(crate) fn fire_uncaptured_error(&self, error: webgpu_traits::Error) {
+    pub fn fire_uncaptured_error(&self, error: webgpu_traits::Error) {
         /*
         let this = Trusted::new(self);
 
@@ -403,7 +403,7 @@ impl GPUDevice {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#lose-the-device>
-    pub(crate) fn lose(&self, reason: GPUDeviceLostReason, msg: String) {
+    pub fn lose(&self, reason: GPUDeviceLostReason, msg: String) {
         /*
         let this = Trusted::new(self);
 

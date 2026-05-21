@@ -52,7 +52,7 @@ impl Drop for DroppableGPURenderPipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderPipeline {
+pub struct GPURenderPipeline {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     device: Dom<GPUDevice>,

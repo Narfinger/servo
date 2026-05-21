@@ -19,7 +19,7 @@ use script_bindings::str::DOMString;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUAdapterInfo {
+pub struct GPUAdapterInfo {
     reflector_: Reflector,
     vendor: DOMString,
     architecture: DOMString,

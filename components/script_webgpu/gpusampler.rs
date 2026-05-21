@@ -45,7 +45,7 @@ impl Drop for DroppableGPUSampler {
 }
 
 #[dom_struct]
-pub(crate) struct GPUSampler {
+pub struct GPUSampler {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[no_trace]

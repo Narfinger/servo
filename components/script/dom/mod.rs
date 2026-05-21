@@ -408,4 +408,7 @@ pub(crate) mod xmlhttprequesteventtarget;
 pub(crate) mod xmlhttprequestupload;
 pub(crate) mod xmlserializer;
 pub(crate) mod xpath;
+// Reexports from webgpu
+pub(crate) use script_webgpu::*;
+
 pub(crate) use self::xpath::*;

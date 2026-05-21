@@ -25,7 +25,7 @@ use crate::gpuvalidationerror::GPUValidationError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUError {
+pub struct GPUError {
     reflector_: Reflector,
     message: DOMString,
 }

@@ -19,7 +19,7 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUInternalError {
+pub struct GPUInternalError {
     gpu_error: GPUError,
 }
 

@@ -34,7 +34,7 @@ use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPURenderBundleEncoder {
+pub struct GPURenderBundleEncoder {
     reflector_: Reflector,
     #[no_trace]
     channel: WebGPU,

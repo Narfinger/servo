@@ -29,7 +29,7 @@ use wgpu_types::Features;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUSupportedFeatures {
+pub struct GPUSupportedFeatures {
     reflector: Reflector,
     // internal storage for features
     #[custom_trace]

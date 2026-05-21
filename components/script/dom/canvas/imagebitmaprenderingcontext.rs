@@ -10,11 +10,12 @@ use paint_api::SerializableImageData;
 use pixels::Snapshot;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::{CanvasContext, HTMLCanvasElementOrOffscreenCanvas};
 use servo_base::Epoch;
 use webrender_api::units::DeviceIntSize;
 use webrender_api::{ImageDescriptor, ImageFormat, ImageKey};
 
-use crate::canvas_context::{CanvasContext, CanvasHelpers, HTMLCanvasElementOrOffscreenCanvas};
+use crate::canvas_context::CanvasHelpers;
 use crate::dom::bindings::codegen::Bindings::ImageBitmapBinding::ImageBitmapMethods;
 use crate::dom::bindings::codegen::Bindings::ImageBitmapRenderingContextBinding::ImageBitmapRenderingContextMethods;
 use crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas as RootedHTMLCanvasElementOrOffscreenCanvas;
@@ -31,7 +32,7 @@ use crate::script_runtime::CanGc;
 pub(crate) struct ImageBitmapRenderingContext {
     reflector_: Reflector,
     /// <https://html.spec.whatwg.org/multipage/#dom-imagebitmaprenderingcontext-canvas>
-    canvas: HTMLCanvasElementOrOffscreenCanvas,
+    canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
     /// Represents both the [output bitmap] and the [bitmap mode] of the context.
     /// <https://html.spec.whatwg.org/multipage/#concept-imagebitmaprenderingcontext-output-bitmap>
     /// <https://html.spec.whatwg.org/multipage/#concept-imagebitmaprenderingcontext-bitmap-mode>
@@ -48,7 +49,9 @@ pub(crate) struct ImageBitmapRenderingContext {
 impl ImageBitmapRenderingContext {
     /// <https://html.spec.whatwg.org/multipage/#imagebitmaprenderingcontext-creation-algorithm>
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-    fn new_inherited(canvas: HTMLCanvasElementOrOffscreenCanvas) -> ImageBitmapRenderingContext {
+    fn new_inherited(
+        canvas: HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>,
+    ) -> ImageBitmapRenderingContext {
         ImageBitmapRenderingContext {
             reflector_: Reflector::new(),
             canvas,
@@ -64,6 +67,8 @@ impl ImageBitmapRenderingContext {
         canvas: &RootedHTMLCanvasElementOrOffscreenCanvas,
         can_gc: CanGc,
     ) -> DomRoot<ImageBitmapRenderingContext> {
+        todo!()
+        /*
         reflect_dom_object(
             Box::new(ImageBitmapRenderingContext::new_inherited(
                 HTMLCanvasElementOrOffscreenCanvas::from(canvas),
@@ -71,6 +76,7 @@ impl ImageBitmapRenderingContext {
             global,
             can_gc,
         )
+         */
     }
 
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {
@@ -151,9 +157,11 @@ impl CanvasContext for ImageBitmapRenderingContext {
 
     fn context_id(&self) -> Self::ID {}
 
+    /*
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
         Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
     }
+     */
 
     /// <https://html.spec.whatwg.org/multipage/#the-canvas-element:concept-canvas-bitmaprenderer>
     fn resize(&self) {
@@ -196,22 +204,25 @@ impl CanvasContext for ImageBitmapRenderingContext {
         self.origin_clean.get()
     }
 
+    /*
     fn size(&self) -> Size2D<u32> {
         self.bitmap
             .borrow()
             .as_ref()
             .map_or_else(|| self.canvas.size(), |bitmap| bitmap.size())
     }
+     */
 
     fn mark_as_dirty(&self) {
-        self.canvas.mark_as_dirty();
+        //self.canvas.mark_as_dirty();
     }
 }
 
 impl ImageBitmapRenderingContextMethods<crate::DomTypeHolder> for ImageBitmapRenderingContext {
     /// <https://html.spec.whatwg.org/multipage/#dom-imagebitmaprenderingcontext-canvas>
     fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
-        RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
+        todo!()
+        //RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
     }
 
     /// <https://html.spec.whatwg.org/multipage/#dom-imagebitmaprenderingcontext-transferfromimagebitmap>

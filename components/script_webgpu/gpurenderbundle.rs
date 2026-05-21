@@ -44,7 +44,7 @@ impl Drop for DroppableGPURenderBundle {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderBundle {
+pub struct GPURenderBundle {
     reflector_: Reflector,
     #[no_trace]
     device: WebGPUDevice,

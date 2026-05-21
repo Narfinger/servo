@@ -23,7 +23,7 @@ use crate::script_runtime::CanGc;
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct]
-pub(crate) struct GPUPipelineError {
+pub struct GPUPipelineError {
     reflector: Reflector,
     //exception: D::DOMException,
     reason: GPUPipelineErrorReason,

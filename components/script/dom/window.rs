@@ -70,6 +70,8 @@ use script_bindings::interfaces::WindowHelpers;
 use script_bindings::reflector::DomObject;
 use script_bindings::root::Root;
 use script_traits::{ConstellationInputEvent, ScriptThreadMessage};
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use selectors::attr::CaseSensitivity;
 use servo_arc::Arc as ServoArc;
 use servo_base::cross_process_instant::CrossProcessInstant;
@@ -180,8 +182,6 @@ use crate::dom::trustedtypes::trustedtypepolicyfactory::TrustedTypePolicyFactory
 use crate::dom::types::{ImageBitmap, MouseEvent, UIEvent};
 use crate::dom::useractivation::UserActivationTimestamp;
 use crate::dom::visualviewport::{VisualViewport, VisualViewportChanges};
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::dom::windowproxy::{WindowProxy, WindowProxyHandler};
 use crate::dom::worklet::Worklet;
 use crate::dom::workletglobalscope::WorkletGlobalScopeType;

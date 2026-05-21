@@ -16,6 +16,7 @@ use js::jsval::{BooleanValue, DoubleValue, Int32Value, NullValue, ObjectValue, U
 use js::rust::{CustomAutoRooterGuard, HandleObject, MutableHandleValue};
 use js::typedarray::{ArrayBufferView, CreateWith, Float32, Int32Array, Uint32, Uint32Array};
 use pixels::{Alpha, Snapshot};
+use script_bindings::CanvasContext;
 use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::interfaces::WebGL2RenderingContextHelpers;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -30,7 +31,6 @@ use url::Host;
 use webrender_api::ImageKey;
 
 use super::validations::types::TexImageTarget;
-use crate::canvas_context::CanvasContext;
 use crate::dom::bindings::codegen::Bindings::WebGL2RenderingContextBinding::{
     WebGL2RenderingContextConstants as constants, WebGL2RenderingContextMethods,
 };
@@ -976,9 +976,11 @@ impl CanvasContext for WebGL2RenderingContext {
         self.base.context_id()
     }
 
+    /*
     fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
         self.base.canvas()
     }
+     */
 
     fn resize(&self) {
         self.base.resize();

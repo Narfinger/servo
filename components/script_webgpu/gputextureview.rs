@@ -46,7 +46,7 @@ impl Drop for DroppableGPUTextureView {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTextureView {
+pub struct GPUTextureView {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     texture: Dom<GPUTexture>,

@@ -5,6 +5,8 @@
 use dom_struct::dom_struct;
 use js::rust::MutableHandleValue;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+#[cfg(feature = "webgpu")]
+use script_webgpu::gpu::GPU;
 use servo_config::pref;
 
 use crate::dom::bindings::codegen::Bindings::WorkerNavigatorBinding::WorkerNavigatorMethods;
@@ -16,8 +18,6 @@ use crate::dom::navigator::hardware_concurrency;
 use crate::dom::navigatorinfo;
 use crate::dom::permissions::Permissions;
 use crate::dom::storagemanager::StorageManager;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::gpu::GPU;
 use crate::dom::workerglobalscope::WorkerGlobalScope;
 use crate::script_runtime::{CanGc, JSContext};
 
@@ -129,7 +129,7 @@ impl WorkerNavigatorMethods<crate::DomTypeHolder> for WorkerNavigator {
     #[cfg(feature = "webgpu")]
     fn Gpu(&self) -> DomRoot<GPU> {
         self.gpu
-            .or_init(|| GPU::new(&self.global(), CanGc::deprecated_note()))
+            .or_init(|| GPU::new::<crate::DomTypeHolder>(&self.global(), CanGc::deprecated_note()))
     }
 
     /// <https://html.spec.whatwg.org/multipage/#dom-navigator-hardwareconcurrency>

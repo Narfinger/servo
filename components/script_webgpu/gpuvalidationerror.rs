@@ -21,7 +21,7 @@ use crate::gpuerror::GPUError;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUValidationError {
+pub struct GPUValidationError {
     gpu_error: GPUError,
 }
 
@@ -36,7 +36,7 @@ impl GPUValidationError {
          */
     }
 
-    pub(crate) fn new_with_proto<D>(
+    pub fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,

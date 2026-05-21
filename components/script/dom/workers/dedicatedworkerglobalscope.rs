@@ -22,6 +22,8 @@ use net_traits::request::{
     PreloadedResources, Referrer, RequestBuilder, RequestClient, RequestMode,
 };
 use script_bindings::cell::DomRefCell;
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel::{GenericReceiver, RoutedReceiver};
 use servo_base::id::{BrowsingContextId, PipelineId, ScriptEventLoopId, WebViewId};
 use servo_constellation_traits::{WorkerGlobalScopeInit, WorkerScriptLoadOrigin};
@@ -51,8 +53,6 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::html::htmlscriptelement::Script;
 use crate::dom::messageevent::MessageEvent;
 use crate::dom::types::DebuggerGlobalScope;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::dom::worker::{TrustedWorkerAddress, Worker};
 use crate::dom::workerglobalscope::{ScriptFetchContext, WorkerGlobalScope};
 use crate::messaging::{CommonScriptMsg, ScriptEventLoopReceiver, ScriptEventLoopSender};

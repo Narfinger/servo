@@ -45,7 +45,7 @@ use unicode_script::Script;
 use url::Url;
 use webrender_api::ImageKey;
 
-use crate::canvas_context::{CanvasContext, OffscreenRenderingContext, RenderingContext};
+use crate::canvas_context::{OffscreenRenderingContext, RenderingContext};
 use crate::conversions::Convert;
 use crate::css::parser_context_for_anonymous_content;
 use crate::dom::bindings::codegen::Bindings::CanvasRenderingContext2DBinding::{
@@ -652,6 +652,7 @@ impl CanvasState {
         dw: Option<f64>,
         dh: Option<f64>,
     ) -> ErrorResult {
+        /*
         let canvas_size = canvas
             .context()
             .map_or_else(|| canvas.get_size(), |context| context.size());
@@ -745,6 +746,7 @@ impl CanvasState {
         }
 
         self.mark_as_dirty(htmlcanvas);
+        ) */
         Ok(())
     }
 
@@ -762,6 +764,7 @@ impl CanvasState {
         dw: Option<f64>,
         dh: Option<f64>,
     ) -> ErrorResult {
+        /*
         let canvas_size = canvas
             .context()
             .map_or_else(|| canvas.get_size(), |context| context.size());
@@ -890,6 +893,7 @@ impl CanvasState {
         }
 
         self.mark_as_dirty(htmlcanvas);
+         */
         Ok(())
     }
 

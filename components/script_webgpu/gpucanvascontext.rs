@@ -26,7 +26,7 @@ use script_bindings::reflector::{
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
-use script_bindings::{DomTypes, cformat};
+use script_bindings::{CanvasContext, DomTypes, cformat};
 use servo_base::{Epoch, generic_channel};
 use webgpu_traits::{
     ContextConfiguration, PRESENTATION_BUFFER_COUNT, PendingTexture, WebGPU, WebGPUContextId,
@@ -71,7 +71,7 @@ impl Drop for DroppableGPUCanvasContext {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCanvasContext {
+pub struct GPUCanvasContext {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
     //canvas: HTMLCanvasElementOrOffscreenCanvas,
@@ -127,7 +127,7 @@ impl GPUCanvasContext {
          */
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub fn new<D: DomTypes>(
         global: &D::GlobalScope,
         canvas: &D::HTMLCanvasElement,
         channel: WebGPU,
@@ -150,7 +150,7 @@ impl GPUCanvasContext {
 
 // Abstract ops from spec
 impl GPUCanvasContext {
-    pub(crate) fn set_image_key(&self, image_key: ImageKey) {
+    pub fn set_image_key(&self, image_key: ImageKey) {
         /*
         if let Err(error) = self.droppable.channel.0.send(WebGPURequest::SetImageKey {
             context_id: self.context_id(),
@@ -165,7 +165,7 @@ impl GPUCanvasContext {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-updating-the-rendering-of-a-webgpu-canvas>
-    pub(crate) fn update_rendering(&self, canvas_epoch: Epoch) -> bool {
+    pub fn update_rendering(&self, canvas_epoch: Epoch) -> bool {
         /*
                // Present by updating the image in WebRender. This will copy the texture into
                // the presentation buffer and use it for presenting or send a cleared image to WebRender.
@@ -287,7 +287,6 @@ impl GPUCanvasContext {
     }
 }
 
-/*
 impl CanvasContext for GPUCanvasContext {
     type ID = WebGPUContextId;
 
@@ -297,6 +296,7 @@ impl CanvasContext for GPUCanvasContext {
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-update-the-canvas-size>
     fn resize(&self) {
+        /*
         // 1. Replace the drawing buffer of context.
         self.replace_drawing_buffer();
         // 2. Let configuration be context.[[configuration]]
@@ -309,6 +309,7 @@ impl CanvasContext for GPUCanvasContext {
                 self.texture_descriptor_for_canvas_and_configuration(configuration),
             ));
         }
+         */
     }
 
     fn reset_bitmap(&self) {
@@ -318,6 +319,8 @@ impl CanvasContext for GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#ref-for-abstract-opdef-get-a-copy-of-the-image-contents-of-a-context%E2%91%A5>
     fn get_image_data(&self) -> Option<Snapshot> {
         // 1. Return a copy of the image contents of context.
+        todo!()
+        /*
         Some(if self.cleared.get() {
             Snapshot::cleared(self.size())
         } else {
@@ -334,18 +337,18 @@ impl CanvasContext for GPUCanvasContext {
                 .ok()?;
             receiver.recv().ok()?.to_owned()
         })
+         */
     }
 
-    fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
-        Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
-    }
+    //fn canvas<D: DomTypes>(&self) -> Option<HTMLCanvasElementOrOffscreenCanvas<D>> {
+    //    todo!()
+    //Some(HTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
+    //}
 
     fn mark_as_dirty(&self) {
-        self.canvas.mark_as_dirty();
+        //self.canvas.mark_as_dirty();
     }
 }
-
- */
 
 impl<D> GPUCanvasContextMethods<D> for GPUCanvasContext
 where

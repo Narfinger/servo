@@ -31,7 +31,7 @@ use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
-pub(crate) struct GPUQueue {
+pub struct GPUQueue {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in webgpu"]
     #[no_trace]
