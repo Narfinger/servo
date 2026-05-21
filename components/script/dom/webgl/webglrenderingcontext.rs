@@ -350,7 +350,7 @@ impl WebGLRenderingContext {
     }
 
     pub(crate) fn update_rendering(&self, canvas_epoch: Epoch) -> bool {
-        if !self.onscreen() {
+        if !self.onscreen::<crate::DomTypeHolder>() {
             return false;
         }
 

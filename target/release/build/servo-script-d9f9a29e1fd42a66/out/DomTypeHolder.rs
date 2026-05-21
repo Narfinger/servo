@@ -493,6 +493,15 @@ impl DomObjectWrap<crate::DomTypeHolder>
     ) -> Root<Dom<Self>> = crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPURenderBundleEncoder_Binding::Wrap::<crate::DomTypeHolder>;
 }
 
+impl DomObjectWrap<crate::DomTypeHolder> for script_webgpu::gpudevicelostinfo::GPUDeviceLostInfo {
+    const WRAP: unsafe fn(
+        &mut JSContext,
+        &GlobalScope,
+        Option<HandleObject>,
+        Box<Self>,
+    ) -> Root<Dom<Self>> = crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUDeviceLostInfo_Binding::Wrap::<crate::DomTypeHolder>;
+}
+
 #[derive(JSTraceable, MallocSizeOf, PartialEq)]
 pub(crate) struct DomTypeHolder;
 impl crate::DomTypes for DomTypeHolder {

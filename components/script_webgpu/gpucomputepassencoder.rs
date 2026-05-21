@@ -202,3 +202,9 @@ where
          */
     }
 }
+
+impl AsRef<GPUComputePassEncoder> for GPUComputePassEncoder {
+    fn as_ref(&self) -> &GPUComputePassEncoder {
+        &self
+    }
+}

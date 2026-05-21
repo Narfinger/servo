@@ -82,6 +82,7 @@ pub(crate) use script_bindings::reflector::{AssociatedMemory, DomObject, MutDomO
 pub use script_runtime::JSEngineSetup;
 pub use script_thread::ScriptThread;
 use script_webgpu::gpudevice::GPUDevice;
+use script_webgpu::gpupipelineerror::GPUPipelineError;
 use script_webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
 pub use serviceworker_manager::ServiceWorkerManager;
 
@@ -92,7 +93,7 @@ pub(crate) use crate::dom::bindings::codegen::DomTypeHolder::DomTypeHolder;
 // it is useful that they are accessible at the root of the crate.
 pub(crate) use crate::dom::bindings::inheritance::HasParent;
 pub(crate) use crate::dom::bindings::trace::{CustomTraceable, JSTraceable};
-use crate::dom::types::EventTarget;
+use crate::dom::types::{DOMException, EventTarget};
 
 pub(crate) mod webgpu {
     pub(crate) use script_webgpu::*;
@@ -100,3 +101,4 @@ pub(crate) mod webgpu {
 
 impl DerivedFrom<EventTarget> for GPUDevice {}
 impl DerivedFrom<Event> for GPUUncapturedErrorEvent {}
+impl DerivedFrom<DOMException> for GPUPipelineError {}

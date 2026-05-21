@@ -188,3 +188,9 @@ where
          */
     }
 }
+
+impl AsRef<GPUComputePipeline> for GPUComputePipeline {
+    fn as_ref(&self) -> &GPUComputePipeline {
+        &self
+    }
+}
