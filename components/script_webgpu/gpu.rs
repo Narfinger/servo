@@ -38,6 +38,22 @@ pub struct GPU {
     wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
 }
 
+/// Helper trait to allow us easy into.
+/// T impl Equivalence if S can be transformed into T and vice versa on D: DomObject struct
+pub trait Equivalence<D, T> {}
+
+/// Self, DomType, T
+impl<E, D, T> Equivalence<D, T> for E
+where
+    E: DomObject + Sized,
+    T: DomObject,
+    D: DomTypes,
+    Box<T>: From<Box<E>>,
+    DomRoot<E>: From<DomRoot<T>>,
+{
+}
+
+/*
 pub trait Equivalence<D, T>
 where
     Self: DomObject + Sized,
@@ -47,6 +63,7 @@ where
     DomRoot<Self>: From<DomRoot<T>>,
 {
 }
+ */
 
 impl GPU {
     pub(crate) fn new_inherited() -> GPU {
@@ -59,8 +76,9 @@ impl GPU {
     pub fn new<D>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU>
     where
         D: DomTypes,
-        Box<D::GPU>: From<Box<GPU>>,
-        DomRoot<GPU>: From<DomRoot<D::GPU>>,
+        GPU: Equivalence<D, D::GPU>,
+        //Box<D::GPU>: From<Box<GPU>>,
+        //DomRoot<GPU>: From<DomRoot<D::GPU>>,
     {
         reflect_dom_object_test_with_wrap::<D, _, _>(
             Box::new(GPU::new_inherited()),
