@@ -40,30 +40,32 @@ pub struct GPU {
 
 /// Helper trait to allow us easy into.
 /// T impl Equivalence if S can be transformed into T and vice versa on D: DomObject struct
-pub trait Equivalence<D, T> {}
-
-/// Self, DomType, T
-impl<E, D, T> Equivalence<D, T> for E
-where
-    E: DomObject + Sized,
-    T: DomObject,
-    D: DomTypes,
-    Box<T>: From<Box<E>>,
-    DomRoot<E>: From<DomRoot<T>>,
-{
-}
-
-/*
-pub trait Equivalence<D, T>
+pub trait Equivalence<D, AbstractType>
 where
     Self: DomObject + Sized,
-    T: DomObject,
+    AbstractType: DomObject + Sized,
     D: DomTypes,
-    Box<T>: From<Box<Self>>,
-    DomRoot<Self>: From<DomRoot<T>>,
 {
+    fn from_abstract(concrete: DomRoot<AbstractType>) -> DomRoot<Self>;
+    fn from_concrete(abstract_type: Box<Self>) -> Box<AbstractType>;
 }
- */
+
+impl<D, ConcreteType, AbstractType> Equivalence<D, AbstractType> for ConcreteType
+where
+    D: DomTypes,
+    AbstractType: DomObject,
+    ConcreteType: DomObject + Sized,
+    DomRoot<ConcreteType>: From<DomRoot<AbstractType>>,
+    Box<AbstractType>: From<Box<ConcreteType>>,
+{
+    fn from_abstract(concrete: DomRoot<AbstractType>) -> DomRoot<Self> {
+        concrete.into()
+    }
+
+    fn from_concrete(abstract_type: Box<Self>) -> Box<AbstractType> {
+        abstract_type.into()
+    }
+}
 
 impl GPU {
     pub(crate) fn new_inherited() -> GPU {
@@ -85,16 +87,16 @@ impl GPU {
             global,
             can_gc,
             |cx, scope, proto, obj| unsafe {
-                script_bindings::codegen::GenericBindings::WebGPUBinding::GPUWrap::<D>(
-                    cx,
-                    scope,
-                    proto,
-                    obj.into(),
+                Equivalence::from_abstract(
+                    script_bindings::codegen::GenericBindings::WebGPUBinding::GPUWrap::<D>(
+                        cx,
+                        scope,
+                        proto,
+                        Equivalence::from_concrete(obj),
+                    ),
                 )
-                .into()
             },
         )
-        .into()
         //reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
