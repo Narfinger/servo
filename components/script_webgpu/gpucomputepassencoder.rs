@@ -19,6 +19,7 @@ use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpucompilationinfo::GPUCompilationInfo;
 use crate::gpucomputepipeline::GPUComputePipeline;
 use crate::script_runtime::CanGc;
 
@@ -95,10 +96,11 @@ impl GPUComputePassEncoder {
 
 impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder
 where
-    D: DomTypes,
-    D::GPUBuffer: AsRef<GPUBuffer>,
-    D::GPUBindGroup: AsRef<GPUBindGroup>,
-    D::GPUComputePipeline: AsRef<GPUComputePipeline>,
+    D: DomTypes<
+            GPUBuffer = GPUBuffer,
+            GPUBindGroup = GPUBindGroup,
+            GPUComputePipeline = GPUComputePipeline,
+        >,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -130,7 +132,6 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-dispatchworkgroupsindirect>
     fn DispatchWorkgroupsIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
-        /*
         if let Err(e) =
             self.droppable
                 .channel
@@ -144,7 +145,6 @@ where
         {
             warn!("Error sending WebGPURequest::ComputePassDispatchWorkgroupsIndirect: {e:?}")
         }
-         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-endpass>
@@ -164,7 +164,6 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablepassencoder-setbindgroup>
     fn SetBindGroup(&self, index: u32, bind_group: &D::GPUBindGroup, offsets: Vec<u32>) {
-        /*
         if let Err(e) = self
             .droppable
             .channel
@@ -179,12 +178,10 @@ where
         {
             warn!("Error sending WebGPURequest::ComputePassSetBindGroup: {e:?}")
         }
-         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-setpipeline>
     fn SetPipeline(&self, pipeline: &D::GPUComputePipeline) {
-        /*
         if let Err(e) = self
             .droppable
             .channel
@@ -197,7 +194,6 @@ where
         {
             warn!("Error sending WebGPURequest::ComputePassSetPipeline: {e:?}")
         }
-         */
     }
 }
 

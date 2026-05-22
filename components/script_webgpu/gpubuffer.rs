@@ -20,7 +20,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
+    DomGlobalGeneric, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -30,6 +30,7 @@ use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
+use crate::gpu::WGPUGobal;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::{CanGc, JSContext};
 use crate::{DataBlock, PromiseStub};
@@ -141,11 +142,16 @@ impl GPUBuffer {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbuffer>
-    pub(crate) fn create(
+    pub(crate) fn create<D>(
         device: &GPUDevice,
         descriptor: &GPUBufferDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBuffer>> {
+    ) -> Fallible<DomRoot<GPUBuffer>>
+    where
+        D: DomTypes,
+        GPUDevice: DomGlobalGeneric<D>,
+        D::GlobalScope: WGPUGobal,
+    {
         todo!()
         /*
         let desc = wgpu_types::BufferDescriptor {

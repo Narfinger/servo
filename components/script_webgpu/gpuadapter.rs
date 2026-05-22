@@ -16,7 +16,7 @@ use script_bindings::error::Error;
 use script_bindings::like::Setlike;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
+    DomGlobalGeneric, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::DOMString;
@@ -28,6 +28,7 @@ use wgpu_types::{self, AdapterInfo, ExperimentalFeatures, MemoryHints};
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
 use super::gpusupportedlimits::set_limit;
+use crate::gpu::{WGPUGobal, WGPUPromise};
 use crate::gpuadapterinfo::GPUAdapterInfo;
 use crate::gpudevice::GPUDevice;
 use crate::gpusupportedfeatures::gpu_to_wgt_feature;
@@ -204,10 +205,13 @@ impl GPUAdapter {
 
 impl<D> GPUAdapterMethods<D> for GPUAdapter
 where
+    Self: DomGlobalGeneric<D>,
     D: DomTypes,
+    D::Promise: WGPUPromise,
     D::GPUSupportedFeatures: From<GPUSupportedFeatures>,
     D::GPUSupportedLimits: From<GPUSupportedLimits>,
     D::GPUAdapterInfo: From<GPUAdapterInfo>,
+    D::GlobalScope: WGPUGobal,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
@@ -217,14 +221,14 @@ where
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
         // Step 2
-        //let promise = D::Promise::new_in_current_realm(comp, can_gc);
-        todo!()
+        let promise = D::Promise::new_in_current_realm(comp, can_gc);
         /*
         let callback = callback_promise(
             &promise,
             self,
             self.global().task_manager().dom_manipulation_task_source(),
         );
+        */
         let mut required_features = wgpu_types::Features::empty();
         for &ext in descriptor.requiredFeatures.iter() {
             if let Some(feature) = gpu_to_wgt_feature(ext) {
@@ -259,6 +263,7 @@ where
         };
         let device_id = self.global().wgpu_id_hub().create_device_id();
         let queue_id = self.global().wgpu_id_hub().create_queue_id();
+        /*
         let pipeline_id = self.global().pipeline_id();
         if self
             .droppable
@@ -276,9 +281,9 @@ where
         {
             promise.reject_error(Error::Operation(None), can_gc);
         }
+         */
         // Step 5
         promise
-         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-features>

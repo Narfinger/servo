@@ -39,9 +39,7 @@ impl GPUCompilationInfo {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUCompilationInfo>: From<Box<GPUCompilationInfo>>,
-        DomRoot<GPUCompilationInfo>: From<DomRoot<D::GPUCompilationInfo>>,
+        D: DomTypes<GPUCompilationInfo = GPUCompilationInfo>,
     {
         reflect_dom_object_test_with_wrap2_with_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(msg)),
@@ -58,19 +56,19 @@ impl GPUCompilationInfo {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUCompilationInfo>: From<Box<GPUCompilationInfo>>,
-        DomRoot<GPUCompilationInfo>: From<DomRoot<D::GPUCompilationInfo>>,
+        D: DomTypes<GPUCompilationInfo = GPUCompilationInfo>,
     {
-        todo!() /*
-        Self::new(
-        global,
-        if let Some(error) = error {
-        vec![GPUCompilationMessage::from(global, error, can_gc)]
-        } else {
-        Vec::new()
-        },
-        can_gc,
+        todo!()
+        /*
+         *
+        Self::new::<D>(
+            global,
+            if let Some(error) = error {
+                vec![GPUCompilationMessage::from(global, error, can_gc)]
+            } else {
+                Vec::new()
+            },
+            can_gc,
         )
          */
     }

@@ -16,7 +16,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
+    DomGlobalGeneric, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
@@ -24,6 +24,7 @@ use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
 use crate::Convert;
+use crate::gpu::WGPUGobal;
 use crate::gpuconvert::convert_bind_group_layout_entry;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
@@ -103,11 +104,16 @@ impl GPUBindGroupLayout {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
-    pub(crate) fn create<D: DomTypes>(
+    pub(crate) fn create<D>(
         device: &GPUDevice,
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBindGroupLayout>> {
+    ) -> Fallible<DomRoot<GPUBindGroupLayout>>
+    where
+        D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+        GPUDevice: DomGlobalGeneric<D>,
+        D::GlobalScope: WGPUGobal,
+    {
         let entries = descriptor
             .entries
             .iter()
@@ -125,8 +131,6 @@ impl GPUBindGroupLayout {
             },
         };
 
-        todo!()
-        /*
         let bind_group_layout_id = device.global().wgpu_id_hub().create_bind_group_layout_id();
         device
             .channel()
@@ -140,14 +144,13 @@ impl GPUBindGroupLayout {
 
         let bgl = WebGPUBindGroupLayout(bind_group_layout_id);
 
-        Ok(GPUBindGroupLayout::new(
+        Ok(GPUBindGroupLayout::new::<D>(
             &device.global(),
             device.channel(),
             bgl,
             descriptor.parent.label.clone(),
             can_gc,
         ))
-         */
     }
 }
 

@@ -14,7 +14,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUBindGroupDescriptor, GPUBindGroupMethods,
 };
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
+    DomGlobalGeneric, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -22,6 +22,7 @@ use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
 use wgpu_core::binding_model::BindGroupDescriptor;
 
 use crate::Convert;
+use crate::gpu::WGPUGobal;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
@@ -107,11 +108,16 @@ impl GPUBindGroup {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbindgroup>
-    pub(crate) fn create<D: DomTypes>(
+    pub(crate) fn create<D>(
         device: &GPUDevice,
         descriptor: &GPUBindGroupDescriptor<D>,
         can_gc: CanGc,
-    ) -> DomRoot<GPUBindGroup> {
+    ) -> DomRoot<GPUBindGroup>
+    where
+        D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout, GPUDevice = GPUDevice>,
+        D::GlobalScope: WGPUGobal,
+        GPUDevice: DomGlobalGeneric<D>,
+    {
         todo!()
         /*
         let entries = descriptor
@@ -147,7 +153,8 @@ impl GPUBindGroup {
             &descriptor.layout.into(),
             descriptor.parent.label.clone(),
             can_gc,
-        ) */
+        )
+         */
     }
 }
 
