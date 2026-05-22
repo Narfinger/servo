@@ -20,7 +20,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -122,11 +122,9 @@ impl GPUBuffer {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUBuffer>: From<Box<GPUBuffer>>,
-        DomRoot<GPUBuffer>: From<DomRoot<D::GPUBuffer>>,
+        D: DomTypes<GPUBuffer = GPUBuffer>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUBuffer::new_inherited(
                 channel, buffer, device, size, usage, mapping, label,
             )),

@@ -13,7 +13,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -85,11 +85,9 @@ impl GPUComputePipeline {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUComputePipeline>: From<Box<GPUComputePipeline>>,
-        DomRoot<GPUComputePipeline>: From<DomRoot<D::GPUComputePipeline>>,
+        D: DomTypes<GPUComputePipeline = GPUComputePipeline>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUComputePipeline::new_inherited(
                 compute_pipeline,
                 label,

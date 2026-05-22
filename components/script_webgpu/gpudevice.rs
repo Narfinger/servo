@@ -22,7 +22,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 use script_bindings::codegen::GenericUnionTypes::GPUPipelineLayoutOrGPUAutoLayoutMode;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{reflect_dom_object, reflect_dom_object_test_with_wrap2};
+use script_bindings::reflector::{reflect_dom_object, reflect_dom_object_test_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;

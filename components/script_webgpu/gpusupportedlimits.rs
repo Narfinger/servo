@@ -12,7 +12,7 @@ use num_traits::bounds::UpperBounded;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimitsMethods;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use wgpu_types::Limits;
@@ -37,11 +37,9 @@ impl GPUSupportedLimits {
 
     pub(crate) fn new<D>(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUSupportedLimits>: From<Box<GPUSupportedLimits>>,
-        DomRoot<GPUSupportedLimits>: From<DomRoot<D::GPUSupportedLimits>>,
+        D: DomTypes<GPUSupportedLimits = GPUSupportedLimits>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(Self::new_inherited(limits)),
             global,
             can_gc,

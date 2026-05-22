@@ -11,7 +11,7 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
 use script_bindings::reflector::{
-    DomObject, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    DomObject, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
@@ -66,12 +66,9 @@ impl GPUAdapterInfo {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        GPUAdapterInfo: DomObject,
-        Box<D::GPUAdapterInfo>: From<Box<GPUAdapterInfo>>,
-        DomRoot<GPUAdapterInfo>: From<DomRoot<D::GPUAdapterInfo>>,
+        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 vendor,
                 architecture,
@@ -93,10 +90,7 @@ impl GPUAdapterInfo {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        GPUAdapterInfo: DomObject,
-        Box<D::GPUAdapterInfo>: From<Box<GPUAdapterInfo>>,
-        DomRoot<GPUAdapterInfo>: From<DomRoot<D::GPUAdapterInfo>>,
+        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo>,
     {
         Self::new::<D>(
             global,

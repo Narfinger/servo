@@ -16,7 +16,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
@@ -82,11 +82,9 @@ impl GPUBindGroupLayout {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUBindGroupLayout>: From<Box<GPUBindGroupLayout>>,
-        DomRoot<GPUBindGroupLayout>: From<DomRoot<D::GPUBindGroupLayout>>,
+        D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUBindGroupLayout::new_inherited(
                 channel,
                 bind_group_layout,

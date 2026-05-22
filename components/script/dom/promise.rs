@@ -37,6 +37,7 @@ use js::rust::{HandleObject, HandleValue, MutableHandleObject, Runtime};
 use script_bindings::conversions::SafeToJSValConvertible;
 use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 use script_bindings::settings_stack::run_a_script;
+use script_webgpu::gpu::WGPUPromise;
 
 use crate::DomTypeHolder;
 use crate::dom::bindings::conversions::root_from_object;
@@ -648,4 +649,10 @@ pub(crate) fn wait_for_all_promise(
 
     // Return promise.
     promise
+}
+
+impl WGPUPromise for Promise {
+    fn new_in_current_realm(_comp: InRealm, can_gc: CanGc) -> Rc<Self> {
+        todo!()
+    }
 }

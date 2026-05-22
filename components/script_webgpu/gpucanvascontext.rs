@@ -22,7 +22,7 @@ use script_bindings::codegen::GenericUnionTypes::{
 };
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{
-    DomObjectWrap, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    DomObjectWrap, Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;

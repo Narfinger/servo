@@ -13,7 +13,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCompilationMessageMethods, GPUCompilationMessageType,
 };
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use script_bindings::str::DOMString;
@@ -63,11 +63,9 @@ impl GPUCompilationMessage {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUCompilationMessage>: From<Box<GPUCompilationMessage>>,
-        DomRoot<GPUCompilationMessage>: From<DomRoot<D::GPUCompilationMessage>>,
+        D: DomTypes<GPUCompilationMessage = GPUCompilationMessage>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 message, mtype, line_num, line_pos, offset, length,
             )),
@@ -83,9 +81,7 @@ impl GPUCompilationMessage {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUCompilationMessage>: From<Box<GPUCompilationMessage>>,
-        DomRoot<GPUCompilationMessage>: From<DomRoot<D::GPUCompilationMessage>>,
+        D: DomTypes<GPUCompilationMessage = GPUCompilationMessage>,
     {
         GPUCompilationMessage::new::<D>(
             global,

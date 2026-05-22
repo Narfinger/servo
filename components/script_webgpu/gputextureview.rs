@@ -12,7 +12,7 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTextureViewMethods;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -80,11 +80,9 @@ impl GPUTextureView {
         can_gc: CanGc,
     ) -> DomRoot<GPUTextureView>
     where
-        D: DomTypes,
-        Box<D::GPUTextureView>: From<Box<GPUTextureView>>,
-        DomRoot<GPUTextureView>: From<DomRoot<D::GPUTextureView>>,
+        D: DomTypes<GPUTextureView = GPUTextureView>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUTextureView::new_inherited(
                 channel,
                 texture_view,

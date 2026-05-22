@@ -13,7 +13,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipelineMethods;
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::str::USVString;
@@ -84,11 +84,9 @@ impl GPURenderPipeline {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPURenderPipeline>: From<Box<GPURenderPipeline>>,
-        DomRoot<GPURenderPipeline>: From<DomRoot<D::GPURenderPipeline>>,
+        D: DomTypes<GPURenderPipeline = GPURenderPipeline>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPURenderPipeline::new_inherited(
                 render_pipeline,
                 label,

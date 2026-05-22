@@ -15,7 +15,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
 };
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
@@ -87,11 +87,9 @@ impl GPUShaderModule {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUShaderModule>: From<Box<GPUShaderModule>>,
-        DomRoot<GPUShaderModule>: From<DomRoot<D::GPUShaderModule>>,
+        D: DomTypes<GPUShaderModule = GPUShaderModule>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUShaderModule::new_inherited::<D>(
                 channel,
                 shader_module,

@@ -59,6 +59,7 @@ use script_bindings::cell::{DomRefCell, RefMut};
 use script_bindings::interfaces::GlobalScopeHelpers;
 use script_bindings::reflector::DomObject;
 use script_bindings::settings_stack::run_a_script;
+use script_webgpu::gpu::WGPUGobal;
 #[cfg(feature = "webgpu")]
 use script_webgpu::gpudevice::GPUDevice;
 #[cfg(feature = "webgpu")]
@@ -3624,5 +3625,11 @@ impl GlobalScopeHelpers<crate::DomTypeHolder> for GlobalScope {
 
     fn is_secure_context(&self) -> bool {
         self.is_secure_context()
+    }
+}
+
+impl WGPUGobal for GlobalScope {
+    fn wgpu_id_hub(&self) -> Arc<IdentityHub> {
+        todo!()
     }
 }

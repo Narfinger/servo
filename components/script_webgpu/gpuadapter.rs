@@ -102,37 +102,31 @@ impl GPUAdapter {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUAdapter>: From<Box<GPUAdapter>>,
-        DomRoot<GPUAdapter>: From<DomRoot<D::GPUAdapter>>,
+        D: DomTypes<
+                GPUAdapterInfo = GPUAdapterInfo,
+                GPUAdapter = GPUAdapter,
+                GPUSupportedLimits = GPUSupportedLimits,
+                GPUSupportedFeatures = GPUSupportedFeatures,
+            >,
+        //GPUAdapter: Equivalence<D, D::GPUAdapter>,
+        //GPUSupportedFeatures: Equivalence<D, D::GPUSupportedFeatures>,
     {
-        todo!()
-        /*
-        let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
-        let limits = GPUSupportedLimits::new(global, limits, can_gc);
-        let info = GPUAdapter::create_adapter_info(global, info, &features, can_gc);
+        let features =
+            GPUSupportedFeatures::Constructor::<D>(global, None, features, can_gc).unwrap();
+        let limits = GPUSupportedLimits::new::<D>(global, limits, can_gc);
+        let info = GPUAdapter::create_adapter_info::<D>(global, info, &features, can_gc);
 
-        let dom_root: DomRoot<GPUAdapter<D>> = reflect_dom_object_test_with_wrap::<D, _, _>(
+        let dom_root: DomRoot<GPUAdapter> = reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUAdapter::new_inherited(
                 channel, name, &features, &limits, &info, adapter,
             )),
             global,
             can_gc,
-            |cx, scope, proto, obj| unsafe {
-                script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterWrap::<D>(
-                    cx,
-                    scope,
-                    proto,
-                    obj.into(),
-                )
-                .into()
-            },
-        )
-        .into();
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterWrap::<D>,
+        );
 
         dom_root.extensions.set(*extensions);
         dom_root
-         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-new-adapter-info>
@@ -143,11 +137,8 @@ impl GPUAdapter {
         can_gc: CanGc,
     ) -> DomRoot<GPUAdapterInfo>
     where
-        D: DomTypes,
-        Box<D::GPUAdapter>: From<Box<GPUAdapter>>,
-        DomRoot<GPUAdapter>: From<DomRoot<D::GPUAdapter>>,
+        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo, GPUAdapter = GPUAdapter>,
     {
-        /*
         // Step 2. If the vendor is known, set adapterInfo.vendor to the name of adapter’s vendor as
         // a normalized identifier string. To preserve privacy, the user agent may instead set
         // adapterInfo.vendor to the empty string or a reasonable approximation of the vendor as a
@@ -197,7 +188,7 @@ impl GPUAdapter {
         let is_fallback_adapter = info.device_type == wgpu_types::DeviceType::Cpu;
 
         // Step 1. Let adapterInfo be a new GPUAdapterInfo.
-        GPUAdapterInfo::new(
+        GPUAdapterInfo::new::<D>(
             global,
             vendor,
             architecture,
@@ -208,8 +199,6 @@ impl GPUAdapter {
             is_fallback_adapter,
             can_gc,
         )
-         */
-        todo!()
     }
 }
 

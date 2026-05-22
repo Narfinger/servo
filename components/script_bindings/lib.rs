@@ -98,7 +98,7 @@ use pixels::Snapshot;
 
 pub use crate::codegen::DomTypes::DomTypes;
 pub(crate) use crate::reflector::{DomObject, MutDomObject, Reflector};
-use crate::root::Dom;
+use crate::root::{Dom, DomRoot};
 pub(crate) use crate::trace::CustomTraceable;
 
 /// Non rooted variant of [`crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas`]

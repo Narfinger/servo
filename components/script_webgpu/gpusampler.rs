@@ -14,7 +14,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUSamplerDescriptor, GPUSamplerMethods,
 };
 use script_bindings::reflector::{
-    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap2,
+    Reflector, reflect_dom_object, reflect_dom_object_test_with_wrap,
 };
 use script_bindings::root::DomRoot;
 use script_bindings::str::USVString;
@@ -81,11 +81,9 @@ impl GPUSampler {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes,
-        Box<D::GPUSampler>: From<Box<GPUSampler>>,
-        DomRoot<GPUSampler>: From<DomRoot<D::GPUSampler>>,
+        D: DomTypes<GPUSampler = GPUSampler>,
     {
-        reflect_dom_object_test_with_wrap2::<D, _, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, _>(
             Box::new(GPUSampler::new_inherited(
                 channel,
                 device,

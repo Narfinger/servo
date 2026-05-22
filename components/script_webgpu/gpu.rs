@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use std::rc::Rc;
+use std::sync::Arc;
 
 use dom_struct::dom_struct;
 use js::jsapi::HandleObject;
@@ -22,12 +23,14 @@ use script_bindings::reflector::{
 use script_bindings::root::{Dom, DomRoot, Root};
 use script_bindings::str::DOMString;
 use servo_constellation_traits::ScriptToConstellationMessage;
-use webgpu_traits::WebGPUAdapterResponse;
+use webgpu_traits::{Adapter, WebGPUAdapterResponse};
+use wgpu_core::id::Id;
 use wgpu_types::PowerPreference;
 
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
 use crate::MutNullableDom;
 use crate::gpuadapter::GPUAdapter;
+use crate::identityhub::IdentityHub;
 use crate::script_runtime::CanGc;
 
 #[dom_struct]
@@ -38,33 +41,12 @@ pub struct GPU {
     wgsl_language_features: MutNullableDom<WGSLLanguageFeatures>,
 }
 
-/// Helper trait to allow us easy into.
-/// T impl Equivalence if S can be transformed into T and vice versa on D: DomObject struct
-pub trait Equivalence<D, AbstractType>
-where
-    Self: DomObject + Sized,
-    AbstractType: DomObject + Sized,
-    D: DomTypes,
-{
-    fn from_abstract(concrete: DomRoot<AbstractType>) -> DomRoot<Self>;
-    fn from_concrete(abstract_type: Box<Self>) -> Box<AbstractType>;
+pub trait WGPUPromise {
+    fn new_in_current_realm(_comp: InRealm, can_gc: CanGc) -> Rc<Self>;
 }
 
-impl<D, ConcreteType, AbstractType> Equivalence<D, AbstractType> for ConcreteType
-where
-    D: DomTypes,
-    AbstractType: DomObject,
-    ConcreteType: DomObject + Sized,
-    DomRoot<ConcreteType>: From<DomRoot<AbstractType>>,
-    Box<AbstractType>: From<Box<ConcreteType>>,
-{
-    fn from_abstract(concrete: DomRoot<AbstractType>) -> DomRoot<Self> {
-        concrete.into()
-    }
-
-    fn from_concrete(abstract_type: Box<Self>) -> Box<AbstractType> {
-        abstract_type.into()
-    }
+pub trait WGPUGobal {
+    fn wgpu_id_hub(&self) -> Arc<IdentityHub>;
 }
 
 impl GPU {
@@ -77,36 +59,23 @@ impl GPU {
 
     pub fn new<D>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU>
     where
-        D: DomTypes,
-        GPU: Equivalence<D, D::GPU>,
-        //Box<D::GPU>: From<Box<GPU>>,
-        //DomRoot<GPU>: From<DomRoot<D::GPU>>,
+        D: DomTypes<GPU = GPU>,
     {
-        reflect_dom_object_test_with_wrap::<D, _, _>(
+        reflect_dom_object_test_with_wrap::<D, _, _, GPU>(
             Box::new(GPU::new_inherited()),
             global,
             can_gc,
-            |cx, scope, proto, obj| unsafe {
-                Equivalence::from_abstract(
-                    script_bindings::codegen::GenericBindings::WebGPUBinding::GPUWrap::<D>(
-                        cx,
-                        scope,
-                        proto,
-                        Equivalence::from_concrete(obj),
-                    ),
-                )
-            },
+            script_bindings::codegen::GenericBindings::WebGPUBinding::GPUWrap::<D>,
         )
-        //reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
 
 impl<D: DomTypes> GPUMethods<D> for GPU
 where
     GPU: DomGlobalGeneric<D>,
-    D: DomTypes,
-    D::WGSLLanguageFeatures: From<WGSLLanguageFeatures>,
-    //D::GlobalScope: GlobalScopeTrait,
+    D: DomTypes<WGSLLanguageFeatures = WGSLLanguageFeatures>,
+    D::Promise: WGPUPromise,
+    D::GlobalScope: WGPUGobal,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
@@ -116,10 +85,8 @@ where
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
         let global = &self.global();
-        todo!()
-        /*
         let promise = D::Promise::new_in_current_realm(comp, can_gc);
-        let task_source = global.task_manager().dom_manipulation_task_source();
+        //let task_source = global.task_manager().dom_manipulation_task_source();
         //let callback = callback_promise(&promise, self, task_source);
 
         let power_preference = match options.powerPreference {
@@ -129,6 +96,7 @@ where
         };
         let ids = global.wgpu_id_hub().create_adapter_id();
 
+        /*
         let script_to_constellation_chan = global.script_to_constellation_chan();
 
         if script_to_constellation_chan
@@ -145,8 +113,8 @@ where
         {
             promise.reject_error(Error::Operation(None), can_gc);
         }
-        promise
          */
+        promise
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-getpreferredcanvasformat>
@@ -166,7 +134,6 @@ where
         self.wgsl_language_features
             .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
             .into()
-
              */
     }
 }

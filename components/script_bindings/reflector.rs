@@ -276,51 +276,31 @@ where
 
 /// Create the reflector for a new DOM object and yield ownership to the
 /// reflector.
-pub fn reflect_dom_object_test_with_wrap<D, T, U>(
-    obj: Box<T>,
-    global: &U,
+pub fn reflect_dom_object_test_with_wrap<D, AbstractType, GlobalType, ConcreteType>(
+    obj: Box<ConcreteType>,
+    global: &GlobalType,
     _can_gc: CanGc,
     wrap: unsafe fn(
         &mut js::context::JSContext,
         &D::GlobalScope,
         Option<HandleObject>,
-        Box<T>,
-    ) -> DomRoot<T>,
-) -> DomRoot<T>
+        Box<AbstractType>,
+    ) -> DomRoot<AbstractType>,
+) -> DomRoot<ConcreteType>
 where
     D: DomTypes,
-    T: DomObject,
-    U: DerivedFrom<D::GlobalScope>,
+    AbstractType: DomObject,
+    ConcreteType: DomObject,
+    GlobalType: DerivedFrom<D::GlobalScope>,
+    Box<AbstractType>: From<Box<ConcreteType>>,
+    DomRoot<ConcreteType>: From<DomRoot<AbstractType>>,
 {
     let global_scope = global.upcast();
     let mut cx = unsafe { temp_cx() };
-    unsafe { wrap(&mut cx, global_scope, None, obj) }
-    //unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
-}
-
-pub fn reflect_dom_object_test_with_wrap2<D, T, U, K>(
-    obj: Box<T>,
-    global: &U,
-    _can_gc: CanGc,
-    wrap: unsafe fn(
-        &mut js::context::JSContext,
-        &D::GlobalScope,
-        Option<HandleObject>,
-        Box<K>,
-    ) -> DomRoot<K>,
-) -> DomRoot<T>
-where
-    D: DomTypes,
-    T: DomObject,
-    K: DomObject,
-    U: DerivedFrom<D::GlobalScope>,
-    DomRoot<T>: From<DomRoot<K>>,
-    Box<K>: From<Box<T>>,
-{
-    let global_scope = global.upcast();
-    let mut cx = unsafe { temp_cx() };
-
-    unsafe { wrap(&mut cx, global_scope, None, obj.into()).into() }
+    let abstract_obj: Box<AbstractType> = obj.into();
+    let abstract_obj: DomRoot<AbstractType> =
+        unsafe { wrap(&mut cx, global_scope, None, abstract_obj) };
+    abstract_obj.into()
     //unsafe { T::WRAP(&mut cx, global_scope, None, obj) }
 }
 
