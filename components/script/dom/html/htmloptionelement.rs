@@ -19,7 +19,7 @@ use crate::dom::bindings::codegen::Bindings::NodeBinding::NodeMethods;
 use crate::dom::bindings::codegen::Bindings::WindowBinding::WindowMethods;
 use crate::dom::bindings::error::Fallible;
 use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::root::DomRoot;
+use crate::dom::bindings::root::{DomRoot, UnrootedDom};
 use crate::dom::bindings::str::DOMString;
 use crate::dom::characterdata::CharacterData;
 use crate::dom::document::Document;
@@ -473,8 +473,9 @@ impl VirtualMethods for HTMLOptionElement {
 
         if let Some(select) = context
             .parent
-            .inclusive_ancestors(ShadowIncluding::No)
-            .find_map(DomRoot::downcast::<HTMLSelectElement>)
+            .inclusive_ancestors_unrooted(cx.no_gc(), ShadowIncluding::No)
+            .find_map(UnrootedDom::downcast::<HTMLSelectElement>)
+            .map(|node| node.as_rooted())
         {
             select
                 .validity_state(CanGc::from_cx(cx))
@@ -521,8 +522,9 @@ impl VirtualMethods for HTMLOptionElement {
         let element = self.upcast::<Element>();
         if let Some(old_parent) = context.old_parent {
             if let Some(select) = old_parent
-                .inclusive_ancestors(ShadowIncluding::No)
-                .find_map(DomRoot::downcast::<HTMLSelectElement>)
+                .inclusive_ancestors_unrooted(cx.no_gc(), ShadowIncluding::No)
+                .find_map(UnrootedDom::downcast::<HTMLSelectElement>)
+                .map(|node| node.as_rooted())
             {
                 select
                     .validity_state(CanGc::from_cx(cx))

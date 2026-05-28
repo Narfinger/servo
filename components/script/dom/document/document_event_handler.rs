@@ -51,7 +51,7 @@ use webrender_api::ExternalScrollId;
 
 use crate::dom::bindings::inheritance::{ElementTypeId, HTMLElementTypeId, NodeTypeId};
 use crate::dom::bindings::refcounted::Trusted;
-use crate::dom::bindings::root::MutNullableDom;
+use crate::dom::bindings::root::{MutNullableDom, UnrootedDom};
 use crate::dom::bindings::trace::NoTrace;
 use crate::dom::clipboardevent::ClipboardEventType;
 use crate::dom::document::FireMouseEventType;
@@ -2237,7 +2237,7 @@ impl DocumentEventHandler {
             return false;
         }
 
-        for node in node.inclusive_ancestors(ShadowIncluding::Yes) {
+        for node in node.inclusive_ancestors_unrooted(cx.no_gc(), ShadowIncluding::Yes) {
             if node
                 .downcast::<HTMLElement>()
                 .is_some_and(|html_element| html_element.Hidden())

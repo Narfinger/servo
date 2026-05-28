@@ -33,7 +33,7 @@ pub(crate) fn execute_createlink_command(
         .active_range()
         .expect("Must always have an active range");
     active_range.for_each_effectively_contained_child(|node| {
-        for ancestor in node.inclusive_ancestors(ShadowIncluding::No) {
+        for ancestor in node.inclusive_ancestors_unrooted(cx.no_gc(), ShadowIncluding::No) {
             if !ancestor.is_editable() {
                 return;
             }
