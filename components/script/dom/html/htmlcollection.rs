@@ -6,6 +6,7 @@ use std::cell::Cell;
 
 use dom_struct::dom_struct;
 use html5ever::{LocalName, QualName, local_name, namespace_url, ns};
+use js::context::JSContext;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_cx};
 use style::str::split_html_space_chars;
 use stylo_atoms::Atom;
@@ -13,7 +14,7 @@ use stylo_atoms::Atom;
 use crate::dom::bindings::codegen::Bindings::HTMLCollectionBinding::HTMLCollectionMethods;
 use crate::dom::bindings::domname::namespace_from_domstring;
 use crate::dom::bindings::inheritance::Castable;
-use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
+use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom, UnrootedDom};
 use crate::dom::bindings::str::DOMString;
 use crate::dom::bindings::trace::JSTraceable;
 use crate::dom::element::Element;
@@ -364,12 +365,13 @@ impl HTMLCollection {
     /// Only usable with filter-based collections for cursor optimization.
     fn filter_iter_after<'a>(
         &'a self,
+        no_gc: &NoGC,
         after: &'a Node,
         filter: &'a (dyn CollectionFilter + 'static),
     ) -> impl Iterator<Item = DomRoot<Element>> + 'a {
         after
-            .following_nodes(&self.root)
-            .filter_map(DomRoot::downcast)
+            .following_nodes_unrooted(no_gc, &self.root)
+            .filter_map(UnrootedDom::downcast)
             .filter(move |element| filter.filter(element, &self.root))
     }
 
@@ -386,10 +388,13 @@ impl HTMLCollection {
             .filter(move |element| filter.filter(element, &self.root))
     }
 
-    pub(crate) fn elements_iter(&self) -> Box<dyn Iterator<Item = DomRoot<Element>> + '_> {
+    pub(crate) fn elements_iter(
+        &self,
+        no_gc: &NoGC,
+    ) -> Box<dyn Iterator<Item = DomRoot<Element>> + '_> {
         match &self.kind {
             CollectionKind::Filter(filter) => {
-                Box::new(self.filter_iter_after(&self.root, filter.as_ref()))
+                Box::new(self.filter_iter_after(no_gc, &self.root, filter.as_ref()))
             },
             CollectionKind::Source(source) => source.iter(&self.root),
         }
@@ -402,7 +407,7 @@ impl HTMLCollection {
 
 impl HTMLCollectionMethods<crate::DomTypeHolder> for HTMLCollection {
     /// <https://dom.spec.whatwg.org/#dom-htmlcollection-length>
-    fn Length(&self) -> u32 {
+    fn Length(&self, cx: &JSContext) -> u32 {
         self.validate_cache();
 
         if let Some(cached_length) = self.cached_length.get().to_option() {
@@ -410,14 +415,14 @@ impl HTMLCollectionMethods<crate::DomTypeHolder> for HTMLCollection {
             cached_length
         } else {
             // Cache miss, calculate the length
-            let length = self.elements_iter().count() as u32;
+            let length = self.elements_iter(cx.no_gc()).count() as u32;
             self.cached_length.set(OptionU32::some(length));
             length
         }
     }
 
     /// <https://dom.spec.whatwg.org/#dom-htmlcollection-item>
-    fn Item(&self, index: u32) -> Option<DomRoot<Element>> {
+    fn Item(&self, cx: &JSContext, index: u32) -> Option<DomRoot<Element>> {
         self.validate_cache();
 
         if let Some(element) = self.cached_cursor_element.get() {
@@ -437,7 +442,7 @@ impl HTMLCollectionMethods<crate::DomTypeHolder> for HTMLCollection {
                         let offset = index - (cached_index + 1);
                         self.set_cached_cursor(
                             index,
-                            self.filter_iter_after(&node, filter.as_ref())
+                            self.filter_iter_after(cx.no_gc(), &node, filter.as_ref())
                                 .nth(offset as usize),
                         )
                     } else {
@@ -454,11 +459,11 @@ impl HTMLCollectionMethods<crate::DomTypeHolder> for HTMLCollection {
         }
 
         // Cache miss or source-based collection: iterate from the beginning.
-        self.set_cached_cursor(index, self.elements_iter().nth(index as usize))
+        self.set_cached_cursor(index, self.elements_iter(cx.no_gc()).nth(index as usize))
     }
 
     /// <https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem>
-    fn NamedItem(&self, key: DOMString) -> Option<DomRoot<Element>> {
+    fn NamedItem(&self, cx: &JSContext, key: DOMString) -> Option<DomRoot<Element>> {
         // Step 1.
         if key.is_empty() {
             return None;
@@ -467,7 +472,7 @@ impl HTMLCollectionMethods<crate::DomTypeHolder> for HTMLCollection {
         let key = Atom::from(key);
 
         // Step 2.
-        self.elements_iter().find(|elem| {
+        self.elements_iter(cx.no_gc()).find(|elem| {
             elem.get_id().is_some_and(|id| id == key) ||
                 (elem.namespace() == &ns!(html) && elem.get_name().is_some_and(|id| id == key))
         })
@@ -484,12 +489,12 @@ impl HTMLCollectionMethods<crate::DomTypeHolder> for HTMLCollection {
     }
 
     /// <https://dom.spec.whatwg.org/#interface-htmlcollection>
-    fn SupportedPropertyNames(&self) -> Vec<DOMString> {
+    fn SupportedPropertyNames(&self, cx: &JSContext) -> Vec<DOMString> {
         // Step 1
         let mut result = vec![];
 
         // Step 2
-        for elem in self.elements_iter() {
+        for elem in self.elements_iter(cx.no_gc()) {
             // Step 2.1
             if let Some(id_atom) = elem.get_id() {
                 let id_str = DOMString::from(&*id_atom);

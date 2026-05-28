@@ -73,6 +73,85 @@ impl Iterator for FollowingNodeIterator {
     }
 }
 
+#[cfg_attr(crown, crown::unrooted_must_root_lint::allow_unrooted_interior)]
+pub(crate) struct UnrootedFollowingNodeIterator<'a, 'b> {
+    current: Option<UnrootedDom<'b, Node>>,
+    root: UnrootedDom<'a, Node>,
+    /// This is unused and only used for lifetime guarantee of NoGC
+    no_gc: &'b NoGC,
+    phantom: PhantomData<&'a Node>,
+}
+
+impl<'a, 'b> UnrootedFollowingNodeIterator<'a, 'b>
+where
+    'b: 'a,
+{
+    pub(crate) fn new(
+        current: Option<UnrootedDom<'b, Node>>,
+        root: UnrootedDom<'a, Node>,
+        no_gc: &'b NoGC,
+    ) -> Self {
+        UnrootedFollowingNodeIterator {
+            current,
+            root,
+            no_gc,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Skips iterating the children of the current node
+    pub(crate) fn next_skipping_children(&mut self) -> Option<UnrootedDom<'a, Node>> {
+        let current = self.current.take()?;
+        self.next_skipping_children_impl(current)
+    }
+
+    fn next_skipping_children_impl(
+        &mut self,
+        current: UnrootedDom<'b, Node>,
+    ) -> Option<UnrootedDom<'a, Node>> {
+        if self.root == &current {
+            self.current = None;
+            return None;
+        }
+
+        if let Some(next_sibling) = current.get_next_sibling_unrooted(self.no_gc) {
+            self.current = Some(next_sibling);
+            return current.get_next_sibling_unrooted(self.no_gc);
+        }
+
+        for ancestor in current.inclusive_ancestors_unrooted(self.no_gc, ShadowIncluding::No) {
+            if self.root == &ancestor {
+                break;
+            }
+            if let Some(next_sibling) = ancestor.get_next_sibling_unrooted(self.no_gc) {
+                self.current = Some(next_sibling);
+                return ancestor.get_next_sibling_unrooted(self.no_gc);
+            }
+        }
+        self.current = None;
+        None
+    }
+}
+
+impl<'a, 'b> Iterator for UnrootedFollowingNodeIterator<'a, 'b>
+where
+    'b: 'a,
+{
+    type Item = UnrootedDom<'a, Node>;
+
+    /// <https://dom.spec.whatwg.org/#concept-tree-following>
+    fn next(&mut self) -> Option<UnrootedDom<'a, Node>> {
+        let current = self.current.take()?;
+
+        if let Some(first_child) = current.get_first_child_unrooted(self.no_gc) {
+            self.current = Some(first_child);
+            return current.get_first_child_unrooted(self.no_gc);
+        }
+
+        self.next_skipping_children_impl(current)
+    }
+}
+
 pub(crate) struct PrecedingNodeIterator {
     current: Option<DomRoot<Node>>,
     root: DomRoot<Node>,

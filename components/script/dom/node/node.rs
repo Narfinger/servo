@@ -111,6 +111,7 @@ use crate::dom::html::htmlstyleelement::HTMLStyleElement;
 use crate::dom::html::htmltextareaelement::HTMLTextAreaElement;
 use crate::dom::html::htmlvideoelement::HTMLVideoElement;
 use crate::dom::html::input_element::HTMLInputElement;
+use crate::dom::iterators::UnrootedFollowingNodeIterator;
 use crate::dom::mutationobserver::{Mutation, MutationObserver, RegisteredObserver};
 use crate::dom::node::iterators::{
     FollowingNodeIterator, PrecedingNodeIterator, SimpleNodeIterator, TreeIterator,
@@ -1036,6 +1037,18 @@ impl Node {
 
     pub(crate) fn following_nodes(&self, root: &Node) -> FollowingNodeIterator {
         FollowingNodeIterator::new(Some(DomRoot::from_ref(self)), DomRoot::from_ref(root))
+    }
+
+    pub(crate) fn following_nodes_unrooted(
+        &self,
+        no_gc: &NoGC,
+        root: &Node,
+    ) -> UnrootedFollowingNodeIterator {
+        UnrootedFollowingNodeIterator::new(
+            Some(UnrootedDom::from_dom(Dom::from_ref(self), no_gc)),
+            UnrootedDom::from_dom(Dom::from_ref(root), no_gc),
+            no_gc,
+        )
     }
 
     pub(crate) fn preceding_nodes(&self, root: &Node) -> PrecedingNodeIterator {
