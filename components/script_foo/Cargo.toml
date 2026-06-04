@@ -1,6 +1,5 @@
 [package]
-name = "servo-script-bindings"
-build = "build.rs"
+name = "servo-script-foo"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -12,11 +11,9 @@ description.workspace = true
 # but is used during the build via build.rs.
 license = "MPL-2.0 AND BSD-3-Clause"
 
-# https://github.com/rust-lang/cargo/issues/3544
-links = "script_bindings_crate"
 
 [lib]
-name = "script_bindings"
+name = "script_foo"
 path = "lib.rs"
 
 [dependencies]
@@ -45,6 +42,7 @@ servo-base = { workspace = true }
 servo-config = { workspace = true }
 servo-url = { workspace = true }
 servo_arc = { workspace = true }
+script_bindings = { workspace = true }
 smallvec = { workspace = true }
 stylo = { workspace = true }
 stylo_atoms = { workspace = true }
