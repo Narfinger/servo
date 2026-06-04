@@ -11,21 +11,21 @@ import os
 from typing import Any, TypeVar
 
 from WebIDL import (
-    IDLExternalInterface,
-    IDLSequenceType,
-    IDLWrapperType,
-    WebIDLError,
+    IDLAttribute,
+    IDLCallback,
+    IDLDictionary,
     IDLEnum,
+    IDLExternalInterface,
+    IDLInterfaceMember,
+    IDLInterfaceOrNamespace,
+    IDLMethod,
     IDLObject,
     IDLObjectWithIdentifier,
+    IDLSequenceType,
     IDLType,
     IDLTypedef,
-    IDLInterfaceOrNamespace,
-    IDLDictionary,
-    IDLCallback,
-    IDLAttribute,
-    IDLMethod,
-    IDLInterfaceMember,
+    IDLWrapperType,
+    WebIDLError,
 )
 
 TargetType = TypeVar('TargetType')
@@ -51,6 +51,7 @@ class Configuration:
     callbacks: list[IDLCallback]
     crates: dict[str,list[str]]
     idl_crates: dict[str, str]
+    sub_crates: dict[str,list[str]]
 
     def __init__(self, filename: str, parseData: list[IDLObjectWithIdentifier]) -> None:
         # Read the configuration file.
@@ -62,6 +63,7 @@ class Configuration:
         self.unionConfig = glbl['Unions']
         self.crates = glbl['Crates']
         self.idl_crates = glbl['IDLCrates']
+        self.sub_crates = glbl['SubCrates']
 
         # Build descriptors for all the interfaces we have in the parse data.
         # This allows callers to specify a subset of interfaces by filtering

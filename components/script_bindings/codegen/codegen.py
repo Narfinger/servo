@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import functools
+import itertools
 import operator
 import os
 import re
@@ -3072,12 +3073,15 @@ def DomTypeHolder(descriptors: list[Descriptor],
             "impl crate::DomTypes for DomTypeHolder {\n"
         ),
     ]
+    itertools_any = list(itertools.chain.from_iterable([item for item in config.sub_crates.values()]))
     for descriptor in descriptors:
         if descriptor.interface.isCallback() or descriptor.interface.isIteratorInterface():
             continue
         iface_name = descriptor.interface.identifier.name
-        if iface_name in config.idl_crates.keys():
-            path = f"{config.idl_crates["iface_name"]}::{iface_name.lower()}::{firstCap(iface_name)}"
+
+        if iface_name in itertools_any:
+            key = [key for key, val in config.sub_crates.items() if iface_name in val][0]
+            path = f"{key}::{iface_name.lower()}::{firstCap(iface_name)}"
         else:
             path = f"crate::dom::{iface_name.lower()}::{firstCap(iface_name)}"
         elements.append(CGGeneric(f"    type {firstCap(iface_name)} = {path};\n"))
