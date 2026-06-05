@@ -29,7 +29,6 @@ use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucomputepassencoder::GPUComputePassEncoder;
 use crate::gpuconvert::{WebGPUConvert, WebGPUTryConvert, convert_load_op};
-use crate::gpudevice::GPUDevice;
 use crate::gpurenderpassencoder::GPURenderPassEncoder;
 use crate::gputexture::GPUTexture;
 use crate::gputextureview::GPUTextureView;

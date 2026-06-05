@@ -13,7 +13,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUPipelineLayoutDescriptor, GPUPipelineLayoutMethods, GPUPipelineLayoutWrap,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -22,8 +22,7 @@ use wgpu_core::binding_model::PipelineLayoutDescriptor;
 
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpuconvert::WebGPUConvert;
-use crate::gpudevice::GPUDevice;
-use crate::traits::WebGPUGlobalTrait;
+use crate::traits::{GPUDeviceTrait, WebGPUGlobalTrait};
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUPipelineLayout {
@@ -111,13 +110,13 @@ impl GPUPipelineLayout {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createpipelinelayout>
     pub(crate) fn create<D>(
-        device: &GPUDevice,
+        device: &D::GPUDevice,
         descriptor: &GPUPipelineLayoutDescriptor<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUPipelineLayout>
     where
         D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout, GPUPipelineLayout = GPUPipelineLayout>,
-        GPUDevice: WebGPUGlobalTrait<D>,
+        D::GPUDevice: GPUDeviceTrait + WebGPUGlobalTrait<D>,
     {
         let bgls = descriptor
             .bindGroupLayouts

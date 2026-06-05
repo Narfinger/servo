@@ -25,12 +25,7 @@ use wgpu_core::pipeline::ProgrammableStageDescriptor;
 use wgpu_core::resource::TextureDescriptor;
 use wgpu_types::{self, AstcBlock, AstcChannel};
 
-use crate::gpubuffer::GPUBuffer;
-use crate::gpudevice::GPUDevice;
 use crate::gpusampler::GPUSampler;
-use crate::gpushadermodule::GPUShaderModule;
-use crate::gputexture::GPUTexture;
-use crate::gputextureview::GPUTextureView;
 
 /// A version of the `Into<T>` trait from the standard library that can be used
 /// to convert between two types that are not defined in the script crate.
@@ -514,7 +509,7 @@ impl WebGPUConvert<wgpu_types::StencilOperation> for GPUStencilOperation {
 
 impl<D> WebGPUConvert<wgpu_com::TexelCopyBufferInfo> for &GPUTexelCopyBufferInfo<D>
 where
-    D: DomTypes<GPUBuffer = GPUBuffer>,
+    D: DomTypes,
 {
     fn convert(self) -> wgpu_com::TexelCopyBufferInfo {
         wgpu_com::TexelCopyBufferInfo {
@@ -554,7 +549,7 @@ impl WebGPUTryConvert<wgpu_types::Origin3d> for &GPUOrigin3D {
 
 impl<D> WebGPUTryConvert<wgpu_com::TexelCopyTextureInfo> for &GPUTexelCopyTextureInfo<D>
 where
-    D: DomTypes<GPUTexture = GPUTexture>,
+    D: DomTypes,
 {
     type Error = Error;
 
@@ -587,9 +582,9 @@ impl<'a> WebGPUConvert<Option<Cow<'a, str>>> for &GPUObjectDescriptorBase {
     }
 }
 
-pub(crate) fn convert_bind_group_layout_entry(
+pub(crate) fn convert_bind_group_layout_entry<D: DomTypes>(
     bgle: &GPUBindGroupLayoutEntry,
-    device: &GPUDevice,
+    device: &D::GPUDevice,
 ) -> Fallible<Result<wgpu_types::BindGroupLayoutEntry, webgpu_traits::Error>> {
     let number_of_provided_bindings = bgle.buffer.is_some() as u8 +
         bgle.sampler.is_some() as u8 +
@@ -710,74 +705,6 @@ impl WebGPUTryConvert<wgpu_types::Color> for &GPUColor {
                 b: *d.b,
                 a: *d.a,
             }),
-        }
-    }
-}
-
-impl<'a, D> WebGPUConvert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage<D>
-where
-    D: DomTypes<GPUShaderModule = GPUShaderModule>,
-{
-    fn convert(self) -> ProgrammableStageDescriptor<'a> {
-        ProgrammableStageDescriptor {
-            module: self.module.id().0,
-            entry_point: self
-                .entryPoint
-                .as_ref()
-                .map(|ep| Cow::Owned(ep.to_string())),
-            constants: self
-                .constants
-                .as_ref()
-                .map(|records| records.iter().map(|(k, v)| (k.0.clone(), **v)).collect())
-                .unwrap_or_default(),
-            zero_initialize_workgroup_memory: true,
-        }
-    }
-}
-
-impl<D> WebGPUConvert<WebGPUTextureView> for &GPUTextureOrGPUTextureView<D>
-where
-    D: DomTypes<GPUTextureView = GPUTextureView, GPUTexture = GPUTexture>,
-{
-    fn convert(self) -> WebGPUTextureView {
-        match self {
-            GPUTextureOrGPUTextureView::GPUTextureView(view) => view.id(),
-            GPUTextureOrGPUTextureView::GPUTexture(texture) => texture.get_default_view(),
-        }
-    }
-}
-
-impl<'a, D> WebGPUConvert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D>
-where
-    D: DomTypes<
-            GPUSampler = GPUSampler,
-            GPUTexture = GPUTexture,
-            GPUBuffer = GPUBuffer,
-            GPUTextureView = GPUTextureView,
-        >,
-{
-    fn convert(self) -> BindGroupEntry<'a> {
-        BindGroupEntry {
-            binding: self.binding,
-            resource: match self.resource {
-                GPUBindingResource::GPUSampler(ref s) => BindingResource::Sampler(s.id().0),
-                GPUBindingResource::GPUTextureView(ref t) => BindingResource::TextureView(t.id().0),
-                GPUBindingResource::GPUTexture(ref t) => {
-                    BindingResource::TextureView(t.get_default_view().0)
-                },
-                GPUBindingResource::GPUBufferBinding(ref b) => {
-                    BindingResource::Buffer(BufferBinding {
-                        buffer: b.buffer.id().0,
-                        offset: b.offset,
-                        size: b.size,
-                    })
-                },
-                GPUBindingResource::GPUBuffer(ref b) => BindingResource::Buffer(BufferBinding {
-                    buffer: b.id().0,
-                    offset: 0,
-                    size: None,
-                }),
-            },
         }
     }
 }

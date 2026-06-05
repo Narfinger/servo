@@ -17,8 +17,6 @@ use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
 
-use crate::gputexture::GPUTexture;
-
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUTextureView {
     #[ignore_malloc_size_of = "defined in webgpu"]

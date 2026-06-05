@@ -19,8 +19,7 @@ use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURequest, WebGPUSampler};
 use wgpu_core::resource::SamplerDescriptor;
 
 use crate::gpuconvert::WebGPUConvert;
-use crate::gpudevice::GPUDevice;
-use crate::traits::WebGPUGlobalTrait;
+use crate::traits::{GPUDeviceTrait, WebGPUGlobalTrait};
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUSampler {
@@ -103,13 +102,13 @@ impl GPUSampler {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createsampler>
     pub(crate) fn create<D>(
-        device: &GPUDevice,
+        device: &D::GPUDevice,
         descriptor: &GPUSamplerDescriptor,
         can_gc: CanGc,
     ) -> DomRoot<GPUSampler>
     where
-        D: DomTypes<GPUSampler = GPUSampler, GPUDevice = GPUDevice>,
-        GPUDevice: WebGPUGlobalTrait<D>,
+        D: DomTypes<GPUSampler = GPUSampler>,
+        D::GPUDevice: GPUDeviceTrait + WebGPUGlobalTrait<D>,
     {
         let sampler_id = device.wgpu_id_hub().create_sampler_id();
         let compare_enable = descriptor.compare.is_some();

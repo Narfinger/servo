@@ -25,9 +25,7 @@ use wgpu_core::pipeline::ComputePipelineDescriptor;
 
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpuconvert::WebGPUConvert;
-use crate::gpudevice::GPUDevice;
 use crate::gpupipelinelayout::GPUPipelineLayout;
-use crate::gpushadermodule::GPUShaderModule;
 use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]

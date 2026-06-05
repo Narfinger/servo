@@ -34,7 +34,7 @@ pub(crate) struct GPUSupportedFeatures {
 }
 
 impl GPUSupportedFeatures {
-    fn new<D: DomTypes>(
+    fn new<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,

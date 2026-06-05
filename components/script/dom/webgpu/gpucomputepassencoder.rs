@@ -19,8 +19,6 @@ use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
-use crate::gpucommandencoder::GPUCommandEncoder;
-use crate::gpucomputepipeline::GPUComputePipeline;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUComputePassEncoder {

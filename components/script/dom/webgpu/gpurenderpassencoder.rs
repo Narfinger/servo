@@ -21,11 +21,9 @@ use script_bindings::str::USVString;
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
 use crate::gpubindgroup::GPUBindGroup;
-use crate::gpubuffer::GPUBuffer;
-use crate::gpucommandencoder::GPUCommandEncoder;
 use crate::gpuconvert::WebGPUTryConvert;
 use crate::gpurenderbundle::GPURenderBundle;
-use crate::gpurenderpipeline::GPURenderPipeline;
+use crate::traits::WebGPURenderPipelineTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPURenderPassEncoder {
@@ -128,11 +126,11 @@ where
     D: DomTypes<
             GPUBindGroup = GPUBindGroup,
             GPUBuffer = GPUBuffer,
-            GPURenderPipeline = GPURenderPipeline,
             GPURenderPassEncoder = GPURenderPassEncoder,
             GPUCommandEncoder = GPUCommandEncoder,
             GPURenderBundle = GPURenderBundle,
         >,
+    D::GPURenderPipeline: WebGPURenderPipelineTrait,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {

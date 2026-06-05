@@ -25,7 +25,6 @@ use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
 use crate::gpuconvert::WebGPUConvert;
-use crate::gpudevice::GPUDevice;
 use crate::gputextureview::GPUTextureView;
 use crate::traits::WebGPUGlobalTrait;
 

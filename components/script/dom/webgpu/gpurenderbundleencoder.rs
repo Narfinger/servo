@@ -26,7 +26,6 @@ use wgpu_core::command::{
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpuconvert::WebGPUConvert;
-use crate::gpudevice::GPUDevice;
 use crate::gpurenderbundle::GPURenderBundle;
 use crate::gpurenderpipeline::GPURenderPipeline;
 use crate::traits::WebGPUGlobalTrait;

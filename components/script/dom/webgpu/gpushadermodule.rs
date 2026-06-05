@@ -22,7 +22,6 @@ use script_bindings::trace::RootedTraceableBox;
 use webgpu_traits::{ShaderCompilationInfo, WebGPU, WebGPURequest, WebGPUShaderModule};
 
 use super::gpucompilationinfo::GPUCompilationInfo;
-use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUShaderModule {

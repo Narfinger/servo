@@ -31,7 +31,6 @@ use wgpu_core::resource::BufferAccessError;
 
 use crate::datablock::DataBlock;
 use crate::gpuconvert::WebGPUConvert;
-use crate::gpudevice::GPUDevice;
 use crate::traits::{WebGPUGlobalTrait, WebGPUPromise};
 
 #[derive(JSTraceable, MallocSizeOf)]

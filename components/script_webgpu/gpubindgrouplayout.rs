@@ -22,8 +22,7 @@ use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
 use crate::gpuconvert::{WebGPUConvert, convert_bind_group_layout_entry};
-use crate::gpudevice::GPUDevice;
-use crate::traits::WebGPUGlobalTrait;
+use crate::traits::{GPUDeviceTrait, WebGPUGlobalTrait};
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroupLayout {
@@ -101,13 +100,13 @@ impl GPUBindGroupLayout {
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
     pub(crate) fn create<D>(
-        device: &GPUDevice,
+        device: &D::GPUDevice,
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
     ) -> Fallible<DomRoot<GPUBindGroupLayout>>
     where
         D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
-        GPUDevice: WebGPUGlobalTrait<D>,
+        D::GPUDevice: GPUDeviceTrait + WebGPUGlobalTrait<D>,
     {
         let entries = descriptor
             .entries

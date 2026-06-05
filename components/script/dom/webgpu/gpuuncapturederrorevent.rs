@@ -20,7 +20,7 @@ use crate::gpuerror::GPUError;
 
 #[dom_struct]
 pub(crate) struct GPUUncapturedErrorEvent {
-    //event: Event,
+    event: Event,
     #[ignore_malloc_size_of = "Because it is non-owning"]
     gpu_error: Dom<GPUError>,
 }
@@ -32,7 +32,7 @@ impl GPUUncapturedErrorEvent {
     {
         Self {
             gpu_error: Dom::from_ref(&init.error),
-            //   event: Event::new_inherited(),
+            event: Event::new_inherited(),
         }
     }
 
@@ -65,9 +65,9 @@ impl GPUUncapturedErrorEvent {
             can_gc,
             GPUUncapturedErrorEventWrap::<D>,
         );
-        //event
-        //            .event
-        //            .init_event(event_type, init.parent.bubbles, init.parent.cancelable);
+        event
+            .event
+            .init_event(event_type, init.parent.bubbles, init.parent.cancelable);
         event
     }
 }
@@ -94,7 +94,6 @@ where
 
     /// <https://dom.spec.whatwg.org/#dom-event-istrusted>
     fn IsTrusted(&self) -> bool {
-        todo!()
-        //self.event.IsTrusted()
+        self.event.IsTrusted()
     }
 }
