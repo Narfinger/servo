@@ -11,9 +11,13 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::WGSLLanguageFeaturesMethods;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    WGSLLanguageFeaturesMethods, WGSLLanguageFeaturesWrap,
+};
 use script_bindings::like::Setlike;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -28,16 +32,19 @@ pub struct WGSLLanguageFeatures {
 }
 
 impl WGSLLanguageFeatures {
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<WGSLLanguageFeatures = WGSLLanguageFeatures>,
+    {
         let set = ImplementedLanguageExtension::all()
             .iter()
             .map(|le| le.to_ident().into())
             .collect();
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
             Box::new(Self {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
@@ -45,6 +52,7 @@ impl WGSLLanguageFeatures {
             global,
             proto,
             can_gc,
+            WGSLLanguageFeaturesWrap::<D>,
         )
     }
 }

@@ -12,11 +12,11 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
-    GPUTextureMethods, GPUTextureViewDescriptor,
+    GPUTextureMethods, GPUTextureViewDescriptor, GPUTextureWrap,
 };
 use script_bindings::dom::MutNullableDom;
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -24,8 +24,10 @@ use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
+use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
 use crate::gputextureview::GPUTextureView;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUTexture {
@@ -51,10 +53,10 @@ impl Drop for DroppableGPUTexture {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTexture<D: DomTypes> {
+pub(crate) struct GPUTexture {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     #[no_trace]
     #[ignore_malloc_size_of = "External type"]
     texture_size: wgpu_types::Extent3d,
@@ -71,7 +73,7 @@ impl GPUTexture {
     #[expect(clippy::too_many_arguments)]
     fn new_inherited(
         texture: WebGPUTexture,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         channel: WebGPU,
         texture_size: wgpu_types::Extent3d,
         mip_level_count: u32,
@@ -97,10 +99,10 @@ impl GPUTexture {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         texture: WebGPUTexture,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         channel: WebGPU,
         texture_size: wgpu_types::Extent3d,
         mip_level_count: u32,
@@ -110,8 +112,11 @@ impl GPUTexture {
         texture_usage: u32,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUTexture = GPUTexture>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUTexture::new_inherited(
                 texture,
                 device,
@@ -126,24 +131,30 @@ impl GPUTexture {
             )),
             global,
             can_gc,
+            GPUTextureWrap::<D>,
         )
     }
 }
 
-impl<D: DomTypes> GPUTexture<D> {
+impl GPUTexture {
     pub(crate) fn id(&self) -> WebGPUTexture {
         self.droppable.texture
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createtexture>
-    pub(crate) fn create(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D>(
+        device: &GPUDevice,
         descriptor: &GPUTextureDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUTexture<D>>> {
+    ) -> Fallible<DomRoot<GPUTexture>>
+    where
+        D: DomTypes<GPUTexture = GPUTexture>,
+        GPUDevice: WebGPUGlobalTrait<D>,
+        GPUTexture: WebGPUGlobalTrait<D>,
+    {
         let (desc, size) = convert_texture_descriptor(descriptor, device)?;
 
-        let texture_id = device.global().wgpu_id_hub().create_texture_id();
+        let texture_id = device.wgpu_id_hub().create_texture_id();
 
         device
             .channel()
@@ -157,7 +168,7 @@ impl<D: DomTypes> GPUTexture<D> {
 
         let texture = WebGPUTexture(texture_id);
 
-        Ok(GPUTexture::new(
+        Ok(GPUTexture::new::<D>(
             &device.global(),
             texture,
             device,
@@ -183,9 +194,10 @@ impl<D: DomTypes> GPUTexture<D> {
     }
 }
 
-impl<D> GPUTextureMethods<D> for GPUTexture<D>
+impl<D> GPUTextureMethods<D> for GPUTexture
 where
     D: DomTypes<GPUTextureView = GPUTextureView>,
+    GPUTexture: WebGPUGlobalTrait<D>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -235,7 +247,7 @@ where
             None
         };
 
-        let texture_view_id = self.global().wgpu_id_hub().create_texture_view_id();
+        let texture_view_id = self.wgpu_id_hub().create_texture_view_id();
 
         self.droppable
             .channel
@@ -250,7 +262,7 @@ where
 
         let texture_view = WebGPUTextureView(texture_view_id);
 
-        Ok(GPUTextureView::new(
+        Ok(GPUTextureView::new::<D>(
             &self.global(),
             self.droppable.channel.clone(),
             texture_view,

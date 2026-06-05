@@ -9,24 +9,21 @@ use js::jsapi::{HandleObject, Heap, JSObject};
 use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUAdapterMethods, GPUAdapterWrap, GPUDeviceDescriptor,
 };
-use script_bindings::error::Error;
 use script_bindings::like::Setlike;
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
-use script_bindings::{DomTypes, cformat};
 use webgpu_traits::{WebGPU, WebGPUAdapter, WebGPURequest};
-use wgpu_types::{AdapterInfo, ExperimentalFeatures, MemoryHints};
+use wgpu_types::AdapterInfo;
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
-use super::gpusupportedlimits::set_limit;
 use crate::gpuadapterinfo::GPUAdapterInfo;
-use crate::gpusupportedfeatures::gpu_to_wgt_feature;
 use crate::gpusupportedlimits::GPUSupportedLimits;
 
 #[derive(JSTraceable, MallocSizeOf)]

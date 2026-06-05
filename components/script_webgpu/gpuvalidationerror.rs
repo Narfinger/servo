@@ -7,8 +7,12 @@ use js::rust::HandleObject;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationErrorMethods;
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUValidationErrorMethods, GPUValidationErrorWrap,
+};
+use script_bindings::reflector::{
+    reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -27,17 +31,21 @@ impl GPUValidationError {
         }
     }
 
-    pub(crate) fn new_with_proto<D: DomTypes>(
+    pub(crate) fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUValidationError = GPUValidationError>,
+    {
+        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
             Box::new(Self::new_inherited(message)),
             global,
             proto,
             can_gc,
+            GPUValidationErrorWrap::<D>,
         )
     }
 }
@@ -53,6 +61,6 @@ where
         can_gc: CanGc,
         message: DOMString,
     ) -> DomRoot<Self> {
-        Self::new_with_proto(global, proto, message, can_gc)
+        Self::new_with_proto::<D>(global, proto, message, can_gc)
     }
 }

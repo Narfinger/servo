@@ -12,11 +12,13 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUFeatureName, GPUSupportedFeaturesMethods,
+    GPUFeatureName, GPUSupportedFeaturesMethods, GPUSupportedFeaturesWrap,
 };
 use script_bindings::error::Fallible;
 use script_bindings::like::Setlike;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -39,7 +41,10 @@ impl GPUSupportedFeatures {
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
-    ) -> DomRoot<GPUSupportedFeatures> {
+    ) -> DomRoot<GPUSupportedFeatures>
+    where
+        D: DomTypes<GPUSupportedFeatures = GPUSupportedFeatures>,
+    {
         let mut set = IndexSet::new();
         if features.contains(Features::DEPTH_CLIP_CONTROL) {
             set.insert(GPUFeatureName::Depth_clip_control);
@@ -91,7 +96,7 @@ impl GPUSupportedFeatures {
         }
         */
 
-        reflect_dom_object_with_proto(
+        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
             Box::new(GPUSupportedFeatures {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
@@ -100,17 +105,23 @@ impl GPUSupportedFeatures {
             global,
             proto,
             can_gc,
+            GPUSupportedFeaturesWrap::<D>,
         )
     }
 
     #[expect(non_snake_case)]
-    pub(crate) fn Constructor<D: DomTypes>(
+    pub(crate) fn Constructor<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUSupportedFeatures>> {
-        Ok(GPUSupportedFeatures::new(global, proto, features, can_gc))
+    ) -> Fallible<DomRoot<GPUSupportedFeatures>>
+    where
+        D: DomTypes<GPUSupportedFeatures = GPUSupportedFeatures>,
+    {
+        Ok(GPUSupportedFeatures::new::<D>(
+            global, proto, features, can_gc,
+        ))
     }
 }
 

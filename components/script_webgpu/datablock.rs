@@ -1,12 +1,8 @@
-use std::ffi::c_void;
 use std::ops::Range;
 
-use js::rooted;
-use js::rust::wrappers2::NewExternalArrayBuffer;
 use js::typedarray::HeapArrayBuffer;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::trace::RootedTraceableBox;
 use servo_arc::Arc;

@@ -8,9 +8,11 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods,
+    GPUUncapturedErrorEventInit, GPUUncapturedErrorEventMethods, GPUUncapturedErrorEventWrap,
 };
-use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::reflector::{
+    reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
+};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -36,31 +38,38 @@ impl GPUUncapturedErrorEvent {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUUncapturedErrorEvent = GPUUncapturedErrorEvent, GPUError = GPUError>,
+    {
         Self::new_with_proto(global, None, event_type, init, can_gc)
     }
 
-    fn new_with_proto<D: DomTypes>(
+    fn new_with_proto<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         event_type: Atom,
         init: &GPUUncapturedErrorEventInit<D>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        let event = reflect_dom_object_with_proto(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUUncapturedErrorEvent = GPUUncapturedErrorEvent, GPUError = GPUError>,
+    {
+        let event = reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
             Box::new(GPUUncapturedErrorEvent::new_inherited(init)),
             global,
             proto,
             can_gc,
+            GPUUncapturedErrorEventWrap::<D>,
         );
-        event
-            .event
-            .init_event(event_type, init.parent.bubbles, init.parent.cancelable);
+        //event
+        //            .event
+        //            .init_event(event_type, init.parent.bubbles, init.parent.cancelable);
         event
     }
 }
@@ -87,6 +96,7 @@ where
 
     /// <https://dom.spec.whatwg.org/#dom-event-istrusted>
     fn IsTrusted(&self) -> bool {
-        self.event.IsTrusted()
+        todo!()
+        //self.event.IsTrusted()
     }
 }

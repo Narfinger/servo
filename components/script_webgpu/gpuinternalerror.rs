@@ -61,6 +61,6 @@ where
         can_gc: CanGc,
         message: DOMString,
     ) -> DomRoot<Self> {
-        Self::new_with_proto::<D(global, proto, message, can_gc)
+        Self::new_with_proto::<D>(global, proto, message, can_gc)
     }
 }

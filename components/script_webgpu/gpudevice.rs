@@ -48,6 +48,7 @@ use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
 use crate::gpucomputepipeline::GPUComputePipeline;
+use crate::gpuconvert::WebGPUConvert;
 use crate::gpuerror::GPUError;
 use crate::gpupipelinelayout::GPUPipelineLayout;
 use crate::gpuqueue::GPUQueue;
@@ -57,6 +58,8 @@ use crate::gpusampler::GPUSampler;
 use crate::gpushadermodule::GPUShaderModule;
 use crate::gpusupportedfeatures::GPUSupportedFeatures;
 use crate::gputexture::GPUTexture;
+use crate::promise::WebGPUPromise;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUDevice {
@@ -79,9 +82,8 @@ impl Drop for DroppableGPUDevice {
 }
 
 #[dom_struct]
-pub(crate) struct GPUDevice<D: DomTypes> {
-    reflector_: Reflector,
-    eventtarget: D::EventTarget,
+pub(crate) struct GPUDevice {
+    //eventtarget: EventTarget,
     adapter: Dom<GPUAdapter>,
     #[ignore_malloc_size_of = "mozjs"]
     extensions: Heap<*mut JSObject>,
@@ -92,7 +94,7 @@ pub(crate) struct GPUDevice<D: DomTypes> {
     default_queue: Dom<GPUQueue>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-lost>
     #[conditional_malloc_size_of]
-    lost_promise: DomRefCell<Rc<D::Promise>>,
+    lost_promise: DomRefCell<Rc<WebGPUPromise>>,
     valid: Cell<bool>,
     droppable: DroppableGPUDevice,
 }
@@ -111,12 +113,9 @@ impl PipelineLayout {
     }
 }
 
-impl<D> GPUDevice<D>
-where
-    D: DomTypes,
-{
+impl GPUDevice {
     #[allow(clippy::too_many_arguments)]
-    fn new_inherited(
+    fn new_inherited<D>(
         channel: WebGPU,
         adapter: &GPUAdapter,
         features: &GPUSupportedFeatures,
@@ -126,9 +125,12 @@ where
         queue: &GPUQueue,
         label: String,
         lost_promise: Rc<D::Promise>,
-    ) -> Self {
+    ) -> Self
+    where
+        D: DomTypes,
+    {
         Self {
-            eventtarget: D::EventTarget::new_inherited(),
+            //eventtarget: D::EventTarget::new_inherited(),
             adapter: Dom::from_ref(adapter),
             extensions: Heap::default(),
             features: Dom::from_ref(features),
@@ -143,7 +145,7 @@ where
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
+    pub(crate) fn new<D: DomTypes>(
         global: &D::GlobalScope,
         channel: WebGPU,
         adapter: &GPUAdapter,
@@ -184,7 +186,7 @@ where
     }
 }
 
-impl<D: DomTypes> GPUDevice<D> {
+impl GPUDevice {
     pub(crate) fn id(&self) -> WebGPUDevice {
         self.droppable.device
     }
@@ -262,10 +264,13 @@ impl<D: DomTypes> GPUDevice<D> {
         self.lost_promise.borrow().is_fulfilled()
     }
 
-    pub(crate) fn get_pipeline_layout_data(
+    pub(crate) fn get_pipeline_layout_data<D>(
         &self,
         layout: &GPUPipelineLayoutOrGPUAutoLayoutMode<D>,
-    ) -> PipelineLayout {
+    ) -> PipelineLayout
+    where
+        D: DomTypes<GPUPipelineLayout = GPUPipelineLayout>,
+    {
         if let GPUPipelineLayoutOrGPUAutoLayoutMode::GPUPipelineLayout(layout) = layout {
             PipelineLayout::Explicit(layout.id().0)
         } else {
@@ -273,10 +278,13 @@ impl<D: DomTypes> GPUDevice<D> {
         }
     }
 
-    pub(crate) fn parse_render_pipeline<'a>(
+    pub(crate) fn parse_render_pipeline<'a, D>(
         &self,
-        descriptor: &GPURenderPipelineDescriptor,
-    ) -> Fallible<RenderPipelineDescriptor<'a>> {
+        descriptor: &GPURenderPipelineDescriptor<D>,
+    ) -> Fallible<RenderPipelineDescriptor<'a>>
+    where
+        D: DomTypes<GPUPipelineLayout = GPUPipelineLayout>,
+    {
         let pipeline_layout = self.get_pipeline_layout_data(&descriptor.parent.layout);
         let desc = wgpu_pipe::RenderPipelineDescriptor {
             label: (&descriptor.parent.parent).convert(),
@@ -410,24 +418,27 @@ impl<D: DomTypes> GPUDevice<D> {
     }
 }
 
-impl<D> GPUDeviceMethods<D> for GPUDevice<D>
+impl<D> GPUDeviceMethods<D> for GPUDevice
 where
     D: DomTypes<
             GPUSupportedFeatures = GPUSupportedFeatures,
             GPUAdapterInfo = GPUAdapterInfo,
             GPUSupportedLimits = GPUSupportedLimits,
             GPUPipelineLayout = GPUPipelineLayout,
-            GPUBuffer = GPUBuffer<D>,
+            GPUBuffer = GPUBuffer,
             GPUQueue = GPUQueue,
             GPUBindGroupLayout = GPUBindGroupLayout,
-            GPUShaderModule = GPUShaderModule<D>,
+            GPUShaderModule = GPUShaderModule,
             GPUBindGroup = GPUBindGroup,
             GPUComputePipeline = GPUComputePipeline,
             GPURenderBundleEncoder = GPURenderBundleEncoder,
             GPUTexture = GPUTexture,
             GPUSampler = GPUSampler,
             GPUCommandEncoder = GPUCommandEncoder,
+            GPUDevice = GPUDevice,
         >,
+    GPUTexture: WebGPUGlobalTrait<D>,
+    GPUDevice: WebGPUGlobalTrait<D>,
     D::Promise: Clone,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-features>
@@ -466,7 +477,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbuffer>
-    fn CreateBuffer(&self, descriptor: &GPUBufferDescriptor) -> Fallible<DomRoot<GPUBuffer<D>>> {
+    fn CreateBuffer(&self, descriptor: &GPUBufferDescriptor) -> Fallible<DomRoot<GPUBuffer>> {
         GPUBuffer::create(self, descriptor, CanGc::deprecated_note())
     }
 
@@ -507,7 +518,7 @@ where
         descriptor: &GPUComputePipelineDescriptor<D>,
     ) -> DomRoot<D::GPUComputePipeline> {
         let compute_pipeline = GPUComputePipeline::create(self, descriptor, None);
-        GPUComputePipeline::new(
+        GPUComputePipeline::new::<D>(
             &self.global(),
             compute_pipeline,
             descriptor.parent.parent.label.clone(),
@@ -557,7 +568,7 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
     fn CreateRenderPipeline(
         &self,
-        descriptor: &GPURenderPipelineDescriptor<D>,
+        descriptor: &GPURenderPipelineDescriptor,
     ) -> Fallible<DomRoot<GPURenderPipeline>> {
         let desc = self.parse_render_pipeline(descriptor)?;
         let render_pipeline = GPURenderPipeline::create(self, desc, None)?;

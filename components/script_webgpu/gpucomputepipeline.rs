@@ -24,8 +24,15 @@ use webgpu_traits::{
 use wgpu_core::pipeline::ComputePipelineDescriptor;
 
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpubuffer::GPUBuffer;
 use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
+use crate::gpupipelinelayout::GPUPipelineLayout;
+use crate::gpusampler::GPUSampler;
+use crate::gpushadermodule::GPUShaderModule;
+use crate::gputexture::GPUTexture;
+use crate::gputextureview::GPUTextureView;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUComputePipeline {
@@ -51,22 +58,22 @@ impl Drop for DroppableGPUComputePipeline {
 }
 
 #[dom_struct]
-pub(crate) struct GPUComputePipeline<D: DomTypes> {
+pub(crate) struct GPUComputePipeline {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice<D>>,
+    device: Dom<GPUDevice>,
     droppable: DroppableGPUComputePipeline,
 }
 
-impl<D> GPUComputePipeline<D>
-where
-    D: DomTypes<GPUComputePipeline = GPUComputePipeline<D>>,
-{
-    fn new_inherited(
+impl GPUComputePipeline {
+    fn new_inherited<D>(
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
-        device: &GPUDevice<D>,
-    ) -> Self {
+        device: &GPUDevice,
+    ) -> Self
+    where
+        D: DomTypes<GPUComputePipeline = GPUComputePipeline>,
+    {
         Self {
             reflector_: Reflector::new(),
             label: DomRefCell::new(label),
@@ -78,15 +85,18 @@ where
         }
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         compute_pipeline: WebGPUComputePipeline,
         label: USVString,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUComputePipeline = GPUComputePipeline>,
+    {
         reflect_dom_object_with_wrap::<D, _, _, _>(
-            Box::new(GPUComputePipeline::new_inherited(
+            Box::new(GPUComputePipeline::new_inherited::<D>(
                 compute_pipeline,
                 label,
                 device,
@@ -98,18 +108,22 @@ where
     }
 }
 
-impl<D: DomTypes> GPUComputePipeline<D> {
+impl GPUComputePipeline {
     pub(crate) fn id(&self) -> &WebGPUComputePipeline {
         &self.droppable.compute_pipeline
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcomputepipeline>
-    pub(crate) fn create(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D>(
+        device: &GPUDevice,
         descriptor: &GPUComputePipelineDescriptor<D>,
         async_sender: Option<GenericCallback<WebGPUComputePipelineResponse>>,
-    ) -> WebGPUComputePipeline {
-        let compute_pipeline_id = device.global().wgpu_id_hub().create_compute_pipeline_id();
+    ) -> WebGPUComputePipeline
+    where
+        D: DomTypes<GPUPipelineLayout = GPUPipelineLayout, GPUShaderModule = GPUShaderModule>,
+        GPUDevice: WebGPUGlobalTrait<D>,
+    {
+        let compute_pipeline_id = device.wgpu_id_hub().create_compute_pipeline_id();
 
         let pipeline_layout = device.get_pipeline_layout_data(&descriptor.parent.layout);
 
@@ -135,9 +149,10 @@ impl<D: DomTypes> GPUComputePipeline<D> {
     }
 }
 
-impl<D> GPUComputePipelineMethods<D> for GPUComputePipeline<D>
+impl<D> GPUComputePipelineMethods<D> for GPUComputePipeline
 where
     D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+    GPUComputePipeline: WebGPUGlobalTrait<D>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -151,7 +166,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
     fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<GPUBindGroupLayout>> {
-        let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
+        let id = self.wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
             .droppable
@@ -167,7 +182,7 @@ where
             warn!("Failed to send WebGPURequest::ComputeGetBindGroupLayout {e:?}");
         }
 
-        Ok(GPUBindGroupLayout::new(
+        Ok(GPUBindGroupLayout::new::<D>(
             &self.global(),
             self.droppable.channel.clone(),
             WebGPUBindGroupLayout(id),

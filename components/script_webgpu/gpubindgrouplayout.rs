@@ -14,7 +14,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods, GPUBindGroupLayoutWrap,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -23,6 +23,7 @@ use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
 use crate::gpuconvert::{WebGPUConvert, convert_bind_group_layout_entry};
 use crate::gpudevice::GPUDevice;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroupLayout {
@@ -99,11 +100,15 @@ impl GPUBindGroupLayout {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
-    pub(crate) fn create<D: DomTypes>(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D>(
+        device: &GPUDevice,
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUBindGroupLayout>> {
+    ) -> Fallible<DomRoot<GPUBindGroupLayout>>
+    where
+        D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+        GPUDevice: WebGPUGlobalTrait<D>,
+    {
         let entries = descriptor
             .entries
             .iter()
@@ -121,7 +126,7 @@ impl GPUBindGroupLayout {
             },
         };
 
-        let bind_group_layout_id = device.global().wgpu_id_hub().create_bind_group_layout_id();
+        let bind_group_layout_id = device.wgpu_id_hub().create_bind_group_layout_id();
         device
             .channel()
             .0
@@ -134,7 +139,7 @@ impl GPUBindGroupLayout {
 
         let bgl = WebGPUBindGroupLayout(bind_group_layout_id);
 
-        Ok(GPUBindGroupLayout::new(
+        Ok(GPUBindGroupLayout::new::<D>(
             &device.global(),
             device.channel(),
             bgl,

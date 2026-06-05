@@ -9,12 +9,12 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUIndexFormat, GPURenderPassEncoderMethods,
+    GPUIndexFormat, GPURenderPassEncoderMethods, GPURenderPassEncoderWrap,
 };
 use script_bindings::codegen::GenericUnionTypes::{self, DoubleSequenceOrGPUColorDict};
 use script_bindings::error::Fallible;
 use script_bindings::num::Finite;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -55,12 +55,15 @@ pub(crate) struct GPURenderPassEncoder {
 }
 
 impl GPURenderPassEncoder {
-    fn new_inherited(
+    fn new_inherited<D>(
         channel: WebGPU,
         render_pass: WebGPURenderPass,
         parent: &GPUCommandEncoder,
         label: USVString,
-    ) -> Self {
+    ) -> Self
+    where
+        D: DomTypes<GPURenderPassEncoder = GPURenderPassEncoder>,
+    {
         Self {
             reflector_: Reflector::new(),
             label: DomRefCell::new(label),
@@ -72,16 +75,19 @@ impl GPURenderPassEncoder {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         render_pass: WebGPURenderPass,
         parent: &GPUCommandEncoder,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
-            Box::new(GPURenderPassEncoder::new_inherited(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPURenderPassEncoder = GPURenderPassEncoder>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
+            Box::new(GPURenderPassEncoder::new_inherited::<D>(
                 channel,
                 render_pass,
                 parent,
@@ -89,6 +95,7 @@ impl GPURenderPassEncoder {
             )),
             global,
             can_gc,
+            GPURenderPassEncoderWrap::<D>,
         )
     }
 
@@ -120,8 +127,11 @@ impl<D> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder
 where
     D: DomTypes<
             GPUBindGroup = GPUBindGroup,
-            GPUBuffer = GPUBuffer<D>,
+            GPUBuffer = GPUBuffer,
             GPURenderPipeline = GPURenderPipeline,
+            GPURenderPassEncoder = GPURenderPassEncoder,
+            GPUCommandEncoder = GPUCommandEncoder,
+            GPURenderBundle = GPURenderBundle,
         >,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
@@ -195,7 +205,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setpipeline>
-    fn SetPipeline(&self, pipeline: &GPURenderPipeline) {
+    fn SetPipeline(&self, pipeline: &D::GPURenderPipeline) {
         self.send_render_command(RenderCommand::SetPipeline(pipeline.id().0))
     }
 
@@ -219,7 +229,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
-    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer<D>, offset: u64, size: u64) {
+    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer, offset: u64, size: u64) {
         self.send_render_command(RenderCommand::SetVertexBuffer {
             slot,
             buffer_id: buffer.id().0,

@@ -11,10 +11,10 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUIndexFormat, GPURenderBundleDescriptor, GPURenderBundleEncoderDescriptor,
-    GPURenderBundleEncoderMethods,
+    GPURenderBundleEncoderMethods, GPURenderBundleEncoderWrap,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -25,9 +25,11 @@ use wgpu_core::command::{
 
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
+use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
 use crate::gpurenderbundle::GPURenderBundle;
 use crate::gpurenderpipeline::GPURenderPipeline;
+use crate::traits::WebGPUGlobalTrait;
 
 #[dom_struct]
 pub(crate) struct GPURenderBundleEncoder {
@@ -42,12 +44,15 @@ pub(crate) struct GPURenderBundleEncoder {
 }
 
 impl GPURenderBundleEncoder {
-    fn new_inherited(
+    fn new_inherited<D>(
         render_bundle_encoder: RenderBundleEncoder,
         device: &GPUDevice,
         channel: WebGPU,
         label: USVString,
-    ) -> Self {
+    ) -> Self
+    where
+        D: DomTypes<GPURenderBundleEncoder = GPURenderBundleEncoder>,
+    {
         Self {
             reflector_: Reflector::new(),
             render_bundle_encoder: DomRefCell::new(Some(render_bundle_encoder)),
@@ -57,16 +62,19 @@ impl GPURenderBundleEncoder {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         render_bundle_encoder: RenderBundleEncoder,
         device: &GPUDevice,
         channel: WebGPU,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
-            Box::new(GPURenderBundleEncoder::new_inherited(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPURenderBundleEncoder = GPURenderBundleEncoder>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
+            Box::new(GPURenderBundleEncoder::new_inherited::<D>(
                 render_bundle_encoder,
                 device,
                 channel,
@@ -74,17 +82,22 @@ impl GPURenderBundleEncoder {
             )),
             global,
             can_gc,
+            GPURenderBundleEncoderWrap::<D>,
         )
     }
 }
 
 impl GPURenderBundleEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderbundleencoder>
-    pub(crate) fn create(
+    pub(crate) fn create<D>(
         device: &GPUDevice,
         descriptor: &GPURenderBundleEncoderDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPURenderBundleEncoder>> {
+    ) -> Fallible<DomRoot<GPURenderBundleEncoder>>
+    where
+        D: DomTypes<GPURenderBundleEncoder = GPURenderBundleEncoder>,
+        GPUDevice: WebGPUGlobalTrait<D>,
+    {
         let desc = RenderBundleEncoderDescriptor {
             label: (&descriptor.parent.parent).convert(),
             color_formats: Cow::Owned(
@@ -119,7 +132,7 @@ impl GPURenderBundleEncoder {
         // Handle error gracefully
         let render_bundle_encoder = RenderBundleEncoder::new(&desc, device.id().0).unwrap();
 
-        Ok(GPURenderBundleEncoder::new(
+        Ok(GPURenderBundleEncoder::new::<D>(
             &device.global(),
             render_bundle_encoder,
             device,
@@ -134,10 +147,11 @@ impl<D> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder
 where
     D: DomTypes<
             GPURenderPipeline = GPURenderPipeline,
-            GPUBuffer = GPUBuffer<D>,
+            GPUBuffer = GPUBuffer,
             GPUBindGroup = GPUBindGroup,
             GPURenderBundle = GPURenderBundle,
         >,
+    GPURenderBundleEncoder: WebGPUGlobalTrait<D>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -175,7 +189,7 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer<D>,
+        buffer: &GPUBuffer,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,
@@ -195,7 +209,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
-    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer<D>, offset: u64, size: u64) {
+    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer, offset: u64, size: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_set_vertex_buffer(
                 encoder,
@@ -242,7 +256,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
-    fn DrawIndirect(&self, indirect_buffer: &GPUBuffer<D>, indirect_offset: u64) {
+    fn DrawIndirect(&self, indirect_buffer: &GPUBuffer, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_draw_indirect(
                 encoder,
@@ -253,7 +267,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
-    fn DrawIndexedIndirect(&self, indirect_buffer: &GPUBuffer<D>, indirect_offset: u64) {
+    fn DrawIndexedIndirect(&self, indirect_buffer: &GPUBuffer, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_draw_indexed_indirect(
                 encoder,
@@ -269,7 +283,7 @@ where
             label: (&descriptor.parent).convert(),
         };
         let encoder = self.render_bundle_encoder.borrow_mut().take().unwrap();
-        let render_bundle_id = self.global().wgpu_id_hub().create_render_bundle_id();
+        let render_bundle_id = self.wgpu_id_hub().create_render_bundle_id();
 
         self.channel
             .0
@@ -282,7 +296,7 @@ where
             .expect("Failed to send RenderBundleEncoderFinish");
 
         let render_bundle = WebGPURenderBundle(render_bundle_id);
-        GPURenderBundle::new(
+        GPURenderBundle::new::<D>(
             &self.global(),
             render_bundle,
             self.device.id(),

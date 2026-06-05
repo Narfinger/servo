@@ -21,7 +21,7 @@ use script_bindings::codegen::GenericUnionTypes::{
 };
 use script_bindings::dom::MutNullableDom;
 use script_bindings::error::{Error, Fallible};
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -46,6 +46,7 @@ fn supported_context_format(format: GPUTextureFormat) -> bool {
         GPUTextureFormat::Bgra8unorm | GPUTextureFormat::Rgba8unorm
     )
 }
+/*
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUCanvasContext {
@@ -128,7 +129,7 @@ impl<D: DomTypes> GPUCanvasContext<D> {
         channel: WebGPU,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        reflect_dom_object(
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUCanvasContext::new_inherited(
                 global,
                 //HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
@@ -419,3 +420,4 @@ impl<D: DomTypes> GPUCanvasContextMethods<D> for GPUCanvasContext {
         Ok(current_texture)
     }
 }
+ */

@@ -96,7 +96,7 @@ impl GPUComputePassEncoder {
 impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder
 where
     D: DomTypes<
-            GPUBuffer = GPUBuffer<D>,
+            GPUBuffer = GPUBuffer,
             GPUBindGroup = GPUBindGroup,
             GPUComputePipeline = GPUComputePipeline,
         >,
@@ -130,7 +130,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-dispatchworkgroupsindirect>
-    fn DispatchWorkgroupsIndirect(&self, buffer: &GPUBuffer<D>, offset: u64) {
+    fn DispatchWorkgroupsIndirect(&self, buffer: &GPUBuffer, offset: u64) {
         if let Err(e) =
             self.droppable
                 .channel

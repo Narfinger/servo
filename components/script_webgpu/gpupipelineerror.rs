@@ -60,7 +60,7 @@ impl GPUPipelineError {
     where
         D: DomTypes<GPUPipelineError = GPUPipelineError>,
     {
-        Self::new_with_proto(global, None, message, reason, can_gc)
+        Self::new_with_proto::<D>(global, None, message, reason, can_gc)
     }
 }
 
@@ -76,7 +76,7 @@ where
         message: DOMString,
         options: &GPUPipelineErrorInit,
     ) -> DomRoot<Self> {
-        Self::new_with_proto(global, proto, message, options.reason, can_gc)
+        Self::new_with_proto::<D>(global, proto, message, options.reason, can_gc)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-reason>

@@ -30,7 +30,12 @@ use wgpu_core::pipeline::ProgrammableStageDescriptor;
 use wgpu_core::resource::TextureDescriptor;
 use wgpu_types::{self, AstcBlock, AstcChannel};
 
+use crate::gpubuffer::GPUBuffer;
 use crate::gpudevice::GPUDevice;
+use crate::gpusampler::GPUSampler;
+use crate::gpushadermodule::GPUShaderModule;
+use crate::gputexture::GPUTexture;
+use crate::gputextureview::GPUTextureView;
 
 /// A version of the `Into<T>` trait from the standard library that can be used
 /// to convert between two types that are not defined in the script crate.
@@ -512,7 +517,10 @@ impl WebGPUConvert<wgpu_types::StencilOperation> for GPUStencilOperation {
     }
 }
 
-impl<D: DomTypes> WebGPUConvert<wgpu_com::TexelCopyBufferInfo> for &GPUTexelCopyBufferInfo<D> {
+impl<D> WebGPUConvert<wgpu_com::TexelCopyBufferInfo> for &GPUTexelCopyBufferInfo<D>
+where
+    D: DomTypes<GPUBuffer = GPUBuffer>,
+{
     fn convert(self) -> wgpu_com::TexelCopyBufferInfo {
         wgpu_com::TexelCopyBufferInfo {
             buffer: self.buffer.id().0,
@@ -549,7 +557,10 @@ impl WebGPUTryConvert<wgpu_types::Origin3d> for &GPUOrigin3D {
     }
 }
 
-impl<D: DomTypes> WebGPUTryConvert<wgpu_com::TexelCopyTextureInfo> for &GPUTexelCopyTextureInfo<D> {
+impl<D> WebGPUTryConvert<wgpu_com::TexelCopyTextureInfo> for &GPUTexelCopyTextureInfo<D>
+where
+    D: DomTypes<GPUTexture = GPUTexture>,
+{
     type Error = Error;
 
     fn try_convert(self) -> Result<wgpu_com::TexelCopyTextureInfo, Self::Error> {
@@ -708,7 +719,10 @@ impl WebGPUTryConvert<wgpu_types::Color> for &GPUColor {
     }
 }
 
-impl<'a, D: DomTypes> WebGPUConvert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage<D> {
+impl<'a, D> WebGPUConvert<ProgrammableStageDescriptor<'a>> for &GPUProgrammableStage<D>
+where
+    D: DomTypes<GPUShaderModule = GPUShaderModule>,
+{
     fn convert(self) -> ProgrammableStageDescriptor<'a> {
         ProgrammableStageDescriptor {
             module: self.module.id().0,
@@ -726,7 +740,10 @@ impl<'a, D: DomTypes> WebGPUConvert<ProgrammableStageDescriptor<'a>> for &GPUPro
     }
 }
 
-impl<D: DomTypes> WebGPUConvert<WebGPUTextureView> for &GPUTextureOrGPUTextureView<D> {
+impl<D> WebGPUConvert<WebGPUTextureView> for &GPUTextureOrGPUTextureView<D>
+where
+    D: DomTypes<GPUTextureView = GPUTextureView, GPUTexture = GPUTexture>,
+{
     fn convert(self) -> WebGPUTextureView {
         match self {
             GPUTextureOrGPUTextureView::GPUTextureView(view) => view.id(),
@@ -735,7 +752,15 @@ impl<D: DomTypes> WebGPUConvert<WebGPUTextureView> for &GPUTextureOrGPUTextureVi
     }
 }
 
-impl<'a, D: DomTypes> WebGPUConvert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D> {
+impl<'a, D> WebGPUConvert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D>
+where
+    D: DomTypes<
+            GPUSampler = GPUSampler,
+            GPUTexture = GPUTexture,
+            GPUBuffer = GPUBuffer,
+            GPUTextureView = GPUTextureView,
+        >,
+{
     fn convert(self) -> BindGroupEntry<'a> {
         BindGroupEntry {
             binding: self.binding,

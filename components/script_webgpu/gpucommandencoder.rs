@@ -31,6 +31,9 @@ use crate::gpucomputepassencoder::GPUComputePassEncoder;
 use crate::gpuconvert::{WebGPUConvert, WebGPUTryConvert, convert_load_op};
 use crate::gpudevice::GPUDevice;
 use crate::gpurenderpassencoder::GPURenderPassEncoder;
+use crate::gputexture::GPUTexture;
+use crate::gputextureview::GPUTextureView;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUCommandEncoder {
@@ -61,12 +64,15 @@ impl Drop for DroppableGPUCommandEncoder {
 }
 
 impl GPUCommandEncoder {
-    pub(crate) fn new_inherited<D: DomTypes>(
+    pub(crate) fn new_inherited<D>(
         channel: WebGPU,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         encoder: WebGPUCommandEncoder,
         label: USVString,
-    ) -> Self {
+    ) -> Self
+    where
+        D: DomTypes<GPUCommandEncoder = GPUCommandEncoder>,
+    {
         Self {
             droppable: DroppableGPUCommandEncoder { channel, encoder },
             reflector_: Reflector::new(),
@@ -78,7 +84,7 @@ impl GPUCommandEncoder {
     pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         encoder: WebGPUCommandEncoder,
         label: USVString,
         can_gc: CanGc,
@@ -87,7 +93,7 @@ impl GPUCommandEncoder {
         D: DomTypes<GPUCommandEncoder = GPUCommandEncoder>,
     {
         reflect_dom_object_with_wrap::<D, _, _, _>(
-            Box::new(GPUCommandEncoder::new_inherited(
+            Box::new(GPUCommandEncoder::new_inherited::<D>(
                 channel, device, encoder, label,
             )),
             global,
@@ -107,12 +113,16 @@ impl GPUCommandEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcommandencoder>
-    pub(crate) fn create<D: DomTypes>(
-        device: &GPUDevice<D>,
+    pub(crate) fn create<D>(
+        device: &GPUDevice,
         descriptor: &GPUCommandEncoderDescriptor,
         can_gc: CanGc,
-    ) -> DomRoot<GPUCommandEncoder> {
-        let command_encoder_id = device.global().wgpu_id_hub().create_command_encoder_id();
+    ) -> DomRoot<GPUCommandEncoder>
+    where
+        D: DomTypes<GPUDevice = GPUDevice, GPUCommandEncoder = GPUCommandEncoder>,
+        GPUDevice: WebGPUGlobalTrait<D>,
+    {
+        let command_encoder_id = device.wgpu_id_hub().create_command_encoder_id();
         device
             .channel()
             .0
@@ -127,7 +137,7 @@ impl GPUCommandEncoder {
 
         let encoder = WebGPUCommandEncoder(command_encoder_id);
 
-        GPUCommandEncoder::new(
+        GPUCommandEncoder::new::<D>(
             &device.global(),
             device.channel(),
             device,
@@ -144,8 +154,12 @@ where
             GPUComputePassEncoder = GPUComputePassEncoder,
             GPURenderPassEncoder = GPURenderPassEncoder,
             GPUCommandBuffer = GPUCommandBuffer,
-            GPUBuffer = GPUBuffer<D>,
+            GPUBuffer = GPUBuffer,
+            GPUCommandEncoder = GPUCommandEncoder,
+            GPUTextureView = GPUTextureView,
+            GPUTexture = GPUTexture,
         >,
+    GPUCommandEncoder: WebGPUGlobalTrait<D>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -162,7 +176,7 @@ where
         &self,
         descriptor: &GPUComputePassDescriptor,
     ) -> DomRoot<GPUComputePassEncoder> {
-        let compute_pass_id = self.global().wgpu_id_hub().create_compute_pass_id();
+        let compute_pass_id = self.wgpu_id_hub().create_compute_pass_id();
 
         if let Err(e) = self
             .droppable
@@ -178,7 +192,7 @@ where
             warn!("Failed to send WebGPURequest::BeginComputePass {e:?}");
         }
 
-        GPUComputePassEncoder::new(
+        GPUComputePassEncoder::new::<D>(
             &self.global(),
             self.droppable.channel.clone(),
             self,
@@ -236,7 +250,7 @@ where
                 }))
             })
             .collect::<Fallible<Vec<_>>>()?;
-        let render_pass_id = self.global().wgpu_id_hub().create_render_pass_id();
+        let render_pass_id = self.wgpu_id_hub().create_render_pass_id();
 
         if let Err(e) = self
             .droppable
@@ -254,7 +268,7 @@ where
             warn!("Failed to send WebGPURequest::BeginRenderPass {e:?}");
         }
 
-        Ok(GPURenderPassEncoder::new(
+        Ok(GPURenderPassEncoder::new::<D>(
             &self.global(),
             self.droppable.channel.clone(),
             WebGPURenderPass(render_pass_id),
@@ -267,9 +281,9 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertobuffer>
     fn CopyBufferToBuffer(
         &self,
-        source: &GPUBuffer<D>,
+        source: &GPUBuffer,
         source_offset: GPUSize64,
-        destination: &GPUBuffer<D>,
+        destination: &GPUBuffer,
         destination_offset: GPUSize64,
         size: GPUSize64,
     ) {
@@ -356,7 +370,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-finish>
     fn Finish(&self, descriptor: &GPUCommandBufferDescriptor) -> DomRoot<GPUCommandBuffer> {
-        let command_buffer_id = self.global().wgpu_id_hub().create_command_buffer_id();
+        let command_buffer_id = self.wgpu_id_hub().create_command_buffer_id();
         self.droppable
             .channel
             .0
@@ -371,7 +385,7 @@ where
             .expect("Failed to send Finish");
 
         let buffer = WebGPUCommandBuffer(command_buffer_id);
-        GPUCommandBuffer::new(
+        GPUCommandBuffer::new::<D>(
             &self.global(),
             self.droppable.channel.clone(),
             buffer,

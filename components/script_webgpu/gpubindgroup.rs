@@ -13,7 +13,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUBindGroupDescriptor, GPUBindGroupMethods, GPUBindGroupWrap,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -23,7 +23,7 @@ use wgpu_core::binding_model::BindGroupDescriptor;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
-use crate::traits::WGPUGobal;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroup {
@@ -108,12 +108,17 @@ impl GPUBindGroup {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createbindgroup>
     pub(crate) fn create<D>(
-        device: &GPUDevice<D>,
+        device: &GPUDevice,
         descriptor: &GPUBindGroupDescriptor<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUBindGroup>
     where
-        D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+        D: DomTypes<
+                GPUBindGroupLayout = GPUBindGroupLayout,
+                GPUBindGroup = GPUBindGroup,
+                GPUDevice = GPUDevice,
+            >,
+        GPUDevice: WebGPUGlobalTrait<D>,
     {
         let entries = descriptor
             .entries
@@ -127,7 +132,7 @@ impl GPUBindGroup {
             entries: Cow::Owned(entries),
         };
 
-        let bind_group_id = device.global().wgpu_id_hub().create_bind_group_id();
+        let bind_group_id = device.wgpu_id_hub().create_bind_group_id();
         device
             .channel()
             .0
@@ -140,7 +145,7 @@ impl GPUBindGroup {
 
         let bind_group = WebGPUBindGroup(bind_group_id);
 
-        GPUBindGroup::new(
+        GPUBindGroup::new::<D>(
             &device.global(),
             device.channel(),
             bind_group,

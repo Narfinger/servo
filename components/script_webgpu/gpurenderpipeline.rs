@@ -8,9 +8,11 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipelineMethods;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPURenderPipelineMethods, GPURenderPipelineWrap,
+};
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -23,6 +25,7 @@ use wgpu_core::pipeline::RenderPipelineDescriptor;
 
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpudevice::GPUDevice;
+use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPURenderPipeline {
@@ -56,11 +59,14 @@ pub(crate) struct GPURenderPipeline {
 }
 
 impl GPURenderPipeline {
-    fn new_inherited(
+    fn new_inherited<D>(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
         device: &GPUDevice,
-    ) -> Self {
+    ) -> Self
+    where
+        D: DomTypes<GPURenderPipeline = GPURenderPipeline>,
+    {
         Self {
             reflector_: Reflector::new(),
             label: DomRefCell::new(label),
@@ -72,21 +78,25 @@ impl GPURenderPipeline {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
         device: &GPUDevice,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
-            Box::new(GPURenderPipeline::new_inherited(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPURenderPipeline = GPURenderPipeline>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
+            Box::new(GPURenderPipeline::new_inherited::<D>(
                 render_pipeline,
                 label,
                 device,
             )),
             global,
             can_gc,
+            GPURenderPipelineWrap::<D>,
         )
     }
 }
@@ -97,12 +107,16 @@ impl GPURenderPipeline {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
-    pub(crate) fn create(
+    pub(crate) fn create<D>(
         device: &GPUDevice,
         descriptor: RenderPipelineDescriptor<'static>,
         async_sender: Option<GenericCallback<WebGPURenderPipelineResponse>>,
-    ) -> Fallible<WebGPURenderPipeline> {
-        let render_pipeline_id = device.global().wgpu_id_hub().create_render_pipeline_id();
+    ) -> Fallible<WebGPURenderPipeline>
+    where
+        D: DomTypes,
+        GPUDevice: WebGPUGlobalTrait<D>,
+    {
+        let render_pipeline_id = device.wgpu_id_hub().create_render_pipeline_id();
 
         device
             .channel()
@@ -119,9 +133,10 @@ impl GPURenderPipeline {
     }
 }
 
-impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline
+impl<D> GPURenderPipelineMethods<D> for GPURenderPipeline
 where
     D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+    GPURenderPipeline: WebGPUGlobalTrait<D>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -135,7 +150,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
     fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<GPUBindGroupLayout>> {
-        let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
+        let id = self.wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
             .droppable
@@ -151,7 +166,7 @@ where
             warn!("Failed to send WebGPURequest::RenderGetBindGroupLayout {e:?}");
         }
 
-        Ok(GPUBindGroupLayout::new(
+        Ok(GPUBindGroupLayout::new::<D>(
             &self.global(),
             self.droppable.channel.clone(),
             WebGPUBindGroupLayout(id),

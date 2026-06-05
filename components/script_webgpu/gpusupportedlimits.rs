@@ -8,8 +8,10 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use num_traits::bounds::UpperBounded;
 use script_bindings::DomTypes;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimits_Binding;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUSupportedLimits_Binding, GPUSupportedLimitsWrap,
+};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use wgpu_types::Limits;
@@ -31,12 +33,16 @@ impl GPUSupportedLimits {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
-        global: &D::GlobalScope,
-        limits: Limits,
-        can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(Box::new(Self::new_inherited(limits)), global, can_gc)
+    pub(crate) fn new<D>(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUSupportedLimits = GPUSupportedLimits>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
+            Box::new(Self::new_inherited(limits)),
+            global,
+            can_gc,
+            GPUSupportedLimitsWrap::<D>,
+        )
     }
 }
 

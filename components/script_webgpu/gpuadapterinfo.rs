@@ -9,7 +9,7 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUAdapterInfoMethods, GPUAdapterInfoWrap,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;

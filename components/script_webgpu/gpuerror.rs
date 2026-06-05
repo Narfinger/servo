@@ -10,9 +10,7 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUErrorFilter, GPUErrorMethods, GPUErrorWrap,
 };
-use script_bindings::reflector::{
-    Reflector, reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
-};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap_and_proto};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -73,7 +71,12 @@ impl GPUError {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes<GPUError = GPUError>,
+        D: DomTypes<
+                GPUError = GPUError,
+                GPUValidationError = GPUValidationError,
+                GPUOutOfMemoryError = GPUOutOfMemoryError,
+                GPUInternalError = GPUInternalError,
+            >,
     {
         match error {
             Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
