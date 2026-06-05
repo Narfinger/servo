@@ -659,9 +659,9 @@ pub(crate) fn convert_bind_group_layout_entry<D: DomTypes>(
     }))
 }
 
-pub(crate) fn convert_texture_descriptor(
+pub(crate) fn convert_texture_descriptor<D: DomTypes>(
     descriptor: &GPUTextureDescriptor,
-    device: &GPUDevice,
+    device: &D::GPUDevice,
 ) -> Fallible<(TextureDescriptor<'static>, wgpu_types::Extent3d)> {
     let size = (&descriptor.size).try_convert()?;
     let desc = TextureDescriptor {

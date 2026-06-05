@@ -3,13 +3,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 pub mod datablock;
-pub mod gpu;
-pub mod gpuadapter;
 pub mod gpuadapterinfo;
 pub mod gpubindgroup;
 pub mod gpubindgrouplayout;
 pub mod gpubufferusage;
-pub mod gpucanvascontext;
 pub mod gpucolorwrite;
 pub mod gpucommandbuffer;
 pub mod gpucompilationinfo;

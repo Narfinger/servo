@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+pub(crate) mod gpu;
+pub(crate) mod gpuadapter;
 pub(crate) mod gpubuffer;
+pub(crate) mod gpucanvascontext;
 pub(crate) mod gpucommandencoder;
 pub(crate) mod gpucomputepassencoder;
 pub(crate) mod gpucomputepipeline;

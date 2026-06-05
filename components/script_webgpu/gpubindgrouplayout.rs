@@ -111,7 +111,7 @@ impl GPUBindGroupLayout {
         let entries = descriptor
             .entries
             .iter()
-            .map(|bgle| convert_bind_group_layout_entry(bgle, device))
+            .map(|bgle| convert_bind_group_layout_entry::<D>(bgle, device))
             .collect::<Fallible<Result<Vec<_>, _>>>()?;
 
         let desc = match entries {
