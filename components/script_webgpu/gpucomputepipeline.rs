@@ -12,7 +12,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUComputePipelineDescriptor, GPUComputePipelineMethods, GPUComputePipelineWrap,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -24,14 +24,10 @@ use webgpu_traits::{
 use wgpu_core::pipeline::ComputePipelineDescriptor;
 
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::gpubuffer::GPUBuffer;
 use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
 use crate::gpupipelinelayout::GPUPipelineLayout;
-use crate::gpusampler::GPUSampler;
 use crate::gpushadermodule::GPUShaderModule;
-use crate::gputexture::GPUTexture;
-use crate::gputextureview::GPUTextureView;
 use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]

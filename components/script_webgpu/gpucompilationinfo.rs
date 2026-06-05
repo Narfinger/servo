@@ -10,9 +10,7 @@ use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCompilationInfoMethods, GPUCompilationInfoWrap,
 };
-use script_bindings::reflector::{
-    Reflector, reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
-};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap_and_proto};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::{CanGc, JSContext};
 use script_foo::to_frozen_array;

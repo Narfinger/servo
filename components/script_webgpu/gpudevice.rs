@@ -283,7 +283,7 @@ impl GPUDevice {
         descriptor: &GPURenderPipelineDescriptor<D>,
     ) -> Fallible<RenderPipelineDescriptor<'a>>
     where
-        D: DomTypes<GPUPipelineLayout = GPUPipelineLayout>,
+        D: DomTypes<GPUPipelineLayout = GPUPipelineLayout, GPUShaderModule = GPUShaderModule>,
     {
         let pipeline_layout = self.get_pipeline_layout_data(&descriptor.parent.layout);
         let desc = wgpu_pipe::RenderPipelineDescriptor {

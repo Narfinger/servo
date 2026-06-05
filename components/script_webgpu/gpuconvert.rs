@@ -16,12 +16,7 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUTexelCopyTextureInfo, GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension,
     GPUTextureFormat, GPUTextureSampleType, GPUTextureViewDimension, GPUVertexFormat,
 };
-use script_bindings::codegen::GenericUnionTypes::{
-    DoubleSequenceOrGPUColorDict,
-    GPUSamplerOrGPUTextureOrGPUTextureViewOrGPUBufferOrGPUBufferBinding,
-    GPUTextureOrGPUTextureView, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
-    RangeEnforcedUnsignedLongSequenceOrGPUOrigin3DDict,
-};
+use script_bindings::codegen::GenericUnionTypes::GPUTextureOrGPUTextureView;
 use script_bindings::error::{Error, Fallible};
 use webgpu_traits::WebGPUTextureView;
 use wgpu_core::binding_model::{BindGroupEntry, BindingResource, BufferBinding};

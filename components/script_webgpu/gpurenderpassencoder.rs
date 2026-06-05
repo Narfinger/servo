@@ -11,10 +11,10 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUIndexFormat, GPURenderPassEncoderMethods, GPURenderPassEncoderWrap,
 };
-use script_bindings::codegen::GenericUnionTypes::{self, DoubleSequenceOrGPUColorDict};
+use script_bindings::codegen::GenericUnionTypes::{self};
 use script_bindings::error::Fallible;
 use script_bindings::num::Finite;
-use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;

@@ -35,18 +35,26 @@ use crate::gpudevice::GPUDevice;
 use crate::traits::{WebGPUGlobalTrait, WebGPUPromise};
 
 #[derive(JSTraceable, MallocSizeOf)]
-pub(crate) struct ActiveBufferMapping {
+pub(crate) struct ActiveBufferMapping<D>
+where
+    D: DomTypes,
+    D::GlobalScope: WebGPUGlobalTrait<D>,
+{
     // TODO(sagudev): Use GenericSharedMemory when https://github.com/servo/ipc-channel/pull/356 lands
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-data>
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-views>
-    pub(crate) data: DataBlock,
+    pub(crate) data: DataBlock<D>,
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-mode>
     mode: GPUMapModeFlags,
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-range>
     range: Range<u64>,
 }
 
-impl ActiveBufferMapping {
+impl<D> ActiveBufferMapping<D>
+where
+    D: DomTypes,
+    D::GlobalScope: WebGPUGlobalTrait<D>,
+{
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-initialize-an-active-buffer-mapping>
     pub(crate) fn new(mode: GPUMapModeFlags, range: Range<u64>) -> Fallible<Self> {
         // Step 1

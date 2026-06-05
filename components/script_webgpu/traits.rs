@@ -4,7 +4,7 @@ use std::sync::Arc;
 use script_bindings::DomTypes;
 use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
-use script_bindings::script_runtime::CanGc;
+use script_bindings::script_runtime::{CanGc, JSContext};
 use servo_base::id::PipelineId;
 
 use crate::identityhub::IdentityHub;
@@ -18,4 +18,6 @@ pub trait WebGPUGlobalTrait<D: DomTypes> {
     fn global(&self) -> D::GlobalScope;
     fn wgpu_id_hub(&self) -> Arc<IdentityHub>;
     fn pipeline_id(&self) -> PipelineId;
+    fn get_cx() -> JSContext;
+    fn script_to_constellation_chan(&self) -> ();
 }

@@ -46,7 +46,6 @@ pub mod gpuuncapturederrorevent;
 pub mod gpuvalidationerror;
 #[expect(dead_code)]
 pub mod identityhub;
-pub mod promise;
 pub mod traits;
 pub mod wgsllanguagefeatures;
 

@@ -9,15 +9,19 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    self, GPUMethods, GPURequestAdapterOptions, GPUTextureFormat,
+    self, GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
 };
 use script_bindings::dom::MutNullableDom;
+use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
 use script_bindings::reflector::{DomGlobalGeneric, Reflector, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
+use servo_constellation_traits::ScriptToConstellationMessage;
+use wgpu_types::PowerPreference;
 
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
+use crate::traits::{WebGPUGlobalTrait, WebGPUPromise};
 
 #[dom_struct]
 #[expect(clippy::upper_case_acronyms)]
@@ -52,6 +56,8 @@ impl<D> GPUMethods<D> for GPU
 where
     GPU: DomGlobalGeneric<D>,
     D: DomTypes<WGSLLanguageFeatures = WGSLLanguageFeatures>,
+    GPU: WebGPUGlobalTrait<D>,
+    D::Promise: WebGPUPromise,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
@@ -60,11 +66,8 @@ where
         comp: InRealm,
         can_gc: CanGc,
     ) -> Rc<D::Promise> {
-        todo!()
-        /*
-         * TODO
         let global = &self.global();
-        let promise = Promise::new_in_current_realm(comp, can_gc);
+        let promise = D::Promise::new_in_current_realm(comp, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
         let callback = callback_promise(&promise, self, task_source);
 
@@ -73,7 +76,7 @@ where
             Some(GPUPowerPreference::High_performance) => PowerPreference::HighPerformance,
             None => PowerPreference::default(),
         };
-        let ids = global.wgpu_id_hub().create_adapter_id();
+        let ids = self.wgpu_id_hub().create_adapter_id();
 
         let script_to_constellation_chan = global.script_to_constellation_chan();
         if script_to_constellation_chan
@@ -91,7 +94,6 @@ where
             promise.reject_error(Error::Operation(None), can_gc);
         }
         promise
-         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-getpreferredcanvasformat>
@@ -106,11 +108,8 @@ where
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
     fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures> {
-        todo!()
-        /*
         self.wgsl_language_features
-            .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
-             */
+            .or_init(|| WGSLLanguageFeatures::new::<D>(&self.global(), None, can_gc))
     }
 }
 
