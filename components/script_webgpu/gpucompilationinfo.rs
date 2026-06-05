@@ -4,15 +4,16 @@
 
 use dom_struct::dom_struct;
 use js::rust::MutableHandleValue;
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::{CanGc, JSContext};
 use webgpu_traits::ShaderCompilationInfo;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUCompilationInfoMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::utils::to_frozen_array;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::GPUCompilationMessage;
-use crate::script_runtime::{CanGc, JSContext};
+use crate::gpucompilationmessage::GPUCompilationMessage;
 
 #[dom_struct]
 pub(crate) struct GPUCompilationInfo {
@@ -29,16 +30,16 @@ impl GPUCompilationInfo {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         msg: Vec<DomRoot<GPUCompilationMessage>>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         reflect_dom_object_with_proto(Box::new(Self::new_inherited(msg)), global, None, can_gc)
     }
 
-    pub(crate) fn from(
-        global: &GlobalScope,
+    pub(crate) fn from<D: DomTypes>(
+        global: &D::GlobalScope,
         error: Option<ShaderCompilationInfo>,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -54,7 +55,7 @@ impl GPUCompilationInfo {
     }
 }
 
-impl GPUCompilationInfoMethods<crate::DomTypeHolder> for GPUCompilationInfo {
+impl<D: DomTypes> GPUCompilationInfoMethods<D> for GPUCompilationInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationinfo-messages>
     fn Messages(&self, cx: JSContext, can_gc: CanGc, retval: MutableHandleValue) {
         to_frozen_array(self.msg.as_slice(), cx, retval, can_gc)

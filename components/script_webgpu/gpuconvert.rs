@@ -5,6 +5,23 @@
 use std::borrow::Cow;
 use std::num::NonZeroU64;
 
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUAddressMode, GPUBindGroupEntry, GPUBindGroupLayoutEntry, GPUBlendComponent, GPUBlendFactor,
+    GPUBlendOperation, GPUBufferBindingType, GPUCompareFunction, GPUCullMode, GPUFilterMode,
+    GPUFrontFace, GPUIndexFormat, GPULoadOp, GPUMipmapFilterMode, GPUObjectDescriptorBase,
+    GPUPrimitiveState, GPUPrimitiveTopology, GPUProgrammableStage, GPUSamplerBindingType,
+    GPUStencilOperation, GPUStorageTextureAccess, GPUStoreOp, GPUTexelCopyBufferInfo,
+    GPUTexelCopyBufferLayout, GPUTexelCopyTextureInfo, GPUTextureAspect, GPUTextureDescriptor,
+    GPUTextureDimension, GPUTextureFormat, GPUTextureSampleType, GPUTextureViewDimension,
+    GPUVertexFormat,
+};
+use script_bindings::codegen::GenericUnionTypes::{
+    DoubleSequenceOrGPUColorDict,
+    GPUSamplerOrGPUTextureOrGPUTextureViewOrGPUBufferOrGPUBufferBinding,
+    GPUTextureOrGPUTextureView, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
+    RangeEnforcedUnsignedLongSequenceOrGPUOrigin3DDict,
+};
+use script_bindings::error::{Error, Fallible};
 use webgpu_traits::WebGPUTextureView;
 use wgpu_core::binding_model::{BindGroupEntry, BindingResource, BufferBinding};
 use wgpu_core::command as wgpu_com;
@@ -12,20 +29,7 @@ use wgpu_core::pipeline::ProgrammableStageDescriptor;
 use wgpu_core::resource::TextureDescriptor;
 use wgpu_types::{self, AstcBlock, AstcChannel};
 
-use crate::conversions::{Convert, TryConvert};
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUAddressMode, GPUBindGroupEntry, GPUBindGroupLayoutEntry, GPUBindingResource,
-    GPUBlendComponent, GPUBlendFactor, GPUBlendOperation, GPUBufferBindingType, GPUColor,
-    GPUCompareFunction, GPUCullMode, GPUExtent3D, GPUFilterMode, GPUFrontFace, GPUIndexFormat,
-    GPULoadOp, GPUMipmapFilterMode, GPUObjectDescriptorBase, GPUOrigin3D, GPUPrimitiveState,
-    GPUPrimitiveTopology, GPUProgrammableStage, GPUSamplerBindingType, GPUStencilOperation,
-    GPUStorageTextureAccess, GPUStoreOp, GPUTexelCopyBufferInfo, GPUTexelCopyBufferLayout,
-    GPUTexelCopyTextureInfo, GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension,
-    GPUTextureFormat, GPUTextureSampleType, GPUTextureViewDimension, GPUVertexFormat,
-};
-use crate::dom::bindings::codegen::UnionTypes::GPUTextureOrGPUTextureView;
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::types::GPUDevice;
+use crate::gpudevice::GPUDevice;
 
 impl Convert<wgpu_types::TextureFormat> for GPUTextureFormat {
     fn convert(self) -> wgpu_types::TextureFormat {

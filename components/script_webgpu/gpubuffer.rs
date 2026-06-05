@@ -8,30 +8,28 @@ use std::string::String;
 
 use dom_struct::dom_struct;
 use js::typedarray::HeapArrayBuffer;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBufferDescriptor, GPUBufferMapState, GPUBufferMethods, GPUFlagsConstant,
+    GPUMapModeConstants, GPUMapModeFlags, GPUSize64,
+};
+use script_bindings::error::{Error, Fallible};
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use script_bindings::trace::RootedTraceableBox;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
-use crate::conversions::Convert;
-use crate::dom::bindings::buffer_source::DataBlock;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUBufferDescriptor, GPUBufferMapState, GPUBufferMethods, GPUFlagsConstant,
-    GPUMapModeConstants, GPUMapModeFlags, GPUSize64,
-};
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::realms::InRealm;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
-use crate::script_runtime::{CanGc, JSContext};
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
@@ -109,8 +107,8 @@ impl GPUBuffer {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         buffer: WebGPUBuffer,
         device: &GPUDevice,
@@ -189,7 +187,7 @@ impl Drop for GPUBuffer {
     }
 }
 
-impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
+impl<D: DomTypes> GPUBufferMethods<D> for GPUBuffer {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-unmap>
     fn Unmap(&self) {
         // Step 1
@@ -249,7 +247,9 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
         size: Option<GPUSize64>,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<D::Promise> {
+        todo!()
+        /*
         let promise = Promise::new_in_current_realm(comp, can_gc);
         // Step 2
         if self.pending_map.borrow().is_some() {
@@ -294,12 +294,13 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
         }
         // Step 6
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-getmappedrange>
     fn GetMappedRange(
         &self,
-        _cx: JSContext,
+        _cx: script_bindings::script_runtime::JSContext,
         offset: GPUSize64,
         size: Option<GPUSize64>,
         can_gc: CanGc,
@@ -373,7 +374,7 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
 }
 
 impl GPUBuffer {
-    fn map_failure(&self, p: &Rc<Promise>, can_gc: CanGc) {
+    fn map_failure<D: DomTypes>(&self, p: &Rc<D::Promise>, can_gc: CanGc) {
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
             assert!(p.is_rejected());
@@ -392,7 +393,7 @@ impl GPUBuffer {
         }
     }
 
-    fn map_success(&self, p: &Rc<Promise>, wgpu_mapping: Mapping, can_gc: CanGc) {
+    fn map_success<D: DomTypes>(&self, p: &Rc<D::Promise>, wgpu_mapping: Mapping, can_gc: CanGc) {
         // Step 1
         if self.pending_map.borrow().as_ref() != Some(p) {
             assert!(p.is_rejected());
@@ -429,6 +430,7 @@ impl GPUBuffer {
     }
 }
 
+/*
 impl RoutedPromiseListener<Result<Mapping, BufferAccessError>> for GPUBuffer {
     fn handle_response(
         &self,
@@ -442,3 +444,4 @@ impl RoutedPromiseListener<Result<Mapping, BufferAccessError>> for GPUBuffer {
         }
     }
 }
+ */

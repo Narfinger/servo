@@ -5,27 +5,25 @@
 use std::rc::Rc;
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUQueueMethods, GPUSize64, GPUTexelCopyBufferLayout, GPUTexelCopyTextureInfo,
+};
+use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};
 
-use crate::conversions::{Convert, TryConvert};
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUExtent3D, GPUQueueMethods, GPUSize64, GPUTexelCopyBufferLayout, GPUTexelCopyTextureInfo,
-};
-use crate::dom::bindings::codegen::UnionTypes::ArrayBufferViewOrArrayBuffer as BufferSource;
-use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandbuffer::GPUCommandBuffer;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
-use crate::script_runtime::CanGc;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandbuffer::GPUCommandBuffer;
 
 #[dom_struct]
 pub(crate) struct GPUQueue {
@@ -74,7 +72,10 @@ impl GPUQueue {
     }
 }
 
-impl GPUQueueMethods<crate::DomTypeHolder> for GPUQueue {
+impl<D> GPUQueueMethods<D> for GPUQueue
+where
+    D: DomTypes<GPUCommandBuffer = GPUCommandBuffer>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -167,7 +168,7 @@ impl GPUQueueMethods<crate::DomTypeHolder> for GPUQueue {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueue-writetexture>
     fn WriteTexture(
         &self,
-        destination: &GPUTexelCopyTextureInfo,
+        destination: &GPUTexelCopyTextureInfo<D>,
         data: BufferSource,
         data_layout: &GPUTexelCopyBufferLayout,
         size: GPUExtent3D,

@@ -3,13 +3,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUAdapterInfoMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 
 #[dom_struct]
 pub(crate) struct GPUAdapterInfo {
@@ -46,8 +47,8 @@ impl GPUAdapterInfo {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         vendor: DOMString,
         architecture: DOMString,
         device: DOMString,
@@ -72,8 +73,8 @@ impl GPUAdapterInfo {
         )
     }
 
-    pub(crate) fn clone_from(
-        global: &GlobalScope,
+    pub(crate) fn clone_from<D: DomTypes>(
+        global: &D::GlobalScope,
         info: &GPUAdapterInfo,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -91,7 +92,7 @@ impl GPUAdapterInfo {
     }
 }
 
-impl GPUAdapterInfoMethods<crate::DomTypeHolder> for GPUAdapterInfo {
+impl<D: DomTypes> GPUAdapterInfoMethods<D> for GPUAdapterInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapterinfo-vendor>
     fn Vendor(&self) -> DOMString {
         self.vendor.clone()

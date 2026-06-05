@@ -5,22 +5,24 @@
 use std::borrow::Cow;
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBindGroupDescriptor, GPUBindGroupMethods,
+};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroup, WebGPUDevice, WebGPURequest};
 use wgpu_core::binding_model::BindGroupDescriptor;
 
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUBindGroupDescriptor, GPUBindGroupMethods,
-};
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::script_runtime::CanGc;
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpudevice::GPUDevice;
+
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroup {
     #[no_trace]
@@ -74,8 +76,8 @@ impl GPUBindGroup {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         bind_group: WebGPUBindGroup,
         device: WebGPUDevice,
@@ -141,7 +143,7 @@ impl GPUBindGroup {
     }
 }
 
-impl GPUBindGroupMethods<crate::DomTypeHolder> for GPUBindGroup {
+impl<D: DomTypes> GPUBindGroupMethods<D> for GPUBindGroup {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

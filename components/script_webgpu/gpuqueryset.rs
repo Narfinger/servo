@@ -3,10 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUQuerySetMethods;
 use script_bindings::reflector::Reflector;
-
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUQuerySetMethods;
-use crate::dom::bindings::str::USVString;
+use script_bindings::str::USVString;
 
 #[dom_struct]
 pub(crate) struct GPUQuerySet {
@@ -14,7 +16,7 @@ pub(crate) struct GPUQuerySet {
 }
 
 // TODO: wgpu does not expose right fields right now
-impl GPUQuerySetMethods<crate::DomTypeHolder> for GPUQuerySet {
+impl<D: DomTypes> GPUQuerySetMethods<D> for GPUQuerySet {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueryset-destroy>
     fn Destroy(&self) {
         todo!()

@@ -4,14 +4,16 @@
 
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUOutOfMemoryErrorMethods;
 use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUOutOfMemoryError_Binding::GPUOutOfMemoryErrorMethods;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::GPUError;
-use crate::script_runtime::CanGc;
+use crate::gpuerror::GPUError;
 
 #[dom_struct]
 pub(crate) struct GPUOutOfMemoryError {
@@ -25,8 +27,8 @@ impl GPUOutOfMemoryError {
         }
     }
 
-    pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+    pub(crate) fn new_with_proto<D: DomTypes>(
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -40,10 +42,13 @@ impl GPUOutOfMemoryError {
     }
 }
 
-impl GPUOutOfMemoryErrorMethods<crate::DomTypeHolder> for GPUOutOfMemoryError {
+impl<D> GPUOutOfMemoryErrorMethods<D> for GPUOutOfMemoryError
+where
+    D: DomTypes<GPUOutOfMemoryError = GPUOutOfMemoryError>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-GPUOutOfMemoryError-GPUOutOfMemoryError>
     fn Constructor(
-        global: &GlobalScope,
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,

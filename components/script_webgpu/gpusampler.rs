@@ -3,21 +3,22 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUSamplerDescriptor, GPUSamplerMethods,
+};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURequest, WebGPUSampler};
 use wgpu_core::resource::SamplerDescriptor;
 
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUSamplerDescriptor, GPUSamplerMethods,
-};
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::script_runtime::CanGc;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUSampler {
@@ -66,8 +67,8 @@ impl GPUSampler {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         device: WebGPUDevice,
         compare_enable: bool,
@@ -143,7 +144,7 @@ impl GPUSampler {
     }
 }
 
-impl GPUSamplerMethods<crate::DomTypeHolder> for GPUSampler {
+impl<D: DomTypes> GPUSamplerMethods<D> for GPUSampler {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

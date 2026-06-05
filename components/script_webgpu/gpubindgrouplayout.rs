@@ -5,23 +5,24 @@
 use std::borrow::Cow;
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
+};
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpuconvert::convert_bind_group_layout_entry;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::script_runtime::CanGc;
+use crate::gpuconvert::convert_bind_group_layout_entry;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroupLayout {
@@ -69,8 +70,8 @@ impl GPUBindGroupLayout {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
         label: USVString,
@@ -139,7 +140,7 @@ impl GPUBindGroupLayout {
     }
 }
 
-impl GPUBindGroupLayoutMethods<crate::DomTypeHolder> for GPUBindGroupLayout {
+impl<D: DomTypes> GPUBindGroupLayoutMethods<D> for GPUBindGroupLayout {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

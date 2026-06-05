@@ -4,16 +4,19 @@
 
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods};
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 use webgpu_traits::{Error, ErrorFilter};
 
-use crate::conversions::Convert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods};
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::types::{GPUInternalError, GPUOutOfMemoryError, GPUValidationError};
-use crate::script_runtime::CanGc;
+use crate::gpuinternalerror::GPUInternalError;
+use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
+use crate::gpuvalidationerror::GPUValidationError;
 
 #[dom_struct]
 pub(crate) struct GPUError {
@@ -30,12 +33,16 @@ impl GPUError {
     }
 
     #[expect(dead_code)]
-    pub(crate) fn new(global: &GlobalScope, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
+        message: DOMString,
+        can_gc: CanGc,
+    ) -> DomRoot<Self> {
         Self::new_with_proto(global, None, message, can_gc)
     }
 
-    pub(crate) fn new_with_proto(
-        global: &GlobalScope,
+    pub(crate) fn new_with_proto<D: DomTypes>(
+        global: &D::GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
@@ -48,7 +55,11 @@ impl GPUError {
         )
     }
 
-    pub(crate) fn from_error(global: &GlobalScope, error: Error, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn from_error<D: DomTypes>(
+        global: &D::GlobalScope,
+        error: Error,
+        can_gc: CanGc,
+    ) -> DomRoot<Self> {
         match error {
             Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
                 global,
@@ -72,7 +83,7 @@ impl GPUError {
     }
 }
 
-impl GPUErrorMethods<crate::DomTypeHolder> for GPUError {
+impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

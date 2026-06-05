@@ -46,3 +46,8 @@ pub(crate) mod gpuvalidationerror;
 #[expect(dead_code)]
 pub(crate) mod identityhub;
 pub(crate) mod wgsllanguagefeatures;
+
+pub(crate) use js::gc::Traceable as JSTraceable;
+pub(crate) use script_bindings::inheritance::HasParent;
+pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
+pub(crate) use script_bindings::trace::CustomTraceable;

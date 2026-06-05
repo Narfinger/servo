@@ -3,25 +3,27 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUIndexFormat, GPURenderPassEncoderMethods,
+};
+use script_bindings::codegen::GenericUnionTypes::DoubleSequenceOrGPUColorDict;
+use script_bindings::error::Fallible;
+use script_bindings::num::Finite;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
-use crate::conversions::TryConvert;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUColor, GPUIndexFormat, GPURenderPassEncoderMethods,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::num::Finite;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpurenderbundle::GPURenderBundle;
-use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
-use crate::script_runtime::CanGc;
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpurenderpipeline::GPURenderPipeline;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPURenderPassEncoder {
@@ -68,8 +70,8 @@ impl GPURenderPassEncoder {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         render_pass: WebGPURenderPass,
         parent: &GPUCommandEncoder,
@@ -110,7 +112,10 @@ impl GPURenderPassEncoder {
     }
 }
 
-impl GPURenderPassEncoderMethods<crate::DomTypeHolder> for GPURenderPassEncoder {
+impl<D> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder
+where
+    D: DomTypes<GPUBindGroup = GPUBindGroup>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

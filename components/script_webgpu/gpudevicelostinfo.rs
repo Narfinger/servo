@@ -3,15 +3,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
-
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUDeviceLostInfoMethods, GPUDeviceLostReason,
 };
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 
 #[dom_struct]
 pub(crate) struct GPUDeviceLostInfo {
@@ -29,8 +30,8 @@ impl GPUDeviceLostInfo {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         message: DOMString,
         reason: GPUDeviceLostReason,
         can_gc: CanGc,
@@ -43,7 +44,7 @@ impl GPUDeviceLostInfo {
     }
 }
 
-impl GPUDeviceLostInfoMethods<crate::DomTypeHolder> for GPUDeviceLostInfo {
+impl<D: DomTypes> GPUDeviceLostInfoMethods<D> for GPUDeviceLostInfo {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevicelostinfo-message>
     fn Message(&self) -> DOMString {
         self.message.clone()

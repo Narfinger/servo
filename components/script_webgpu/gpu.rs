@@ -6,25 +6,25 @@ use std::rc::Rc;
 
 use dom_struct::dom_struct;
 use js::jsapi::HandleObject;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
+};
+use script_bindings::dom::MutNullableDom;
+use script_bindings::error::Error;
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
 use servo_constellation_traits::ScriptToConstellationMessage;
-use webgpu_traits::WebGPUAdapterResponse;
 use wgpu_types::PowerPreference;
 
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
-};
-use crate::dom::bindings::error::Error;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{DomRoot, MutNullableDom};
-use crate::dom::bindings::str::DOMString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::promise::Promise;
-use crate::dom::webgpu::gpuadapter::GPUAdapter;
-use crate::realms::InRealm;
-use crate::routed_promise::{RoutedPromiseListener, callback_promise};
-use crate::script_runtime::CanGc;
+use crate::gpuadapter::GPUAdapter;
 
 #[dom_struct]
 #[expect(clippy::upper_case_acronyms)]
@@ -42,19 +42,25 @@ impl GPU {
         }
     }
 
-    pub(crate) fn new(global: &GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
+    pub(crate) fn new<D: DomTypes>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
         reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
     }
 }
 
-impl GPUMethods<crate::DomTypeHolder> for GPU {
+impl<D> GPUMethods<D> for GPU
+where
+    D: DomTypes<WGSLLanguageFeatures = WGSLLanguageFeatures>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,
         options: &GPURequestAdapterOptions,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<Promise> {
+    ) -> Rc<D::Promise> {
+        todo!()
+        /*
+         * TODO
         let global = &self.global();
         let promise = Promise::new_in_current_realm(comp, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
@@ -83,6 +89,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
             promise.reject_error(Error::Operation(None), can_gc);
         }
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-getpreferredcanvasformat>
@@ -102,6 +109,8 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
     }
 }
 
+/*
+ * TODO
 impl RoutedPromiseListener<WebGPUAdapterResponse> for GPU {
     fn handle_response(
         &self,
@@ -138,3 +147,4 @@ impl RoutedPromiseListener<WebGPUAdapterResponse> for GPU {
         }
     }
 }
+ */

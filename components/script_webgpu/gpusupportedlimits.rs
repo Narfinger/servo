@@ -4,14 +4,15 @@
 
 use GPUSupportedLimits_Binding::GPUSupportedLimitsMethods;
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
 use num_traits::bounds::UpperBounded;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUSupportedLimits_Binding;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
 use wgpu_types::Limits;
-
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUSupportedLimits_Binding;
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::globalscope::GlobalScope;
-use crate::script_runtime::CanGc;
 
 /// <https://gpuweb.github.io/gpuweb/#gpusupportedlimits>
 #[dom_struct]
@@ -30,13 +31,17 @@ impl GPUSupportedLimits {
         }
     }
 
-    pub(crate) fn new(global: &GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self> {
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
+        limits: Limits,
+        can_gc: CanGc,
+    ) -> DomRoot<Self> {
         reflect_dom_object(Box::new(Self::new_inherited(limits)), global, can_gc)
     }
 }
 
 // Limits are ordered by their declaration in the spec.
-impl GPUSupportedLimitsMethods<crate::DomTypeHolder> for GPUSupportedLimits {
+impl<D: DomTypes> GPUSupportedLimitsMethods<D> for GPUSupportedLimits {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpusupportedlimits-maxtexturedimension1d>
     fn MaxTextureDimension1D(&self) -> u32 {
         self.limits.max_texture_dimension_1d

@@ -3,32 +3,34 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCommandBufferDescriptor, GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
+    GPUComputePassDescriptor, GPURenderPassDescriptor, GPUSize64, GPUTexelCopyBufferInfo,
+    GPUTexelCopyTextureInfo, GPUVertexBufferLayout,
+};
+use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{
     WebGPU, WebGPUCommandBuffer, WebGPUCommandEncoder, WebGPUComputePass, WebGPUDevice,
     WebGPURenderPass, WebGPURequest,
 };
 use wgpu_core::command as wgpu_com;
 
-use crate::conversions::{Convert, TryConvert};
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUCommandBufferDescriptor, GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
-    GPUComputePassDescriptor, GPUExtent3D, GPURenderPassDescriptor, GPUSize64,
-    GPUTexelCopyBufferInfo, GPUTexelCopyTextureInfo,
-};
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::gpuconvert::convert_load_op;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandbuffer::GPUCommandBuffer;
-use crate::dom::webgpu::gpucomputepassencoder::GPUComputePassEncoder;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpurenderpassencoder::GPURenderPassEncoder;
-use crate::script_runtime::CanGc;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandbuffer::GPUCommandBuffer;
+use crate::gpucomputepassencoder::GPUComputePassEncoder;
+use crate::gpuconvert::convert_load_op;
+use crate::gpudevice::GPUDevice;
+use crate::gpurenderpassencoder::GPURenderPassEncoder;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUCommandEncoder {
@@ -73,8 +75,8 @@ impl GPUCommandEncoder {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         device: &GPUDevice,
         encoder: WebGPUCommandEncoder,
@@ -132,7 +134,15 @@ impl GPUCommandEncoder {
     }
 }
 
-impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
+impl<D> GPUCommandEncoderMethods<D> for GPUCommandEncoder
+where
+    D: DomTypes<
+            GPUComputePassEncoder = GPUComputePassEncoder,
+            GPURenderPassEncoder = GPURenderPassEncoder,
+            GPUCommandBuffer = GPUCommandBuffer,
+            GPUBuffer = GPUBuffer,
+        >,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -177,7 +187,7 @@ impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-beginrenderpass>
     fn BeginRenderPass(
         &self,
-        descriptor: &GPURenderPassDescriptor,
+        descriptor: &GPURenderPassDescriptor<D>,
     ) -> Fallible<DomRoot<GPURenderPassEncoder>> {
         let depth_stencil_attachment = descriptor.depthStencilAttachment.as_ref().map(|ds| {
             wgpu_com::RenderPassDepthStencilAttachment {
@@ -277,9 +287,9 @@ impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertotexture>
     fn CopyBufferToTexture(
         &self,
-        source: &GPUTexelCopyBufferInfo,
-        destination: &GPUTexelCopyTextureInfo,
-        copy_size: GPUExtent3D,
+        source: &GPUTexelCopyBufferInfo<D>,
+        destination: &GPUTexelCopyTextureInfo<D>,
+        copy_size: GPUExtent3D<D>,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -299,9 +309,9 @@ impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertotexture>
     fn CopyTextureToBuffer(
         &self,
-        source: &GPUTexelCopyTextureInfo,
-        destination: &GPUTexelCopyBufferInfo,
-        copy_size: GPUExtent3D,
+        source: &GPUTexelCopyTextureInfo<D>,
+        destination: &GPUTexelCopyBufferInfo<D>,
+        copy_size: GPUExtent3D<D>,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -321,9 +331,9 @@ impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
     /// <https://gpuweb.github.io/gpuweb/#GPUCommandEncoder-copyTextureToTexture>
     fn CopyTextureToTexture(
         &self,
-        source: &GPUTexelCopyTextureInfo,
-        destination: &GPUTexelCopyTextureInfo,
-        copy_size: GPUExtent3D,
+        source: &GPUTexelCopyTextureInfo<D>,
+        destination: &GPUTexelCopyTextureInfo<D>,
+        copy_size: GPUExtent3D<D>,
     ) -> Fallible<()> {
         self.droppable
             .channel

@@ -3,16 +3,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
-use webgpu_traits::ShaderCompilationInfo;
-
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
+use jstraceable_derive::JSTraceable;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCompilationMessageMethods, GPUCompilationMessageType,
 };
-use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::str::DOMString;
-use crate::dom::types::GlobalScope;
-use crate::script_runtime::CanGc;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::DomRoot;
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::DOMString;
+use webgpu_traits::ShaderCompilationInfo;
 
 #[dom_struct]
 pub(crate) struct GPUCompilationMessage {
@@ -46,8 +47,8 @@ impl GPUCompilationMessage {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         message: DOMString,
         mtype: GPUCompilationMessageType,
         line_num: u64,
@@ -65,8 +66,8 @@ impl GPUCompilationMessage {
         )
     }
 
-    pub(crate) fn from(
-        global: &GlobalScope,
+    pub(crate) fn from<D: DomTypes>(
+        global: &D::GlobalScope,
         info: ShaderCompilationInfo,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
@@ -83,7 +84,7 @@ impl GPUCompilationMessage {
     }
 }
 
-impl GPUCompilationMessageMethods<crate::DomTypeHolder> for GPUCompilationMessage {
+impl<D: DomTypes> GPUCompilationMessageMethods<D> for GPUCompilationMessage {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucompilationmessage-message>
     fn Message(&self) -> DOMString {
         self.message.to_owned()

@@ -1,6 +1,5 @@
 [package]
 name = "servo-script-webgpu"
-build = "build.rs"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -26,14 +25,6 @@ profilemozjs = ['js/profilemozjs']
 testbinding = ["script_bindings/testbinding"]
 tracing = ["dep:tracing", "script_bindings/tracing"]
 webgl_backtrace = ["servo-canvas-traits/webgl_backtrace"]
-webgpu = [
-    "dep:webgpu_traits",
-    "dep:wgpu-core",
-    "dep:wgpu-types",
-    "script_bindings/webgpu",
-    "script_traits/webgpu",
-]
-webxr = ["gamepad", "webxr-api", "script_bindings/webxr"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(crown)'] }
@@ -170,11 +161,11 @@ urlpattern = { workspace = true }
 uuid = { workspace = true, features = ["serde"] }
 web_atoms = { workspace = true }
 webdriver = { workspace = true }
-webgpu_traits = { workspace = true, optional = true }
+webgpu_traits = { workspace = true }
 webrender_api = { workspace = true }
-webxr-api = { workspace = true, optional = true }
-wgpu-core = { workspace = true, optional = true }
-wgpu-types = { workspace = true, optional = true }
+webxr-api = { workspace = true }
+wgpu-core = { workspace = true }
+wgpu-types = { workspace = true }
 x25519-dalek = { workspace = true }
 xml5ever = { workspace = true }
 xpath = { workspace = true }

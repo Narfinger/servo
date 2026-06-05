@@ -3,8 +3,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPURenderPipelineMethods;
+use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPURenderPipeline, WebGPURenderPipelineResponse,
@@ -12,15 +21,8 @@ use webgpu_traits::{
 };
 use wgpu_core::pipeline::RenderPipelineDescriptor;
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPURenderPipelineMethods;
-use crate::dom::bindings::error::Fallible;
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::script_runtime::CanGc;
+use crate::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPURenderPipeline {
@@ -70,8 +72,8 @@ impl GPURenderPipeline {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
         device: &GPUDevice,
@@ -117,7 +119,10 @@ impl GPURenderPipeline {
     }
 }
 
-impl GPURenderPipelineMethods<crate::DomTypeHolder> for GPURenderPipeline {
+impl<D: DomTypes> GPURenderPipelineMethods<D> for GPURenderPipeline
+where
+    D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

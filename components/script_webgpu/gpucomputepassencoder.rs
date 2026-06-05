@@ -3,19 +3,22 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
+use jstraceable_derive::JSTraceable;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
+use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePassEncoderMethods;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::root::{Dom, DomRoot};
+use script_bindings::script_runtime::CanGc;
+use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUComputePass, WebGPURequest};
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUComputePassEncoderMethods;
-use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
-use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpucomputepipeline::GPUComputePipeline;
-use crate::script_runtime::CanGc;
+use crate::gpubindgroup::GPUBindGroup;
+use crate::gpubuffer::GPUBuffer;
+use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpucomputepipeline::GPUComputePipeline;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUComputePassEncoder {
@@ -63,8 +66,8 @@ impl GPUComputePassEncoder {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         parent: &GPUCommandEncoder,
         compute_pass: WebGPUComputePass,
@@ -84,7 +87,14 @@ impl GPUComputePassEncoder {
     }
 }
 
-impl GPUComputePassEncoderMethods<crate::DomTypeHolder> for GPUComputePassEncoder {
+impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder
+where
+    D: DomTypes<
+            GPUBuffer = GPUBuffer,
+            GPUBindGroup = GPUBindGroup,
+            GPUComputePipeline = GPUComputePipeline,
+        >,
+{
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
