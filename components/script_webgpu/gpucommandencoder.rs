@@ -10,12 +10,12 @@ use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCommandBufferDescriptor, GPUCommandEncoderDescriptor, GPUCommandEncoderMethods,
-    GPUComputePassDescriptor, GPURenderPassDescriptor, GPUSize64, GPUTexelCopyBufferInfo,
-    GPUTexelCopyTextureInfo, GPUVertexBufferLayout,
+    GPUCommandEncoderWrap, GPUComputePassDescriptor, GPUExtent3D, GPURenderPassDescriptor,
+    GPUSize64, GPUTexelCopyBufferInfo, GPUTexelCopyTextureInfo, GPUVertexBufferLayout,
 };
 use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -28,7 +28,7 @@ use wgpu_core::command as wgpu_com;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucomputepassencoder::GPUComputePassEncoder;
-use crate::gpuconvert::convert_load_op;
+use crate::gpuconvert::{WebGPUConvert, WebGPUTryConvert, convert_load_op};
 use crate::gpudevice::GPUDevice;
 use crate::gpurenderpassencoder::GPURenderPassEncoder;
 
@@ -61,9 +61,9 @@ impl Drop for DroppableGPUCommandEncoder {
 }
 
 impl GPUCommandEncoder {
-    pub(crate) fn new_inherited(
+    pub(crate) fn new_inherited<D: DomTypes>(
         channel: WebGPU,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         encoder: WebGPUCommandEncoder,
         label: USVString,
     ) -> Self {
@@ -75,20 +75,24 @@ impl GPUCommandEncoder {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         encoder: WebGPUCommandEncoder,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUCommandEncoder = GPUCommandEncoder>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUCommandEncoder::new_inherited(
                 channel, device, encoder, label,
             )),
             global,
             can_gc,
+            GPUCommandEncoderWrap::<D>,
         )
     }
 }
@@ -103,8 +107,8 @@ impl GPUCommandEncoder {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createcommandencoder>
-    pub(crate) fn create(
-        device: &GPUDevice,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice<D>,
         descriptor: &GPUCommandEncoderDescriptor,
         can_gc: CanGc,
     ) -> DomRoot<GPUCommandEncoder> {
@@ -140,7 +144,7 @@ where
             GPUComputePassEncoder = GPUComputePassEncoder,
             GPURenderPassEncoder = GPURenderPassEncoder,
             GPUCommandBuffer = GPUCommandBuffer,
-            GPUBuffer = GPUBuffer,
+            GPUBuffer = GPUBuffer<D>,
         >,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
@@ -196,7 +200,7 @@ where
                         .depthLoadOp
                         .as_ref()
                         .map(|l| convert_load_op(l, ds.depthClearValue.map(|v| *v))),
-                    store_op: ds.depthStoreOp.as_ref().map(Convert::convert),
+                    store_op: ds.depthStoreOp.as_ref().map(WebGPUConvert::convert),
                     read_only: ds.depthReadOnly,
                 },
                 stencil: wgpu_com::PassChannel {
@@ -204,7 +208,7 @@ where
                         .stencilLoadOp
                         .as_ref()
                         .map(|l| convert_load_op(l, Some(ds.stencilClearValue))),
-                    store_op: ds.stencilStoreOp.as_ref().map(Convert::convert),
+                    store_op: ds.stencilStoreOp.as_ref().map(WebGPUConvert::convert),
                     read_only: ds.stencilReadOnly,
                 },
                 view: ds.view.convert().0,
@@ -263,9 +267,9 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucommandencoder-copybuffertobuffer>
     fn CopyBufferToBuffer(
         &self,
-        source: &GPUBuffer,
+        source: &GPUBuffer<D>,
         source_offset: GPUSize64,
-        destination: &GPUBuffer,
+        destination: &GPUBuffer<D>,
         destination_offset: GPUSize64,
         size: GPUSize64,
     ) {
@@ -289,7 +293,7 @@ where
         &self,
         source: &GPUTexelCopyBufferInfo<D>,
         destination: &GPUTexelCopyTextureInfo<D>,
-        copy_size: GPUExtent3D<D>,
+        copy_size: GPUExtent3D,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -311,7 +315,7 @@ where
         &self,
         source: &GPUTexelCopyTextureInfo<D>,
         destination: &GPUTexelCopyBufferInfo<D>,
-        copy_size: GPUExtent3D<D>,
+        copy_size: GPUExtent3D,
     ) -> Fallible<()> {
         self.droppable
             .channel
@@ -333,7 +337,7 @@ where
         &self,
         source: &GPUTexelCopyTextureInfo<D>,
         destination: &GPUTexelCopyTextureInfo<D>,
-        copy_size: GPUExtent3D<D>,
+        copy_size: GPUExtent3D,
     ) -> Fallible<()> {
         self.droppable
             .channel

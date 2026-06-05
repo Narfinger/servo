@@ -13,10 +13,10 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUQueueMethods, GPUSize64, GPUTexelCopyBufferLayout, GPUTexelCopyTextureInfo,
 };
-use script_bindings::codegen::GenericUnionTypes::RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+use script_bindings::codegen::GenericUnionTypes::{self, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict};
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use script_bindings::root::DomRoot;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use servo_base::generic_channel::GenericSharedMemory;
@@ -24,6 +24,7 @@ use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};
 
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandbuffer::GPUCommandBuffer;
+use crate::gpudevice::GPUDevice;
 
 #[dom_struct]
 pub(crate) struct GPUQueue {
@@ -48,8 +49,8 @@ impl GPUQueue {
         }
     }
 
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         channel: WebGPU,
         queue: WebGPUQueue,
         can_gc: CanGc,
@@ -74,7 +75,7 @@ impl GPUQueue {
 
 impl<D> GPUQueueMethods<D> for GPUQueue
 where
-    D: DomTypes<GPUCommandBuffer = GPUCommandBuffer>,
+    D: DomTypes<GPUCommandBuffer = GPUCommandBuffer, GPUBuffer= GPUBuffer<D>>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -103,12 +104,14 @@ where
     #[expect(unsafe_code)]
     fn WriteBuffer(
         &self,
-        buffer: &GPUBuffer,
+        buffer: &D::GPUBuffer,
         buffer_offset: GPUSize64,
-        data: BufferSource,
+        data: GenericUnionTypes::ArrayBufferViewOrArrayBuffer,
         data_offset: GPUSize64,
         size: Option<GPUSize64>,
     ) -> Fallible<()> {
+        todo!();
+        /*
         // Step 1
         let (sizeof_element, data_len): (usize, usize) = match &data {
             BufferSource::ArrayBufferView(d) => {
@@ -161,7 +164,7 @@ where
             warn!("Failed to send WriteBuffer({:?}) ({})", buffer.id(), e);
             return Err(Error::Operation(None));
         }
-
+ */
         Ok(())
     }
 
@@ -169,10 +172,12 @@ where
     fn WriteTexture(
         &self,
         destination: &GPUTexelCopyTextureInfo<D>,
-        data: BufferSource,
+        data:  GenericUnionTypes::ArrayBufferViewOrArrayBuffer,
         data_layout: &GPUTexelCopyBufferLayout,
         size: GPUExtent3D,
     ) -> Fallible<()> {
+        todo!()
+        /*
         let (bytes, len) = match data {
             BufferSource::ArrayBufferView(d) => (d.to_vec(), d.len() as u64),
             BufferSource::ArrayBuffer(d) => (d.to_vec(), d.len() as u64),
@@ -203,12 +208,14 @@ where
             );
             return Err(Error::Operation(None));
         }
-
+ */
         Ok(())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuqueue-onsubmittedworkdone>
-    fn OnSubmittedWorkDone(&self, can_gc: CanGc) -> Rc<Promise> {
+    fn OnSubmittedWorkDone(&self, can_gc: CanGc) -> Rc<D::Promise> {
+        todo!()
+        /*
         let global = self.global();
         let promise = Promise::new(&global, can_gc);
         let task_source = global.task_manager().dom_manipulation_task_source();
@@ -225,9 +232,11 @@ where
             warn!("QueueOnSubmittedWorkDone failed with {e}")
         }
         promise
+         */
     }
 }
 
+/*
 impl RoutedPromiseListener<()> for GPUQueue {
     fn handle_response(
         &self,
@@ -238,3 +247,4 @@ impl RoutedPromiseListener<()> for GPUQueue {
         promise.resolve_native_with_cx(cx, &());
     }
 }
+ */

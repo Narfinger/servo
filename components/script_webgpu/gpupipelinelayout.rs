@@ -20,6 +20,7 @@ use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPUPipelineLayout, WebGPURequest};
 use wgpu_core::binding_model::PipelineLayoutDescriptor;
 
+use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -103,9 +104,9 @@ impl GPUPipelineLayout {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createpipelinelayout>
-    pub(crate) fn create(
-        device: &GPUDevice,
-        descriptor: &GPUPipelineLayoutDescriptor,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice<D>,
+        descriptor: &GPUPipelineLayoutDescriptor<D>,
         can_gc: CanGc,
     ) -> DomRoot<GPUPipelineLayout> {
         let bgls = descriptor

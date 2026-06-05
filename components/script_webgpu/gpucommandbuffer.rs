@@ -8,8 +8,10 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCommandBufferMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCommandBufferMethods, GPUCommandBufferWrap,
+};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -61,14 +63,17 @@ impl GPUCommandBuffer {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUCommandBuffer = GPUCommandBuffer>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUCommandBuffer::new_inherited(
                 channel,
                 command_buffer,
@@ -76,6 +81,7 @@ impl GPUCommandBuffer {
             )),
             global,
             can_gc,
+            GPUCommandBufferWrap::<D>,
         )
     }
 }

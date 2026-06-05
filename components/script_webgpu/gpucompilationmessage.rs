@@ -7,9 +7,9 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUCompilationMessageMethods, GPUCompilationMessageType,
+    GPUCompilationMessageMethods, GPUCompilationMessageType, GPUCompilationMessageWrap,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -47,7 +47,7 @@ impl GPUCompilationMessage {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         message: DOMString,
         mtype: GPUCompilationMessageType,
@@ -56,22 +56,29 @@ impl GPUCompilationMessage {
         offset: u64,
         length: u64,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUCompilationMessage = GPUCompilationMessage>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 message, mtype, line_num, line_pos, offset, length,
             )),
             global,
             can_gc,
+            GPUCompilationMessageWrap::<D>,
         )
     }
 
-    pub(crate) fn from<D: DomTypes>(
+    pub(crate) fn from<D>(
         global: &D::GlobalScope,
         info: ShaderCompilationInfo,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        GPUCompilationMessage::new(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUCompilationMessage = GPUCompilationMessage>,
+    {
+        GPUCompilationMessage::new::<D>(
             global,
             info.message.into(),
             GPUCompilationMessageType::Error,

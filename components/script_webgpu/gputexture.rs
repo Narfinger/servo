@@ -11,18 +11,20 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUTextureAspect, GPUTextureDimension, GPUTextureFormat, GPUTextureMethods,
-    GPUTextureViewDescriptor,
+    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
+    GPUTextureMethods, GPUTextureViewDescriptor,
 };
+use script_bindings::dom::MutNullableDom;
 use script_bindings::error::Fallible;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use script_bindings::root::DomRoot;
+use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
+use crate::gpudevice::GPUDevice;
 use crate::gputextureview::GPUTextureView;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -49,10 +51,10 @@ impl Drop for DroppableGPUTexture {
 }
 
 #[dom_struct]
-pub(crate) struct GPUTexture {
+pub(crate) struct GPUTexture<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     #[no_trace]
     #[ignore_malloc_size_of = "External type"]
     texture_size: wgpu_types::Extent3d,
@@ -69,7 +71,7 @@ impl GPUTexture {
     #[expect(clippy::too_many_arguments)]
     fn new_inherited(
         texture: WebGPUTexture,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         channel: WebGPU,
         texture_size: wgpu_types::Extent3d,
         mip_level_count: u32,
@@ -95,10 +97,10 @@ impl GPUTexture {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new(
-        global: &GlobalScope,
+    pub(crate) fn new<D: DomTypes>(
+        global: &D::GlobalScope,
         texture: WebGPUTexture,
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         channel: WebGPU,
         texture_size: wgpu_types::Extent3d,
         mip_level_count: u32,
@@ -128,17 +130,17 @@ impl GPUTexture {
     }
 }
 
-impl GPUTexture {
+impl<D: DomTypes> GPUTexture<D> {
     pub(crate) fn id(&self) -> WebGPUTexture {
         self.droppable.texture
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createtexture>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: &GPUTextureDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUTexture>> {
+    ) -> Fallible<DomRoot<GPUTexture<D>>> {
         let (desc, size) = convert_texture_descriptor(descriptor, device)?;
 
         let texture_id = device.global().wgpu_id_hub().create_texture_id();
@@ -181,7 +183,7 @@ impl GPUTexture {
     }
 }
 
-impl<D> GPUTextureMethods<D> for GPUTexture
+impl<D> GPUTextureMethods<D> for GPUTexture<D>
 where
     D: DomTypes<GPUTextureView = GPUTextureView>,
 {

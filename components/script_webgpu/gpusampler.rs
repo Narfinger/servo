@@ -9,15 +9,16 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUSamplerDescriptor, GPUSamplerMethods,
+    GPUSamplerDescriptor, GPUSamplerMethods, GPUSamplerWrap,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURequest, WebGPUSampler};
 use wgpu_core::resource::SamplerDescriptor;
 
+use crate::gpuconvert::WebGPUConvert;
 use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -67,7 +68,7 @@ impl GPUSampler {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         device: WebGPUDevice,
@@ -75,8 +76,11 @@ impl GPUSampler {
         sampler: WebGPUSampler,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUSampler = GPUSampler>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUSampler::new_inherited(
                 channel,
                 device,
@@ -86,6 +90,7 @@ impl GPUSampler {
             )),
             global,
             can_gc,
+            GPUSamplerWrap::<D>,
         )
     }
 }
@@ -115,7 +120,7 @@ impl GPUSampler {
             mipmap_filter: descriptor.mipmapFilter.convert(),
             lod_min_clamp: *descriptor.lodMinClamp,
             lod_max_clamp: *descriptor.lodMaxClamp,
-            compare: descriptor.compare.map(Convert::convert),
+            compare: descriptor.compare.map(WebGPUConvert::convert),
             anisotropy_clamp: 1,
             border_color: None,
         };

@@ -11,12 +11,14 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
+    self, GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
 };
 use script_bindings::dom::MutNullableDom;
 use script_bindings::error::Error;
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{
+    DomGlobalGeneric, Reflector, reflect_dom_object, reflect_dom_object_with_wrap,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -25,6 +27,7 @@ use wgpu_types::PowerPreference;
 
 use super::wgsllanguagefeatures::WGSLLanguageFeatures;
 use crate::gpuadapter::GPUAdapter;
+use crate::traits::WGPUGobal;
 
 #[dom_struct]
 #[expect(clippy::upper_case_acronyms)]
@@ -42,13 +45,22 @@ impl GPU {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU> {
-        reflect_dom_object(Box::new(GPU::new_inherited()), global, can_gc)
+    pub(crate) fn new<D>(global: &D::GlobalScope, can_gc: CanGc) -> DomRoot<GPU>
+    where
+        D: DomTypes<GPU = GPU>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
+            Box::new(GPU::new_inherited()),
+            global,
+            can_gc,
+            WebGPUBinding::GPUWrap::<D>,
+        )
     }
 }
 
 impl<D> GPUMethods<D> for GPU
 where
+    GPU: DomGlobalGeneric<D>,
     D: DomTypes<WGSLLanguageFeatures = WGSLLanguageFeatures>,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
@@ -104,8 +116,11 @@ where
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
     fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures> {
+        todo!()
+        /*
         self.wgsl_language_features
             .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, can_gc))
+             */
     }
 }
 

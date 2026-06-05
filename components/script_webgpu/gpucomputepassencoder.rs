@@ -8,8 +8,10 @@ use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUComputePassEncoderMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUComputePassEncoderMethods, GPUComputePassEncoderWrap,
+};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -66,15 +68,18 @@ impl GPUComputePassEncoder {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         parent: &GPUCommandEncoder,
         compute_pass: WebGPUComputePass,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUComputePassEncoder = GPUComputePassEncoder>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUComputePassEncoder::new_inherited(
                 channel,
                 parent,
@@ -83,6 +88,7 @@ impl GPUComputePassEncoder {
             )),
             global,
             can_gc,
+            GPUComputePassEncoderWrap::<D>,
         )
     }
 }
@@ -90,7 +96,7 @@ impl GPUComputePassEncoder {
 impl<D: DomTypes> GPUComputePassEncoderMethods<D> for GPUComputePassEncoder
 where
     D: DomTypes<
-            GPUBuffer = GPUBuffer,
+            GPUBuffer = GPUBuffer<D>,
             GPUBindGroup = GPUBindGroup,
             GPUComputePipeline = GPUComputePipeline,
         >,
@@ -124,7 +130,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucomputepassencoder-dispatchworkgroupsindirect>
-    fn DispatchWorkgroupsIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DispatchWorkgroupsIndirect(&self, buffer: &GPUBuffer<D>, offset: u64) {
         if let Err(e) =
             self.droppable
                 .channel

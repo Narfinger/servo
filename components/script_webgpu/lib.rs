@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+pub(crate) mod datablock;
 pub(crate) mod gpu;
 pub(crate) mod gpuadapter;
 pub(crate) mod gpuadapterinfo;
@@ -45,6 +46,7 @@ pub(crate) mod gpuuncapturederrorevent;
 pub(crate) mod gpuvalidationerror;
 #[expect(dead_code)]
 pub(crate) mod identityhub;
+pub(crate) mod traits;
 pub(crate) mod wgsllanguagefeatures;
 
 pub(crate) use js::gc::Traceable as JSTraceable;

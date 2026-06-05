@@ -6,8 +6,10 @@ use dom_struct::dom_struct;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUAdapterInfoMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUAdapterInfoMethods, GPUAdapterInfoWrap,
+};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -47,7 +49,7 @@ impl GPUAdapterInfo {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         vendor: DOMString,
         architecture: DOMString,
@@ -57,8 +59,11 @@ impl GPUAdapterInfo {
         subgroup_max_size: u32,
         is_fallback_adapter: bool,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(Self::new_inherited(
                 vendor,
                 architecture,
@@ -70,15 +75,19 @@ impl GPUAdapterInfo {
             )),
             global,
             can_gc,
+            GPUAdapterInfoWrap::<D>,
         )
     }
 
-    pub(crate) fn clone_from<D: DomTypes>(
+    pub(crate) fn clone_from<D>(
         global: &D::GlobalScope,
         info: &GPUAdapterInfo,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        Self::new(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo>,
+    {
+        Self::new::<D>(
             global,
             info.vendor.clone(),
             info.architecture.clone(),

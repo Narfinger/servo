@@ -11,17 +11,17 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods,
+    GPUBindGroupLayoutDescriptor, GPUBindGroupLayoutMethods, GPUBindGroupLayoutWrap,
 };
 use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
 use webgpu_traits::{WebGPU, WebGPUBindGroupLayout, WebGPURequest};
 use wgpu_core::binding_model::BindGroupLayoutDescriptor;
 
-use crate::gpuconvert::convert_bind_group_layout_entry;
+use crate::gpuconvert::{WebGPUConvert, convert_bind_group_layout_entry};
 use crate::gpudevice::GPUDevice;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -70,14 +70,17 @@ impl GPUBindGroupLayout {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         bind_group_layout: WebGPUBindGroupLayout,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUBindGroupLayout::new_inherited(
                 channel,
                 bind_group_layout,
@@ -85,6 +88,7 @@ impl GPUBindGroupLayout {
             )),
             global,
             can_gc,
+            GPUBindGroupLayoutWrap::<D>,
         )
     }
 }
@@ -95,8 +99,8 @@ impl GPUBindGroupLayout {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#GPUDevice-createBindGroupLayout>
-    pub(crate) fn create(
-        device: &GPUDevice,
+    pub(crate) fn create<D: DomTypes>(
+        device: &GPUDevice<D>,
         descriptor: &GPUBindGroupLayoutDescriptor,
         can_gc: CanGc,
     ) -> Fallible<DomRoot<GPUBindGroupLayout>> {

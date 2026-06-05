@@ -11,7 +11,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUIndexFormat, GPURenderPassEncoderMethods,
 };
-use script_bindings::codegen::GenericUnionTypes::DoubleSequenceOrGPUColorDict;
+use script_bindings::codegen::GenericUnionTypes::{self, DoubleSequenceOrGPUColorDict};
 use script_bindings::error::Fallible;
 use script_bindings::num::Finite;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -23,6 +23,8 @@ use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
+use crate::gpuconvert::WebGPUTryConvert;
+use crate::gpurenderbundle::GPURenderBundle;
 use crate::gpurenderpipeline::GPURenderPipeline;
 
 #[derive(JSTraceable, MallocSizeOf)]
@@ -112,9 +114,15 @@ impl GPURenderPassEncoder {
     }
 }
 
+type GPUColor = GenericUnionTypes::DoubleSequenceOrGPUColorDict;
+
 impl<D> GPURenderPassEncoderMethods<D> for GPURenderPassEncoder
 where
-    D: DomTypes<GPUBindGroup = GPUBindGroup>,
+    D: DomTypes<
+            GPUBindGroup = GPUBindGroup,
+            GPUBuffer = GPUBuffer<D>,
+            GPURenderPipeline = GPURenderPipeline,
+        >,
 {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
@@ -194,7 +202,7 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer,
+        buffer: &D::GPUBuffer,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,
@@ -211,7 +219,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
-    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer, offset: u64, size: u64) {
+    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer<D>, offset: u64, size: u64) {
         self.send_render_command(RenderCommand::SetVertexBuffer {
             slot,
             buffer_id: buffer.id().0,
@@ -249,7 +257,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
-    fn DrawIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DrawIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
         self.send_render_command(RenderCommand::DrawIndirect {
             buffer_id: buffer.id().0,
             offset,
@@ -257,7 +265,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
-    fn DrawIndexedIndirect(&self, buffer: &GPUBuffer, offset: u64) {
+    fn DrawIndexedIndirect(&self, buffer: &D::GPUBuffer, offset: u64) {
         self.send_render_command(RenderCommand::DrawIndexedIndirect {
             buffer_id: buffer.id().0,
             offset,
@@ -265,7 +273,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderpassencoder-executebundles>
-    fn ExecuteBundles(&self, bundles: Vec<DomRoot<GPURenderBundle>>) {
+    fn ExecuteBundles(&self, bundles: Vec<DomRoot<D::GPURenderBundle>>) {
         let bundle_ids: Vec<_> = bundles.iter().map(|b| b.id().0).collect();
         self.send_render_command(RenderCommand::ExecuteBundles(bundle_ids))
     }

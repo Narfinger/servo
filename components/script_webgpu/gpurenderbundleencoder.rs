@@ -134,7 +134,7 @@ impl<D> GPURenderBundleEncoderMethods<D> for GPURenderBundleEncoder
 where
     D: DomTypes<
             GPURenderPipeline = GPURenderPipeline,
-            GPUBuffer = GPUBuffer,
+            GPUBuffer = GPUBuffer<D>,
             GPUBindGroup = GPUBindGroup,
             GPURenderBundle = GPURenderBundle,
         >,
@@ -175,7 +175,7 @@ where
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setindexbuffer>
     fn SetIndexBuffer(
         &self,
-        buffer: &GPUBuffer,
+        buffer: &GPUBuffer<D>,
         index_format: GPUIndexFormat,
         offset: u64,
         size: u64,
@@ -195,7 +195,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-setvertexbuffer>
-    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer, offset: u64, size: u64) {
+    fn SetVertexBuffer(&self, slot: u32, buffer: &GPUBuffer<D>, offset: u64, size: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_set_vertex_buffer(
                 encoder,
@@ -242,7 +242,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindirect>
-    fn DrawIndirect(&self, indirect_buffer: &GPUBuffer, indirect_offset: u64) {
+    fn DrawIndirect(&self, indirect_buffer: &GPUBuffer<D>, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_draw_indirect(
                 encoder,
@@ -253,7 +253,7 @@ where
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpurenderencoderbase-drawindexedindirect>
-    fn DrawIndexedIndirect(&self, indirect_buffer: &GPUBuffer, indirect_offset: u64) {
+    fn DrawIndexedIndirect(&self, indirect_buffer: &GPUBuffer<D>, indirect_offset: u64) {
         if let Some(encoder) = self.render_bundle_encoder.borrow_mut().as_mut() {
             wgpu_bundle::wgpu_render_bundle_draw_indexed_indirect(
                 encoder,

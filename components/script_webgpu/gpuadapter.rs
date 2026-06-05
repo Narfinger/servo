@@ -10,12 +10,12 @@ use jstraceable_derive::JSTraceable;
 use log::warn;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUAdapterMethods, GPUDeviceDescriptor,
+    GPUAdapterMethods, GPUAdapterWrap, GPUDeviceDescriptor,
 };
 use script_bindings::error::Error;
 use script_bindings::like::Setlike;
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::{Dom, DomRoot};
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -97,17 +97,24 @@ impl GPUAdapter {
         can_gc: CanGc,
     ) -> DomRoot<Self>
     where
-        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo>,
+        D: DomTypes<
+                GPUAdapterInfo = GPUAdapterInfo,
+                GPUSupportedFeatures = GPUSupportedFeatures,
+                GPUSupportedLimits = GPUSupportedLimits,
+                GPUAdapter = GPUAdapter,
+            >,
     {
-        let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
-        let limits = GPUSupportedLimits::new(global, limits, can_gc);
-        let info = GPUAdapter::create_adapter_info(global, info, &features, can_gc);
-        let dom_root = reflect_dom_object(
+        let features =
+            GPUSupportedFeatures::Constructor::<D>(global, None, features, can_gc).unwrap();
+        let limits = GPUSupportedLimits::new::<D>(global, limits, can_gc);
+        let info = GPUAdapter::create_adapter_info::<D>(global, info, &features, can_gc);
+        let dom_root = reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUAdapter::new_inherited(
                 channel, name, &features, &limits, &info, adapter,
             )),
             global,
             can_gc,
+            GPUAdapterWrap::<D>,
         );
         dom_root.extensions.set(*extensions);
         dom_root
@@ -172,7 +179,7 @@ impl GPUAdapter {
         let is_fallback_adapter = info.device_type == wgpu_types::DeviceType::Cpu;
 
         // Step 1. Let adapterInfo be a new GPUAdapterInfo.
-        GPUAdapterInfo::new(
+        GPUAdapterInfo::new::<D>(
             global,
             vendor,
             architecture,

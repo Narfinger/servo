@@ -7,10 +7,15 @@ use js::rust::MutableHandleValue;
 use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUCompilationInfoMethods;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
+use script_bindings::codegen::GenericBindings::WebGPUBinding::{
+    GPUCompilationInfoMethods, GPUCompilationInfoWrap,
+};
+use script_bindings::reflector::{
+    Reflector, reflect_dom_object_with_proto, reflect_dom_object_with_wrap_and_proto,
+};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::{CanGc, JSContext};
+use script_foo::to_frozen_array;
 use webgpu_traits::ShaderCompilationInfo;
 
 use crate::gpucompilationmessage::GPUCompilationMessage;
@@ -30,23 +35,38 @@ impl GPUCompilationInfo {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         msg: Vec<DomRoot<GPUCompilationMessage>>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object_with_proto(Box::new(Self::new_inherited(msg)), global, None, can_gc)
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUCompilationInfo = GPUCompilationInfo>,
+    {
+        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
+            Box::new(Self::new_inherited(msg)),
+            global,
+            None,
+            can_gc,
+            GPUCompilationInfoWrap::<D>,
+        )
     }
 
-    pub(crate) fn from<D: DomTypes>(
+    pub(crate) fn from<D>(
         global: &D::GlobalScope,
         error: Option<ShaderCompilationInfo>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        Self::new(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<
+                GPUCompilationInfo = GPUCompilationInfo,
+                GPUCompilationMessage = GPUCompilationMessage,
+            >,
+    {
+        Self::new::<D>(
             global,
             if let Some(error) = error {
-                vec![GPUCompilationMessage::from(global, error, can_gc)]
+                vec![GPUCompilationMessage::from::<D>(global, error, can_gc)]
             } else {
                 Vec::new()
             },

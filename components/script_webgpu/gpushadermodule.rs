@@ -11,10 +11,10 @@ use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUShaderModuleDescriptor, GPUShaderModuleMethods,
+    GPUShaderModuleDescriptor, GPUShaderModuleMethods, GPUShaderModuleWrap,
 };
 use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::USVString;
@@ -48,7 +48,7 @@ impl Drop for DroppableGPUShaderModule {
 }
 
 #[dom_struct]
-pub(crate) struct GPUShaderModule {
+pub(crate) struct GPUShaderModule<D: DomTypes> {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     #[ignore_malloc_size_of = "promise"]
@@ -56,8 +56,8 @@ pub(crate) struct GPUShaderModule {
     droppable: DroppableGPUShaderModule,
 }
 
-impl GPUShaderModule {
-    fn new_inherited<D: DomTypes>(
+impl<D: DomTypes> GPUShaderModule<D> {
+    fn new_inherited(
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
@@ -74,15 +74,18 @@ impl GPUShaderModule {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new(
         global: &D::GlobalScope,
         channel: WebGPU,
         shader_module: WebGPUShaderModule,
         label: USVString,
         promise: Rc<D::Promise>,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUShaderModule = GPUShaderModule<D>>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUShaderModule::new_inherited(
                 channel,
                 shader_module,
@@ -91,22 +94,23 @@ impl GPUShaderModule {
             )),
             global,
             can_gc,
+            GPUShaderModuleWrap::<D>,
         )
     }
 }
 
-impl GPUShaderModule {
+impl<D: DomTypes> GPUShaderModule<D> {
     pub(crate) fn id(&self) -> WebGPUShaderModule {
         self.droppable.shader_module
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createshadermodule>
     pub(crate) fn create(
-        device: &GPUDevice,
+        device: &GPUDevice<D>,
         descriptor: RootedTraceableBox<GPUShaderModuleDescriptor>,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> DomRoot<GPUShaderModule> {
+    ) -> DomRoot<GPUShaderModule<D>> {
         todo!()
         /*
         let program_id = device.global().wgpu_id_hub().create_shader_module_id();
@@ -143,7 +147,7 @@ impl GPUShaderModule {
     }
 }
 
-impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule {
+impl<D: DomTypes> GPUShaderModuleMethods<D> for GPUShaderModule<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

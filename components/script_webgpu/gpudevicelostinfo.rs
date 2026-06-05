@@ -7,9 +7,9 @@ use jstraceable_derive::JSTraceable;
 use malloc_size_of_derive::MallocSizeOf;
 use script_bindings::DomTypes;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUDeviceLostInfoMethods, GPUDeviceLostReason,
+    GPUDeviceLostInfoMethods, GPUDeviceLostInfoWrap, GPUDeviceLostReason,
 };
-use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_bindings::reflector::{Reflector, reflect_dom_object, reflect_dom_object_with_wrap};
 use script_bindings::root::DomRoot;
 use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
@@ -30,16 +30,20 @@ impl GPUDeviceLostInfo {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new<D>(
         global: &D::GlobalScope,
         message: DOMString,
         reason: GPUDeviceLostReason,
         can_gc: CanGc,
-    ) -> DomRoot<Self> {
-        reflect_dom_object(
+    ) -> DomRoot<Self>
+    where
+        D: DomTypes<GPUDeviceLostInfo = GPUDeviceLostInfo>,
+    {
+        reflect_dom_object_with_wrap::<D, _, _, _>(
             Box::new(GPUDeviceLostInfo::new_inherited(message, reason)),
             global,
             can_gc,
+            GPUDeviceLostInfoWrap::<D>,
         )
     }
 }

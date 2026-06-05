@@ -16,7 +16,9 @@ use script_bindings::codegen::GenericBindings::WebGPUBinding::{
     GPUCanvasAlphaMode, GPUCanvasConfiguration, GPUExtent3DDict, GPUObjectDescriptorBase,
     GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants,
 };
-use script_bindings::codegen::GenericUnionTypes::HTMLCanvasElementOrOffscreenCanvas;
+use script_bindings::codegen::GenericUnionTypes::{
+    HTMLCanvasElementOrOffscreenCanvas, RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict,
+};
 use script_bindings::dom::MutNullableDom;
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{Reflector, reflect_dom_object};
@@ -67,28 +69,28 @@ impl Drop for DroppableGPUCanvasContext {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCanvasContext {
+pub(crate) struct GPUCanvasContext<D: DomTypes> {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    canvas: HTMLCanvasElementOrOffscreenCanvas,
+    //canvas: HTMLCanvasElementOrOffscreenCanvas,
     #[ignore_malloc_size_of = "manual writing is hard"]
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configuration-slot>
-    configuration: RefCell<Option<GPUCanvasConfiguration>>,
+    configuration: RefCell<Option<GPUCanvasConfiguration<D>>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-texturedescriptor-slot>
     texture_descriptor: RefCell<Option<GPUTextureDescriptor>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-currenttexture-slot>
-    current_texture: MutNullableDom<GPUTexture>,
+    current_texture: MutNullableDom<GPUTexture<D>>,
     /// Set if image is cleared
     /// (usually done by [`GPUCanvasContext::replace_drawing_buffer`])
     cleared: Cell<bool>,
     droppable: DroppableGPUCanvasContext,
 }
 
-impl GPUCanvasContext {
+impl<D: DomTypes> GPUCanvasContext<D> {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-    fn new_inherited<D: DomTypes>(
+    fn new_inherited(
         global: &D::GlobalScope,
-        canvas: HTMLCanvasElementOrOffscreenCanvas,
+        //canvas: HTMLCanvasElementOrOffscreenCanvas,
         channel: WebGPU,
     ) -> Self {
         let (sender, receiver) = generic_channel::channel().unwrap();
@@ -120,7 +122,7 @@ impl GPUCanvasContext {
         }
     }
 
-    pub(crate) fn new<D: DomTypes>(
+    pub(crate) fn new(
         global: &D::GlobalScope,
         canvas: &D::HTMLCanvasElement,
         channel: WebGPU,
@@ -129,7 +131,7 @@ impl GPUCanvasContext {
         reflect_dom_object(
             Box::new(GPUCanvasContext::new_inherited(
                 global,
-                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
+                //HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(Dom::from_ref(canvas)),
                 channel,
             )),
             global,
@@ -139,7 +141,7 @@ impl GPUCanvasContext {
 }
 
 // Abstract ops from spec
-impl GPUCanvasContext {
+impl<D: DomTypes> GPUCanvasContext<D> {
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {
         if let Err(error) = self.droppable.channel.0.send(WebGPURequest::SetImageKey {
             context_id: self.context_id(),
@@ -177,7 +179,7 @@ impl GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-gputexturedescriptor-for-the-canvas-and-configuration>
     fn texture_descriptor_for_canvas_and_configuration(
         &self,
-        configuration: &GPUCanvasConfiguration,
+        configuration: &GPUCanvasConfiguration<D>,
     ) -> GPUTextureDescriptor {
         let size = self.size();
         GPUTextureDescriptor {
@@ -236,7 +238,7 @@ impl GPUCanvasContext {
 }
 
 // Internal helper methods
-impl GPUCanvasContext {
+impl<D: DomTypes> GPUCanvasContext<D> {
     fn context_configuration(&self) -> Option<ContextConfiguration> {
         let configuration = self.configuration.borrow();
         let configuration = configuration.as_ref()?;
@@ -265,7 +267,7 @@ impl GPUCanvasContext {
     }
 }
 
-impl<D: DomTypes> CanvasContext<D> for GPUCanvasContext {
+impl<D: DomTypes> CanvasContext<D> for GPUCanvasContext<D> {
     type ID = WebGPUContextId;
 
     fn context_id(&self) -> WebGPUContextId {
