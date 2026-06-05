@@ -1,5 +1,6 @@
 [package]
 name = "servo-script-webgpu"
+build = "build.rs"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

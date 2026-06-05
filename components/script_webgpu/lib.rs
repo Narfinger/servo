@@ -33,6 +33,26 @@ pub mod identityhub;
 pub mod traits;
 pub mod wgsllanguagefeatures;
 
+pub(crate) mod dom {
+    pub(crate) mod types {}
+    pub(crate) mod bindings {
+        pub(crate) use script_bindings::*;
+    }
+}
+
+/// Generated JS-Rust bindings.
+#[allow(missing_docs, non_snake_case)]
+pub(crate) mod codegen {
+    pub mod IDLInterface {
+        //include!(concat!(env!("OUT_DIR"), "/GPUIDLInterfaceBindings.rs"));
+    }
+    pub(crate) mod ConcreteInheritTypes {
+        pub(crate) use crate::gpuerror::GPUError;
+        pub(crate) use crate::gpuvalidationerror::GPUValidationError;
+        include!(concat!(env!("OUT_DIR"), "/GPUConcreteInheritTypes.rs"));
+    }
+}
+
 pub(crate) use js::gc::Traceable as JSTraceable;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};

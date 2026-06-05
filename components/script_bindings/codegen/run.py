@@ -135,7 +135,6 @@ def build_concrete_inherit_types(config: Configuration, out_dir:str) -> None:
         root = GlobalGenRoots.ConcreteInheritTypes(config, skip=interfaces, inverse= True)
         code = root.define()
         filepath =os.path.join(out_dir, name+"ConcreteInheritTypes.rs")
-        make_dir(filepath)
         with open(filepath, "wb") as f:
             f.write(code.encode("utf-8"))
 
