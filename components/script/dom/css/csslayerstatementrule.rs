@@ -8,6 +8,7 @@ use dom_struct::dom_struct;
 use js::context::JSContext;
 use js::rust::MutableHandleValue;
 use script_bindings::reflector::reflect_dom_object_with_cx;
+use script_foo::to_frozen_array;
 use servo_arc::Arc;
 use style::shared_lock::ToCssWithGuard;
 use style::stylesheets::{CssRuleType, LayerStatementRule};
@@ -18,7 +19,6 @@ use super::cssstylesheet::CSSStyleSheet;
 use crate::dom::bindings::codegen::Bindings::CSSLayerStatementRuleBinding::CSSLayerStatementRuleMethods;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::bindings::str::DOMString;
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::window::Window;
 use crate::script_runtime::{CanGc, JSContext as SafeJSContext};
 

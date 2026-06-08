@@ -11,13 +11,13 @@ use js::typedarray::HeapArrayBuffer;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::trace::RootedTraceableBox;
+use script_webgpu::datablock::DataBlock;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
 use wgpu_core::resource::BufferAccessError;
 
 use crate::conversions::Convert;
-use crate::dom::bindings::buffer_source::DataBlock;
 use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
     GPUBufferDescriptor, GPUBufferMapState, GPUBufferMethods, GPUFlagsConstant,
     GPUMapModeConstants, GPUMapModeFlags, GPUSize64,
@@ -28,7 +28,7 @@ use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::promise::Promise;
-use crate::dom::webgpu::gpudevice::GPUDevice;
+use crate::dom::types::GPUDevice;
 use crate::realms::InRealm;
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::{CanGc, JSContext};
@@ -38,7 +38,7 @@ pub(crate) struct ActiveBufferMapping {
     // TODO(sagudev): Use GenericSharedMemory when https://github.com/servo/ipc-channel/pull/356 lands
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-data>
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-views>
-    pub(crate) data: DataBlock,
+    pub(crate) data: DataBlock<crate::DomTypeHolder>,
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-mode>
     mode: GPUMapModeFlags,
     /// <https://gpuweb.github.io/gpuweb/#active-buffer-mapping-range>

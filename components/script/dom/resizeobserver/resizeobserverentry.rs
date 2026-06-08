@@ -9,7 +9,6 @@ use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto_and_cx
 
 use crate::dom::bindings::codegen::Bindings::ResizeObserverEntryBinding::ResizeObserverEntryMethods;
 use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::domrectreadonly::DOMRectReadOnly;
 use crate::dom::element::Element;
 use crate::dom::resizeobserversize::ResizeObserverSize;

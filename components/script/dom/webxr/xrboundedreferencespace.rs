@@ -5,12 +5,12 @@
 use dom_struct::dom_struct;
 use js::rust::MutableHandleValue;
 use script_bindings::reflector::reflect_dom_object;
+use script_foo::to_frozen_array;
 
 use crate::dom::bindings::codegen::Bindings::XRBoundedReferenceSpaceBinding::XRBoundedReferenceSpaceMethods;
 use crate::dom::bindings::codegen::Bindings::XRReferenceSpaceBinding::XRReferenceSpaceType;
 use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot};
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::dompointreadonly::DOMPointReadOnly;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::window::Window;

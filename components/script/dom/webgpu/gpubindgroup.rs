@@ -18,8 +18,8 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
+use crate::dom::types::GPUDevice;
 use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::dom::webgpu::gpudevice::GPUDevice;
 use crate::script_runtime::CanGc;
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUBindGroup {

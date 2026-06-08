@@ -41,7 +41,7 @@ impl Drop for DroppableGPURenderBundle {
 }
 
 #[dom_struct]
-pub(crate) struct GPURenderBundle {
+pub struct GPURenderBundle {
     reflector_: Reflector,
     #[no_trace]
     device: WebGPUDevice,
@@ -67,7 +67,7 @@ impl GPURenderBundle {
         }
     }
 
-    pub(crate) fn new<D>(
+    pub fn new<D>(
         global: &D::GlobalScope,
         render_bundle: WebGPURenderBundle,
         device: WebGPUDevice,
@@ -93,7 +93,7 @@ impl GPURenderBundle {
 }
 
 impl GPURenderBundle {
-    pub(crate) fn id(&self) -> WebGPURenderBundle {
+    pub fn id(&self) -> WebGPURenderBundle {
         self.droppable.render_bundle
     }
 }

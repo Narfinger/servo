@@ -18,7 +18,7 @@ use script_bindings::str::DOMString;
 use crate::gpuerror::GPUError;
 
 #[dom_struct]
-pub(crate) struct GPUValidationError {
+pub struct GPUValidationError {
     gpu_error: GPUError,
 }
 

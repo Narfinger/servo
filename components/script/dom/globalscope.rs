@@ -60,8 +60,6 @@ use script_bindings::interfaces::GlobalScopeHelpers;
 use script_bindings::reflector::DomObject;
 use script_bindings::settings_stack::run_a_script;
 #[cfg(feature = "webgpu")]
-use script_webgpu::gpudevice::GPUDevice;
-#[cfg(feature = "webgpu")]
 use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel;
 use servo_base::generic_channel::{GenericCallback, GenericSend};
@@ -137,6 +135,8 @@ use crate::dom::serviceworkerregistration::ServiceWorkerRegistration;
 use crate::dom::sharedworkerglobalscope::SharedWorkerGlobalScope;
 use crate::dom::stream::underlyingsourcecontainer::UnderlyingSourceType;
 use crate::dom::stream::writablestream::CrossRealmTransformWritable;
+#[cfg(feature = "webgpu")]
+use crate::dom::types::GPUDevice;
 use crate::dom::types::{AbortSignal, DebuggerGlobalScope, MessageEvent};
 use crate::dom::window::Window;
 use crate::dom::workerglobalscope::WorkerGlobalScope;

@@ -16,6 +16,8 @@ use js::rust::wrappers2::JS_DefineDebuggerObject;
 use net_traits::ResourceThreads;
 use profile_traits::{mem, time};
 use script_bindings::reflector::DomObject;
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel::{GenericCallback, GenericSender, channel};
 use servo_base::id::{Index, PipelineId, PipelineNamespaceId};
 use servo_constellation_traits::ScriptToConstellationChan;
@@ -52,8 +54,6 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::types::{
     DebuggerAddDebuggeeEvent, DebuggerEvalEvent, DebuggerGetPossibleBreakpointsEvent, Event,
 };
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::realms::{enter_auto_realm, enter_realm};
 use crate::script_runtime::{CanGc, IntroductionType};
 use crate::script_thread::with_script_thread;

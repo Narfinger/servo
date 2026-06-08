@@ -9,7 +9,6 @@ use script_bindings::reflector::{Reflector, reflect_dom_object};
 use crate::dom::bindings::codegen::Bindings::ServoTestUtilsBinding::LayoutResultMethods;
 use crate::dom::bindings::import::base::SafeJSContext;
 use crate::dom::bindings::root::DomRoot;
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::globalscope::GlobalScope;
 use crate::script_runtime::CanGc;
 

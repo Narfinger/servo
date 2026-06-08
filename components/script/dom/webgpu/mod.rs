@@ -12,6 +12,7 @@ pub(crate) mod gpucommandencoder;
 pub(crate) mod gpucomputepassencoder;
 pub(crate) mod gpucomputepipeline;
 pub(crate) mod gpuconvert;
+pub(crate) mod gpudevice;
 pub(crate) mod gpupipelineerror;
 pub(crate) mod gpuqueue;
 pub(crate) mod gpurenderbundleencoder;

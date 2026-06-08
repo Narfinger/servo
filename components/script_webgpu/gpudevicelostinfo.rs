@@ -15,7 +15,7 @@ use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
 
 #[dom_struct]
-pub(crate) struct GPUDeviceLostInfo {
+pub struct GPUDeviceLostInfo {
     reflector_: Reflector,
     message: DOMString,
     reason: GPUDeviceLostReason,
@@ -30,7 +30,7 @@ impl GPUDeviceLostInfo {
         }
     }
 
-    pub(crate) fn new<D>(
+    pub fn new<D>(
         global: &D::GlobalScope,
         message: DOMString,
         reason: GPUDeviceLostReason,

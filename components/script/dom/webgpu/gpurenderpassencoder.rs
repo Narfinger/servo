@@ -5,6 +5,7 @@
 use dom_struct::dom_struct;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::gpurenderbundle::GPURenderBundle;
 use webgpu_traits::{RenderCommand, WebGPU, WebGPURenderPass, WebGPURequest};
 
 use crate::conversions::TryConvert;
@@ -19,7 +20,6 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
 use crate::dom::webgpu::gpubuffer::GPUBuffer;
 use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
-use crate::dom::webgpu::gpurenderbundle::GPURenderBundle;
 use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 

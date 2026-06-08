@@ -19,7 +19,7 @@ use webgpu_traits::ShaderCompilationInfo;
 use crate::gpucompilationmessage::GPUCompilationMessage;
 
 #[dom_struct]
-pub(crate) struct GPUCompilationInfo {
+pub struct GPUCompilationInfo {
     reflector_: Reflector,
     // currently we only get one message from wgpu
     msg: Vec<DomRoot<GPUCompilationMessage>>,

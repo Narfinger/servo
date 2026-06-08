@@ -23,7 +23,7 @@ use script_bindings::str::DOMString;
 use wgpu_types::Features;
 
 #[dom_struct]
-pub(crate) struct GPUSupportedFeatures {
+pub struct GPUSupportedFeatures {
     reflector: Reflector,
     // internal storage for features
     #[custom_trace]
@@ -108,7 +108,7 @@ impl GPUSupportedFeatures {
     }
 
     #[expect(non_snake_case)]
-    pub(crate) fn Constructor<D>(
+    pub fn Constructor<D>(
         global: &D::GlobalScope,
         proto: Option<HandleObject>,
         features: Features,
@@ -124,7 +124,7 @@ impl GPUSupportedFeatures {
 }
 
 impl GPUSupportedFeatures {
-    pub(crate) fn wgpu_features(&self) -> &Features {
+    pub fn wgpu_features(&self) -> &Features {
         &self.features
     }
 }

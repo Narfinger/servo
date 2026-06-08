@@ -41,7 +41,7 @@ impl Drop for DroppableGPUCommandBuffer {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCommandBuffer {
+pub struct GPUCommandBuffer {
     reflector_: Reflector,
     label: DomRefCell<USVString>,
     droppable: DroppableGPUCommandBuffer,
@@ -63,7 +63,7 @@ impl GPUCommandBuffer {
         }
     }
 
-    pub(crate) fn new<D>(
+    pub fn new<D>(
         global: &D::GlobalScope,
         channel: WebGPU,
         command_buffer: WebGPUCommandBuffer,
@@ -87,7 +87,7 @@ impl GPUCommandBuffer {
 }
 
 impl GPUCommandBuffer {
-    pub(crate) fn id(&self) -> WebGPUCommandBuffer {
+    pub fn id(&self) -> WebGPUCommandBuffer {
         self.droppable.command_buffer
     }
 }

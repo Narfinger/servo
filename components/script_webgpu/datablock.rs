@@ -15,7 +15,7 @@ use servo_arc::Arc;
 use crate::traits::WebGPUGlobalTrait;
 
 #[derive(JSTraceable, MallocSizeOf)]
-pub(crate) struct DataBlock<D>
+pub struct DataBlock<D>
 where
     D: DomTypes,
     D::GlobalScope: WebGPUGlobalTrait<D>,
@@ -37,7 +37,7 @@ where
     D: DomTypes,
     D::GlobalScope: WebGPUGlobalTrait<D>,
 {
-    pub(crate) fn new_zeroed(size: usize) -> Self {
+    pub fn new_zeroed(size: usize) -> Self {
         let data = vec![0; size];
         Self {
             data: Arc::new(data.into_boxed_slice()),
@@ -113,7 +113,7 @@ where
 
 #[derive(JSTraceable, MallocSizeOf)]
 #[cfg_attr(crown, expect(crown::unrooted_must_root))]
-pub(crate) struct DataView<D>
+pub struct DataView<D>
 where
     D: DomTypes,
     D::GlobalScope: WebGPUGlobalTrait<D>,

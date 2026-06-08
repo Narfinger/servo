@@ -7,6 +7,7 @@ use std::borrow::Cow;
 use dom_struct::dom_struct;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::gpurenderbundle::GPURenderBundle;
 use webgpu_traits::{WebGPU, WebGPURenderBundle, WebGPURequest};
 use wgpu_core::command::{
     RenderBundleEncoder, RenderBundleEncoderDescriptor, bundle_ffi as wgpu_bundle,
@@ -22,10 +23,9 @@ use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
+use crate::dom::types::GPUDevice;
 use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
 use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpurenderbundle::GPURenderBundle;
 use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
 use crate::script_runtime::CanGc;
 
@@ -274,7 +274,7 @@ impl GPURenderBundleEncoderMethods<crate::DomTypeHolder> for GPURenderBundleEnco
             .expect("Failed to send RenderBundleEncoderFinish");
 
         let render_bundle = WebGPURenderBundle(render_bundle_id);
-        GPURenderBundle::new(
+        GPURenderBundle::new::<crate::DomTypeHolder>(
             &self.global(),
             render_bundle,
             self.device.id(),

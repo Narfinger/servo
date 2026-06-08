@@ -205,6 +205,8 @@
 #[macro_use]
 pub(crate) mod macros;
 
+pub(crate) use script_webgpu::*;
+
 pub(crate) mod types {
     include!(concat!(env!("OUT_DIR"), "/InterfaceTypes.rs"));
 }

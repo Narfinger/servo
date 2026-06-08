@@ -15,7 +15,7 @@ use script_bindings::script_runtime::CanGc;
 use script_bindings::str::DOMString;
 
 #[dom_struct]
-pub(crate) struct GPUAdapterInfo {
+pub struct GPUAdapterInfo {
     reflector_: Reflector,
     vendor: DOMString,
     architecture: DOMString,
@@ -49,7 +49,7 @@ impl GPUAdapterInfo {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new<D>(
+    pub fn new<D>(
         global: &D::GlobalScope,
         vendor: DOMString,
         architecture: DOMString,
@@ -79,7 +79,7 @@ impl GPUAdapterInfo {
         )
     }
 
-    pub(crate) fn clone_from<D>(
+    pub fn clone_from<D>(
         global: &D::GlobalScope,
         info: &GPUAdapterInfo,
         can_gc: CanGc,

@@ -20,6 +20,8 @@ use net_traits::request::{
 };
 use script_bindings::cell::DomRefCell;
 use script_bindings::conversions::SafeToJSValConvertible;
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel::{GenericReceiver, RoutedReceiver};
 use servo_base::id::ScriptEventLoopId;
 use servo_constellation_traits::{MessagePortImpl, WorkerGlobalScopeInit, WorkerScriptLoadOrigin};
@@ -47,8 +49,6 @@ use crate::dom::html::htmlscriptelement::Script;
 use crate::dom::messageport::MessagePort;
 use crate::dom::sharedworker::{SharedWorker, TrustedSharedWorkerAddress};
 use crate::dom::types::DebuggerGlobalScope;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::dom::workerglobalscope::WorkerGlobalScope;
 use crate::messaging::{CommonScriptMsg, ScriptEventLoopReceiver, ScriptEventLoopSender};
 use crate::script_module::{ModuleFetchClient, fetch_a_module_worker_script_graph};

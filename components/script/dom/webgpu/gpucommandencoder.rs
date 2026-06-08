@@ -5,6 +5,7 @@
 use dom_struct::dom_struct;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::gpucommandbuffer::GPUCommandBuffer;
 use webgpu_traits::{
     WebGPU, WebGPUCommandBuffer, WebGPUCommandEncoder, WebGPUComputePass, WebGPUDevice,
     WebGPURenderPass, WebGPURequest,
@@ -23,10 +24,9 @@ use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::gpuconvert::convert_load_op;
+use crate::dom::types::GPUDevice;
 use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandbuffer::GPUCommandBuffer;
 use crate::dom::webgpu::gpucomputepassencoder::GPUComputePassEncoder;
-use crate::dom::webgpu::gpudevice::GPUDevice;
 use crate::dom::webgpu::gpurenderpassencoder::GPURenderPassEncoder;
 use crate::script_runtime::CanGc;
 
@@ -357,7 +357,7 @@ impl GPUCommandEncoderMethods<crate::DomTypeHolder> for GPUCommandEncoder {
             .expect("Failed to send Finish");
 
         let buffer = WebGPUCommandBuffer(command_buffer_id);
-        GPUCommandBuffer::new(
+        GPUCommandBuffer::new::<crate::DomTypeHolder>(
             &self.global(),
             self.droppable.channel.clone(),
             buffer,

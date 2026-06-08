@@ -10,6 +10,7 @@ use embedder_traits::{DualRumbleEffectParams, EmbedderMsg, GamepadSupportedHapti
 use js::rust::MutableHandleValue;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_foo::to_frozen_array;
 use servo_base::generic_channel::GenericCallback;
 
 use crate::dom::bindings::codegen::Bindings::GamepadHapticActuatorBinding::{
@@ -21,7 +22,6 @@ use crate::dom::bindings::refcounted::{Trusted, TrustedPromise};
 use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::bindings::root::DomRoot;
 use crate::dom::bindings::str::DOMString;
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::promise::Promise;
 use crate::dom::window::Window;
 use crate::realms::InRealm;

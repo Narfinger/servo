@@ -22,7 +22,7 @@ use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
 use crate::gpuvalidationerror::GPUValidationError;
 
 #[dom_struct]
-pub(crate) struct GPUError {
+pub struct GPUError {
     reflector_: Reflector,
     message: DOMString,
 }
@@ -65,11 +65,7 @@ impl GPUError {
         )
     }
 
-    pub(crate) fn from_error<D>(
-        global: &D::GlobalScope,
-        error: Error,
-        can_gc: CanGc,
-    ) -> DomRoot<Self>
+    pub fn from_error<D>(global: &D::GlobalScope, error: Error, can_gc: CanGc) -> DomRoot<Self>
     where
         D: DomTypes<
                 GPUError = GPUError,

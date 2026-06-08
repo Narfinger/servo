@@ -11,7 +11,7 @@ use script_bindings::reflector::Reflector;
 use script_bindings::str::USVString;
 
 #[dom_struct]
-pub(crate) struct GPUQuerySet {
+pub struct GPUQuerySet {
     reflector_: Reflector,
 }
 

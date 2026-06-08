@@ -8,11 +8,11 @@ use dom_struct::dom_struct;
 use js::jsapi::HandleObject;
 use js::realm::CurrentRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::wgsllanguagefeatures::WGSLLanguageFeatures;
 use servo_constellation_traits::ScriptToConstellationMessage;
 use webgpu_traits::WebGPUAdapterResponse;
 use wgpu_types::PowerPreference;
 
-use super::wgsllanguagefeatures::WGSLLanguageFeatures;
 use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
     GPUMethods, GPUPowerPreference, GPURequestAdapterOptions, GPUTextureFormat,
 };
@@ -123,7 +123,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
         cx: &mut js::context::JSContext,
     ) -> DomRoot<WGSLLanguageFeatures> {
         self.wgsl_language_features
-            .or_init(|| WGSLLanguageFeatures::new(cx, &self.global(), None))
+            .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, CanGc::deprecated_note()))
     }
 }
 

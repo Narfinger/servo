@@ -7,6 +7,7 @@ use js::jsapi::Heap;
 use js::jsval::JSVal;
 use js::rust::{HandleObject, MutableHandleValue};
 use script_bindings::reflector::reflect_dom_object_with_proto;
+use script_foo::to_frozen_array;
 use stylo_atoms::Atom;
 
 use crate::dom::bindings::codegen::Bindings::EventBinding::Event_Binding::EventMethods;
@@ -16,7 +17,6 @@ use crate::dom::bindings::codegen::Bindings::XRInputSourcesChangeEventBinding::{
 use crate::dom::bindings::inheritance::Castable;
 use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::DOMString;
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::event::Event;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::window::Window;

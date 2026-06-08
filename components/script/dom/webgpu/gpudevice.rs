@@ -11,6 +11,11 @@ use js::jsapi::{HandleObject, Heap, JSObject};
 use script_bindings::cell::DomRefCell;
 use script_bindings::cformat;
 use script_bindings::reflector::reflect_dom_object;
+use script_webgpu::gpuadapterinfo::GPUAdapterInfo;
+use script_webgpu::gpudevicelostinfo::GPUDeviceLostInfo;
+use script_webgpu::gpusampler::GPUSampler;
+use script_webgpu::gpusupportedfeatures::GPUSupportedFeatures;
+use script_webgpu::gpusupportedlimits::GPUSupportedLimits;
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
     WebGPUPoppedErrorScopeResponse, WebGPUQueue, WebGPURenderPipeline,
@@ -21,10 +26,6 @@ use wgpu_core::pipeline as wgpu_pipe;
 use wgpu_core::pipeline::RenderPipelineDescriptor;
 use wgpu_types::{self, TextureFormat};
 
-use super::gpudevicelostinfo::GPUDeviceLostInfo;
-use super::gpuerror::AsWebGpu;
-use super::gpupipelineerror::GPUPipelineError;
-use super::gpusupportedlimits::GPUSupportedLimits;
 use crate::conversions::Convert;
 use crate::dom::bindings::codegen::Bindings::EventBinding::EventInit;
 use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
@@ -47,21 +48,17 @@ use crate::dom::event::Event;
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::promise::Promise;
-use crate::dom::types::GPUError;
+use crate::dom::types::{GPUError, GPUPipelineError};
 use crate::dom::webgpu::gpuadapter::GPUAdapter;
-use crate::dom::webgpu::gpuadapterinfo::GPUAdapterInfo;
 use crate::dom::webgpu::gpubindgroup::GPUBindGroup;
 use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::dom::webgpu::gpubuffer::GPUBuffer;
 use crate::dom::webgpu::gpucommandencoder::GPUCommandEncoder;
 use crate::dom::webgpu::gpucomputepipeline::GPUComputePipeline;
-use crate::dom::webgpu::gpupipelinelayout::GPUPipelineLayout;
 use crate::dom::webgpu::gpuqueue::GPUQueue;
 use crate::dom::webgpu::gpurenderbundleencoder::GPURenderBundleEncoder;
 use crate::dom::webgpu::gpurenderpipeline::GPURenderPipeline;
-use crate::dom::webgpu::gpusampler::GPUSampler;
 use crate::dom::webgpu::gpushadermodule::GPUShaderModule;
-use crate::dom::webgpu::gpusupportedfeatures::GPUSupportedFeatures;
 use crate::dom::webgpu::gputexture::GPUTexture;
 use crate::dom::webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent;
 use crate::realms::InRealm;

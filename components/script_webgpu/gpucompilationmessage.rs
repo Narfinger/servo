@@ -16,7 +16,7 @@ use script_bindings::str::DOMString;
 use webgpu_traits::ShaderCompilationInfo;
 
 #[dom_struct]
-pub(crate) struct GPUCompilationMessage {
+pub struct GPUCompilationMessage {
     reflector_: Reflector,
     message: DOMString,
     mtype: GPUCompilationMessageType,

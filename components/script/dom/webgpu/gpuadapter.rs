@@ -9,13 +9,12 @@ use js::jsapi::{HandleObject, Heap, JSObject};
 use script_bindings::cformat;
 use script_bindings::like::Setlike;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::gpusupportedfeatures::GPUSupportedFeatures;
 use webgpu_traits::{
     RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest,
 };
 use wgpu_types::{self, AdapterInfo, ExperimentalFeatures, MemoryHints};
 
-use super::gpusupportedfeatures::GPUSupportedFeatures;
-use super::gpusupportedlimits::set_limit;
 use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
     GPUAdapterMethods, GPUDeviceDescriptor, GPUDeviceLostReason,
 };
@@ -25,9 +24,7 @@ use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::DOMString;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::promise::Promise;
-use crate::dom::types::{GPUAdapterInfo, GPUSupportedLimits};
-use crate::dom::webgpu::gpudevice::GPUDevice;
-use crate::dom::webgpu::gpusupportedfeatures::gpu_to_wgt_feature;
+use crate::dom::types::{GPUAdapterInfo, GPUDevice, GPUSupportedLimits};
 use crate::realms::InRealm;
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::CanGc;
@@ -99,8 +96,11 @@ impl GPUAdapter {
         adapter: WebGPUAdapter,
         can_gc: CanGc,
     ) -> DomRoot<Self> {
-        let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
-        let limits = GPUSupportedLimits::new(global, limits, can_gc);
+        let features = GPUSupportedFeatures::Constructor::<crate::DomTypeHolder>(
+            global, None, features, can_gc,
+        )
+        .unwrap();
+        let limits = GPUSupportedLimits::new::<crate::DomTypeHolder>(global, limits, can_gc);
         let info = GPUAdapter::create_adapter_info(global, info, &features, can_gc);
         let dom_root = reflect_dom_object(
             Box::new(GPUAdapter::new_inherited(

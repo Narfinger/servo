@@ -7,6 +7,7 @@ use std::rc::Rc;
 use dom_struct::dom_struct;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::gpucommandbuffer::GPUCommandBuffer;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{WebGPU, WebGPUQueue, WebGPURequest};
 
@@ -21,9 +22,8 @@ use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
 use crate::dom::promise::Promise;
+use crate::dom::types::GPUDevice;
 use crate::dom::webgpu::gpubuffer::GPUBuffer;
-use crate::dom::webgpu::gpucommandbuffer::GPUCommandBuffer;
-use crate::dom::webgpu::gpudevice::GPUDevice;
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::CanGc;
 

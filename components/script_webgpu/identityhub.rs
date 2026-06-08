@@ -16,7 +16,7 @@ use wgpu_core::id::{
 use wgpu_core::identity::IdentityManager;
 
 #[derive(Debug)]
-pub(crate) struct IdentityHub {
+pub struct IdentityHub {
     adapters: IdentityManager<Adapter>,
     devices: IdentityManager<Device>,
     queues: IdentityManager<Queue>,
@@ -67,7 +67,7 @@ impl IdentityHub {
         self.devices.process()
     }
 
-    pub(crate) fn free_device_id(&self, id: DeviceId) {
+    pub fn free_device_id(&self, id: DeviceId) {
         self.devices.free(id);
     }
 
@@ -75,7 +75,7 @@ impl IdentityHub {
         self.queues.process()
     }
 
-    pub(crate) fn free_queue_id(&self, id: QueueId) {
+    pub fn free_queue_id(&self, id: QueueId) {
         self.queues.free(id);
     }
 
@@ -83,7 +83,7 @@ impl IdentityHub {
         self.adapters.process()
     }
 
-    pub(crate) fn free_adapter_id(&self, id: AdapterId) {
+    pub fn free_adapter_id(&self, id: AdapterId) {
         self.adapters.free(id);
     }
 
@@ -91,119 +91,119 @@ impl IdentityHub {
         self.buffers.process()
     }
 
-    pub(crate) fn free_buffer_id(&self, id: BufferId) {
+    pub fn free_buffer_id(&self, id: BufferId) {
         self.buffers.free(id);
     }
 
-    pub(crate) fn create_bind_group_id(&self) -> BindGroupId {
+    pub fn create_bind_group_id(&self) -> BindGroupId {
         self.bind_groups.process()
     }
 
-    pub(crate) fn free_bind_group_id(&self, id: BindGroupId) {
+    pub fn free_bind_group_id(&self, id: BindGroupId) {
         self.bind_groups.free(id);
     }
 
-    pub(crate) fn create_bind_group_layout_id(&self) -> BindGroupLayoutId {
+    pub fn create_bind_group_layout_id(&self) -> BindGroupLayoutId {
         self.bind_group_layouts.process()
     }
 
-    pub(crate) fn free_bind_group_layout_id(&self, id: BindGroupLayoutId) {
+    pub fn free_bind_group_layout_id(&self, id: BindGroupLayoutId) {
         self.bind_group_layouts.free(id);
     }
 
-    pub(crate) fn create_compute_pipeline_id(&self) -> ComputePipelineId {
+    pub fn create_compute_pipeline_id(&self) -> ComputePipelineId {
         self.compute_pipelines.process()
     }
 
-    pub(crate) fn free_compute_pipeline_id(&self, id: ComputePipelineId) {
+    pub fn free_compute_pipeline_id(&self, id: ComputePipelineId) {
         self.compute_pipelines.free(id);
     }
 
-    pub(crate) fn create_pipeline_layout_id(&self) -> PipelineLayoutId {
+    pub fn create_pipeline_layout_id(&self) -> PipelineLayoutId {
         self.pipeline_layouts.process()
     }
 
-    pub(crate) fn free_pipeline_layout_id(&self, id: PipelineLayoutId) {
+    pub fn free_pipeline_layout_id(&self, id: PipelineLayoutId) {
         self.pipeline_layouts.free(id);
     }
 
-    pub(crate) fn create_shader_module_id(&self) -> ShaderModuleId {
+    pub fn create_shader_module_id(&self) -> ShaderModuleId {
         self.shader_modules.process()
     }
 
-    pub(crate) fn free_shader_module_id(&self, id: ShaderModuleId) {
+    pub fn free_shader_module_id(&self, id: ShaderModuleId) {
         self.shader_modules.free(id);
     }
 
-    pub(crate) fn create_command_encoder_id(&self) -> CommandEncoderId {
+    pub fn create_command_encoder_id(&self) -> CommandEncoderId {
         self.command_encoders.process()
     }
 
-    pub(crate) fn free_command_encoder_id(&self, id: CommandEncoderId) {
+    pub fn free_command_encoder_id(&self, id: CommandEncoderId) {
         self.command_encoders.free(id);
     }
 
-    pub(crate) fn create_command_buffer_id(&self) -> CommandBufferId {
+    pub fn create_command_buffer_id(&self) -> CommandBufferId {
         self.command_buffers.process()
     }
 
-    pub(crate) fn free_command_buffer_id(&self, id: CommandBufferId) {
+    pub fn free_command_buffer_id(&self, id: CommandBufferId) {
         self.command_buffers.free(id);
     }
 
-    pub(crate) fn create_sampler_id(&self) -> SamplerId {
+    pub fn create_sampler_id(&self) -> SamplerId {
         self.samplers.process()
     }
 
-    pub(crate) fn free_sampler_id(&self, id: SamplerId) {
+    pub fn free_sampler_id(&self, id: SamplerId) {
         self.samplers.free(id);
     }
 
-    pub(crate) fn create_render_pipeline_id(&self) -> RenderPipelineId {
+    pub fn create_render_pipeline_id(&self) -> RenderPipelineId {
         self.render_pipelines.process()
     }
 
-    pub(crate) fn free_render_pipeline_id(&self, id: RenderPipelineId) {
+    pub fn free_render_pipeline_id(&self, id: RenderPipelineId) {
         self.render_pipelines.free(id);
     }
 
-    pub(crate) fn create_texture_id(&self) -> TextureId {
+    pub fn create_texture_id(&self) -> TextureId {
         self.textures.process()
     }
 
-    pub(crate) fn free_texture_id(&self, id: TextureId) {
+    pub fn free_texture_id(&self, id: TextureId) {
         self.textures.free(id);
     }
 
-    pub(crate) fn create_texture_view_id(&self) -> TextureViewId {
+    pub fn create_texture_view_id(&self) -> TextureViewId {
         self.texture_views.process()
     }
 
-    pub(crate) fn free_texture_view_id(&self, id: TextureViewId) {
+    pub fn free_texture_view_id(&self, id: TextureViewId) {
         self.texture_views.free(id);
     }
 
-    pub(crate) fn create_render_bundle_id(&self) -> RenderBundleId {
+    pub fn create_render_bundle_id(&self) -> RenderBundleId {
         self.render_bundles.process()
     }
 
-    pub(crate) fn free_render_bundle_id(&self, id: RenderBundleId) {
+    pub fn free_render_bundle_id(&self, id: RenderBundleId) {
         self.render_bundles.free(id);
     }
 
-    pub(crate) fn create_compute_pass_id(&self) -> ComputePassId {
+    pub fn create_compute_pass_id(&self) -> ComputePassId {
         self.compute_passes.process()
     }
 
-    pub(crate) fn free_compute_pass_id(&self, id: ComputePassId) {
+    pub fn free_compute_pass_id(&self, id: ComputePassId) {
         self.compute_passes.free(id);
     }
 
-    pub(crate) fn create_render_pass_id(&self) -> RenderPassId {
+    pub fn create_render_pass_id(&self) -> RenderPassId {
         self.render_passes.process()
     }
 
-    pub(crate) fn free_render_pass_id(&self, id: RenderPassId) {
+    pub fn free_render_pass_id(&self, id: RenderPassId) {
         self.render_passes.free(id);
     }
 }

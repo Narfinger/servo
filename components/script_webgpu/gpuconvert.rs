@@ -477,7 +477,7 @@ impl WebGPUConvert<wgpu_types::BlendComponent> for &GPUBlendComponent {
     }
 }
 
-pub(crate) fn convert_load_op<T>(load: &GPULoadOp, clear: T) -> wgpu_com::LoadOp<T> {
+pub fn convert_load_op<T>(load: &GPULoadOp, clear: T) -> wgpu_com::LoadOp<T> {
     match load {
         GPULoadOp::Load => wgpu_com::LoadOp::Load,
         GPULoadOp::Clear => wgpu_com::LoadOp::Clear(clear),

@@ -18,7 +18,7 @@ use wgpu_types::Limits;
 
 /// <https://gpuweb.github.io/gpuweb/#gpusupportedlimits>
 #[dom_struct]
-pub(crate) struct GPUSupportedLimits {
+pub struct GPUSupportedLimits {
     reflector_: Reflector,
     #[ignore_malloc_size_of = "defined in wgpu-types"]
     #[no_trace]
@@ -33,7 +33,7 @@ impl GPUSupportedLimits {
         }
     }
 
-    pub(crate) fn new<D>(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self>
+    pub fn new<D>(global: &D::GlobalScope, limits: Limits, can_gc: CanGc) -> DomRoot<Self>
     where
         D: DomTypes<GPUSupportedLimits = GPUSupportedLimits>,
     {

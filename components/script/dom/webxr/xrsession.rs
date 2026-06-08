@@ -9,6 +9,7 @@ use std::rc::Rc;
 use std::{mem, ptr};
 
 use script_bindings::reflector::reflect_dom_object;
+use script_foo::to_frozen_array;
 use servo_base::cross_process_instant::CrossProcessInstant;
 use dom_struct::dom_struct;
 use euclid::{RigidTransform3D, Transform3D, Vector3D};
@@ -54,7 +55,6 @@ use crate::dom::bindings::num::Finite;
 use crate::dom::bindings::refcounted::Trusted;
 use crate::dom::bindings::reflector::{DomGlobal};
 use crate::dom::bindings::root::{Dom, DomRoot, MutDom, MutNullableDom};
-use crate::dom::bindings::utils::to_frozen_array;
 use crate::dom::event::Event;
 use crate::dom::eventtarget::EventTarget;
 use crate::dom::promise::Promise;

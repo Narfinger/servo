@@ -14,6 +14,8 @@ use net_traits::ResourceThreads;
 use net_traits::image_cache::ImageCache;
 use profile_traits::{mem, time};
 use script_traits::Painter;
+#[cfg(feature = "webgpu")]
+use script_webgpu::identityhub::IdentityHub;
 use servo_base::generic_channel::{GenericCallback, GenericSender};
 use servo_base::id::{PipelineId, WebViewId};
 use servo_constellation_traits::{ScriptToConstellationChan, ScriptToConstellationMessage};
@@ -29,8 +31,6 @@ use crate::dom::globalscope::GlobalScope;
 use crate::dom::paintworkletglobalscope::{PaintWorkletGlobalScope, PaintWorkletTask};
 #[cfg(feature = "testbinding")]
 use crate::dom::testworkletglobalscope::{TestWorkletGlobalScope, TestWorkletTask};
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::identityhub::IdentityHub;
 use crate::dom::worklet::WorkletExecutor;
 use crate::messaging::MainThreadScriptMsg;
 use crate::realms::enter_auto_realm;

@@ -7,9 +7,9 @@ use std::rc::Rc;
 use dom_struct::dom_struct;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_webgpu::gpucompilationinfo::GPUCompilationInfo;
 use webgpu_traits::{ShaderCompilationInfo, WebGPU, WebGPURequest, WebGPUShaderModule};
 
-use super::gpucompilationinfo::GPUCompilationInfo;
 use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
     GPUShaderModuleDescriptor, GPUShaderModuleMethods,
 };
@@ -164,7 +164,10 @@ impl RoutedPromiseListener<Option<ShaderCompilationInfo>> for GPUShaderModule {
         response: Option<ShaderCompilationInfo>,
         promise: &Rc<Promise>,
     ) {
+        todo!();
+        /*
         let info = GPUCompilationInfo::from(&self.global(), response, CanGc::from_cx(cx));
         promise.resolve_native_with_cx(cx, &info);
+         */
     }
 }
