@@ -320,8 +320,8 @@ where
 /// Here `AbstractType` is of the form `D::` while `ConcreteType` is the concrete type given in [`DomTypeHolders`] in script.
 /// As these will be equal in script, the `From<..>` type bounds are automatically fulfilled.
 #[expect(clippy::type_complexity, reason = "The type is generated in codegen")]
-pub fn reflect_dom_object_with_wrap<D, AbstractType, GlobalType, ConcreteType>(
-    obj: Box<ConcreteType>,
+pub fn reflect_dom_object_with_wrap<D, AbstractType, GlobalType>(
+    obj: Box<AbstractType>,
     global: &GlobalType,
     _can_gc: CanGc,
     wrap: unsafe fn(
@@ -330,14 +330,12 @@ pub fn reflect_dom_object_with_wrap<D, AbstractType, GlobalType, ConcreteType>(
         Option<HandleObject>,
         Box<AbstractType>,
     ) -> DomRoot<AbstractType>,
-) -> DomRoot<ConcreteType>
+) -> DomRoot<AbstractType>
 where
     D: DomTypes,
     AbstractType: DomObject,
-    ConcreteType: DomObject,
     GlobalType: DerivedFrom<D::GlobalScope>,
-    Box<AbstractType>: From<Box<ConcreteType>>,
-    DomRoot<ConcreteType>: From<DomRoot<AbstractType>>,
+    DomRoot<AbstractType>: From<DomRoot<AbstractType>>,
 {
     let global_scope = global.upcast();
     let mut cx = unsafe { temp_cx() };

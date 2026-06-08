@@ -80,7 +80,7 @@ impl GPUBindGroupLayout {
     where
         D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPUBindGroupLayout::new_inherited(
                 channel,
                 bind_group_layout,

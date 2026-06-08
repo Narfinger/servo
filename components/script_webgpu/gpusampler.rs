@@ -80,7 +80,7 @@ impl GPUSampler {
     where
         D: DomTypes<GPUSampler = GPUSampler>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPUSampler::new_inherited(
                 channel,
                 device,

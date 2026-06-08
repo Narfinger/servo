@@ -39,7 +39,7 @@ impl GPUDeviceLostInfo {
     where
         D: DomTypes<GPUDeviceLostInfo = GPUDeviceLostInfo>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPUDeviceLostInfo::new_inherited(message, reason)),
             global,
             can_gc,

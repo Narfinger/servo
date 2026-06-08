@@ -60,7 +60,7 @@ impl GPUCompilationMessage {
     where
         D: DomTypes<GPUCompilationMessage = GPUCompilationMessage>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(Self::new_inherited(
                 message, mtype, line_num, line_pos, offset, length,
             )),

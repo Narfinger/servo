@@ -44,10 +44,12 @@ pub(crate) mod dom {
 #[allow(missing_docs, non_snake_case)]
 pub(crate) mod codegen {
     pub mod IDLInterface {
-        //include!(concat!(env!("OUT_DIR"), "/GPUIDLInterfaceBindings.rs"));
+        include!(concat!(env!("OUT_DIR"), "/GPUIDLInterfaceBindings.rs"));
     }
     pub(crate) mod ConcreteInheritTypes {
         pub(crate) use crate::gpuerror::GPUError;
+        pub(crate) use crate::gpuinternalerror::GPUInternalError;
+        pub(crate) use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
         pub(crate) use crate::gpuvalidationerror::GPUValidationError;
         include!(concat!(env!("OUT_DIR"), "/GPUConcreteInheritTypes.rs"));
     }

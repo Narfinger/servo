@@ -78,7 +78,7 @@ impl GPURenderBundle {
     where
         D: DomTypes<GPURenderBundle = GPURenderBundle>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPURenderBundle::new_inherited(
                 render_bundle,
                 device,

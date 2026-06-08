@@ -85,7 +85,7 @@ impl GPUPipelineLayout {
     where
         D: DomTypes<GPUPipelineLayout = GPUPipelineLayout>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPUPipelineLayout::new_inherited(
                 channel,
                 pipeline_layout,

@@ -89,7 +89,7 @@ impl GPUBindGroup {
     where
         D: DomTypes<GPUBindGroup = GPUBindGroup>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPUBindGroup::new_inherited(
                 channel, bind_group, device, layout, label,
             )),

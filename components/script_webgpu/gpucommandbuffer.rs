@@ -73,7 +73,7 @@ impl GPUCommandBuffer {
     where
         D: DomTypes<GPUCommandBuffer = GPUCommandBuffer>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(GPUCommandBuffer::new_inherited(
                 channel,
                 command_buffer,

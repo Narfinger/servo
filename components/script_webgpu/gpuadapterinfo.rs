@@ -63,7 +63,7 @@ impl GPUAdapterInfo {
     where
         D: DomTypes<GPUAdapterInfo = GPUAdapterInfo>,
     {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+        reflect_dom_object_with_wrap::<D, _, _>(
             Box::new(Self::new_inherited(
                 vendor,
                 architecture,
