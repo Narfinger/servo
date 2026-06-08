@@ -12,6 +12,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_bindings::trace::RootedTraceableBox;
 use script_webgpu::datablock::DataBlock;
+use script_webgpu::traits::WebGPUGlobalTrait;
 use servo_base::generic_channel::GenericSharedMemory;
 use webgpu_traits::{Mapping, WebGPU, WebGPUBuffer, WebGPURequest};
 use wgpu_core::device::HostMap;
@@ -32,6 +33,28 @@ use crate::dom::types::GPUDevice;
 use crate::realms::InRealm;
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::{CanGc, JSContext};
+
+impl WebGPUGlobalTrait<crate::DomTypeHolder> for GlobalScope {
+    fn global(&self) -> GlobalScope {
+        self
+    }
+
+    fn wgpu_id_hub(&self) -> std::sync::Arc<script_webgpu::identityhub::IdentityHub> {
+        self.wgpu_id_hub()
+    }
+
+    fn pipeline_id(&self) -> servo_base::id::PipelineId {
+        self.pipeline_id()
+    }
+
+    fn get_cx() -> JSContext {
+        GlobalScope::get_cx()
+    }
+
+    fn script_to_constellation_chan(&self) -> () {
+        self.script_to_constellation_chan();
+    }
+}
 
 #[derive(JSTraceable, MallocSizeOf)]
 pub(crate) struct ActiveBufferMapping {
@@ -206,6 +229,8 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
         };
 
         // Step 3
+        todo!()
+        /*
         mapping.data.clear_views();
         // Step 5&7
         if let Err(e) = self.channel.0.send(WebGPURequest::UnmapBuffer {
@@ -222,6 +247,7 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
         }) {
             warn!("Failed to send Buffer unmap ({:?}) ({})", self.buffer.0, e);
         }
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-destroy>
@@ -329,6 +355,8 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
         // only mapping.range is mapped with mapping.range.start at 0
         // so we need to rebase range to mapped.range
         let rebased_offset = (offset - mapping.range.start) as usize;
+        todo!()
+        /*
         let result = mapping
             .data
             .view(rebased_offset..rebased_offset + range_size as usize, can_gc)
@@ -337,6 +365,7 @@ impl GPUBufferMethods<crate::DomTypeHolder> for GPUBuffer {
 
         self.mapping.borrow_mut().replace(mapping);
         result
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
@@ -418,7 +447,7 @@ impl GPUBuffer {
             },
             Ok(mut mapping) => {
                 // Step 5
-                mapping.data.load(&wgpu_mapping.data);
+                //mapping.data.load(&wgpu_mapping.data);
                 // Step 6
                 self.mapping.borrow_mut().replace(mapping);
                 // Step 7

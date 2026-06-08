@@ -47,9 +47,8 @@ fn main() {
             .unwrap();
         });
 
-    /*
     // Copy IDLInterface folder
-    let _ = std::fs::create_dir(out_dir.join("GPUIDLInterfaceBindings"));
+    let _ = std::fs::create_dir(out_dir.join("GIDLInterfaceBindings"));
     let script_concrete_bindings_out_dir = script_bindings_out_dir.join("IDLInterfaceBindings");
     println!(
         "cargo::rerun-if-changed={}",
@@ -59,14 +58,14 @@ fn main() {
         .unwrap()
         .filter_map(|res| res.map(|e| e.path()).ok())
         .filter(|path| path.is_file())
+        .filter(|path| path.to_string_lossy().contains("WebGPU"))
         .for_each(|file| {
             std::fs::copy(
                 &file,
                 out_dir
-                    .join("IDLInterfaceBindings")
+                    .join("GIDLInterfaceBindings")
                     .join(file.file_name().unwrap()),
             )
             .unwrap();
         });
-         */
 }

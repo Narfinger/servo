@@ -169,7 +169,7 @@ impl GPUAdapter {
         let is_fallback_adapter = info.device_type == wgpu_types::DeviceType::Cpu;
 
         // Step 1. Let adapterInfo be a new GPUAdapterInfo.
-        GPUAdapterInfo::new(
+        GPUAdapterInfo::new::<crate::DomTypeHolder>(
             global,
             vendor,
             architecture,
@@ -200,6 +200,7 @@ impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
         );
         let mut required_features = wgpu_types::Features::empty();
         for &ext in descriptor.requiredFeatures.iter() {
+            /*
             if let Some(feature) = gpu_to_wgt_feature(ext) {
                 required_features.insert(feature);
             } else {
@@ -209,16 +210,19 @@ impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
                 );
                 return promise;
             }
+             */
         }
 
         let mut required_limits = wgpu_types::Limits::default();
         if let Some(limits) = &descriptor.requiredLimits {
             for (limit, value) in (*limits).iter() {
+                /*
                 if !set_limit(&mut required_limits, &limit.str(), *value) {
                     warn!("Unknown GPUDevice limit: {limit}");
                     promise.reject_error(Error::Operation(None), can_gc);
                     return promise;
                 }
+                 */
             }
         }
 

@@ -82,8 +82,24 @@ def main() -> None:
     make_dir(doc_servo)
     generate(config, "SupportedDomApis", os.path.join(doc_servo, "apis.html"))
 
+    descriptors: list[str] = []
+    for file in webidls:
+        for desc in config.getDescriptors(webIDLFile=file,
+                                                hasInterfaceObject=True):
+            descriptors.append(desc.name)
+        for desc in config.getDescriptors(webIDLFile=file,
+                                                     hasInterfaceObject=False,
+                                                     isCallback=False,
+                                                     register=True):
+            descriptors.append(desc.name)
+    all_interface_descriptors = set(descriptors) - set(config.sub_crates["script_webgpu"])
+
+
+
     build_concrete_inherit_types(config, out_dir)
-    build_idl(config, out_dir, webidls_dir, webidls)
+    build_idl(config, out_dir, webidls_dir, webidls, all_interface_descriptors)
+
+
 
     for webidl in webidls:
         filename = os.path.join(webidls_dir, webidl)
@@ -94,18 +110,28 @@ def main() -> None:
                 f.write(module.encode("utf-8"))
 
         prefix = "ConcreteBindings/%sBinding" % webidl[:-len(".webidl")]
-        module = CGConcreteBindingRoot(config, prefix, filename, None).define()
+        module = CGConcreteBindingRoot(config, prefix, filename, all_interface_descriptors).define()
         if module:
             with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
                 f.write(module.encode("utf-8"))
 
-def build_idl(config: Configuration, out_dir: str, webidls_dir: str, webidls:list[str]) -> None:
+
+def build_idl(config: Configuration, out_dir: str, webidls_dir: str, webidls:list[str], all_interface_descriptors: set[str]) -> None:
     from codegen import CGIDLInterfaceBindingRoot
     #other_bindings = set(webidls) - set(config.idl_crates.values())
     for webidl in webidls:
         filename = os.path.join(webidls_dir, webidl)
         prefix = "IDLInterfaceBindings/%sBinding" % webidl[:-len(".webidl")]
-        module = CGIDLInterfaceBindingRoot(config, prefix, filename).define()
+        module = CGIDLInterfaceBindingRoot(config, prefix, filename, all_interface_descriptors).define()
+        if module:
+            with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
+                f.write(module.encode("utf-8"))
+
+    for webidl in webidls:
+        filename = os.path.join(webidls_dir, webidl)
+        prefix = "GIDLInterfaceBindings/%sBinding" % webidl[:-len(".webidl")]
+        make_dir(os.path.join(out_dir, "GIDLInterfaceBindings"))
+        module = CGIDLInterfaceBindingRoot(config, prefix, filename, set(item for item in config.sub_crates["script_webgpu"])).define()
         if module:
             with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
                 f.write(module.encode("utf-8"))

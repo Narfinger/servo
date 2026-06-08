@@ -18,7 +18,7 @@ use script_bindings::str::DOMString;
 use crate::gpuerror::GPUError;
 
 #[dom_struct]
-pub(crate) struct GPUOutOfMemoryError {
+pub struct GPUOutOfMemoryError {
     gpu_error: GPUError,
 }
 

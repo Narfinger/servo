@@ -415,6 +415,7 @@ impl ExtractedBody {
         //  from `components::script` to `components::net`.
         let (chunk_request_sender, chunk_request_receiver) = ipc::channel().unwrap();
 
+        /*
         let trusted_stream = Trusted::new(&*stream);
 
         let global = stream.global();
@@ -474,6 +475,8 @@ impl ExtractedBody {
 
         // Also return the stream for this body, which can be used by script to consume it.
         (request_body, stream)
+         */
+        todo!();
     }
 
     /// Is the data of the stream of this extracted body available in memory?
@@ -829,6 +832,8 @@ fn run_package_data_algorithm(
     let mime = &*mime_type;
     let realm = CurrentRealm::assert(cx);
     let global = GlobalScope::from_current_realm(&realm);
+    todo!()
+    /*
     match body_type {
         BodyType::Text => run_text_data_algorithm(bytes),
         BodyType::Json => run_json_data_algorithm(cx, bytes),
@@ -837,6 +842,7 @@ fn run_package_data_algorithm(
         BodyType::ArrayBuffer => run_array_buffer_data_algorithm(cx, bytes),
         BodyType::Bytes => run_bytes_data_algorithm(cx, bytes),
     }
+     */
 }
 
 /// <https://fetch.spec.whatwg.org/#ref-for-concept-body-consume-body%E2%91%A4>
@@ -1060,7 +1066,7 @@ fn run_form_data_algorithm(
         // Return a new FormData object, appending each entry, resulting from the parsing operation, to its entry list.
         let formdata = FormData::new(None, root, CanGc::from_cx(cx));
 
-        append_multipart_nodes(cx, root, &formdata, nodes)?;
+        //append_multipart_nodes(cx, root, &formdata, nodes)?;
 
         return Ok(FetchedData::FormData(formdata));
     }

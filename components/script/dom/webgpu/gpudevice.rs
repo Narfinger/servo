@@ -13,6 +13,7 @@ use script_bindings::cformat;
 use script_bindings::reflector::reflect_dom_object;
 use script_webgpu::gpuadapterinfo::GPUAdapterInfo;
 use script_webgpu::gpudevicelostinfo::GPUDeviceLostInfo;
+use script_webgpu::gpupipelinelayout::GPUPipelineLayout;
 use script_webgpu::gpusampler::GPUSampler;
 use script_webgpu::gpusupportedfeatures::GPUSupportedFeatures;
 use script_webgpu::gpusupportedlimits::GPUSupportedLimits;
@@ -159,7 +160,7 @@ impl GPUDevice {
         can_gc: CanGc,
     ) -> DomRoot<Self> {
         let queue = GPUQueue::new(global, channel.clone(), queue, can_gc);
-        let limits = GPUSupportedLimits::new(global, limits, can_gc);
+        let limits = GPUSupportedLimits::new::<crate::DomTypeHolder>(global, limits, can_gc);
         let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
         let adapter_info = GPUAdapterInfo::clone_from(global, &adapter.Info(), can_gc);
         let lost_promise = Promise::new(global, can_gc);
@@ -215,7 +216,7 @@ impl GPUDevice {
         self.global().task_manager().webgpu_task_source().queue(
             task!(fire_uncaptured_error: move |cx| {
                 let this = this.root();
-                let error = GPUError::from_error(&this.global(), error, CanGc::from_cx(cx));
+                let error = GPUError::from_error::<crate::DomTypeHolder>(&this.global(), error, CanGc::from_cx(cx));
 
                 let event = GPUUncapturedErrorEvent::new(
                     &this.global(),
@@ -395,7 +396,7 @@ impl GPUDevice {
                 let this = this.root();
 
                 let lost_promise = &(*this.lost_promise.borrow());
-                let lost = GPUDeviceLostInfo::new(&this.global(), msg.into(), reason, CanGc::deprecated_note());
+                let lost = GPUDeviceLostInfo::new::<crate::DomTypeHolder>(&this.global(), msg.into(), reason, CanGc::deprecated_note());
                 lost_promise.resolve_native(&*lost, CanGc::deprecated_note());
             }),
         );
@@ -521,7 +522,7 @@ impl GPUDeviceMethods<crate::DomTypeHolder> for GPUDevice {
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createsampler>
     fn CreateSampler(&self, descriptor: &GPUSamplerDescriptor) -> DomRoot<GPUSampler> {
-        GPUSampler::create(self, descriptor, CanGc::deprecated_note())
+        GPUSampler::create::<crate::DomTypeHolder>(self, descriptor, CanGc::deprecated_note())
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
@@ -638,7 +639,11 @@ impl RoutedPromiseListener<WebGPUPoppedErrorScopeResponse> for GPUDevice {
             },
             Err(PopError::Empty) => promise.reject_error_with_cx(cx, Error::Operation(None)),
             Ok(Some(error)) => {
-                let error = GPUError::from_error(&self.global(), error, CanGc::from_cx(cx));
+                let error = GPUError::from_error::<crate::DomTypeHolder>(
+                    &self.global(),
+                    error,
+                    CanGc::from_cx(cx),
+                );
                 promise.resolve_native_with_cx(cx, &error);
             },
         }

@@ -7,6 +7,7 @@ use std::rc::Rc;
 use dom_struct::dom_struct;
 use js::jsapi::HandleObject;
 use js::realm::CurrentRealm;
+use script_bindings::realms::InRealm;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
 use script_webgpu::wgsllanguagefeatures::WGSLLanguageFeatures;
 use servo_constellation_traits::ScriptToConstellationMessage;
@@ -51,9 +52,12 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-requestadapter>
     fn RequestAdapter(
         &self,
-        cx: &mut CurrentRealm,
         options: &GPURequestAdapterOptions,
+        cx: &mut InRealm,
+        can_gc: CanGc,
     ) -> Rc<Promise> {
+        todo!()
+        /*
         let global = &self.global();
         // 1. Let promise be a new promise.
         let promise = Promise::new_in_realm(cx);
@@ -105,6 +109,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
         }
         // 4. Return promise
         promise
+         */
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpu-getpreferredcanvasformat>
@@ -118,12 +123,14 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
     }
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpu-wgsllanguagefeatures>
-    fn WgslLanguageFeatures(
-        &self,
-        cx: &mut js::context::JSContext,
-    ) -> DomRoot<WGSLLanguageFeatures> {
-        self.wgsl_language_features
-            .or_init(|| WGSLLanguageFeatures::new(&self.global(), None, CanGc::deprecated_note()))
+    fn WgslLanguageFeatures(&self, can_gc: CanGc) -> DomRoot<WGSLLanguageFeatures> {
+        self.wgsl_language_features.or_init(|| {
+            WGSLLanguageFeatures::new::<crate::DomTypeHolder>(
+                &self.global(),
+                None,
+                CanGc::deprecated_note(),
+            )
+        })
     }
 }
 

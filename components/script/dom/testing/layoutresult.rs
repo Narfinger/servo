@@ -5,6 +5,7 @@ use dom_struct::dom_struct;
 use js::gc::MutableHandleValue;
 use script_bindings::domstring::DOMString;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
+use script_foo::to_frozen_array;
 
 use crate::dom::bindings::codegen::Bindings::ServoTestUtilsBinding::LayoutResultMethods;
 use crate::dom::bindings::import::base::SafeJSContext;
