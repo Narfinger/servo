@@ -47,9 +47,9 @@ fn main() {
             .unwrap();
         });
 
-    // Copy IDLInterface folder
     /*
-    let _ = std::fs::create_dir(out_dir.join("IDLInterfaceBindings"));
+    // Copy IDLInterface folder
+    let _ = std::fs::create_dir(out_dir.join("GPUIDLInterfaceBindings"));
     let script_concrete_bindings_out_dir = script_bindings_out_dir.join("IDLInterfaceBindings");
     println!(
         "cargo::rerun-if-changed={}",

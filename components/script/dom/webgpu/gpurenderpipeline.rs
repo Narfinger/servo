@@ -3,19 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use dom_struct::dom_struct;
-use jstraceable_derive::JSTraceable;
-use log::warn;
-use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPURenderPipelineMethods, GPURenderPipelineWrap,
-};
-use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
-use script_bindings::root::{Dom, DomRoot};
-use script_bindings::script_runtime::CanGc;
-use script_bindings::str::USVString;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
 use servo_base::generic_channel::GenericCallback;
 use webgpu_traits::{
     WebGPU, WebGPUBindGroupLayout, WebGPURenderPipeline, WebGPURenderPipelineResponse,
@@ -23,8 +12,15 @@ use webgpu_traits::{
 };
 use wgpu_core::pipeline::RenderPipelineDescriptor;
 
-use crate::gpubindgrouplayout::GPUBindGroupLayout;
-use crate::traits::WebGPUGlobalTrait;
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPURenderPipelineMethods;
+use crate::dom::bindings::error::Fallible;
+use crate::dom::bindings::reflector::DomGlobal;
+use crate::dom::bindings::root::{Dom, DomRoot};
+use crate::dom::bindings::str::USVString;
+use crate::dom::globalscope::GlobalScope;
+use crate::dom::webgpu::gpubindgrouplayout::GPUBindGroupLayout;
+use crate::dom::webgpu::gpudevice::GPUDevice;
+use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPURenderPipeline {
@@ -58,14 +54,11 @@ pub(crate) struct GPURenderPipeline {
 }
 
 impl GPURenderPipeline {
-    fn new_inherited<D>(
+    fn new_inherited(
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
         device: &GPUDevice,
-    ) -> Self
-    where
-        D: DomTypes<GPURenderPipeline = GPURenderPipeline>,
-    {
+    ) -> Self {
         Self {
             reflector_: Reflector::new(),
             label: DomRefCell::new(label),
@@ -77,25 +70,21 @@ impl GPURenderPipeline {
         }
     }
 
-    pub(crate) fn new<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new(
+        global: &GlobalScope,
         render_pipeline: WebGPURenderPipeline,
         label: USVString,
         device: &GPUDevice,
         can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<GPURenderPipeline = GPURenderPipeline>,
-    {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
-            Box::new(GPURenderPipeline::new_inherited::<D>(
+    ) -> DomRoot<Self> {
+        reflect_dom_object(
+            Box::new(GPURenderPipeline::new_inherited(
                 render_pipeline,
                 label,
                 device,
             )),
             global,
             can_gc,
-            GPURenderPipelineWrap::<D>,
         )
     }
 }
@@ -106,16 +95,12 @@ impl GPURenderPipeline {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createrenderpipeline>
-    pub(crate) fn create<D>(
+    pub(crate) fn create(
         device: &GPUDevice,
         descriptor: RenderPipelineDescriptor<'static>,
         async_sender: Option<GenericCallback<WebGPURenderPipelineResponse>>,
-    ) -> Fallible<WebGPURenderPipeline>
-    where
-        D: DomTypes,
-        GPUDevice: WebGPUGlobalTrait<D>,
-    {
-        let render_pipeline_id = device.wgpu_id_hub().create_render_pipeline_id();
+    ) -> Fallible<WebGPURenderPipeline> {
+        let render_pipeline_id = device.global().wgpu_id_hub().create_render_pipeline_id();
 
         device
             .channel()
@@ -132,11 +117,7 @@ impl GPURenderPipeline {
     }
 }
 
-impl<D> GPURenderPipelineMethods<D> for GPURenderPipeline
-where
-    D: DomTypes<GPUBindGroupLayout = GPUBindGroupLayout>,
-    GPURenderPipeline: WebGPUGlobalTrait<D>,
-{
+impl GPURenderPipelineMethods<crate::DomTypeHolder> for GPURenderPipeline {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -149,7 +130,7 @@ where
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelinebase-getbindgrouplayout>
     fn GetBindGroupLayout(&self, index: u32) -> Fallible<DomRoot<GPUBindGroupLayout>> {
-        let id = self.wgpu_id_hub().create_bind_group_layout_id();
+        let id = self.global().wgpu_id_hub().create_bind_group_layout_id();
 
         if let Err(e) = self
             .droppable
@@ -165,7 +146,7 @@ where
             warn!("Failed to send WebGPURequest::RenderGetBindGroupLayout {e:?}");
         }
 
-        Ok(GPUBindGroupLayout::new::<D>(
+        Ok(GPUBindGroupLayout::new(
             &self.global(),
             self.droppable.channel.clone(),
             WebGPUBindGroupLayout(id),

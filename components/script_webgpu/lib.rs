@@ -4,8 +4,6 @@
 
 pub mod datablock;
 pub mod gpuadapterinfo;
-pub mod gpubindgroup;
-pub mod gpubindgrouplayout;
 pub mod gpubufferusage;
 pub mod gpucolorwrite;
 pub mod gpucommandbuffer;
@@ -44,7 +42,8 @@ pub(crate) mod dom {
 #[allow(missing_docs, non_snake_case)]
 pub(crate) mod codegen {
     pub mod IDLInterface {
-        include!(concat!(env!("OUT_DIR"), "/GPUIDLInterfaceBindings.rs"));
+
+        //include!(concat!(env!("OUT_DIR"), "/GPUIDLInterfaceBindings.rs"));
     }
     pub(crate) mod ConcreteInheritTypes {
         pub(crate) use crate::gpuerror::GPUError;
@@ -55,7 +54,57 @@ pub(crate) mod codegen {
     }
 }
 
+use std::ptr;
+
 pub(crate) use js::gc::Traceable as JSTraceable;
+use script_bindings::codegen::PrototypeList;
+use script_bindings::conversions::IDLInterface;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 pub(crate) use script_bindings::trace::CustomTraceable;
+use script_bindings::utils::DOMClass;
+
+use crate::gpuerror::GPUError;
+use crate::gpuinternalerror::GPUInternalError;
+use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
+use crate::gpuvalidationerror::GPUValidationError;
+
+impl IDLInterface for GPUOutOfMemoryError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUOutOfMemoryError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 350;
+    const PROTO_LAST: u16 = 350;
+}
+impl IDLInterface for GPUValidationError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUValidationError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 351;
+    const PROTO_LAST: u16 = 351;
+}
+impl IDLInterface for GPUInternalError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        ptr::eq(class, unsafe {
+            &crate::dom::bindings::codegen::GenericBindings::WebGPUBinding::GPUInternalError_Binding::Class.get().dom_class
+        })
+    }
+    const PROTO_FIRST: u16 = 349;
+    const PROTO_LAST: u16 = 349;
+}
+
+impl IDLInterface for GPUError {
+    #[inline]
+    fn derives(class: &'static DOMClass) -> bool {
+        class.interface_chain[0] == PrototypeList::ID::GPUError
+    }
+    const PROTO_FIRST: u16 = 348;
+    const PROTO_LAST: u16 = 351;
+}

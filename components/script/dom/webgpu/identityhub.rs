@@ -63,7 +63,7 @@ impl Default for IdentityHub {
 }
 
 impl IdentityHub {
-    pub fn create_device_id(&self) -> DeviceId {
+    pub(crate) fn create_device_id(&self) -> DeviceId {
         self.devices.process()
     }
 
@@ -71,7 +71,7 @@ impl IdentityHub {
         self.devices.free(id);
     }
 
-    pub fn create_queue_id(&self) -> QueueId {
+    pub(crate) fn create_queue_id(&self) -> QueueId {
         self.queues.process()
     }
 
@@ -79,7 +79,7 @@ impl IdentityHub {
         self.queues.free(id);
     }
 
-    pub fn create_adapter_id(&self) -> AdapterId {
+    pub(crate) fn create_adapter_id(&self) -> AdapterId {
         self.adapters.process()
     }
 
@@ -87,7 +87,7 @@ impl IdentityHub {
         self.adapters.free(id);
     }
 
-    pub fn create_buffer_id(&self) -> BufferId {
+    pub(crate) fn create_buffer_id(&self) -> BufferId {
         self.buffers.process()
     }
 

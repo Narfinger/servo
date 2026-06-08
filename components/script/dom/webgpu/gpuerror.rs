@@ -4,22 +4,16 @@
 
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
-use jstraceable_derive::JSTraceable;
-use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUErrorFilter, GPUErrorMethods, GPUErrorWrap,
-};
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap_and_proto};
-use script_bindings::root::DomRoot;
-use script_bindings::script_runtime::CanGc;
-use script_bindings::str::DOMString;
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use webgpu_traits::{Error, ErrorFilter};
 
-use crate::gpuconvert::WebGPUConvert;
-use crate::gpuinternalerror::GPUInternalError;
-use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
-use crate::gpuvalidationerror::GPUValidationError;
+use crate::conversions::Convert;
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{GPUErrorFilter, GPUErrorMethods};
+use crate::dom::bindings::root::DomRoot;
+use crate::dom::bindings::str::DOMString;
+use crate::dom::globalscope::GlobalScope;
+use crate::dom::types::{GPUInternalError, GPUOutOfMemoryError, GPUValidationError};
+use crate::script_runtime::CanGc;
 
 #[dom_struct]
 pub(crate) struct GPUError {
@@ -36,62 +30,39 @@ impl GPUError {
     }
 
     #[expect(dead_code)]
-    pub(crate) fn new<D>(
-        global: &D::GlobalScope,
-        message: DOMString,
-        can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<GPUError = GPUError>,
-    {
-        Self::new_with_proto::<D>(global, None, message, can_gc)
+    pub(crate) fn new(global: &GlobalScope, message: DOMString, can_gc: CanGc) -> DomRoot<Self> {
+        Self::new_with_proto(global, None, message, can_gc)
     }
 
-    pub(crate) fn new_with_proto<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new_with_proto(
+        global: &GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<GPUError = GPUError>,
-    {
-        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
+    ) -> DomRoot<Self> {
+        reflect_dom_object_with_proto(
             Box::new(GPUError::new_inherited(message)),
             global,
             proto,
             can_gc,
-            GPUErrorWrap::<D>,
         )
     }
 
-    pub(crate) fn from_error<D>(
-        global: &D::GlobalScope,
-        error: Error,
-        can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<
-                GPUError = GPUError,
-                GPUValidationError = GPUValidationError,
-                GPUOutOfMemoryError = GPUOutOfMemoryError,
-                GPUInternalError = GPUInternalError,
-            >,
-    {
+    pub(crate) fn from_error(global: &GlobalScope, error: Error, can_gc: CanGc) -> DomRoot<Self> {
         match error {
-            Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto::<D>(
+            Error::Validation(msg) => DomRoot::upcast(GPUValidationError::new_with_proto(
                 global,
                 None,
                 msg.into(),
                 can_gc,
             )),
-            Error::OutOfMemory(msg) => DomRoot::upcast(GPUOutOfMemoryError::new_with_proto::<D>(
+            Error::OutOfMemory(msg) => DomRoot::upcast(GPUOutOfMemoryError::new_with_proto(
                 global,
                 None,
                 msg.into(),
                 can_gc,
             )),
-            Error::Internal(msg) => DomRoot::upcast(GPUInternalError::new_with_proto::<D>(
+            Error::Internal(msg) => DomRoot::upcast(GPUInternalError::new_with_proto(
                 global,
                 None,
                 msg.into(),
@@ -101,14 +72,14 @@ impl GPUError {
     }
 }
 
-impl<D: DomTypes> GPUErrorMethods<D> for GPUError {
+impl GPUErrorMethods<crate::DomTypeHolder> for GPUError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuerror-message>
     fn Message(&self) -> DOMString {
         self.message.clone()
     }
 }
 
-impl WebGPUConvert<GPUErrorFilter> for ErrorFilter {
+impl Convert<GPUErrorFilter> for ErrorFilter {
     fn convert(self) -> GPUErrorFilter {
         match self {
             ErrorFilter::Validation => GPUErrorFilter::Validation,

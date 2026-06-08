@@ -6,28 +6,31 @@ use std::rc::Rc;
 
 use dom_struct::dom_struct;
 use js::jsapi::{HandleObject, Heap, JSObject};
-use jstraceable_derive::JSTraceable;
-use log::warn;
-use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUAdapterMethods, GPUAdapterWrap, GPUDeviceDescriptor,
-};
-use script_bindings::error::Error;
+use script_bindings::cformat;
 use script_bindings::like::Setlike;
-use script_bindings::realms::InRealm;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
-use script_bindings::root::{Dom, DomRoot};
-use script_bindings::script_runtime::CanGc;
-use script_bindings::str::DOMString;
-use script_bindings::{DomTypes, cformat};
-use webgpu_traits::{WebGPU, WebGPUAdapter, WebGPURequest};
-use wgpu_types::{AdapterInfo, ExperimentalFeatures, MemoryHints};
+use script_bindings::reflector::{Reflector, reflect_dom_object};
+use webgpu_traits::{
+    RequestDeviceError, WebGPU, WebGPUAdapter, WebGPUDeviceResponse, WebGPURequest,
+};
+use wgpu_types::{self, AdapterInfo, ExperimentalFeatures, MemoryHints};
 
 use super::gpusupportedfeatures::GPUSupportedFeatures;
-use crate::gpuadapterinfo::GPUAdapterInfo;
-use crate::gpusupportedfeatures::gpu_to_wgt_feature;
-use crate::gpusupportedlimits::{GPUSupportedLimits, set_limit};
-use crate::traits::{WebGPUGlobalTrait, WebGPUPromise};
+use super::gpusupportedlimits::set_limit;
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
+    GPUAdapterMethods, GPUDeviceDescriptor, GPUDeviceLostReason,
+};
+use crate::dom::bindings::error::Error;
+use crate::dom::bindings::reflector::DomGlobal;
+use crate::dom::bindings::root::{Dom, DomRoot};
+use crate::dom::bindings::str::DOMString;
+use crate::dom::globalscope::GlobalScope;
+use crate::dom::promise::Promise;
+use crate::dom::types::{GPUAdapterInfo, GPUSupportedLimits};
+use crate::dom::webgpu::gpudevice::GPUDevice;
+use crate::dom::webgpu::gpusupportedfeatures::gpu_to_wgt_feature;
+use crate::realms::InRealm;
+use crate::routed_promise::{RoutedPromiseListener, callback_promise};
+use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUAdapter {
@@ -85,8 +88,8 @@ impl GPUAdapter {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn new<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new(
+        global: &GlobalScope,
         channel: WebGPU,
         name: DOMString,
         extensions: HandleObject,
@@ -95,41 +98,28 @@ impl GPUAdapter {
         info: wgpu_types::AdapterInfo,
         adapter: WebGPUAdapter,
         can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<
-                GPUAdapterInfo = GPUAdapterInfo,
-                GPUSupportedFeatures = GPUSupportedFeatures,
-                GPUSupportedLimits = GPUSupportedLimits,
-                GPUAdapter = GPUAdapter,
-            >,
-    {
-        let features =
-            GPUSupportedFeatures::Constructor::<D>(global, None, features, can_gc).unwrap();
-        let limits = GPUSupportedLimits::new::<D>(global, limits, can_gc);
-        let info = GPUAdapter::create_adapter_info::<D>(global, info, &features, can_gc);
-        let dom_root = reflect_dom_object_with_wrap::<D, _, _, _>(
+    ) -> DomRoot<Self> {
+        let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
+        let limits = GPUSupportedLimits::new(global, limits, can_gc);
+        let info = GPUAdapter::create_adapter_info(global, info, &features, can_gc);
+        let dom_root = reflect_dom_object(
             Box::new(GPUAdapter::new_inherited(
                 channel, name, &features, &limits, &info, adapter,
             )),
             global,
             can_gc,
-            GPUAdapterWrap::<D>,
         );
         dom_root.extensions.set(*extensions);
         dom_root
     }
 
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-new-adapter-info>
-    fn create_adapter_info<D>(
-        global: &D::GlobalScope,
+    fn create_adapter_info(
+        global: &GlobalScope,
         info: AdapterInfo,
         features: &GPUSupportedFeatures,
         can_gc: CanGc,
-    ) -> DomRoot<GPUAdapterInfo>
-    where
-        D: DomTypes<GPUAdapterInfo = GPUAdapterInfo, GPUAdapter = GPUAdapter>,
-    {
+    ) -> DomRoot<GPUAdapterInfo> {
         // Step 2. If the vendor is known, set adapterInfo.vendor to the name of adapter’s vendor as
         // a normalized identifier string. To preserve privacy, the user agent may instead set
         // adapterInfo.vendor to the empty string or a reasonable approximation of the vendor as a
@@ -179,7 +169,7 @@ impl GPUAdapter {
         let is_fallback_adapter = info.device_type == wgpu_types::DeviceType::Cpu;
 
         // Step 1. Let adapterInfo be a new GPUAdapterInfo.
-        GPUAdapterInfo::new::<D>(
+        GPUAdapterInfo::new(
             global,
             vendor,
             architecture,
@@ -193,25 +183,16 @@ impl GPUAdapter {
     }
 }
 
-impl<D> GPUAdapterMethods<D> for GPUAdapter
-where
-    D: DomTypes<
-            GPUSupportedFeatures = GPUSupportedFeatures,
-            GPUSupportedLimits = GPUSupportedLimits,
-            GPUAdapterInfo = GPUAdapterInfo,
-        >,
-    D::Promise: WebGPUPromise,
-    GPUAdapter: WebGPUGlobalTrait<D>,
-{
+impl GPUAdapterMethods<crate::DomTypeHolder> for GPUAdapter {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuadapter-requestdevice>
     fn RequestDevice(
         &self,
         descriptor: &GPUDeviceDescriptor,
         comp: InRealm,
         can_gc: CanGc,
-    ) -> Rc<D::Promise> {
+    ) -> Rc<Promise> {
         // Step 2
-        let promise = D::Promise::new_in_current_realm(comp, can_gc);
+        let promise = Promise::new_in_current_realm(comp, can_gc);
         let callback = callback_promise(
             &promise,
             self,
@@ -249,9 +230,9 @@ where
             trace: wgpu_types::Trace::Off,
             experimental_features: ExperimentalFeatures::disabled(),
         };
-        let device_id = self.wgpu_id_hub().create_device_id();
-        let queue_id = self.wgpu_id_hub().create_queue_id();
-        let pipeline_id = self.pipeline_id();
+        let device_id = self.global().wgpu_id_hub().create_device_id();
+        let queue_id = self.global().wgpu_id_hub().create_queue_id();
+        let pipeline_id = self.global().pipeline_id();
         if self
             .droppable
             .channel
@@ -287,9 +268,6 @@ where
         DomRoot::from_ref(&self.info)
     }
 }
-
-/*
- * TODO
 
 impl RoutedPromiseListener<WebGPUDeviceResponse> for GPUAdapter {
     /// <https://www.w3.org/TR/webgpu/#dom-gpuadapter-requestdevice>
@@ -358,4 +336,3 @@ impl RoutedPromiseListener<WebGPUDeviceResponse> for GPUAdapter {
         }
     }
 }
-*/

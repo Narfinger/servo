@@ -4,77 +4,67 @@
 
 use dom_struct::dom_struct;
 use js::rust::HandleObject;
-use jstraceable_derive::JSTraceable;
-use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUPipelineErrorInit, GPUPipelineErrorMethods, GPUPipelineErrorReason, GPUPipelineErrorWrap,
+use script_bindings::reflector::reflect_dom_object_with_proto;
+
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
+    GPUPipelineErrorInit, GPUPipelineErrorMethods, GPUPipelineErrorReason,
 };
-use script_bindings::reflector::reflect_dom_object_with_wrap_and_proto;
-use script_bindings::root::DomRoot;
-use script_bindings::script_runtime::CanGc;
-use script_bindings::str::DOMString;
+use crate::dom::bindings::root::DomRoot;
+use crate::dom::bindings::str::DOMString;
+use crate::dom::domexception::DOMException;
+use crate::dom::globalscope::GlobalScope;
+use crate::script_runtime::CanGc;
 
 /// <https://gpuweb.github.io/gpuweb/#gpupipelineerror>
 #[dom_struct]
 pub(crate) struct GPUPipelineError {
-    //exception: DOMException,
+    exception: DOMException,
     reason: GPUPipelineErrorReason,
 }
 
 impl GPUPipelineError {
     fn new_inherited(message: DOMString, reason: GPUPipelineErrorReason) -> Self {
         Self {
-            //      exception: DOMException::new_inherited(message, "GPUPipelineError".into()),
+            exception: DOMException::new_inherited(message, "GPUPipelineError".into()),
             reason,
         }
     }
 
-    pub(crate) fn new_with_proto<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new_with_proto(
+        global: &GlobalScope,
         proto: Option<HandleObject>,
         message: DOMString,
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<GPUPipelineError = GPUPipelineError>,
-    {
-        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
+    ) -> DomRoot<Self> {
+        reflect_dom_object_with_proto(
             Box::new(Self::new_inherited(message, reason)),
             global,
             proto,
             can_gc,
-            GPUPipelineErrorWrap::<D>,
         )
     }
 
-    pub(crate) fn new<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new(
+        global: &GlobalScope,
         message: DOMString,
         reason: GPUPipelineErrorReason,
         can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<GPUPipelineError = GPUPipelineError>,
-    {
-        Self::new_with_proto::<D>(global, None, message, reason, can_gc)
+    ) -> DomRoot<Self> {
+        Self::new_with_proto(global, None, message, reason, can_gc)
     }
 }
 
-impl<D> GPUPipelineErrorMethods<D> for GPUPipelineError
-where
-    D: DomTypes<GPUPipelineError = GPUPipelineError>,
-{
+impl GPUPipelineErrorMethods<crate::DomTypeHolder> for GPUPipelineError {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-constructor>
     fn Constructor(
-        global: &D::GlobalScope,
+        global: &GlobalScope,
         proto: Option<HandleObject>,
         can_gc: CanGc,
         message: DOMString,
         options: &GPUPipelineErrorInit,
     ) -> DomRoot<Self> {
-        Self::new_with_proto::<D>(global, proto, message, options.reason, can_gc)
+        Self::new_with_proto(global, proto, message, options.reason, can_gc)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpupipelineerror-reason>

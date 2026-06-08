@@ -5,78 +5,77 @@
 use dom_struct::dom_struct;
 use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object};
-use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTextureView};
+use webgpu_traits::{WebGPU, WebGPUDevice, WebGPURenderBundle, WebGPURequest};
 
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUTextureViewMethods;
-use crate::dom::bindings::root::{Dom, DomRoot};
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPURenderBundleMethods;
+use crate::dom::bindings::root::DomRoot;
 use crate::dom::bindings::str::USVString;
 use crate::dom::globalscope::GlobalScope;
-use crate::dom::webgpu::gputexture::GPUTexture;
 use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
-struct DroppableGPUTextureView {
-    #[ignore_malloc_size_of = "defined in webgpu"]
+struct DroppableGPURenderBundle {
     #[no_trace]
     channel: WebGPU,
     #[no_trace]
-    texture_view: WebGPUTextureView,
+    render_bundle: WebGPURenderBundle,
 }
 
-impl Drop for DroppableGPUTextureView {
+impl Drop for DroppableGPURenderBundle {
     fn drop(&mut self) {
         if let Err(e) = self
             .channel
             .0
-            .send(WebGPURequest::DropTextureView(self.texture_view.0))
+            .send(WebGPURequest::DropRenderBundle(self.render_bundle.0))
         {
             warn!(
-                "Failed to send DropTextureView ({:?}) ({})",
-                self.texture_view.0, e
+                "Failed to send DropRenderBundle ({:?}) ({})",
+                self.render_bundle.0, e
             );
         }
     }
 }
 
 #[dom_struct]
-pub(crate) struct GPUTextureView {
+pub(crate) struct GPURenderBundle {
     reflector_: Reflector,
+    #[no_trace]
+    device: WebGPUDevice,
     label: DomRefCell<USVString>,
-    texture: Dom<GPUTexture>,
-    droppable: DroppableGPUTextureView,
+    droppable: DroppableGPURenderBundle,
 }
 
-impl GPUTextureView {
+impl GPURenderBundle {
     fn new_inherited(
+        render_bundle: WebGPURenderBundle,
+        device: WebGPUDevice,
         channel: WebGPU,
-        texture_view: WebGPUTextureView,
-        texture: &GPUTexture,
         label: USVString,
-    ) -> GPUTextureView {
+    ) -> Self {
         Self {
             reflector_: Reflector::new(),
-            texture: Dom::from_ref(texture),
+            device,
             label: DomRefCell::new(label),
-            droppable: DroppableGPUTextureView {
+            droppable: DroppableGPURenderBundle {
                 channel,
-                texture_view,
+                render_bundle,
             },
         }
     }
 
     pub(crate) fn new(
         global: &GlobalScope,
+        render_bundle: WebGPURenderBundle,
+        device: WebGPUDevice,
         channel: WebGPU,
-        texture_view: WebGPUTextureView,
-        texture: &GPUTexture,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<GPUTextureView> {
+    ) -> DomRoot<Self> {
         reflect_dom_object(
-            Box::new(GPUTextureView::new_inherited(
+            Box::new(GPURenderBundle::new_inherited(
+                render_bundle,
+                device,
                 channel,
-                texture_view,
-                texture,
                 label,
             )),
             global,
@@ -85,13 +84,13 @@ impl GPUTextureView {
     }
 }
 
-impl GPUTextureView {
-    pub(crate) fn id(&self) -> WebGPUTextureView {
-        self.droppable.texture_view
+impl GPURenderBundle {
+    pub(crate) fn id(&self) -> WebGPURenderBundle {
+        self.droppable.render_bundle
     }
 }
 
-impl GPUTextureViewMethods<crate::DomTypeHolder> for GPUTextureView {
+impl GPURenderBundleMethods<crate::DomTypeHolder> for GPURenderBundle {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()

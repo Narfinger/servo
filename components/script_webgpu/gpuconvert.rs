@@ -26,6 +26,7 @@ use wgpu_core::resource::TextureDescriptor;
 use wgpu_types::{self, AstcBlock, AstcChannel};
 
 use crate::gpusampler::GPUSampler;
+use crate::traits::{GPUBufferTrait, GPUDeviceTrait, GPUTextureTrait, GPUTextureViewTrait};
 
 /// A version of the `Into<T>` trait from the standard library that can be used
 /// to convert between two types that are not defined in the script crate.
@@ -507,18 +508,6 @@ impl WebGPUConvert<wgpu_types::StencilOperation> for GPUStencilOperation {
     }
 }
 
-impl<D> WebGPUConvert<wgpu_com::TexelCopyBufferInfo> for &GPUTexelCopyBufferInfo<D>
-where
-    D: DomTypes,
-{
-    fn convert(self) -> wgpu_com::TexelCopyBufferInfo {
-        wgpu_com::TexelCopyBufferInfo {
-            buffer: self.buffer.id().0,
-            layout: self.parent.convert(),
-        }
-    }
-}
-
 impl WebGPUTryConvert<wgpu_types::Origin3d> for &GPUOrigin3D {
     type Error = Error;
 
@@ -547,31 +536,6 @@ impl WebGPUTryConvert<wgpu_types::Origin3d> for &GPUOrigin3D {
     }
 }
 
-impl<D> WebGPUTryConvert<wgpu_com::TexelCopyTextureInfo> for &GPUTexelCopyTextureInfo<D>
-where
-    D: DomTypes,
-{
-    type Error = Error;
-
-    fn try_convert(self) -> Result<wgpu_com::TexelCopyTextureInfo, Self::Error> {
-        Ok(wgpu_com::TexelCopyTextureInfo {
-            texture: self.texture.id().0,
-            mip_level: self.mipLevel,
-            origin: self
-                .origin
-                .as_ref()
-                .map(WebGPUTryConvert::<wgpu_types::Origin3d>::try_convert)
-                .transpose()?
-                .unwrap_or_default(),
-            aspect: match self.aspect {
-                GPUTextureAspect::All => wgpu_types::TextureAspect::All,
-                GPUTextureAspect::Stencil_only => wgpu_types::TextureAspect::StencilOnly,
-                GPUTextureAspect::Depth_only => wgpu_types::TextureAspect::DepthOnly,
-            },
-        })
-    }
-}
-
 impl<'a> WebGPUConvert<Option<Cow<'a, str>>> for &GPUObjectDescriptorBase {
     fn convert(self) -> Option<Cow<'a, str>> {
         if self.label.is_empty() {
@@ -580,105 +544,6 @@ impl<'a> WebGPUConvert<Option<Cow<'a, str>>> for &GPUObjectDescriptorBase {
             Some(Cow::Owned(self.label.to_string()))
         }
     }
-}
-
-pub(crate) fn convert_bind_group_layout_entry<D: DomTypes>(
-    bgle: &GPUBindGroupLayoutEntry,
-    device: &D::GPUDevice,
-) -> Fallible<Result<wgpu_types::BindGroupLayoutEntry, webgpu_traits::Error>> {
-    let number_of_provided_bindings = bgle.buffer.is_some() as u8 +
-        bgle.sampler.is_some() as u8 +
-        bgle.storageTexture.is_some() as u8 +
-        bgle.texture.is_some() as u8;
-    let ty = if let Some(buffer) = &bgle.buffer {
-        Some(wgpu_types::BindingType::Buffer {
-            ty: match buffer.type_ {
-                GPUBufferBindingType::Uniform => wgpu_types::BufferBindingType::Uniform,
-                GPUBufferBindingType::Storage => {
-                    wgpu_types::BufferBindingType::Storage { read_only: false }
-                },
-                GPUBufferBindingType::Read_only_storage => {
-                    wgpu_types::BufferBindingType::Storage { read_only: true }
-                },
-            },
-            has_dynamic_offset: buffer.hasDynamicOffset,
-            min_binding_size: NonZeroU64::new(buffer.minBindingSize),
-        })
-    } else if let Some(sampler) = &bgle.sampler {
-        Some(wgpu_types::BindingType::Sampler(match sampler.type_ {
-            GPUSamplerBindingType::Filtering => wgpu_types::SamplerBindingType::Filtering,
-            GPUSamplerBindingType::Non_filtering => wgpu_types::SamplerBindingType::NonFiltering,
-            GPUSamplerBindingType::Comparison => wgpu_types::SamplerBindingType::Comparison,
-        }))
-    } else if let Some(storage) = &bgle.storageTexture {
-        Some(wgpu_types::BindingType::StorageTexture {
-            access: match storage.access {
-                GPUStorageTextureAccess::Write_only => wgpu_types::StorageTextureAccess::WriteOnly,
-                GPUStorageTextureAccess::Read_only => wgpu_types::StorageTextureAccess::ReadOnly,
-                GPUStorageTextureAccess::Read_write => wgpu_types::StorageTextureAccess::ReadWrite,
-            },
-            format: device.validate_texture_format_required_features(&storage.format)?,
-            view_dimension: storage.viewDimension.convert(),
-        })
-    } else if let Some(texture) = &bgle.texture {
-        Some(wgpu_types::BindingType::Texture {
-            sample_type: match texture.sampleType {
-                GPUTextureSampleType::Float => {
-                    wgpu_types::TextureSampleType::Float { filterable: true }
-                },
-                GPUTextureSampleType::Unfilterable_float => {
-                    wgpu_types::TextureSampleType::Float { filterable: false }
-                },
-                GPUTextureSampleType::Depth => wgpu_types::TextureSampleType::Depth,
-                GPUTextureSampleType::Sint => wgpu_types::TextureSampleType::Sint,
-                GPUTextureSampleType::Uint => wgpu_types::TextureSampleType::Uint,
-            },
-            view_dimension: texture.viewDimension.convert(),
-            multisampled: texture.multisampled,
-        })
-    } else {
-        assert_eq!(number_of_provided_bindings, 0);
-        None
-    };
-    // Check for number of bindings should actually be done in device-timeline,
-    // but we do it last on content-timeline to have some visible effect
-    let ty = if number_of_provided_bindings != 1 {
-        None
-    } else {
-        ty
-    }
-    .ok_or(webgpu_traits::Error::Validation(
-        "Exactly on entry type must be provided".to_string(),
-    ));
-
-    Ok(ty.map(|ty| wgpu_types::BindGroupLayoutEntry {
-        binding: bgle.binding,
-        visibility: wgpu_types::ShaderStages::from_bits_retain(bgle.visibility),
-        ty,
-        count: None,
-    }))
-}
-
-pub(crate) fn convert_texture_descriptor<D: DomTypes>(
-    descriptor: &GPUTextureDescriptor,
-    device: &D::GPUDevice,
-) -> Fallible<(TextureDescriptor<'static>, wgpu_types::Extent3d)> {
-    let size = (&descriptor.size).try_convert()?;
-    let desc = TextureDescriptor {
-        label: (&descriptor.parent).convert(),
-        size,
-        mip_level_count: descriptor.mipLevelCount,
-        sample_count: descriptor.sampleCount,
-        dimension: descriptor.dimension.convert(),
-        format: device.validate_texture_format_required_features(&descriptor.format)?,
-        usage: wgpu_types::TextureUsages::from_bits_retain(descriptor.usage),
-        view_formats: descriptor
-            .viewFormats
-            .iter()
-            .map(|tf| device.validate_texture_format_required_features(tf))
-            .collect::<Fallible<_>>()?,
-    };
-    Ok((desc, size))
 }
 
 impl WebGPUTryConvert<wgpu_types::Color> for &GPUColor {
@@ -715,6 +580,39 @@ impl WebGPUConvert<wgpu_types::TextureDimension> for GPUTextureDimension {
             GPUTextureDimension::_1d => wgpu_types::TextureDimension::D1,
             GPUTextureDimension::_2d => wgpu_types::TextureDimension::D2,
             GPUTextureDimension::_3d => wgpu_types::TextureDimension::D3,
+        }
+    }
+}
+
+impl<'a, D> WebGPUConvert<BindGroupEntry<'a>> for &GPUBindGroupEntry<D>
+where
+    D: DomTypes<GPUSampler = GPUSampler>,
+    D::GPUTextureView: GPUTextureViewTrait,
+    D::GPUBuffer: GPUBufferTrait,
+    D::GPUTexture: GPUTextureTrait,
+{
+    fn convert(self) -> BindGroupEntry<'a> {
+        BindGroupEntry {
+            binding: self.binding,
+            resource: match self.resource {
+                GPUBindingResource::GPUSampler(ref s) => BindingResource::Sampler(s.id().0),
+                GPUBindingResource::GPUTextureView(ref t) => BindingResource::TextureView(t.id().0),
+                GPUBindingResource::GPUTexture(ref t) => {
+                    BindingResource::TextureView(t.get_default_view().0)
+                },
+                GPUBindingResource::GPUBufferBinding(ref b) => {
+                    BindingResource::Buffer(BufferBinding {
+                        buffer: b.buffer.id().0,
+                        offset: b.offset,
+                        size: b.size,
+                    })
+                },
+                GPUBindingResource::GPUBuffer(ref b) => BindingResource::Buffer(BufferBinding {
+                    buffer: b.id().0,
+                    offset: 0,
+                    size: None,
+                }),
+            },
         }
     }
 }

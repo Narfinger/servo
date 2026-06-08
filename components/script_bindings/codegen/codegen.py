@@ -8049,7 +8049,7 @@ impl script_bindings::structuredclone::MarkedAs{self.marker}InIdl for {ifaceName
 class CGIDLInterfaceBindingRoot(CGThing):
     """Generate IDLInterface bindings"""
     root: CGThing | None
-    def __init__(self, config: Configuration, prefix: str, webIDLFile: str) -> None:
+    def __init__(self, config: Configuration, prefix: str, webIDLFile: str, only:list[str] | None = None) -> None:
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceObject=True)
         # We also want descriptors that have an interface prototype object
@@ -8062,7 +8062,7 @@ class CGIDLInterfaceBindingRoot(CGThing):
                                                  register=True))
         cgthings = []
         for d in descriptors:
-            if (
+            if ((only is not None and d.name in only) and
                 (d.concrete or d.hasDescendants())
                 and not d.interface.isIteratorInterface()
             ):

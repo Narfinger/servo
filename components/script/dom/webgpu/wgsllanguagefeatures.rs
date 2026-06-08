@@ -6,20 +6,17 @@
 
 use dom_struct::dom_struct;
 use indexmap::IndexSet;
+use js::context::JSContext;
 use js::rust::HandleObject;
-use jstraceable_derive::JSTraceable;
-use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    WGSLLanguageFeaturesMethods, WGSLLanguageFeaturesWrap,
-};
 use script_bindings::like::Setlike;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap_and_proto};
-use script_bindings::root::DomRoot;
-use script_bindings::script_runtime::CanGc;
-use script_bindings::str::DOMString;
+use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto_and_cx};
 use wgpu_core::naga::front::wgsl::ImplementedLanguageExtension;
+
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::WGSLLanguageFeaturesMethods;
+use crate::dom::bindings::root::DomRoot;
+use crate::dom::bindings::str::DOMString;
+use crate::dom::globalscope::GlobalScope;
 
 #[dom_struct]
 pub struct WGSLLanguageFeatures {
@@ -30,32 +27,28 @@ pub struct WGSLLanguageFeatures {
 }
 
 impl WGSLLanguageFeatures {
-    pub fn new<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new(
+        cx: &mut JSContext,
+        global: &GlobalScope,
         proto: Option<HandleObject>,
-        can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<WGSLLanguageFeatures = WGSLLanguageFeatures>,
-    {
+    ) -> DomRoot<Self> {
         let set = ImplementedLanguageExtension::all()
             .iter()
             .map(|le| le.to_ident().into())
             .collect();
-        reflect_dom_object_with_wrap_and_proto::<D, _, _, _>(
+        reflect_dom_object_with_proto_and_cx(
             Box::new(Self {
                 reflector: Reflector::new(),
                 internal: DomRefCell::new(set),
             }),
             global,
             proto,
-            can_gc,
-            WGSLLanguageFeaturesWrap::<D>,
+            cx,
         )
     }
 }
 
-impl<D: DomTypes> WGSLLanguageFeaturesMethods<D> for WGSLLanguageFeatures {
+impl WGSLLanguageFeaturesMethods<crate::DomTypeHolder> for WGSLLanguageFeatures {
     fn Size(&self) -> u32 {
         self.internal.size()
     }

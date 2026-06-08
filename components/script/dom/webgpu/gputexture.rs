@@ -5,28 +5,25 @@
 use std::string::String;
 
 use dom_struct::dom_struct;
-use jstraceable_derive::JSTraceable;
-use log::warn;
-use malloc_size_of_derive::MallocSizeOf;
-use script_bindings::DomTypes;
 use script_bindings::cell::DomRefCell;
-use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
-    GPUTextureMethods, GPUTextureViewDescriptor, GPUTextureWrap,
-};
-use script_bindings::dom::MutNullableDom;
-use script_bindings::error::Fallible;
-use script_bindings::reflector::{Reflector, reflect_dom_object_with_wrap};
-use script_bindings::root::{Dom, DomRoot};
-use script_bindings::script_runtime::CanGc;
-use script_bindings::str::USVString;
+use script_bindings::reflector::{Reflector, reflect_dom_object};
 use webgpu_traits::{WebGPU, WebGPURequest, WebGPUTexture, WebGPUTextureView};
 use wgpu_core::resource;
 
 use super::gpuconvert::convert_texture_descriptor;
-use crate::gpuconvert::WebGPUConvert;
-use crate::gputextureview::GPUTextureView;
-use crate::traits::WebGPUGlobalTrait;
+use crate::conversions::Convert;
+use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
+    GPUTextureAspect, GPUTextureDescriptor, GPUTextureDimension, GPUTextureFormat,
+    GPUTextureMethods, GPUTextureViewDescriptor,
+};
+use crate::dom::bindings::error::Fallible;
+use crate::dom::bindings::reflector::DomGlobal;
+use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
+use crate::dom::bindings::str::USVString;
+use crate::dom::globalscope::GlobalScope;
+use crate::dom::webgpu::gpudevice::GPUDevice;
+use crate::dom::webgpu::gputextureview::GPUTextureView;
+use crate::script_runtime::CanGc;
 
 #[derive(JSTraceable, MallocSizeOf)]
 struct DroppableGPUTexture {
@@ -98,8 +95,8 @@ impl GPUTexture {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub(crate) fn new<D>(
-        global: &D::GlobalScope,
+    pub(crate) fn new(
+        global: &GlobalScope,
         texture: WebGPUTexture,
         device: &GPUDevice,
         channel: WebGPU,
@@ -111,11 +108,8 @@ impl GPUTexture {
         texture_usage: u32,
         label: USVString,
         can_gc: CanGc,
-    ) -> DomRoot<Self>
-    where
-        D: DomTypes<GPUTexture = GPUTexture>,
-    {
-        reflect_dom_object_with_wrap::<D, _, _, _>(
+    ) -> DomRoot<Self> {
+        reflect_dom_object(
             Box::new(GPUTexture::new_inherited(
                 texture,
                 device,
@@ -130,7 +124,6 @@ impl GPUTexture {
             )),
             global,
             can_gc,
-            GPUTextureWrap::<D>,
         )
     }
 }
@@ -141,19 +134,14 @@ impl GPUTexture {
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpudevice-createtexture>
-    pub(crate) fn create<D>(
+    pub(crate) fn create(
         device: &GPUDevice,
         descriptor: &GPUTextureDescriptor,
         can_gc: CanGc,
-    ) -> Fallible<DomRoot<GPUTexture>>
-    where
-        D: DomTypes<GPUTexture = GPUTexture>,
-        GPUDevice: WebGPUGlobalTrait<D>,
-        GPUTexture: WebGPUGlobalTrait<D>,
-    {
+    ) -> Fallible<DomRoot<GPUTexture>> {
         let (desc, size) = convert_texture_descriptor(descriptor, device)?;
 
-        let texture_id = device.wgpu_id_hub().create_texture_id();
+        let texture_id = device.global().wgpu_id_hub().create_texture_id();
 
         device
             .channel()
@@ -167,7 +155,7 @@ impl GPUTexture {
 
         let texture = WebGPUTexture(texture_id);
 
-        Ok(GPUTexture::new::<D>(
+        Ok(GPUTexture::new(
             &device.global(),
             texture,
             device,
@@ -193,11 +181,7 @@ impl GPUTexture {
     }
 }
 
-impl<D> GPUTextureMethods<D> for GPUTexture
-where
-    D: DomTypes<GPUTextureView = GPUTextureView>,
-    GPUTexture: WebGPUGlobalTrait<D>,
-{
+impl GPUTextureMethods<crate::DomTypeHolder> for GPUTexture {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpuobjectbase-label>
     fn Label(&self) -> USVString {
         self.label.borrow().clone()
@@ -246,7 +230,7 @@ where
             None
         };
 
-        let texture_view_id = self.wgpu_id_hub().create_texture_view_id();
+        let texture_view_id = self.global().wgpu_id_hub().create_texture_view_id();
 
         self.droppable
             .channel
@@ -261,7 +245,7 @@ where
 
         let texture_view = WebGPUTextureView(texture_view_id);
 
-        Ok(GPUTextureView::new::<D>(
+        Ok(GPUTextureView::new(
             &self.global(),
             self.droppable.channel.clone(),
             texture_view,

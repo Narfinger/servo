@@ -101,8 +101,8 @@ def main() -> None:
 
 def build_idl(config: Configuration, out_dir: str, webidls_dir: str, webidls:list[str]) -> None:
     from codegen import CGIDLInterfaceBindingRoot
-    other_bindings = set(webidls) - set(config.idl_crates.values())
-    for webidl in other_bindings:
+    #other_bindings = set(webidls) - set(config.idl_crates.values())
+    for webidl in webidls:
         filename = os.path.join(webidls_dir, webidl)
         prefix = "IDLInterfaceBindings/%sBinding" % webidl[:-len(".webidl")]
         module = CGIDLInterfaceBindingRoot(config, prefix, filename).define()
@@ -110,14 +110,14 @@ def build_idl(config: Configuration, out_dir: str, webidls_dir: str, webidls:lis
             with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
                 f.write(module.encode("utf-8"))
 
-    for key, set_name in config.idl_crates.items():
-        filename = os.path.join("webidls_dir", set_name + ".webidl")
-        prefix = "IDLInterfaceBindings/" + set_name + "Binding"
-        make_dir(prefix)
-        module = CGIDLInterfaceBindingRoot(config, prefix,filename).define()
-        if module:
-            with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
-                f.write(module.encode("utf-8"))
+    #for key, set_name in config.idl_crates.items():
+    #    filename = os.path.join("webidls_dir", set_name + ".webidl")
+    #    prefix = "GIDLInterfaceBindings/" + set_name + "Binding"
+    #    make_dir(os.path.join(out_dir, "GIDLInterfaceBindings"))
+    #    module = CGIDLInterfaceBindingRoot(config, prefix,filename, ["GPUBuffer", "GPUError", "GPUValidationError"]).define()
+    #    if module:
+    #        with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
+    #            f.write(module.encode("utf-8"))
 
 
 
