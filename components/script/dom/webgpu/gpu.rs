@@ -53,7 +53,7 @@ impl GPUMethods<crate::DomTypeHolder> for GPU {
     fn RequestAdapter(
         &self,
         options: &GPURequestAdapterOptions,
-        cx: &mut InRealm,
+        cx: InRealm,
         can_gc: CanGc,
     ) -> Rc<Promise> {
         todo!()

@@ -144,7 +144,7 @@ impl GPUPipelineLayout {
 
         let pipeline_layout = WebGPUPipelineLayout(pipeline_layout_id);
         GPUPipelineLayout::new::<D>(
-            &device.global(),
+            &device.get_global(),
             device.channel(),
             pipeline_layout,
             descriptor.parent.label.clone(),

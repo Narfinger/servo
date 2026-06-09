@@ -413,7 +413,7 @@ impl ExtractedBody {
 
         // First, setup some infra to be used to transmit body
         //  from `components::script` to `components::net`.
-        let (chunk_request_sender, chunk_request_receiver) = ipc::channel().unwrap();
+        //let (chunk_request_sender, chunk_request_receiver) = ipc::channel().unwrap();
 
         /*
         let trusted_stream = Trusted::new(&*stream);

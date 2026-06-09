@@ -142,7 +142,7 @@ impl GPUSampler {
         let sampler = WebGPUSampler(sampler_id);
 
         GPUSampler::new::<D>(
-            &device.global(),
+            &device.get_global(),
             device.channel(),
             device.id(),
             compare_enable,

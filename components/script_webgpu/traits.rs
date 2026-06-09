@@ -18,7 +18,7 @@ pub trait WebGPUPromise {
 }
 
 pub trait WebGPUGlobalTrait<D: DomTypes> {
-    fn global(&self) -> D::GlobalScope;
+    fn get_global(&self) -> &D::GlobalScope;
     fn wgpu_id_hub(&self) -> Arc<IdentityHub>;
     fn pipeline_id(&self) -> PipelineId;
     fn get_cx() -> JSContext;

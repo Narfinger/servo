@@ -17,6 +17,7 @@ use script_webgpu::gpupipelinelayout::GPUPipelineLayout;
 use script_webgpu::gpusampler::GPUSampler;
 use script_webgpu::gpusupportedfeatures::GPUSupportedFeatures;
 use script_webgpu::gpusupportedlimits::GPUSupportedLimits;
+use script_webgpu::traits::{GPUBindGroupLayoutTrait, GPUDeviceTrait, WebGPUGlobalTrait};
 use webgpu_traits::{
     PopError, WebGPU, WebGPUComputePipeline, WebGPUComputePipelineResponse, WebGPUDevice,
     WebGPUPoppedErrorScopeResponse, WebGPUQueue, WebGPURenderPipeline,
@@ -165,7 +166,8 @@ impl GPUDevice {
             global, None, features, can_gc,
         )
         .unwrap();
-        let adapter_info = GPUAdapterInfo::clone_from(global, &adapter.Info(), can_gc);
+        let adapter_info =
+            GPUAdapterInfo::clone_from::<crate::DomTypeHolder>(global, &adapter.Info(), can_gc);
         let lost_promise = Promise::new(global, can_gc);
         let device = reflect_dom_object(
             Box::new(GPUDevice::new_inherited(
@@ -185,6 +187,48 @@ impl GPUDevice {
         queue.set_device(&device);
         device.extensions.set(*extensions);
         device
+    }
+}
+
+impl GPUDeviceTrait for GPUDevice {
+    fn channel(&self) -> WebGPU {
+        self.droppable.channel.clone()
+    }
+
+    fn id(&self) -> WebGPUDevice {
+        self.droppable.device
+    }
+
+    fn dispatch_error(&self, error: webgpu_traits::Error) {
+        self.dispatch_error(error);
+    }
+}
+
+impl WebGPUGlobalTrait<crate::DomTypeHolder> for GPUDevice {
+    fn get_global(&self) -> &D::GlobalScope {
+        &self.global()
+    }
+
+    fn wgpu_id_hub(&self) -> std::sync::Arc<script_webgpu::identityhub::IdentityHub> {
+        todo!()
+    }
+
+    fn pipeline_id(&self) -> servo_base::id::PipelineId {
+        todo!()
+    }
+
+    fn get_cx() -> script_bindings::script_runtime::JSContext {
+        todo!()
+    }
+
+    fn script_to_constellation_chan(&self) -> () {
+        todo!()
+    }
+}
+
+impl GPUBindGroupLayoutTrait for GPUBindGroupLayout {
+    fn id(&self) -> webgpu_traits::WebGPUBindGroupLayout {
+        self.id()
     }
 }
 

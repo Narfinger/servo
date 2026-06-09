@@ -35,7 +35,7 @@ use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::script_runtime::{CanGc, JSContext};
 
 impl WebGPUGlobalTrait<crate::DomTypeHolder> for GlobalScope {
-    fn global(&self) -> GlobalScope {
+    fn get_global(&self) -> &GlobalScope {
         self
     }
 
