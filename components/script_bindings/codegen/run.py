@@ -82,23 +82,11 @@ def main() -> None:
     make_dir(doc_servo)
     generate(config, "SupportedDomApis", os.path.join(doc_servo, "apis.html"))
 
-    descriptors: list[str] = []
-    for file in webidls:
-        for desc in config.getDescriptors(webIDLFile=file,
-                                                hasInterfaceObject=True):
-            descriptors.append(desc.name)
-        for desc in config.getDescriptors(webIDLFile=file,
-                                                     hasInterfaceObject=False,
-                                                     isCallback=False,
-                                                     register=True):
-            descriptors.append(desc.name)
-    all_interface_descriptors = set(descriptors) - set(config.sub_crates["script_webgpu"])
-
-
+    all_interface_descriptors = set(d.interface.identifier.name for d in config.descriptors)
 
     build_concrete_inherit_types(config, out_dir)
+    print(all_interface_descriptors)
     build_idl(config, out_dir, webidls_dir, webidls, all_interface_descriptors)
-
 
 
     for webidl in webidls:

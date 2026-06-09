@@ -33,19 +33,10 @@ fn main() {
         "cargo::rerun-if-changed={}",
         script_concrete_bindings_out_dir.display()
     );
-    std::fs::read_dir(script_concrete_bindings_out_dir)
-        .unwrap()
-        .filter_map(|res| res.map(|e| e.path()).ok())
-        .filter(|path| path.is_file())
-        .for_each(|file| {
-            std::fs::copy(
-                &file,
-                out_dir
-                    .join("ConcreteBindings")
-                    .join(file.file_name().unwrap()),
-            )
-            .unwrap();
-        });
+
+    // Copy ConcreteInheritTypes
+    let file = script_bindings_out_dir.join("GPUConcreteInheritTypes.rs");
+    std::fs::copy(&file, out_dir.join("GPUConcreteInheritTypes.rs")).unwrap();
 
     // Copy IDLInterface folder
     let _ = std::fs::create_dir(out_dir.join("GIDLInterfaceBindings"));

@@ -87,6 +87,7 @@ pub(crate) mod codegen {
 use std::ptr;
 
 pub(crate) use js::gc::Traceable as JSTraceable;
+use script_bindings::inheritance::Castable;
 pub(crate) use script_bindings::inheritance::HasParent;
 pub(crate) use script_bindings::reflector::{DomObject, MutDomObject, Reflector};
 pub(crate) use script_bindings::trace::CustomTraceable;

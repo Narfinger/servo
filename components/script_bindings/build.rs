@@ -32,9 +32,10 @@ fn main() {
         .arg(&css_properties_json)
         .arg(&out_dir)
         .env("PYTHONDONTWRITEBYTECODE", "1")
-        .status()
+        .output()
         .unwrap();
-    if !status.success() {
+    println!("OUT: {:?}", String::from_utf8(status.stdout).unwrap());
+    if !status.status.success() {
         std::process::exit(1)
     }
 

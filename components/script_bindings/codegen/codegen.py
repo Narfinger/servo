@@ -8049,7 +8049,7 @@ impl script_bindings::structuredclone::MarkedAs{self.marker}InIdl for {ifaceName
 class CGIDLInterfaceBindingRoot(CGThing):
     """Generate IDLInterface bindings"""
     root: CGThing | None
-    def __init__(self, config: Configuration, prefix: str, webIDLFile: str, only_crate:set[str]) -> None:
+    def __init__(self, config: Configuration, prefix: str, webIDLFile: str, only_interfaces:set[str]) -> None:
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceObject=True)
         # We also want descriptors that have an interface prototype object
@@ -8062,7 +8062,7 @@ class CGIDLInterfaceBindingRoot(CGThing):
                                                  register=True))
         cgthings = []
         for d in descriptors:
-            if (not set(d.name).isdisjoint(only_crate) and
+            if (not set(d.name).isdisjoint(only_interfaces) and
                 (d.concrete or d.hasDescendants())
                 and not d.interface.isIteratorInterface()
             ):
@@ -8089,7 +8089,7 @@ class CGConcreteBindingRoot(CGThing):
     If only_crate is set, only IDLInterface is created in the file and others skipped.
     """
     root: CGThing | None
-    def __init__(self, config: Configuration, prefix: str, webIDLFile: str, only_crate: set[str] | None) -> None:
+    def __init__(self, config: Configuration, prefix: str, webIDLFile: str, only_interfaces: set[str] | None) -> None:
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceObject=True)
         # We also want descriptors that have an interface prototype object
@@ -8143,7 +8143,7 @@ class CGConcreteBindingRoot(CGThing):
 
         cgthings += [CGGeneric(f"pub(crate) use {originalBinding} as GenericBindings;")]
         for d in descriptors:
-            cgthings = self._make_descriptor(d, descriptors, originalBinding, cgthings, only_crate)
+            cgthings = self._make_descriptor(d, descriptors, originalBinding, cgthings, only_interfaces)
 
 
         for c in callbackDescriptors:
@@ -8170,7 +8170,7 @@ class CGConcreteBindingRoot(CGThing):
         # Store the final result.
         self.root = curr
 
-    def _make_descriptor(self, d: Descriptor, descriptors: list[Descriptor], originalBinding: str, cgthings: list[Any], only_crate: set[str]) -> list[Any]:
+    def _make_descriptor(self, d: Descriptor, descriptors: list[Descriptor], originalBinding: str, cgthings: list[Any], only_interfaces: set[str]) -> list[Any]:
         ifaceName: str = d.interface.identifier.name
 
         cgthings += [
@@ -8183,7 +8183,7 @@ class CGConcreteBindingRoot(CGThing):
             if d.interface.getExtendedAttribute(marker):
                 cgthings += [CGStructuredCloneMarker(d, marker)]
 
-        if d.concrete and not set(ifaceName).isdisjoint(only_crate):
+        if d.concrete and not set(ifaceName).isdisjoint(only_interfaces):
             if not d.interface.isIteratorInterface():
                 cgthings.append(CGAssertInheritance(d))
             else:
