@@ -50,7 +50,6 @@ class Configuration:
     dictionaries: list[IDLDictionary]
     callbacks: list[IDLCallback]
     crates: dict[str,list[str]]
-    idl_crates: dict[str, str]
     sub_crates: dict[str,list[str]]
 
     def __init__(self, filename: str, parseData: list[IDLObjectWithIdentifier]) -> None:
@@ -62,7 +61,6 @@ class Configuration:
         self.dictConfig = glbl['Dictionaries']
         self.unionConfig = glbl['Unions']
         self.crates = glbl['Crates']
-        self.idl_crates = glbl['IDLCrates']
         self.sub_crates = glbl['SubCrates']
 
         # Build descriptors for all the interfaces we have in the parse data.

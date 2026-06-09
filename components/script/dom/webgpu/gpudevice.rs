@@ -161,7 +161,10 @@ impl GPUDevice {
     ) -> DomRoot<Self> {
         let queue = GPUQueue::new(global, channel.clone(), queue, can_gc);
         let limits = GPUSupportedLimits::new::<crate::DomTypeHolder>(global, limits, can_gc);
-        let features = GPUSupportedFeatures::Constructor(global, None, features, can_gc).unwrap();
+        let features = GPUSupportedFeatures::Constructor::<crate::DomTypeHolder>(
+            global, None, features, can_gc,
+        )
+        .unwrap();
         let adapter_info = GPUAdapterInfo::clone_from(global, &adapter.Info(), can_gc);
         let lost_promise = Promise::new(global, can_gc);
         let device = reflect_dom_object(

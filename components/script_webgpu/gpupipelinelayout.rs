@@ -99,7 +99,7 @@ impl GPUPipelineLayout {
 }
 
 impl GPUPipelineLayout {
-    pub(crate) fn id(&self) -> WebGPUPipelineLayout {
+    pub fn id(&self) -> WebGPUPipelineLayout {
         self.droppable.pipeline_layout
     }
 

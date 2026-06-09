@@ -34,7 +34,13 @@ fn main() {
         .env("PYTHONDONTWRITEBYTECODE", "1")
         .output()
         .unwrap();
-    println!("OUT: {:?}", String::from_utf8(status.stdout).unwrap());
+    println!(
+        "OUT: {:?}",
+        String::from_utf8(status.stdout)
+            .unwrap()
+            .split_ascii_whitespace()
+            .collect::<Vec<_>>()
+    );
     if !status.status.success() {
         std::process::exit(1)
     }

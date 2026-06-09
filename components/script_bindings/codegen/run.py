@@ -82,10 +82,14 @@ def main() -> None:
     make_dir(doc_servo)
     generate(config, "SupportedDomApis", os.path.join(doc_servo, "apis.html"))
 
-    all_interface_descriptors = set(d.interface.identifier.name for d in config.descriptors)
+    all_interface_descriptors = set(d.interface.identifier.name.replace('\'','') for d in config.descriptors)
 
+    #print("\n\n\n")
+    #for index, i in enumerate(all_interface_descriptors):
+    #    print(str(index) + ":" + i)
+    #print("\n\n\n")
     build_concrete_inherit_types(config, out_dir)
-    print(all_interface_descriptors)
+    #print(all_interface_descriptors)
     build_idl(config, out_dir, webidls_dir, webidls, all_interface_descriptors)
 
 
@@ -106,11 +110,14 @@ def main() -> None:
 
 def build_idl(config: Configuration, out_dir: str, webidls_dir: str, webidls:list[str], all_interface_descriptors: set[str]) -> None:
     from codegen import CGIDLInterfaceBindingRoot
+
+    s = set(item for item in config.sub_crates["script_webgpu"])
+    other_descriptors = all_interface_descriptors - s
     #other_bindings = set(webidls) - set(config.idl_crates.values())
     for webidl in webidls:
         filename = os.path.join(webidls_dir, webidl)
         prefix = "IDLInterfaceBindings/%sBinding" % webidl[:-len(".webidl")]
-        module = CGIDLInterfaceBindingRoot(config, prefix, filename, all_interface_descriptors).define()
+        module = CGIDLInterfaceBindingRoot(config, prefix, filename, other_descriptors).define()
         if module:
             with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
                 f.write(module.encode("utf-8"))
@@ -119,7 +126,8 @@ def build_idl(config: Configuration, out_dir: str, webidls_dir: str, webidls:lis
         filename = os.path.join(webidls_dir, webidl)
         prefix = "GIDLInterfaceBindings/%sBinding" % webidl[:-len(".webidl")]
         make_dir(os.path.join(out_dir, "GIDLInterfaceBindings"))
-        module = CGIDLInterfaceBindingRoot(config, prefix, filename, set(item for item in config.sub_crates["script_webgpu"])).define()
+        print("NEW SET " + str(s))
+        module = CGIDLInterfaceBindingRoot(config, prefix, filename, s).define()
         if module:
             with open(os.path.join(out_dir, prefix + ".rs"), "wb") as f:
                 f.write(module.encode("utf-8"))

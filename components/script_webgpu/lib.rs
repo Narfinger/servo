@@ -47,7 +47,9 @@ pub(crate) mod dom {
                 pub(crate) use crate::gpucolorwrite::GPUColorWrite;
                 pub(crate) use crate::gpucommandbuffer::GPUCommandBuffer;
                 pub(crate) use crate::gpucompilationinfo::GPUCompilationInfo;
+                pub(crate) use crate::gpucompilationmessage::GPUCompilationMessage;
                 pub(crate) use crate::gpudevicelostinfo::GPUDeviceLostInfo;
+                pub(crate) use crate::gpuerror::GPUError;
                 pub(crate) use crate::gpuinternalerror::GPUInternalError;
                 pub(crate) use crate::gpumapmode::GPUMapMode;
                 pub(crate) use crate::gpuoutofmemoryerror::GPUOutOfMemoryError;
@@ -69,7 +71,7 @@ pub(crate) mod dom {
 /// Generated JS-Rust bindings.
 #[allow(missing_docs, non_snake_case)]
 pub(crate) mod codegen {
-    pub mod IDLInterface {
+    pub(crate) mod IDLInterface {
         include!(concat!(
             env!("OUT_DIR"),
             "/GIDLInterfaceBindings/WebGPUBinding.rs"

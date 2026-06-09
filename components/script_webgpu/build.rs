@@ -11,6 +11,8 @@ fn main() {
     let script_bindings_out_dir =
         PathBuf::from(env::var_os("DEP_SCRIPT_BINDINGS_CRATE_OUT_DIR").unwrap());
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    println!("cargo:out_dir={}", out_dir.display());
+
     // copy concrete files
     ["GPUConcreteInheritTypes.rs"]
         .iter()
@@ -40,11 +42,7 @@ fn main() {
 
     // Copy IDLInterface folder
     let _ = std::fs::create_dir(out_dir.join("GIDLInterfaceBindings"));
-    let script_concrete_bindings_out_dir = script_bindings_out_dir.join("IDLInterfaceBindings");
-    println!(
-        "cargo::rerun-if-changed={}",
-        script_concrete_bindings_out_dir.display()
-    );
+    let script_concrete_bindings_out_dir = script_bindings_out_dir.join("GIDLInterfaceBindings");
     std::fs::read_dir(script_concrete_bindings_out_dir)
         .unwrap()
         .filter_map(|res| res.map(|e| e.path()).ok())
