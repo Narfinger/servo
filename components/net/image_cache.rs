@@ -10,6 +10,7 @@ use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::{mem, thread_local};
 
+use fonts_traits::{FontIdentifier, SystemFontServiceProxy};
 use imsz::imsz_from_reader;
 use log::{debug, warn};
 use malloc_size_of::{MallocConditionalSizeOf, MallocSizeOf as MallocSizeOfTrait, MallocSizeOfOps};
@@ -35,6 +36,8 @@ use servo_base::threadpool::ThreadPool;
 use servo_url::{ImmutableOrigin, ServoUrl};
 use webrender_api::ImageKey as WebRenderImageKey;
 use webrender_api::units::DeviceIntSize;
+
+use crate::svg_font_store::create_fn;
 
 thread_local! {
     pub static SUPPRESS_ABORT_IN_PANIC_HOOK: Cell<bool> = const { Cell::new(false) };
@@ -93,6 +96,7 @@ fn parse_svg_document_in_memory(
             resolve_string: image_string_href_resolver,
         },
         fontdb,
+        font_resolver: create_fn(system_font_service_proxy),
         ..usvg::Options::default()
     };
 

@@ -51,6 +51,7 @@ log = { workspace = true }
 malloc_size_of = { workspace = true }
 malloc_size_of_derive = { workspace = true }
 mime = { workspace = true }
+fonts_traits = { workspace = true }
 mime_guess = { workspace = true }
 net_traits = { workspace = true }
 nom = { workspace = true }
