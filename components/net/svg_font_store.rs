@@ -1,9 +1,10 @@
 use std::{convert::identity, sync::{Arc, RwLock}};
 
-use fonts_traits::{FontDescriptor, FontIdentifier, SystemFontServiceMessage, SystemFontServiceProxy};
+use fonts_traits::{FontDescriptor, FontIdentifier, FontTemplateDescriptor, SystemFontServiceMessage, SystemFontServiceProxy};
 use malloc_size_of_derive::MallocSizeOf;
 use resvg::usvg;
 use rustc_hash::FxHashMap;
+use webrender_api::FontTemplate;
 
 #[derive(MallocSizeOf)]
 struct SvgFontStore {
@@ -23,16 +24,18 @@ impl SvgFontStore {
             Some(id)
         } else {
 
-        let description = FontDescriptor {
-        };
+
+        let description = FontTemplateDescriptor::new(font.weight(), font.stretch(), font.style());
 
         let matching_template = self.system_font_service_proxy.find_matching_font_templates(descriptor, family_descriptor).first()?;
         let f = matching_template.borrow();
         let identifier = f.identifier();
         if let FontIdentifier::Local(local_font_identifier) = identifier {
             let data_and_index = unsafe { local_font_identifier.font_data_and_index()?};
-            let indices = db.load_font_source(data.as_ipc_shared_memory());
-            indices.first().cloned()
+            let indices = db.load_font_source(data_and_index.as_ipc_shared_memory());
+            let index = indices.first().cloned()?;
+            self.cache.write().unwrap().insert(font.clone(), index);
+            Some(index)
         } else {
             None
         }
