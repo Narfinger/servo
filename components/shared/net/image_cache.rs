@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use fonts_traits::SystemFontServiceProxy;
 use log::debug;
 use malloc_size_of::MallocSizeOfOps;
 use malloc_size_of_derive::MallocSizeOf;
@@ -166,6 +167,7 @@ pub trait ImageCacheFactory: Sync + Send {
         webview_id: WebViewId,
         pipeline_id: PipelineId,
         paint_api: &CrossProcessPaintApi,
+        system_font_service_proxy: Arc<SystemFontServiceProxy>,
     ) -> Arc<dyn ImageCache>;
 }
 

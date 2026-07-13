@@ -3444,6 +3444,7 @@ impl ScriptThread {
             incomplete.webview_id,
             incomplete.pipeline_id,
             &self.paint_api,
+            self.system_font_service.clone(),
         );
 
         let (user_contents, user_stylesheets) = incomplete

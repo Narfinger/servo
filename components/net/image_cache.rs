@@ -10,7 +10,7 @@ use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::{mem, thread_local};
 
-use fonts_traits::{FontIdentifier, SystemFontServiceProxy};
+use fonts_traits::SystemFontServiceProxy;
 use imsz::imsz_from_reader;
 use log::{debug, warn};
 use malloc_size_of::{MallocConditionalSizeOf, MallocSizeOf as MallocSizeOfTrait, MallocSizeOfOps};
@@ -82,6 +82,7 @@ const MAX_SVG_PIXMAP_DIMENSION: u32 = 5000;
 // ======================================================================
 
 fn parse_svg_document_in_memory(
+    system_font_service_proxy: SystemFontServiceProxy,
     bytes: &[u8],
     fontdb: Arc<fontdb::Database>,
 ) -> Result<usvg::Tree, &'static str> {
@@ -108,6 +109,7 @@ fn parse_svg_document_in_memory(
 }
 
 fn decode_bytes_sync(
+    system_font_service_proxy: SystemFontServiceProxy,
     key: LoadKey,
     bytes: &[u8],
     cors: CorsStatus,
@@ -123,7 +125,7 @@ fn decode_bytes_sync(
     });
 
     let image = if is_svg_document {
-        parse_svg_document_in_memory(bytes, fontdb)
+        parse_svg_document_in_memory(system_font_service_proxy, bytes, fontdb)
             .ok()
             .map(|svg_tree| {
                 DecodedImage::Vector(VectorImageData {
@@ -824,6 +826,7 @@ impl ImageCacheFactory for ImageCacheFactoryImpl {
         webview_id: WebViewId,
         pipeline_id: PipelineId,
         paint_api: &CrossProcessPaintApi,
+        system_font_service_proxy: Arc<SystemFontServiceProxy>,
     ) -> Arc<dyn ImageCache> {
         Arc::new(ImageCacheImpl {
             store: Arc::new(Mutex::new(ImageCacheStore {
@@ -842,6 +845,7 @@ impl ImageCacheFactory for ImageCacheFactoryImpl {
             broken_image_icon_data: self.broken_image_icon_data.clone(),
             thread_pool: self.thread_pool.clone(),
             fontdb: self.fontdb.clone(),
+            system_font_service_proxy,
         })
     }
 }
@@ -859,6 +863,8 @@ pub struct ImageCacheImpl {
     /// A shared font database to be used by system fonts accessed when rasterizing vector
     /// images. This is shared with other [`ImageCache`]s in the same process.
     fontdb: Arc<fontdb::Database>,
+    /// The system font service proxy, only used for svg to request new fonts.
+    system_font_service_proxy: Arc<SystemFontServiceProxy>,
 }
 
 impl ImageCache for ImageCacheImpl {
@@ -1260,9 +1266,17 @@ impl ImageCache for ImageCacheImpl {
 
                         let local_store = self.store.clone();
                         let fontdb = self.fontdb.clone();
+                        let system_font_service_proxy =
+                            self.system_font_service_proxy.to_sender().to_proxy();
                         self.thread_pool.spawn(move || {
-                            let msg =
-                                decode_bytes_sync(key, &bytes, cors_status, content_type, fontdb);
+                            let msg = decode_bytes_sync(
+                                system_font_service_proxy,
+                                key,
+                                &bytes,
+                                cors_status,
+                                content_type,
+                                fontdb,
+                            );
                             local_store.lock().handle_decoder(msg);
                         });
                     },
