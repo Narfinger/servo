@@ -308,7 +308,7 @@ pub enum BodyChunkResponse {
 /// Messages used to implement <https://fetch.spec.whatwg.org/#concept-request-transmit-body>
 /// which are sent from net to script
 /// (with the exception of Done, which is sent from script to script).
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, MallocSizeOf)]
 pub enum BodyChunkRequest {
     /// Connect a fetch in `net`, with a stream of bytes from `script`.
     Connect(GenericCallback<BodyChunkResponse>),

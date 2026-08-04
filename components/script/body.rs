@@ -9,7 +9,6 @@ use std::{fs, ptr, slice, str};
 use encoding_rs::{Encoding, UTF_8};
 use http::HeaderMap;
 use http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
-use ipc_channel::router::ROUTER;
 use js::context::JSContext;
 use js::jsapi::{Heap, JSObject, Value as JSValue};
 use js::jsval::{JSVal, UndefinedValue};
@@ -23,8 +22,7 @@ use net_traits::request::{
 };
 use script_bindings::reflector::DomObject;
 use servo_base::generic_channel::{
-    self, CallbackSetter, GenericCallback, GenericReceiver, GenericSender, GenericSharedMemory,
-    LazyCallback,
+    self, CallbackSetter, GenericCallback, GenericSender, GenericSharedMemory, LazyCallback,
 };
 use servo_constellation_traits::BlobImpl;
 use url::form_urlencoded;
@@ -106,6 +104,7 @@ enum StopReading {
 /// This route runs in the script process,
 /// and will queue tasks to perform operations
 /// on the stream and transmit body chunks over IPC.
+#[derive(Clone)]
 struct TransmitBodyConnectHandler {
     stream: Trusted<ReadableStream>,
     task_source: SendableTaskSource,
@@ -144,36 +143,31 @@ impl TransmitBodyConnectHandler {
     /// Re-extract the source to support streaming it again for a re-direct.
     /// TODO: actually re-extract the source, instead of just cloning data, to support Blob.
     fn re_extract(&mut self, chunk_request_receiver: CallbackSetter<BodyChunkRequest>) {
-        /*
         let mut body_handler = self.clone();
         body_handler.reset_in_memory_done();
 
-        ROUTER.add_typed_route(
-            chunk_request_receiver,
-            Box::new(move |message| {
-                let request = message.unwrap();
-                match request {
-                    BodyChunkRequest::Connect(sender) => {
-                        body_handler.start_reading(sender);
-                    },
-                    BodyChunkRequest::Extract(receiver) => {
-                        body_handler.re_extract(receiver);
-                    },
-                    BodyChunkRequest::Chunk => body_handler.transmit_source(),
-                    // Note: this is actually sent from this process
-                    // by the TransmitBodyPromiseHandler when reading stops.
-                    BodyChunkRequest::Done => {
-                        body_handler.stop_reading(StopReading::Done);
-                    },
-                    // Note: this is actually sent from this process
-                    // by the TransmitBodyPromiseHandler when the stream errors.
-                    BodyChunkRequest::Error => {
-                        body_handler.stop_reading(StopReading::Error);
-                    },
-                }
-            }),
-        );
-         */
+        chunk_request_receiver.set_callback(move |message| {
+            let request = message.unwrap();
+            match request {
+                BodyChunkRequest::Connect(sender) => {
+                    body_handler.start_reading(sender);
+                },
+                BodyChunkRequest::Extract(receiver) => {
+                    body_handler.re_extract(receiver);
+                },
+                BodyChunkRequest::Chunk => body_handler.transmit_source(),
+                // Note: this is actually sent from this process
+                // by the TransmitBodyPromiseHandler when reading stops.
+                BodyChunkRequest::Done => {
+                    body_handler.stop_reading(StopReading::Done);
+                },
+                // Note: this is actually sent from this process
+                // by the TransmitBodyPromiseHandler when the stream errors.
+                BodyChunkRequest::Error => {
+                    body_handler.stop_reading(StopReading::Error);
+                },
+            }
+        });
     }
 
     /// In case of re-direct, and of a source available in memory,
@@ -317,7 +311,7 @@ struct TransmitBodyPromiseHandler {
     bytes_sender: GenericCallback<BodyChunkResponse>,
     stream: Dom<ReadableStream>,
     #[no_trace]
-    control_sender: GenericSender<BodyChunkRequest>,
+    control_sender: LazyCallback<BodyChunkRequest>,
 }
 
 impl js::gc::Rootable for TransmitBodyPromiseHandler {}
@@ -371,7 +365,7 @@ struct TransmitBodyPromiseRejectionHandler {
     bytes_sender: GenericCallback<BodyChunkResponse>,
     stream: Dom<ReadableStream>,
     #[no_trace]
-    control_sender: GenericSender<BodyChunkRequest>,
+    control_sender: LazyCallback<BodyChunkRequest>,
 }
 
 impl js::gc::Rootable for TransmitBodyPromiseRejectionHandler {}

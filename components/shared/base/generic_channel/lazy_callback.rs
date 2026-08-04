@@ -208,6 +208,7 @@ where
     }
 }
 
+#[derive(Clone, MallocSizeOf)]
 pub struct CallbackSetter<T: Serialize + Send + 'static>(CallbackSetterVariants<T>);
 
 impl<T: Serialize + Send> fmt::Debug for CallbackSetter<T> {
@@ -276,7 +277,7 @@ where
 
         match variant_name {
             LazyCallbackSetterVariantNames::Ipc => variant_data
-                .newtype_variant::<Mutex<Option<IpcReceiver<T>>>>()
+                .newtype_variant::<Arc<Mutex<Option<IpcReceiver<T>>>>>()
                 .map(|receiver| CallbackSetter(CallbackSetterVariants::Ipc(receiver))),
             LazyCallbackSetterVariantNames::InProcess => {
                 if use_ipc() {
@@ -317,12 +318,13 @@ where
     }
 }
 
+#[derive(Clone, MallocSizeOf)]
 enum CallbackSetterVariants<T>
 where
     T: Serialize + Send + 'static,
 {
     InProcess(crossbeam_channel::Sender<GenericCallback<T>>),
-    Ipc(Mutex<Option<IpcReceiver<T>>>),
+    Ipc(#[conditional_malloc_size_of] Arc<Mutex<Option<IpcReceiver<T>>>>),
 }
 
 impl<T> CallbackSetter<T>
@@ -379,7 +381,9 @@ where
 {
     let (sender, receiver) = ipc_channel::ipc::channel().expect("Could not create channel");
     let callback = LazyCallback(LazyCallbackVariants::Ipc(sender));
-    let callback_setter = CallbackSetter(CallbackSetterVariants::Ipc(Mutex::new(Some(receiver))));
+    let callback_setter = CallbackSetter(CallbackSetterVariants::Ipc(Arc::new(Mutex::new(Some(
+        receiver,
+    )))));
     (callback, callback_setter)
 }
 
