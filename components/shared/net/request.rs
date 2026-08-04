@@ -7,15 +7,16 @@ use std::sync::Arc;
 use content_security_policy::{self as csp};
 use http::header::{AUTHORIZATION, HeaderName};
 use http::{HeaderMap, Method};
-use ipc_channel::ipc::{self, IpcReceiver, IpcSender};
-use ipc_channel::router::ROUTER;
 use log::error;
+use malloc_size_of::MallocConditionalShallowSizeOf;
 use malloc_size_of_derive::MallocSizeOf;
 use mime::Mime;
 use parking_lot::Mutex;
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use servo_base::generic_channel::GenericSharedMemory;
+use servo_base::generic_channel::{
+    CallbackSetter, GenericCallback, GenericSharedMemory, LazyCallback, lazy_callback,
+};
 use servo_base::id::{PipelineId, WebViewId};
 use servo_url::{ImmutableOrigin, ServoUrl};
 use tokio::sync::oneshot::Sender as TokioSender;
@@ -310,9 +311,9 @@ pub enum BodyChunkResponse {
 #[derive(Debug, Deserialize, Serialize)]
 pub enum BodyChunkRequest {
     /// Connect a fetch in `net`, with a stream of bytes from `script`.
-    Connect(IpcSender<BodyChunkResponse>),
+    Connect(GenericCallback<BodyChunkResponse>),
     /// Re-extract a new stream from the source, following a redirect.
-    Extract(IpcReceiver<BodyChunkRequest>),
+    Extract(CallbackSetter<BodyChunkRequest>),
     /// Ask for another chunk.
     Chunk,
     /// Signal the stream is done(sent from script to script).
@@ -326,20 +327,38 @@ pub enum BodyChunkRequest {
 /// stream. the net side fetch entry points own clearing their local copy once that fetch invocation
 /// reaches its terminal state. Redirect replay can later deserialize a fresh "RequestBody", so
 /// lower level fetch steps cannot always clean up immediately.
-#[derive(Clone, Debug, Deserialize, MallocSizeOf, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct RequestBody {
     /// Net's channel to communicate with script re this body.
-    #[conditional_malloc_size_of]
-    body_chunk_request_channel: Arc<Mutex<Option<IpcSender<BodyChunkRequest>>>>,
+    body_chunk_request_channel: Arc<Mutex<Option<LazyCallback<BodyChunkRequest>>>>,
     /// <https://fetch.spec.whatwg.org/#concept-body-source>
     source: BodySource,
     /// <https://fetch.spec.whatwg.org/#concept-body-total-bytes>
     total_bytes: Option<usize>,
 }
 
+impl malloc_size_of::MallocSizeOf for RequestBody {
+    fn size_of(&self, ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
+        self.body_chunk_request_channel
+            .conditional_shallow_size_of(ops) +
+            self.source.size_of(ops) +
+            self.total_bytes.size_of(ops)
+    }
+}
+
+// Ignore body_chunk_request_channel
+impl std::fmt::Debug for RequestBody {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RequestBody")
+            .field("source", &self.source)
+            .field("total_bytes", &self.total_bytes)
+            .finish()
+    }
+}
+
 impl RequestBody {
     pub fn new(
-        body_chunk_request_channel: IpcSender<BodyChunkRequest>,
+        body_chunk_request_channel: LazyCallback<BodyChunkRequest>,
         source: BodySource,
         total_bytes: Option<usize>,
     ) -> Self {
@@ -355,7 +374,8 @@ impl RequestBody {
         match self.source {
             BodySource::Null => panic!("Null sources should never be re-directed."),
             BodySource::Object => {
-                let (chan, port) = ipc::channel().unwrap();
+                let (callback, setter) = lazy_callback();
+                //let (chan, port) = generic_channel::channel().unwrap();
                 let mut lock = self.body_chunk_request_channel.lock();
                 let Some(selfchan) = lock.as_mut() else {
                     error!(
@@ -363,19 +383,19 @@ impl RequestBody {
                     );
                     return;
                 };
-                if let Err(error) = selfchan.send(BodyChunkRequest::Extract(port)) {
+                if let Err(error) = selfchan.send(BodyChunkRequest::Extract(setter)) {
                     error!(
                         "Could not re-extract the request body source because the body stream has already been closed: {error}"
                     );
                     return;
                 }
-                *selfchan = chan;
+                *selfchan = callback;
             },
         }
     }
 
     /// This is the current process shared optional sender for requesting body chunks.
-    pub fn clone_stream(&self) -> Arc<Mutex<Option<IpcSender<BodyChunkRequest>>>> {
+    pub fn clone_stream(&self) -> Arc<Mutex<Option<LazyCallback<BodyChunkRequest>>>> {
         self.body_chunk_request_channel.clone()
     }
 
@@ -1284,17 +1304,14 @@ pub fn create_request_body_with_content(content: String) -> RequestBody {
     let content_bytes = GenericSharedMemory::from_vec(content.into_bytes());
     let content_len = content_bytes.len();
 
-    let (chunk_request_sender, chunk_request_receiver) = ipc::channel().unwrap();
-    ROUTER.add_typed_route(
-        chunk_request_receiver,
-        Box::new(move |message| {
-            let request = message.unwrap();
-            if let BodyChunkRequest::Connect(sender) = request {
-                let _ = sender.send(BodyChunkResponse::Chunk(content_bytes.clone()));
-                let _ = sender.send(BodyChunkResponse::Done);
-            }
-        }),
-    );
+    let (callback, setter) = lazy_callback();
+    setter.set_callback(move |message| {
+        let request = message.unwrap();
+        if let BodyChunkRequest::Connect(sender) = request {
+            let _ = sender.send(BodyChunkResponse::Chunk(content_bytes.clone()));
+            let _ = sender.send(BodyChunkResponse::Done);
+        }
+    });
 
-    RequestBody::new(chunk_request_sender, BodySource::Object, Some(content_len))
+    RequestBody::new(callback, BodySource::Object, Some(content_len))
 }

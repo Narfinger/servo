@@ -15,7 +15,7 @@ use embedder_traits::resources::{self, Resource};
 use headers::{AccessControlExposeHeaders, ContentType, HeaderMapExt};
 use http::header::{self, HeaderMap, HeaderName, RANGE};
 use http::{HeaderValue, Method, StatusCode};
-use ipc_channel::ipc::{self, IpcSender};
+use ipc_channel::ipc::IpcSender;
 use log::{debug, trace, warn};
 use malloc_size_of_derive::MallocSizeOf;
 use mime::{self, Mime};
@@ -39,7 +39,7 @@ use parking_lot::Mutex;
 use rustc_hash::FxHashMap;
 use rustls_pki_types::CertificateDer;
 use serde::{Deserialize, Serialize};
-use servo_base::generic_channel::CallbackSetter;
+use servo_base::generic_channel::{self, CallbackSetter};
 use servo_base::id::PipelineId;
 use servo_url::{Host, ServoUrl};
 use tokio::sync::Mutex as TokioMutex;
@@ -1014,7 +1014,9 @@ fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io
 
     let stream = body.clone_stream();
     let mut stream = stream.lock();
-    let (body_chan, body_port) = ipc::channel().unwrap();
+
+    let (callback, receiverbody_port) = generic_channel::GenericCallback::new_blocking().unwrap();
+
     let Some(chunk_requester) = stream.as_mut() else {
         log::error!(
             "Could not connect to the request body stream because it has already been closed."
@@ -1022,7 +1024,7 @@ fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io
         return Err(std::io::Error::other("Could not send BodyChunkRequest"));
     };
     chunk_requester
-        .send(BodyChunkRequest::Connect(body_chan))
+        .send(BodyChunkRequest::Connect(callback))
         .map_err(|error| {
             log::error!(
                 "Could not connect to the request body stream because it has already been closed: {error}"
@@ -1037,7 +1039,8 @@ fn handle_allowcert_request(request: &mut Request, context: &FetchContext) -> io
             );
             std::io::Error::other("Could not request request body chunk")
         })?;
-    let body_bytes = match body_port.recv().ok() {
+
+    let body_bytes = match receiverbody_port.recv().ok() {
         Some(BodyChunkResponse::Chunk(bytes)) => bytes,
         _ => return error("Certificate not sent in a single chunk"),
     };

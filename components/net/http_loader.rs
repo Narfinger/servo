@@ -33,9 +33,6 @@ use hyper::Response as HyperResponse;
 use hyper::body::{Bytes, Frame};
 use hyper::ext::ReasonPhrase;
 use hyper::header::{HeaderName, TRANSFER_ENCODING};
-use ipc_channel::IpcError;
-use ipc_channel::ipc::{self, IpcSender};
-use ipc_channel::router::ROUTER;
 use log::{debug, error, info, log_enabled, warn};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use net_traits::blob_url_store::UrlWithBlobClaim;
@@ -63,7 +60,7 @@ use profile_traits::path;
 use profile_traits::trace_span;
 use rustc_hash::FxHashMap;
 use servo_base::cross_process_instant::CrossProcessInstant;
-use servo_base::generic_channel::GenericSharedMemory;
+use servo_base::generic_channel::{GenericCallback, GenericSharedMemory, LazyCallback, SendError};
 use servo_base::id::{BrowsingContextId, HistoryStateId, PipelineId};
 use servo_config::pref;
 use servo_url::{ImmutableOrigin, ServoUrl};
@@ -483,7 +480,7 @@ fn request_body_stream_closed_error(action: &str) -> NetworkError {
     ))
 }
 
-fn log_request_body_stream_closed(action: &str, error: Option<&IpcError>) {
+fn log_request_body_stream_closed(action: &str, error: Option<&SendError>) {
     match error {
         Some(error) => {
             error!("Request body stream has already been closed while trying to {action}: {error}")
@@ -508,7 +505,7 @@ async fn obtain_response(
     url: &ServoUrl,
     method: &Method,
     request_headers: &mut HeaderMap,
-    body_sender: Option<StdArc<Mutex<Option<IpcSender<BodyChunkRequest>>>>>,
+    body_sender: Option<StdArc<Mutex<Option<LazyCallback<BodyChunkRequest>>>>>,
     source_is_null: bool,
     pipeline_id: &Option<PipelineId>,
     request_id: Option<&str>,
@@ -699,96 +696,58 @@ async fn obtain_response(
 /// Setup the callback mechanism to forward chunks from the request received to the `chunk_requester`.
 fn obtain_response_setup_router_callback(
     devtools_bytes: StdArc<Mutex<Vec<u8>>>,
-    chunk_requester: StdArc<Mutex<Option<IpcSender<BodyChunkRequest>>>>,
+    chunk_requester: StdArc<Mutex<Option<LazyCallback<BodyChunkRequest>>>>,
     sink: BodySink,
     fetch_terminated: UnboundedSender<bool>,
 ) -> Result<(), NetworkError> {
-    let (body_chan, body_port) = ipc::channel().unwrap();
-
-    {
-        let mut lock = chunk_requester.lock();
-        if let Some(chunk_requester) = lock.as_mut() {
-            if let Err(error) = chunk_requester.send(BodyChunkRequest::Connect(body_chan)) {
-                log_request_body_stream_closed("connect to the request body stream", Some(&error));
-                return Err(request_body_stream_closed_error(
-                    "connect to the request body stream",
-                ));
-            }
-
-            // https://fetch.spec.whatwg.org/#concept-request-transmit-body
-            // Request the first chunk, corresponding to Step 3 and 4.
-            if let Err(error) = chunk_requester.send(BodyChunkRequest::Chunk) {
-                log_request_body_stream_closed(
-                    "request the first request body chunk",
-                    Some(&error),
-                );
-                return Err(request_body_stream_closed_error(
-                    "request the first request body chunk",
-                ));
-            }
-        } else {
-            log_request_body_stream_closed("connect to the request body stream", None);
-            return Err(request_body_stream_closed_error(
-                "connect to the request body stream",
-            ));
-        }
-    }
-
     let mut sink = Some(sink);
+    let chunk_requester_clone = chunk_requester.clone();
+    let callback = GenericCallback::new(move |message| {
+        info!("Received message");
+        let bytes = match message.unwrap() {
+            BodyChunkResponse::Chunk(bytes) => bytes,
+            BodyChunkResponse::Done => {
+                // Step 2.2.2. If fetchParams’s process request end-of-body is non-null,
+                // then run fetchParams’s process request end-of-body.
+                if fetch_terminated.send(false).is_err() {
+                    log_fetch_terminated_send_failure(false, "handling request body completion");
+                }
+                if let Some(sink) = sink.take() {
+                    sink.close();
+                }
 
-    ROUTER.add_typed_route(
-        body_port,
-        Box::new(move |message| {
-            info!("Received message");
-            let bytes = match message.unwrap() {
-                BodyChunkResponse::Chunk(bytes) => bytes,
-                BodyChunkResponse::Done => {
-                    // Step 2.2.2. If fetchParams’s process request end-of-body is non-null,
-                    // then run fetchParams’s process request end-of-body.
-                    if fetch_terminated.send(false).is_err() {
-                        log_fetch_terminated_send_failure(
-                            false,
-                            "handling request body completion",
-                        );
-                    }
-                    if let Some(sink) = sink.take() {
-                        sink.close();
-                    }
+                return;
+            },
+            BodyChunkResponse::Error => {
+                // Step 4 and/or 5.
+                // TODO: differentiate between the two steps,
+                // where step 5 requires setting an `aborted` flag on the fetch.
+                if fetch_terminated.send(true).is_err() {
+                    log_fetch_terminated_send_failure(true, "handling request body stream error");
+                }
+                if let Some(sink) = sink.take() {
+                    sink.close();
+                }
 
-                    return;
-                },
-                BodyChunkResponse::Error => {
-                    // Step 4 and/or 5.
-                    // TODO: differentiate between the two steps,
-                    // where step 5 requires setting an `aborted` flag on the fetch.
-                    if fetch_terminated.send(true).is_err() {
-                        log_fetch_terminated_send_failure(
-                            true,
-                            "handling request body stream error",
-                        );
-                    }
-                    if let Some(sink) = sink.take() {
-                        sink.close();
-                    }
+                return;
+            },
+        };
 
-                    return;
-                },
+        devtools_bytes.lock().extend_from_slice(&bytes);
+
+        // Step 5.1.2.2, transmit chunk over the network,
+        // currently implemented by sending the bytes to the fetch worker.
+        {
+            let Some(sink) = sink.as_ref() else {
+                return;
             };
+            sink.transmit_bytes(bytes);
+        }
 
-            devtools_bytes.lock().extend_from_slice(&bytes);
-
-            // Step 5.1.2.2, transmit chunk over the network,
-            // currently implemented by sending the bytes to the fetch worker.
-            {
-                let Some(sink) = sink.as_ref() else {
-                    return;
-                };
-                sink.transmit_bytes(bytes);
-            }
-
-            // Step 5.1.2.3
-            // Request the next chunk.
-            let mut chunk_requester = chunk_requester.lock();
+        // Step 5.1.2.3
+        // Request the next chunk.
+        {
+            let mut chunk_requester = chunk_requester_clone.lock();
             if let Some(chunk_requester) = chunk_requester.as_mut() {
                 if let Err(error) = chunk_requester.send(BodyChunkRequest::Chunk) {
                     log_request_body_stream_closed(
@@ -817,9 +776,33 @@ fn obtain_response_setup_router_callback(
                     sink.close();
                 }
             }
-        }),
-    );
+        }
+    })
+    .expect("Could not create callback");
 
+    let mut lock = chunk_requester.lock();
+    if let Some(chunk_requester) = lock.as_mut() {
+        if let Err(error) = chunk_requester.send(BodyChunkRequest::Connect(callback)) {
+            log_request_body_stream_closed("connect to the request body stream", Some(&error));
+            return Err(request_body_stream_closed_error(
+                "connect to the request body stream",
+            ));
+        }
+
+        // https://fetch.spec.whatwg.org/#concept-request-transmit-body
+        // Request the first chunk, corresponding to Step 3 and 4.
+        if let Err(error) = chunk_requester.send(BodyChunkRequest::Chunk) {
+            log_request_body_stream_closed("request the first request body chunk", Some(&error));
+            return Err(request_body_stream_closed_error(
+                "request the first request body chunk",
+            ));
+        }
+    } else {
+        log_request_body_stream_closed("connect to the request body stream", None);
+        return Err(request_body_stream_closed_error(
+            "connect to the request body stream",
+        ));
+    }
     Ok(())
 }
 

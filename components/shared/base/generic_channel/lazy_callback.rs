@@ -14,13 +14,14 @@
 //! This is achieved with having the LazyCallback having a back channel in single process mode that sets the [GenericCallback].
 //! Hence, this is slightly less efficient than a [GenericCallback]
 
-use std::cell::{OnceCell, RefCell};
+use std::cell::RefCell;
 use std::fmt;
 use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use ipc_channel::ipc::{IpcReceiver, IpcSender};
 use ipc_channel::router::ROUTER;
-use malloc_size_of::{MallocSizeOf as MallocSizeOfTrait, MallocSizeOfOps};
+use malloc_size_of::{MallocConditionalSizeOf, MallocSizeOf as MallocSizeOfTrait, MallocSizeOfOps};
 use malloc_size_of_derive::MallocSizeOf;
 use serde::de::VariantAccess;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -29,33 +30,34 @@ use servo_config::opts;
 use crate::generic_channel::{GenericCallback, SendError, SendResult, use_ipc};
 
 /// Basic struct for [LazyCallback]
-#[derive(MallocSizeOf)]
+#[derive(Clone, MallocSizeOf)]
 pub struct LazyCallback<T: Serialize + for<'de> Deserialize<'de> + Send + 'static>(
     LazyCallbackVariants<T>,
 );
 
+#[derive(Clone)]
 enum LazyCallbackVariants<T>
 where
-    T: Serialize + Send + 'static,
+    T: Serialize + for<'de> Deserialize<'de> + Send + 'static,
 {
     InProcess {
-        callback_receiver: RefCell<Option<crossbeam_channel::Receiver<GenericCallback<T>>>>,
-        callback: OnceCell<GenericCallback<T>>,
+        callback_receiver: Arc<Mutex<Option<crossbeam_channel::Receiver<GenericCallback<T>>>>>,
+        callback: Arc<OnceLock<GenericCallback<T>>>,
     },
     Ipc(IpcSender<T>),
 }
 
 impl<T> MallocSizeOfTrait for LazyCallbackVariants<T>
 where
-    T: Serialize + Send + 'static,
+    T: Serialize + for<'de> Deserialize<'de> + Send + 'static,
 {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         match self {
             LazyCallbackVariants::InProcess {
                 callback_receiver,
                 callback,
-            } => callback_receiver.size_of(ops) + callback.size_of(ops),
-            LazyCallbackVariants::Ipc(_) => 0,
+            } => callback_receiver.conditional_size_of(ops) + callback.conditional_size_of(ops),
+            LazyCallbackVariants::Ipc(sender) => sender.size_of(ops),
         }
     }
 }
@@ -75,7 +77,7 @@ where
                     cb.send(value)
                 } else {
                     // Init callback
-                    if let Ok(cb) = callback_receiver.borrow_mut().take().unwrap().recv() {
+                    if let Ok(cb) = callback_receiver.lock().unwrap().take().unwrap().recv() {
                         let _ = callback.set(cb);
                         callback.get().unwrap().send(value)
                     } else {
@@ -95,6 +97,115 @@ where
                 })
             },
         }
+    }
+}
+
+impl<T: Serialize + Send + for<'de> Deserialize<'de>> Serialize for LazyCallback<T> {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match &self.0 {
+            LazyCallbackVariants::Ipc(sender) => {
+                s.serialize_newtype_variant("LazyCallback", 0, "Ipc", sender)
+            },
+            LazyCallbackVariants::InProcess {
+                callback_receiver,
+                callback,
+            } => {
+                if use_ipc() {
+                    return Err(serde::ser::Error::custom(
+                        "InProcess lazycallback can't be serialized in multiprocess mode",
+                    ));
+                }
+                let callback_receiver = Box::new(callback_receiver.clone());
+                let callback_receiver_addr = Box::leak(callback_receiver) as *mut _ as usize;
+
+                let callback = Box::new(callback.clone());
+                let callback_addr = Box::leak(callback) as *mut _ as usize;
+                s.serialize_newtype_variant(
+                    "LazyCallback",
+                    1,
+                    "InProcess",
+                    &(callback_receiver_addr, &callback_addr),
+                )
+            },
+        }
+    }
+}
+
+impl<'de, T> serde::de::Visitor<'de> for LazyCallbackVisitor<T>
+where
+    T: Serialize + for<'d> Deserialize<'d> + Send + 'static,
+{
+    type Value = LazyCallback<T>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a GenericCallback variant")
+    }
+
+    fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::EnumAccess<'de>,
+    {
+        #[derive(Deserialize)]
+        enum LazyCallbackVariantNames {
+            Ipc,
+            InProcess,
+        }
+
+        let (variant_name, variant_data): (LazyCallbackVariantNames, _) = data.variant()?;
+
+        match variant_name {
+            LazyCallbackVariantNames::Ipc => variant_data
+                .newtype_variant::<IpcSender<T>>()
+                .map(|receiver| LazyCallback(LazyCallbackVariants::Ipc(receiver))),
+            LazyCallbackVariantNames::InProcess => {
+                if use_ipc() {
+                    return Err(serde::de::Error::custom(
+                        "InProcess callback found in multiprocess mode",
+                    ));
+                }
+                let addr = variant_data.newtype_variant::<(usize, usize)>()?;
+                let ptr_callback_receiver = addr.0 as *mut _;
+                let ptr_callback = addr.1 as *mut _;
+                // SAFETY: We know we are in the same address space as the sender, so we can safely
+                // reconstruct the Box, that we previously leaked with `into_raw` during
+                // serialization.
+                // Attention: Code reviewers should carefully compare the deserialization here
+                // with the serialization above.
+                #[expect(unsafe_code)]
+                let callback_receiver = unsafe { Box::from_raw(ptr_callback_receiver) };
+                #[expect(unsafe_code)]
+                let callback = unsafe { Box::from_raw(ptr_callback) };
+                Ok(LazyCallback(LazyCallbackVariants::InProcess {
+                    callback_receiver: *callback_receiver,
+                    callback: *callback,
+                }))
+            },
+        }
+    }
+}
+
+struct LazyCallbackVisitor<T> {
+    marker: PhantomData<T>,
+}
+
+impl<'a, T> Deserialize<'a> for LazyCallback<T>
+where
+    T: Serialize + for<'d> Deserialize<'d> + Send + 'static,
+{
+    fn deserialize<D>(d: D) -> Result<LazyCallback<T>, D::Error>
+    where
+        D: Deserializer<'a>,
+    {
+        d.deserialize_enum(
+            "GenericCallback",
+            &["CrossProcess", "InProcess"],
+            LazyCallbackVisitor {
+                marker: PhantomData,
+            },
+        )
     }
 }
 
@@ -248,8 +359,8 @@ where
 {
     let (callback_sender, callback_receiver) = crossbeam_channel::bounded(1);
     let lazycallback = LazyCallback(LazyCallbackVariants::InProcess {
-        callback_receiver: RefCell::new(Some(callback_receiver)),
-        callback: OnceCell::new(),
+        callback_receiver: Arc::new(Mutex::new(Some(callback_receiver))),
+        callback: Arc::new(OnceLock::new()),
     });
 
     let callback_setter = CallbackSetter(CallbackSetterVariants::InProcess(callback_sender));
