@@ -14,7 +14,6 @@
 //! This is achieved with having the LazyCallback having a back channel in single process mode that sets the [GenericCallback].
 //! Hence, this is slightly less efficient than a [GenericCallback]
 
-use std::cell::RefCell;
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -277,7 +276,7 @@ where
 
         match variant_name {
             LazyCallbackSetterVariantNames::Ipc => variant_data
-                .newtype_variant::<IpcReceiver<T>>()
+                .newtype_variant::<Mutex<Option<IpcReceiver<T>>>>()
                 .map(|receiver| CallbackSetter(CallbackSetterVariants::Ipc(receiver))),
             LazyCallbackSetterVariantNames::InProcess => {
                 if use_ipc() {
@@ -323,7 +322,7 @@ where
     T: Serialize + Send + 'static,
 {
     InProcess(crossbeam_channel::Sender<GenericCallback<T>>),
-    Ipc(IpcReceiver<T>),
+    Ipc(Mutex<Option<IpcReceiver<T>>>),
 }
 
 impl<T> CallbackSetter<T>
@@ -346,7 +345,12 @@ where
                 let new_callback = move |msg: Result<T, ipc_channel::SerDeError>| {
                     callback(msg.map_err(|error| error.into()))
                 };
-                ROUTER.add_typed_route(ipc_receiver, Box::new(new_callback));
+                let receiver = ipc_receiver.lock().unwrap().take();
+                if let Some(receiver) = receiver {
+                    ROUTER.add_typed_route(receiver, Box::new(new_callback));
+                } else {
+                    log::error!("Trying to set callback on already set callback");
+                }
             },
         }
     }
@@ -375,7 +379,7 @@ where
 {
     let (sender, receiver) = ipc_channel::ipc::channel().expect("Could not create channel");
     let callback = LazyCallback(LazyCallbackVariants::Ipc(sender));
-    let callback_setter = CallbackSetter(CallbackSetterVariants::Ipc(receiver));
+    let callback_setter = CallbackSetter(CallbackSetterVariants::Ipc(Mutex::new(Some(receiver))));
     (callback, callback_setter)
 }
 

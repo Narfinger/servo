@@ -447,7 +447,7 @@ impl ExtractedBody {
         let mut body_handler = TransmitBodyConnectHandler::new(
             trusted_stream,
             task_source.into(),
-            callback,
+            callback.clone(),
             in_memory,
             source,
         );
