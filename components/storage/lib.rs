@@ -39,6 +39,11 @@ trait StatementTrait {
         params: &[&dyn ToSql],
         f: F,
     ) -> rusqlite::Result<T>;
+    fn query_map<'a, T, F: Fn(&Self::RowType<'a>) -> Result<T>>(
+        &self,
+        params: &[&dyn ToSql],
+        f: F,
+    ) -> Result<Vec<T>>;
     fn execute<P: Params>(&self, params: P) -> Result<usize>;
     fn exists<P: Params>(&self, params: P) -> Result<bool>;
 }
@@ -64,10 +69,10 @@ impl<'a> RowTrait for rusqlite::Row<'a> {
     }
 }
 
-impl StatementTrait for rusqlite::Statement<'a> {
-    type RowType<'a> = rusqlite::Row<'a>;
+impl<'a> StatementTrait for rusqlite::Statement<'a> {
+    type RowType<'b> = rusqlite::Row<'b>;
 
-    fn query_one<'a, T, F: FnOnce(&Self::RowType<'a>) -> Result<T>>(
+    fn query_one<'b, T, F: FnOnce(&Self::RowType<'b>) -> Result<T>>(
         &self,
         params: &[&dyn ToSql],
         f: F,
@@ -75,7 +80,7 @@ impl StatementTrait for rusqlite::Statement<'a> {
         todo!()
     }
 
-    fn query_and_then<'a, T, F: FnOnce(&Self::RowType<'a>) -> Result<T>>(
+    fn query_and_then<'b, T, F: FnOnce(&Self::RowType<'b>) -> Result<T>>(
         &self,
         params: &[&dyn ToSql],
         f: F,
@@ -83,7 +88,7 @@ impl StatementTrait for rusqlite::Statement<'a> {
         todo!()
     }
 
-    fn query_row<'a, T, F: FnOnce(&Self::RowType<'a>) -> Result<T>>(
+    fn query_row<'b, T, F: FnOnce(&Self::RowType<'b>) -> Result<T>>(
         &self,
         params: &[&dyn ToSql],
         f: F,
@@ -96,6 +101,14 @@ impl StatementTrait for rusqlite::Statement<'a> {
     }
 
     fn exists<P: Params>(&self, params: P) -> Result<bool> {
+        todo!()
+    }
+
+    fn query_map<'b, T, F: Fn(&Self::RowType<'b>) -> Result<T>>(
+        &self,
+        params: &[&dyn ToSql],
+        f: F,
+    ) -> Result<Vec<T>> {
         todo!()
     }
 }

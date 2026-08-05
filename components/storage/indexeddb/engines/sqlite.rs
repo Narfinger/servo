@@ -30,6 +30,8 @@ mod object_store_index_model;
 mod object_store_model;
 mod ohos;
 
+pub use ohos::OhosConnection;
+
 fn range_to_query(range: IndexedDBKeyRange) -> Condition {
     // Special case for optimization
     if let Some(singleton) = range.as_singleton() {
@@ -199,12 +201,15 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         }
         let (sql, values) = sql_query.build_rusqlite(SqliteQueryBuilder);
         let mut stmt = connection.prepare(&sql)?;
+        /*
         let models = stmt
             .query_and_then(&*values.as_params(), |row| {
                 object_data_model::model_from_row(row)
             })?
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(models)
+            */
+        todo!()
+        //Ok(models)
     }
 
     fn get_all_keys(
@@ -789,8 +794,8 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
 
     fn object_store_names(&self) -> Result<Vec<String>, Self::Error> {
         let mut stmt = self.connection.prepare("SELECT name FROM object_store")?;
-        stmt.query_map([], |row| row.get(0))?
-            .collect::<Result<Vec<_>, _>>()
+        //stmt.query_map(&[], |row| row.get(0))?
+        todo!()
     }
 
     fn indexes(&self, store_name: &str) -> Result<Vec<IndexedDBIndex>, Self::Error> {
@@ -803,17 +808,15 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
         let mut stmt = self
             .connection
             .prepare("SELECT * FROM object_store_index WHERE object_store_id = ?")?;
-        let indexes = stmt
-            .query_map(params![object_store.id], |row| {
-                let model = object_store_index_model::Model::try_from(row)?;
-                Ok(IndexedDBIndex {
-                    name: model.name,
-                    key_path: postcard::from_bytes(&model.key_path).unwrap(),
-                    unique: model.unique_index,
-                    multi_entry: model.multi_entry_index,
-                })
-            })?
-            .collect::<Result<Vec<_>, _>>()?;
+        let indexes = stmt.query_map(params![object_store.id], |row| {
+            let model = object_store_index_model::model_from_row(row)?;
+            Ok(IndexedDBIndex {
+                name: model.name,
+                key_path: postcard::from_bytes(&model.key_path).unwrap(),
+                unique: model.unique_index,
+                multi_entry: model.multi_entry_index,
+            })
+        })?;
         Ok(indexes)
     }
 

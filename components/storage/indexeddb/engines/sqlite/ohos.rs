@@ -16,7 +16,7 @@ use rusqlite::ToSql;
 use crate::indexeddb::engines::sqlite::database_model::Model;
 use crate::{ConnectionTrait, RowTrait, StatementTrait};
 
-pub(crate) struct OhosConnection(*mut OH_Rdb_Store);
+pub struct OhosConnection(*mut OH_Rdb_Store);
 
 impl MallocSizeOf for OhosConnection {
     fn size_of(&self, ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
@@ -32,7 +32,7 @@ impl RowTrait for OhosRow {
     }
 }
 
-struct OhosStatement {}
+pub(crate) struct OhosStatement {}
 
 impl StatementTrait for OhosStatement {
     type RowType<'a> = OhosRow;
@@ -62,6 +62,18 @@ impl StatementTrait for OhosStatement {
     }
 
     fn execute<P: rusqlite::Params>(&self, params: P) -> rusqlite::Result<usize> {
+        todo!()
+    }
+
+    fn query_map<'a, T, F: Fn(&Self::RowType<'a>) -> rusqlite::Result<T>>(
+        &self,
+        params: &[&dyn ToSql],
+        f: F,
+    ) -> rusqlite::Result<Vec<T>> {
+        todo!()
+    }
+
+    fn exists<P: rusqlite::Params>(&self, params: P) -> rusqlite::Result<bool> {
         todo!()
     }
 }

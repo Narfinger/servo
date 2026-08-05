@@ -1012,6 +1012,12 @@ struct Connection {
     sender: GenericCallback<ConnectionMsg>,
 }
 
+#[cfg(not(platform = "ohos"))]
+type DatabaseType = SqliteEngine<rusqlite::Connection>;
+
+#[cfg(platform = "ohos")]
+type DatabaseType = SqliteEngine<engines::OhosConnection>;
+
 struct IndexedDBManager {
     port: GenericReceiver<IndexedDBThreadMsg>,
     manager_sender: GenericSender<IndexedDBThreadMsg>,

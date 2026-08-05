@@ -10,7 +10,7 @@ use storage_traits::indexeddb::{
     AsyncOperation, CreateObjectResult, IndexedDBIndex, IndexedDBTxnMode, KeyPath,
 };
 
-pub use self::sqlite::SqliteEngine;
+pub use self::sqlite::{OhosConnection, SqliteEngine};
 
 mod sqlite;
 
