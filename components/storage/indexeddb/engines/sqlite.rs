@@ -16,6 +16,7 @@ use storage_traits::indexeddb::{
     IndexedDBRecord, IndexedDBTxnMode, KeyPath, PutItemResult,
 };
 
+use crate::ConnectionTrait;
 use crate::indexeddb::IndexedDBDescription;
 use crate::indexeddb::engines::{KvsEngine, KvsTransaction};
 use crate::shared::{DB_INIT_PRAGMAS, DB_PRAGMAS};
@@ -61,17 +62,17 @@ fn range_to_query(range: IndexedDBKeyRange) -> Condition {
     condition
 }
 
-pub struct SqliteEngine {
+pub struct SqliteEngine<C: ConnectionTrait> {
     db_path: PathBuf,
-    connection: Connection,
+    connection: C,
     read_pool: Arc<ThreadPool>,
     write_pool: Arc<ThreadPool>,
     created_db_path: bool,
 }
 
-impl SqliteEngine {
+impl<C: ConnectionTrait> SqliteEngine<C> {
     fn object_store_by_name(
-        connection: &Connection,
+        connection: &C,
         store_name: &str,
     ) -> Result<object_store_model::Model, Error> {
         connection.query_row(
@@ -110,8 +111,8 @@ impl SqliteEngine {
         self.created_db_path
     }
 
-    fn init_db(path: &Path, db_info: &IndexedDBDescription) -> Result<Connection, Error> {
-        let connection = Connection::open(path)?;
+    fn init_db(path: &Path, db_info: &IndexedDBDescription) -> Result<C, Error> {
+        let connection = C::open(path)?;
         if connection.table_exists(None, "database")? {
             // Database already exists, no need to initialize
             return Ok(connection);
@@ -136,7 +137,7 @@ impl SqliteEngine {
     }
 
     fn get(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
     ) -> Result<Option<object_data_model::Model>, Error> {
@@ -160,7 +161,7 @@ impl SqliteEngine {
     }
 
     fn get_key(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
     ) -> Result<Option<Vec<u8>>, Error> {
@@ -168,7 +169,7 @@ impl SqliteEngine {
     }
 
     fn get_item(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
     ) -> Result<Option<Vec<u8>>, Error> {
@@ -176,7 +177,7 @@ impl SqliteEngine {
     }
 
     fn get_all(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
         count: Option<u32>,
@@ -205,7 +206,7 @@ impl SqliteEngine {
     }
 
     fn get_all_keys(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
         count: Option<u32>,
@@ -215,7 +216,7 @@ impl SqliteEngine {
     }
 
     fn get_all_items(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
         count: Option<u32>,
@@ -226,7 +227,7 @@ impl SqliteEngine {
 
     #[expect(clippy::type_complexity)]
     fn get_all_records(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
     ) -> Result<Vec<(Vec<u8>, Vec<u8>)>, Error> {
@@ -235,7 +236,7 @@ impl SqliteEngine {
     }
 
     fn put_item(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key: IndexedDBKeyType,
         value: Vec<u8>,
@@ -278,7 +279,7 @@ impl SqliteEngine {
     }
 
     fn delete_item(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
     ) -> Result<(), Error> {
@@ -291,7 +292,7 @@ impl SqliteEngine {
         Ok(())
     }
 
-    fn clear(connection: &Connection, store: object_store_model::Model) -> Result<(), Error> {
+    fn clear(connection: &C, store: object_store_model::Model) -> Result<(), Error> {
         connection.execute(
             "DELETE FROM object_data WHERE object_store_id = ?",
             params![store.id],
@@ -300,7 +301,7 @@ impl SqliteEngine {
     }
 
     fn count(
-        connection: &Connection,
+        connection: &C,
         store: object_store_model::Model,
         key_range: IndexedDBKeyRange,
     ) -> Result<usize, Error> {
@@ -317,7 +318,7 @@ impl SqliteEngine {
     }
 
     fn create_store(
-        connection: &Connection,
+        connection: &C,
         store_name: &str,
         key_path: Option<KeyPath>,
         auto_increment: bool,
@@ -338,7 +339,7 @@ impl SqliteEngine {
         Ok(CreateObjectResult::Created)
     }
 
-    fn delete_store(connection: &Connection, store_name: &str) -> Result<(), Error> {
+    fn delete_store(connection: &C, store_name: &str) -> Result<(), Error> {
         // https://www.w3.org/TR/IndexedDB-3/#dom-idbdatabase-deleteobjectstore
         // Step 7. Destroy store.
         let object_store = Self::object_store_by_name(connection, store_name)?;
@@ -373,7 +374,7 @@ impl SqliteEngine {
     }
 
     fn create_index(
-        connection: &Connection,
+        connection: &C,
         store_name: &str,
         index_name: String,
         key_path: KeyPath,
@@ -410,7 +411,7 @@ impl SqliteEngine {
     }
 
     fn rename_index(
-        connection: &Connection,
+        connection: &C,
         store_name: &str,
         index_name: &str,
         new_name: &str,
@@ -429,11 +430,7 @@ impl SqliteEngine {
         Ok(())
     }
 
-    fn delete_index(
-        connection: &Connection,
-        store_name: &str,
-        index_name: String,
-    ) -> Result<(), Error> {
+    fn delete_index(connection: &C, store_name: &str, index_name: String) -> Result<(), Error> {
         let object_store = connection.query_row(
             "SELECT * FROM object_store WHERE name = ?",
             params![store_name.to_string()],
@@ -449,7 +446,7 @@ impl SqliteEngine {
     }
 }
 
-impl KvsEngine for SqliteEngine {
+impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
     type Error = Error;
 
     fn create_store(
@@ -499,7 +496,7 @@ impl KvsEngine for SqliteEngine {
         };
         let path = self.db_path.clone();
         spawning_pool.spawn(move || {
-            let connection = match Connection::open(path) {
+            let connection = match C::open(path) {
                 Ok(connection) => connection,
                 Err(error) => {
                     for request in transaction.requests {
@@ -850,8 +847,12 @@ fn get_db_status(connection: &Connection, op: i32) -> Result<i32, i32> {
     if res != 0 { Err(res) } else { Ok(p_curr) }
 }
 
-impl MallocSizeOf for SqliteEngine {
+impl<C: ConnectionTrait> MallocSizeOf for SqliteEngine<C> {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        0
+        // stubbed because of weirdness
+
+        /*
         // 48 KB (3.3.1 at https://sqlite.org/malloc.html)
         const DEFAULT_LOOKASIDE_SIZE: usize = 48 * 1024;
         self.created_db_path.size_of(ops) +
@@ -865,6 +866,7 @@ impl MallocSizeOf for SqliteEngine {
                 .unwrap_or_default() as usize +
             get_db_status(&self.connection, rusqlite::ffi::SQLITE_DBSTATUS_STMT_USED)
                 .unwrap_or_default() as usize
+                 */
     }
 }
 

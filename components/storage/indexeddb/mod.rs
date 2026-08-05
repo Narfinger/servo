@@ -1015,7 +1015,8 @@ struct Connection {
 struct IndexedDBManager {
     port: GenericReceiver<IndexedDBThreadMsg>,
     manager_sender: GenericSender<IndexedDBThreadMsg>,
-    databases: HashMap<IndexedDBDescription, IndexedDBEnvironment<SqliteEngine>>,
+    databases:
+        HashMap<IndexedDBDescription, IndexedDBEnvironment<SqliteEngine<rusqlite::Connection>>>,
     thread_pool: Arc<ThreadPool>,
 
     /// A global counter to produce unique transaction ids.
@@ -1562,7 +1563,7 @@ impl IndexedDBManager {
         &self,
         origin: ImmutableOrigin,
         db_name: String,
-    ) -> Option<&IndexedDBEnvironment<SqliteEngine>> {
+    ) -> Option<&IndexedDBEnvironment<SqliteEngine<rusqlite::Connection>>> {
         let idb_description = IndexedDBDescription {
             origin,
             name: db_name,
@@ -1575,7 +1576,7 @@ impl IndexedDBManager {
         &mut self,
         origin: ImmutableOrigin,
         db_name: String,
-    ) -> Option<&mut IndexedDBEnvironment<SqliteEngine>> {
+    ) -> Option<&mut IndexedDBEnvironment<SqliteEngine<rusqlite::Connection>>> {
         let idb_description = IndexedDBDescription {
             origin,
             name: db_name,

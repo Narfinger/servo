@@ -5,7 +5,9 @@
 // Adapted from:
 // https://github.com/mozilla-firefox/firefox/blob/ee102e926521b3e460293b0aea6b54b1a03f6f74/dom/indexedDB/DBSchema.cpp#L78
 
-pub(crate) fn create_tables(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+use crate::ConnectionTrait;
+
+pub(crate) fn create_tables<C: ConnectionTrait>(conn: &C) -> Result<(), rusqlite::Error> {
     const DATABASE: &str = r#"
 create table database (
     name    varchar          not null
