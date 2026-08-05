@@ -15,6 +15,7 @@ name = "storage"
 path = "lib.rs"
 
 [dependencies]
+ohos-rdb-sys = {version = "0.1.0", features = ["api-20"]}
 libc = { workspace = true }
 log = { workspace = true }
 malloc_size_of = { workspace = true }

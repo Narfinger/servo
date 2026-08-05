@@ -16,10 +16,11 @@ use storage_traits::indexeddb::{
     IndexedDBRecord, IndexedDBTxnMode, KeyPath, PutItemResult,
 };
 
-use crate::ConnectionTrait;
 use crate::indexeddb::IndexedDBDescription;
+use crate::indexeddb::engines::sqlite::object_store_model::model_from_row;
 use crate::indexeddb::engines::{KvsEngine, KvsTransaction};
 use crate::shared::{DB_INIT_PRAGMAS, DB_PRAGMAS};
+use crate::{ConnectionTrait, RowTrait, StatementTrait};
 
 mod create;
 mod database_model;
@@ -27,6 +28,7 @@ mod encoding;
 mod object_data_model;
 mod object_store_index_model;
 mod object_store_model;
+mod ohos;
 
 fn range_to_query(range: IndexedDBKeyRange) -> Condition {
     // Special case for optimization
@@ -78,7 +80,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         connection.query_row(
             "SELECT * FROM object_store WHERE name = ?",
             params![store_name.to_string()],
-            |row| object_store_model::Model::try_from(row),
+            |row| model_from_row(row),
         )
     }
 
@@ -154,9 +156,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
             .build_rusqlite(SqliteQueryBuilder);
         connection
             .prepare(&sql)?
-            .query_one(&*values.as_params(), |row| {
-                object_data_model::Model::try_from(row)
-            })
+            .query_one(&*values.as_params(), |row| model_from_row(row))
             .optional()
     }
 
@@ -198,9 +198,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         let (sql, values) = sql_query.build_rusqlite(SqliteQueryBuilder);
         let mut stmt = connection.prepare(&sql)?;
         let models = stmt
-            .query_and_then(&*values.as_params(), |row| {
-                object_data_model::Model::try_from(row)
-            })?
+            .query_and_then(&*values.as_params(), |row| model_from_row(row))?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(models)
     }
@@ -384,7 +382,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         let object_store = connection.query_row(
             "SELECT * FROM object_store WHERE name = ?",
             params![store_name.to_string()],
-            |row| object_store_model::Model::try_from(row),
+            |row| model_from_row(row),
         )?;
 
         let index_exists: bool = connection.query_row(
@@ -419,7 +417,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         let object_store = connection.query_row(
             "SELECT * FROM object_store WHERE name = ?",
             params![store_name],
-            |row| object_store_model::Model::try_from(row),
+            |row| model_from_row(row),
         )?;
 
         // Rename the index if it exists
@@ -434,7 +432,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         let object_store = connection.query_row(
             "SELECT * FROM object_store WHERE name = ?",
             params![store_name.to_string()],
-            |row| Ok(object_store_model::Model::try_from(row).unwrap()),
+            |row| Ok(model_from_row(row).unwrap()),
         )?;
 
         // Delete the index if it exists
@@ -526,7 +524,7 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
                     .prepare("SELECT * FROM object_store WHERE name = ?")
                     .and_then(|mut stmt| {
                         stmt.query_row(params![request.store_name.to_string()], |row| {
-                            object_store_model::Model::try_from(row)
+                            model_from_row(row)
                         })
                         .optional()
                     });
@@ -733,7 +731,7 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
             .prepare("SELECT * FROM object_store WHERE name = ?")
             .and_then(|mut stmt| {
                 stmt.query_row(params![store_name.to_string()], |r| {
-                    let object_store = object_store_model::Model::try_from(r).unwrap();
+                    let object_store = model_from_row(r).unwrap();
                     Ok(object_store.auto_increment)
                 })
             })
@@ -773,7 +771,7 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
             .prepare("SELECT * FROM object_store WHERE name = ?")
             .and_then(|mut stmt| {
                 stmt.query_row(params![store_name.to_string()], |r| {
-                    let object_store = object_store_model::Model::try_from(r).unwrap();
+                    let object_store = model_from_row(r).unwrap();
                     Ok(object_store
                         .key_path
                         .map(|key_path| postcard::from_bytes(&key_path).unwrap()))
@@ -795,7 +793,7 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
         let object_store = self.connection.query_row(
             "SELECT * FROM object_store WHERE name = ?",
             params![store_name.to_string()],
-            |row| object_store_model::Model::try_from(row),
+            |row| model_from_row(row),
         )?;
 
         let mut stmt = self
@@ -822,7 +820,9 @@ impl<C: ConnectionTrait> KvsEngine for SqliteEngine<C> {
     fn version(&self) -> Result<u64, Self::Error> {
         let version: i64 =
             self.connection
-                .query_row("SELECT version FROM database LIMIT 1", [], |row| row.get(0))?;
+                .query_row("SELECT version FROM database LIMIT 1", &[], |row| {
+                    row.get(0)
+                })?;
         Ok(u64::from_ne_bytes(version.to_ne_bytes()))
     }
 

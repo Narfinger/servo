@@ -5,7 +5,7 @@
 // Adapted from:
 // https://github.com/mozilla-firefox/firefox/blob/ee102e926521b3e460293b0aea6b54b1a03f6f74/dom/indexedDB/DBSchema.cpp#L78
 
-use crate::ConnectionTrait;
+use crate::{ConnectionTrait, RowTrait};
 
 pub(crate) fn create_tables<C: ConnectionTrait>(conn: &C) -> Result<(), rusqlite::Error> {
     const DATABASE: &str = r#"

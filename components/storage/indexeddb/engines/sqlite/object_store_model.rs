@@ -1,8 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-use rusqlite::Row;
 use sea_query::Iden;
+
+use crate::RowTrait;
 
 #[derive(Iden)]
 #[expect(unused)]
@@ -23,15 +24,11 @@ pub struct Model {
     pub auto_increment: i64,
 }
 
-impl TryFrom<&Row<'_>> for Model {
-    type Error = rusqlite::Error;
-
-    fn try_from(value: &Row) -> Result<Self, Self::Error> {
-        Ok(Self {
-            id: value.get(0)?,
-            name: value.get(1)?,
-            key_path: value.get(2)?,
-            auto_increment: value.get(3)?,
-        })
-    }
+pub(crate) fn model_from_row<R: RowTrait>(value: &R) -> rusqlite::Result<Model> {
+    Ok(Model {
+        id: value.get(0)?,
+        name: value.get(1)?,
+        key_path: value.get(2)?,
+        auto_increment: value.get(3)?,
+    })
 }
