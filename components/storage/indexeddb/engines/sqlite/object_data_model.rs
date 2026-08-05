@@ -4,6 +4,8 @@
 use rusqlite::Row;
 use sea_query::Iden;
 
+use crate::RowTrait;
+
 #[derive(Iden)]
 pub enum Column {
     #[iden = "object_data"]
@@ -30,4 +32,12 @@ impl TryFrom<&Row<'_>> for Model {
             data: value.get(2)?,
         })
     }
+}
+
+pub(crate) fn model_from_row<R: RowTrait>(value: &R) -> rusqlite::Result<Model> {
+    Ok(Model {
+        object_store_id: value.get(0)?,
+        key: value.get(1)?,
+        data: value.get(2)?,
+    })
 }

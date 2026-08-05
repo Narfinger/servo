@@ -40,6 +40,7 @@ trait StatementTrait {
         f: F,
     ) -> rusqlite::Result<T>;
     fn execute<P: Params>(&self, params: P) -> Result<usize>;
+    fn exists<P: Params>(&self, params: P) -> Result<bool>;
 }
 
 trait ConnectionTrait: Sized {
@@ -59,6 +60,42 @@ trait ConnectionTrait: Sized {
 
 impl<'a> RowTrait for rusqlite::Row<'a> {
     fn get<T>(&self, index: usize) -> rusqlite::Result<T> {
+        todo!()
+    }
+}
+
+impl StatementTrait for rusqlite::Statement<'a> {
+    type RowType<'a> = rusqlite::Row<'a>;
+
+    fn query_one<'a, T, F: FnOnce(&Self::RowType<'a>) -> Result<T>>(
+        &self,
+        params: &[&dyn ToSql],
+        f: F,
+    ) -> rusqlite::Result<T> {
+        todo!()
+    }
+
+    fn query_and_then<'a, T, F: FnOnce(&Self::RowType<'a>) -> Result<T>>(
+        &self,
+        params: &[&dyn ToSql],
+        f: F,
+    ) -> rusqlite::Result<T> {
+        todo!()
+    }
+
+    fn query_row<'a, T, F: FnOnce(&Self::RowType<'a>) -> Result<T>>(
+        &self,
+        params: &[&dyn ToSql],
+        f: F,
+    ) -> rusqlite::Result<T> {
+        todo!()
+    }
+
+    fn execute<P: Params>(&self, params: P) -> Result<usize> {
+        todo!()
+    }
+
+    fn exists<P: Params>(&self, params: P) -> Result<bool> {
         todo!()
     }
 }

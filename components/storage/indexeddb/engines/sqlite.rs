@@ -156,7 +156,9 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
             .build_rusqlite(SqliteQueryBuilder);
         connection
             .prepare(&sql)?
-            .query_one(&*values.as_params(), |row| model_from_row(row))
+            .query_one(&*values.as_params(), |row| {
+                object_data_model::model_from_row(row)
+            })
             .optional()
     }
 
@@ -198,7 +200,9 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
         let (sql, values) = sql_query.build_rusqlite(SqliteQueryBuilder);
         let mut stmt = connection.prepare(&sql)?;
         let models = stmt
-            .query_and_then(&*values.as_params(), |row| model_from_row(row))?
+            .query_and_then(&*values.as_params(), |row| {
+                object_data_model::model_from_row(row)
+            })?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(models)
     }
@@ -247,7 +251,7 @@ impl<C: ConnectionTrait> SqliteEngine<C> {
             .prepare("SELECT * FROM object_data WHERE key = ? AND object_store_id = ?")
             .and_then(|mut stmt| {
                 stmt.query_row(params![serialized_key, store.id], |row| {
-                    object_data_model::Model::try_from(row)
+                    object_store_model::model_from_row(row)
                 })
                 .optional()
             })?;
