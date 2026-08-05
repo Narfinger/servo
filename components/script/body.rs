@@ -22,7 +22,7 @@ use net_traits::request::{
 };
 use script_bindings::reflector::DomObject;
 use servo_base::generic_channel::{
-    self, CallbackSetter, GenericCallback, GenericSender, GenericSharedMemory, LazyCallback,
+    self, CallbackSetter, GenericCallback, GenericSharedMemory, LazyCallback,
 };
 use servo_constellation_traits::BlobImpl;
 use url::form_urlencoded;
