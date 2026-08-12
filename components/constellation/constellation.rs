@@ -5041,61 +5041,67 @@ where
     fn handle_webdriver_msg(&mut self, msg: WebDriverCommandMsg) {
         // Find the script channel for the given parent pipeline,
         // and pass the event to that script thread.
-        match msg {
-            WebDriverCommandMsg::IsBrowsingContextOpen(browsing_context_id, response_sender) => {
-                let is_open = self.browsing_contexts.contains_key(&browsing_context_id);
-                let _ = response_sender.send(is_open);
-            },
-            WebDriverCommandMsg::FocusBrowsingContext(browsing_context_id) => {
-                self.handle_focus_remote_browsing_context(
+        #[cfg(feature = "webdriver")]
+        {
+            match msg {
+                WebDriverCommandMsg::IsBrowsingContextOpen(
                     browsing_context_id,
-                    RemoteFocusOperation::Viewport,
-                );
-            },
-            // TODO: This should use the ScriptThreadMessage::EvaluateJavaScript command
-            WebDriverCommandMsg::ScriptCommand(browsing_context_id, cmd) => {
-                let pipeline_id = if let Some(browsing_context) =
-                    self.browsing_contexts.get(&browsing_context_id)
-                {
-                    browsing_context.pipeline_id
-                } else {
-                    return warn!("{}: Browsing context is not ready", browsing_context_id);
-                };
+                    response_sender,
+                ) => {
+                    let is_open = self.browsing_contexts.contains_key(&browsing_context_id);
+                    let _ = response_sender.send(is_open);
+                },
+                WebDriverCommandMsg::FocusBrowsingContext(browsing_context_id) => {
+                    self.handle_focus_remote_browsing_context(
+                        browsing_context_id,
+                        RemoteFocusOperation::Viewport,
+                    );
+                },
+                // TODO: This should use the ScriptThreadMessage::EvaluateJavaScript command
+                WebDriverCommandMsg::ScriptCommand(browsing_context_id, cmd) => {
+                    let pipeline_id = if let Some(browsing_context) =
+                        self.browsing_contexts.get(&browsing_context_id)
+                    {
+                        browsing_context.pipeline_id
+                    } else {
+                        return warn!("{}: Browsing context is not ready", browsing_context_id);
+                    };
 
-                match &cmd {
-                    WebDriverScriptCommand::AddLoadStatusSender(_, sender) => {
-                        self.webdriver_load_status_sender = Some((sender.clone(), pipeline_id));
-                    },
-                    WebDriverScriptCommand::RemoveLoadStatusSender(_) => {
-                        self.webdriver_load_status_sender = None;
-                    },
-                    _ => {},
-                };
+                    match &cmd {
+                        WebDriverScriptCommand::AddLoadStatusSender(_, sender) => {
+                            self.webdriver_load_status_sender = Some((sender.clone(), pipeline_id));
+                        },
+                        WebDriverScriptCommand::RemoveLoadStatusSender(_) => {
+                            self.webdriver_load_status_sender = None;
+                        },
+                        _ => {},
+                    };
 
-                let control_msg = ScriptThreadMessage::WebDriverScriptCommand(pipeline_id, cmd);
-                self.send_message_to_pipeline(
-                    pipeline_id,
-                    control_msg,
-                    "ScriptCommand after closure",
-                );
-            },
-            WebDriverCommandMsg::CloseWebView(..) |
-            WebDriverCommandMsg::NewWindow(..) |
-            WebDriverCommandMsg::FocusWebView(..) |
-            WebDriverCommandMsg::IsWebViewOpen(..) |
-            WebDriverCommandMsg::GetWindowRect(..) |
-            WebDriverCommandMsg::GetViewportSize(..) |
-            WebDriverCommandMsg::SetWindowRect(..) |
-            WebDriverCommandMsg::MaximizeWebView(..) |
-            WebDriverCommandMsg::LoadUrl(..) |
-            WebDriverCommandMsg::Refresh(..) |
-            WebDriverCommandMsg::InputEvent(..) |
-            WebDriverCommandMsg::TakeScreenshot(..) => {
-                unreachable!("This command should be send directly to the embedder.");
-            },
-            _ => {
-                warn!("Unhandled WebDriver command: {:?}", msg);
-            },
+                    let control_msg = ScriptThreadMessage::WebDriverScriptCommand(pipeline_id, cmd);
+                    self.send_message_to_pipeline(
+                        pipeline_id,
+                        control_msg,
+                        "ScriptCommand after closure",
+                    );
+                },
+                WebDriverCommandMsg::CloseWebView(..) |
+                WebDriverCommandMsg::NewWindow(..) |
+                WebDriverCommandMsg::FocusWebView(..) |
+                WebDriverCommandMsg::IsWebViewOpen(..) |
+                WebDriverCommandMsg::GetWindowRect(..) |
+                WebDriverCommandMsg::GetViewportSize(..) |
+                WebDriverCommandMsg::SetWindowRect(..) |
+                WebDriverCommandMsg::MaximizeWebView(..) |
+                WebDriverCommandMsg::LoadUrl(..) |
+                WebDriverCommandMsg::Refresh(..) |
+                WebDriverCommandMsg::InputEvent(..) |
+                WebDriverCommandMsg::TakeScreenshot(..) => {
+                    unreachable!("This command should be send directly to the embedder.");
+                },
+                _ => {
+                    warn!("Unhandled WebDriver command: {:?}", msg);
+                },
+            }
         }
     }
 

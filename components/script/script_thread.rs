@@ -111,6 +111,7 @@ use url::Position;
 #[cfg(feature = "webgpu")]
 use webgpu_traits::{WebGPUDevice, WebGPUMsg};
 
+use crate::devtools;
 use crate::devtools::DevtoolsState;
 use crate::document_collection::DocumentCollection;
 use crate::document_loader::DocumentLoader;
@@ -161,8 +162,10 @@ use crate::script_runtime::{
 use crate::script_window_proxies::ScriptWindowProxies;
 use crate::svg_font::SvgFontResolver;
 use crate::tasks::task_queue::TaskQueue;
+#[cfg(feature = "webdriver")]
+use crate::webdriver_handlers;
+#[cfg(feature = "webdriver")]
 use crate::webdriver_handlers::jsval_to_webdriver;
-use crate::{devtools, webdriver_handlers};
 
 thread_local!(static SCRIPT_THREAD_ROOT: Cell<Option<*const ScriptThread>> = const { Cell::new(None) });
 
@@ -1867,6 +1870,7 @@ impl ScriptThread {
             ScriptThreadMessage::FocusDocument(pipeline_id, remote_focus_operation) => {
                 self.handle_focus_document(cx, pipeline_id, remote_focus_operation);
             },
+            #[cfg(feature = "webdriver")]
             ScriptThreadMessage::WebDriverScriptCommand(pipeline_id, msg) => {
                 self.handle_webdriver_msg(pipeline_id, msg, cx)
             },
@@ -2359,6 +2363,7 @@ impl ScriptThread {
         };
     }
 
+    #[cfg(feature = "webdriver")]
     fn handle_webdriver_msg(
         &self,
         pipeline_id: PipelineId,
@@ -4354,12 +4359,15 @@ impl ScriptThread {
             return;
         };
 
-        let result = jsval_to_webdriver(cx, global_scope, return_value.handle());
-        let _ = self.senders.pipeline_to_constellation_sender.send((
-            webview_id,
-            pipeline_id,
-            ScriptToConstellationMessage::FinishJavaScriptEvaluation(evaluation_id, result),
-        ));
+        #[cfg(feature = "webdriver")]
+        {
+            let result = jsval_to_webdriver(cx, global_scope, return_value.handle());
+            let _ = self.senders.pipeline_to_constellation_sender.send((
+                webview_id,
+                pipeline_id,
+                ScriptToConstellationMessage::FinishJavaScriptEvaluation(evaluation_id, result),
+            ));
+        }
     }
 
     fn handle_refresh_cursor(&self, pipeline_id: PipelineId) {

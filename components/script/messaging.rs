@@ -82,6 +82,7 @@ impl MixedMessage {
                 ScriptThreadMessage::FocusDocumentAsPartOfFocusingSteps(id, ..) => Some(*id),
                 ScriptThreadMessage::UnfocusDocumentAsPartOfFocusingSteps(id, ..) => Some(*id),
                 ScriptThreadMessage::FocusDocument(id, ..) => Some(*id),
+                #[cfg(feature = "webdriver")]
                 ScriptThreadMessage::WebDriverScriptCommand(id, ..) => Some(*id),
                 ScriptThreadMessage::TickAllAnimations(..) => None,
                 ScriptThreadMessage::WebFontLoadFinished(id, ..) => Some(*id),

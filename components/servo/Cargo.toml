@@ -70,6 +70,7 @@ tracing = [
     "net/tracing",
 ]
 vello = ["servo-constellation/vello"]
+webdriver = ["script/webdriver"]
 webgl_backtrace = [
     "script/webgl_backtrace",
     "webgl/webgl_backtrace",

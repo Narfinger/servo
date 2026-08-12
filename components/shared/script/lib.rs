@@ -247,6 +247,7 @@ pub enum ScriptThreadMessage {
     /// - When doing sequential focus navigation into and out of frames.
     FocusDocument(PipelineId, RemoteFocusOperation),
     /// Passes a webdriver command to the script thread for execution
+    #[cfg(feature = "webdriver")]
     WebDriverScriptCommand(PipelineId, WebDriverScriptCommand),
     /// Notifies script thread that all animations are done
     TickAllAnimations(Vec<WebViewId>),

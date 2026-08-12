@@ -19,6 +19,7 @@ bluetooth = ["servo-bluetooth-traits"]
 gamepad = ["embedder_traits/gamepad"]
 tracing = ["dep:tracing", "servo-canvas/tracing"]
 vello = ["servo-canvas/vello"]
+webdriver = []
 webgpu = ["dep:webgpu", "dep:webgpu_traits", "script_traits/webgpu"]
 
 [lints.clippy]

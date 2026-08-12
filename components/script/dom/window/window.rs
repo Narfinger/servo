@@ -205,6 +205,7 @@ use crate::tasks::task_manager::TaskManager;
 use crate::tasks::task_source::SendableTaskSource;
 use crate::timers::{IsInterval, OneshotTimers, TimerCallback};
 use crate::unminify::unminified_path;
+#[cfg(feature = "webdriver")]
 use crate::webdriver_handlers::{find_node_by_unique_id_in_document, jsval_to_webdriver};
 use crate::{fetch, window_named_properties};
 
@@ -1901,27 +1902,39 @@ impl WindowMethods<crate::DomTypeHolder> for Window {
 
     // check-tidy: no specs after this line
     fn WebdriverCallback(&self, realm: &mut CurrentRealm, value: HandleValue) {
-        let webdriver_script_sender = self.webdriver_script_chan.borrow_mut().take();
-        if let Some(webdriver_script_sender) = webdriver_script_sender {
-            let result = jsval_to_webdriver(realm, &self.globalscope, value);
-            let _ = webdriver_script_sender.send(result);
+        #[cfg(feature = "webdriver")]
+        {
+            let webdriver_script_sender = self.webdriver_script_chan.borrow_mut().take();
+            if let Some(webdriver_script_sender) = webdriver_script_sender {
+                let result = jsval_to_webdriver(realm, &self.globalscope, value);
+                let _ = webdriver_script_sender.send(result);
+            }
         }
     }
 
     fn WebdriverException(&self, cx: &mut JSContext, value: HandleValue) {
-        let webdriver_script_sender = self.webdriver_script_chan.borrow_mut().take();
-        if let Some(webdriver_script_sender) = webdriver_script_sender {
-            let error_info = ErrorInfo::from_value(cx, value);
-            let _ = webdriver_script_sender.send(Err(
-                JavaScriptEvaluationError::EvaluationFailure(Some(
-                    javascript_error_info_from_error_info(cx, &error_info, value),
-                )),
-            ));
+        #[cfg(feature = "webdriver")]
+        {
+            let webdriver_script_sender = self.webdriver_script_chan.borrow_mut().take();
+            if let Some(webdriver_script_sender) = webdriver_script_sender {
+                let error_info = ErrorInfo::from_value(cx, value);
+                let _ = webdriver_script_sender.send(Err(
+                    JavaScriptEvaluationError::EvaluationFailure(Some(
+                        javascript_error_info_from_error_info(cx, &error_info, value),
+                    )),
+                ));
+            }
         }
     }
 
+    #[cfg(feature = "webdriver")]
     fn WebdriverElement(&self, id: DOMString) -> Option<DomRoot<Element>> {
         find_node_by_unique_id_in_document(&self.Document(), id.into()).and_then(Root::downcast)
+    }
+
+    #[cfg(not(feature = "webdriver"))]
+    fn WebdriverElement(&self, _id: DOMString) -> Option<DomRoot<Element>> {
+        None
     }
 
     fn WebdriverFrame(&self, browsing_context_id: DOMString) -> Option<DomRoot<WindowProxy>> {
@@ -1951,8 +1964,14 @@ impl WindowMethods<crate::DomTypeHolder> for Window {
         DomRoot::from_ref(window_proxy)
     }
 
+    #[cfg(feature = "webdriver")]
     fn WebdriverShadowRoot(&self, id: DOMString) -> Option<DomRoot<ShadowRoot>> {
         find_node_by_unique_id_in_document(&self.Document(), id.into()).and_then(Root::downcast)
+    }
+
+    #[cfg(not(feature = "webdriver"))]
+    fn WebdriverShadowRoot(&self, _id: DOMString) -> Option<DomRoot<ShadowRoot>> {
+        None
     }
 
     /// <https://drafts.csswg.org/cssom/#dom-window-getcomputedstyle>
