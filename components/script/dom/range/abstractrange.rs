@@ -7,6 +7,7 @@ use std::cmp::{Ord, Ordering, PartialEq, PartialOrd};
 
 use deny_public_fields::DenyPublicFields;
 use dom_struct::dom_struct;
+use js::context::NoGC;
 use script_bindings::reflector::Reflector;
 use servo_base::text::Utf16CodeUnits;
 
@@ -131,7 +132,13 @@ impl PartialEq for BoundaryPoint {
 }
 
 /// <https://dom.spec.whatwg.org/#concept-range-bp-position>
-pub(crate) fn bp_position(a_node: &Node, a_offset: u32, b_node: &Node, b_offset: u32) -> Ordering {
+pub(crate) fn bp_position(
+    no_gc: &NoGC,
+    a_node: &Node,
+    a_offset: u32,
+    b_node: &Node,
+    b_offset: u32,
+) -> Ordering {
     // Step 1: Assert: nodeA and nodeB have the same root.
     debug_assert!(
         a_node.GetRootNode(&Default::default()) == b_node.GetRootNode(&Default::default())
@@ -143,7 +150,7 @@ pub(crate) fn bp_position(a_node: &Node, a_offset: u32, b_node: &Node, b_offset:
         return a_offset.cmp(&b_offset);
     }
 
-    let position = b_node.CompareDocumentPosition(a_node);
+    let position = b_node.CompareDocumentPosition(no_gc, a_node);
     assert!(
         position & NodeConstants::DOCUMENT_POSITION_DISCONNECTED == 0,
         "Nodes should be in the same tree"
@@ -152,7 +159,7 @@ pub(crate) fn bp_position(a_node: &Node, a_offset: u32, b_node: &Node, b_offset:
         // Step 3: If nodeA is following nodeB, then if the position of (nodeB, offsetB)
         // relative to (nodeA, offsetA) is before, return after, and if it is after,
         // return before.
-        return match bp_position(b_node, b_offset, a_node, a_offset) {
+        return match bp_position(no_gc, b_node, b_offset, a_node, a_offset) {
             Ordering::Less => Ordering::Greater,
             Ordering::Greater => Ordering::Less,
             Ordering::Equal => unreachable!("Should be impossible due to Step 2."),
@@ -161,9 +168,9 @@ pub(crate) fn bp_position(a_node: &Node, a_offset: u32, b_node: &Node, b_offset:
         // Step 4: If nodeA is an ancestor of nodeB:
         // Step 4.1: Let child be nodeB.
         // Step 4.2: While child is not a child of nodeA, set child to its parent.
-        let mut b_ancestors = b_node.inclusive_ancestors(ShadowIncluding::No);
+        let mut b_ancestors = b_node.inclusive_ancestors_unrooted(no_gc, ShadowIncluding::No);
         let child = b_ancestors
-            .find(|child| &*child.GetParentNode().unwrap() == a_node)
+            .find(|child| &*child.get_parent_node_unrooted(no_gc).unwrap() == a_node)
             .unwrap();
 
         // Step 4.3: If child’s index is less than offsetA, then return after.

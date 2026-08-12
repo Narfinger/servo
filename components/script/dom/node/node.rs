@@ -712,8 +712,8 @@ impl Node {
 
     /// Returns true if this node is before `other` in the same connected DOM
     /// tree.
-    pub(crate) fn is_before(&self, other: &Node) -> bool {
-        let cmp = other.CompareDocumentPosition(self);
+    pub(crate) fn is_before(&self, no_gc: &NoGC, other: &Node) -> bool {
+        let cmp = other.CompareDocumentPosition(no_gc, self);
         if cmp & NodeConstants::DOCUMENT_POSITION_DISCONNECTED != 0 {
             return false;
         }
@@ -4104,7 +4104,7 @@ impl NodeMethods<crate::DomTypeHolder> for Node {
     }
 
     /// <https://dom.spec.whatwg.org/#dom-node-comparedocumentposition>
-    fn CompareDocumentPosition(&self, other: &Node) -> u16 {
+    fn CompareDocumentPosition(&self, no_gc: &NoGC, other: &Node) -> u16 {
         // Step 1. If this is other, then return zero.
         if self == other {
             return 0;
@@ -4194,10 +4194,10 @@ impl NodeMethods<crate::DomTypeHolder> for Node {
             (Some(node1), Some(node2)) => {
                 // still step 6, testing if node1 and 2 share a root
                 let mut self_and_ancestors = node2
-                    .inclusive_ancestors(ShadowIncluding::No)
+                    .inclusive_ancestors_unrooted(no_gc, ShadowIncluding::No)
                     .collect::<SmallVec<[_; 20]>>();
                 let mut other_and_ancestors = node1
-                    .inclusive_ancestors(ShadowIncluding::No)
+                    .inclusive_ancestors_unrooted(no_gc, ShadowIncluding::No)
                     .collect::<SmallVec<[_; 20]>>();
 
                 if self_and_ancestors.last() != other_and_ancestors.last() {
@@ -4229,7 +4229,7 @@ impl NodeMethods<crate::DomTypeHolder> for Node {
                     let child_2 = other_and_ancestors.pop().unwrap();
 
                     if child_1 != child_2 {
-                        for child in parent.children() {
+                        for child in parent.children_unrooted(no_gc) {
                             if child == child_1 {
                                 // `other` is following `self`.
                                 return NodeConstants::DOCUMENT_POSITION_FOLLOWING;
