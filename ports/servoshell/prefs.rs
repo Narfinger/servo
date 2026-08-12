@@ -396,9 +396,6 @@ struct CmdArgs {
     #[bpaf(argument("~/.config/servo"))]
     config_dir: Option<PathBuf>,
 
-    /// Use temporary storage (data on disk will not persist across restarts).
-    #[bpaf(long)]
-    temporary_storage: bool,
 
     ///
     ///  Run as a content process and connect to the given pipe.
@@ -535,6 +532,9 @@ struct CmdArgs {
     #[bpaf(long("simulate-touch-events"))]
     simulate_touch_events: bool,
 
+    /// Use temporary storage (data on disk will not persist across restarts).
+    #[bpaf(long)]
+    temporary_storage: bool,
     /// Define a custom filter for traces. Overrides `SERVO_TRACING` if set.
     #[bpaf(long("tracing-filter"), argument("FILTER"))]
     tracing_filter: Option<String>,
