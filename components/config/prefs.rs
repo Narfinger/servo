@@ -592,7 +592,7 @@ impl Preferences {
             network_http_proxy_uri: String::new(),
             network_https_proxy_uri: String::new(),
             network_http_no_proxy: String::new(),
-            network_http_cache_size: 5000,
+            network_http_cache_size: 100,
             network_local_directory_listing_enabled: true,
             network_use_webpki_roots: false,
             network_max_content_length: 5 * 1024 * 1024,

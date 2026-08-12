@@ -254,7 +254,7 @@ impl Default for Opts {
             sandbox: false,
             debug: Default::default(),
             config_dir: None,
-            temporary_storage: false,
+            temporary_storage: true,
             shaders_path: None,
             certificate_path: None,
             host_file: None,
