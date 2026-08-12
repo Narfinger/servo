@@ -45,6 +45,7 @@ use url::Url;
 ))]
 pub(crate) use crate::desktop::gamepad::ServoshellGamepadDelegate;
 use crate::prefs::{EXPERIMENTAL_PREFS, ServoShellPreferences};
+#[cfg(feature = "webdriver")]
 use crate::webdriver::WebDriverEmbedderControls;
 use crate::window::{PlatformWindow, ServoShellWindow, ServoShellWindowId};
 
@@ -183,6 +184,7 @@ pub(crate) struct RunningAppState {
     /// When running in WebDriver mode, [`WebDriverEmbedderControls`] is a virtual container
     /// for all embedder controls. This overrides the normal behavior where these controls
     /// are shown in the GUI or not processed at all in headless mode.
+    #[cfg(feature = "webdriver")]
     pub(crate) webdriver_embedder_controls: WebDriverEmbedderControls,
 
     /// A [`HashMap`] of pending WebDriver events. It is the WebDriver embedder's responsibility
@@ -248,6 +250,7 @@ impl RunningAppState {
 
         let webdriver_receiver = servoshell_preferences.webdriver_port.get().map(|port| {
             let (embedder_sender, embedder_receiver) = unbounded();
+            #[cfg(feature = "webdriver")]
             webdriver_server::start_server(
                 port,
                 embedder_sender,
@@ -269,6 +272,7 @@ impl RunningAppState {
             ))]
             gamepad_delegate,
             webdriver_senders: RefCell::default(),
+            #[cfg(feature = "webdriver")]
             webdriver_embedder_controls: Default::default(),
             pending_webdriver_events: Default::default(),
             webdriver_receiver,
@@ -424,6 +428,7 @@ impl RunningAppState {
             window.handle_interface_commands(self, create_platform_window);
         }
 
+        #[cfg(feature = "webdriver")]
         self.handle_webdriver_messages(create_platform_window);
 
         /* #[cfg(all(
@@ -850,6 +855,7 @@ impl WebViewDelegate for RunningAppState {
                 };
             }
 
+            #[cfg(feature = "webdriver")]
             self.webdriver_embedder_controls
                 .show_embedder_control(webview.id(), embedder_control);
             return;
@@ -860,6 +866,7 @@ impl WebViewDelegate for RunningAppState {
     }
 
     fn hide_embedder_control(&self, webview: WebView, embedder_control_id: EmbedderControlId) {
+        #[cfg(feature = "webdriver")]
         if self.servoshell_preferences.webdriver_port.get().is_some() {
             self.webdriver_embedder_controls
                 .hide_embedder_control(webview.id(), embedder_control_id);
