@@ -270,12 +270,14 @@ impl Selection {
         self.set_visible_selection_dirty();
     }
 
-    pub(crate) fn extend_current_range(&self, node: &Node, offset: u32) {
+    pub(crate) fn extend_current_range(&self, no_gc: &NoGC, node: &Node, offset: u32) {
         let range = self.range.get().expect("Must always have a range");
         assert!(range.collapsed(), "Must only extend after collapsing");
 
         let anchor_node = range.start_container();
-        if (*anchor_node == *node && range.start_offset() < offset) || anchor_node.is_before(node) {
+        if (*anchor_node == *node && range.start_offset() < offset) ||
+            anchor_node.is_before(no_gc, node)
+        {
             range.set_end(node, offset);
             self.direction.set(Direction::Forwards);
         } else {
@@ -611,7 +613,7 @@ impl SelectionMethods<crate::DomTypeHolder> for Selection {
             direction = Direction::Forwards;
         } else {
             let is_old_anchor_before_or_equal = matches!(
-                bp_position(old_anchor_node, old_anchor_offset, node, offset),
+                bp_position(cx.no_gc(), old_anchor_node, old_anchor_offset, node, offset),
                 Ordering::Less | Ordering::Equal
             );
             if is_old_anchor_before_or_equal {
@@ -702,8 +704,13 @@ impl SelectionMethods<crate::DomTypeHolder> for Selection {
         // Step 5. If anchor is before focus, set the start the newRange's start to anchor
         // and its end to focus. Otherwise, set the start them to focus and anchor
         // respectively.
-        let is_anchor_before_focus =
-            bp_position(anchor_node, anchor_offset, focus_node, focus_offset) == Ordering::Less;
+        let is_anchor_before_focus = bp_position(
+            cx.no_gc(),
+            anchor_node,
+            anchor_offset,
+            focus_node,
+            focus_offset,
+        ) == Ordering::Less;
         if is_anchor_before_focus {
             new_range = Range::new(
                 cx,
@@ -782,7 +789,7 @@ impl SelectionMethods<crate::DomTypeHolder> for Selection {
     }
 
     /// <https://w3c.github.io/selection-api/#dom-selection-containsnode>
-    fn ContainsNode(&self, node: &Node, allow_partial_containment: bool) -> bool {
+    fn ContainsNode(&self, no_gc: &NoGC, node: &Node, allow_partial_containment: bool) -> bool {
         // > The method must return false if this is empty or if node's root is not the document
         // > associated with this.
         // >
@@ -820,10 +827,16 @@ impl SelectionMethods<crate::DomTypeHolder> for Selection {
         // https://github.com/w3c/selection-api/issues/6
         // For now it is simplified to "position is equal".
         matches!(
-            bp_position(start_node, range.start_offset(), node, compare_start_to),
+            bp_position(
+                no_gc,
+                start_node,
+                range.start_offset(),
+                node,
+                compare_start_to
+            ),
             Ordering::Less | Ordering::Equal
         ) && matches!(
-            bp_position(end_node, range.end_offset(), node, compare_end_to),
+            bp_position(no_gc, end_node, range.end_offset(), node, compare_end_to),
             Ordering::Greater | Ordering::Equal
         )
     }

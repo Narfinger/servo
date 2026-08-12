@@ -197,7 +197,9 @@ impl Selection {
             (active_range.end_container(), active_range.end_offset()).first_equivalent_point();
 
         // Step 6. If (end node, end offset) is not after (start node, start offset):
-        if bp_position(&end_node, end_offset, &start_node, start_offset) != Ordering::Greater {
+        if bp_position(cx.no_gc(), &end_node, end_offset, &start_node, start_offset) !=
+            Ordering::Greater
+        {
             // Step 6.1. If direction is "forward", call collapseToStart() on the context object's selection.
             if direction == SelectionDeleteDirection::Forward {
                 self.collapse_current_range(
@@ -365,7 +367,7 @@ impl Selection {
         // Step 24. For each node contained in the active range, append node to node list if the
         // last member of node list (if any) is not an ancestor of node; node is editable;
         // and node is not a thead, tbody, tfoot, tr, th, or td.
-        let Ok(contained_children) = active_range.contained_children() else {
+        let Ok(contained_children) = active_range.contained_children(cx.no_gc()) else {
             unreachable!("Must always have contained children");
         };
         for node in contained_children.contained_children {

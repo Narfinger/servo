@@ -170,7 +170,7 @@ pub(crate) fn bp_position(
         // Step 4.2: While child is not a child of nodeA, set child to its parent.
         let mut b_ancestors = b_node.inclusive_ancestors_unrooted(no_gc, ShadowIncluding::No);
         let child = b_ancestors
-            .find(|child| &*child.get_parent_node_unrooted(no_gc).unwrap() == a_node)
+            .find(|child| *child.get_parent_node_unrooted(no_gc).unwrap() == a_node)
             .unwrap();
 
         // Step 4.3: If child’s index is less than offsetA, then return after.

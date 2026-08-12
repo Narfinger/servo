@@ -121,7 +121,7 @@ pub(crate) fn execute_insert_paragraph_command(
         let new_range = active_range.block_extend(cx, document);
         // Step 11.4. Append to node list the first node in tree order that is contained in new range and is an allowed child of "p", if any.
         let mut node_list = if let Some(eligible_node) = new_range
-            .contained_children()
+            .contained_children(cx.no_gc())
             .ok()
             .and_then(|contained_children| {
                 contained_children
@@ -291,13 +291,15 @@ pub(crate) fn execute_insert_paragraph_command(
         );
     }
     // Step 17. Let end of line be true if new line range contains either nothing or a single br, and false otherwise.
-    let end_of_line = new_line_range
-        .contained_children()
-        .is_ok_and(|contained_children| {
-            let contained_children = contained_children.contained_children;
-            contained_children.is_empty() ||
-                (contained_children.len() == 1 && contained_children[0].is::<HTMLBRElement>())
-        });
+    let end_of_line =
+        new_line_range
+            .contained_children(cx.no_gc())
+            .is_ok_and(|contained_children| {
+                let contained_children = contained_children.contained_children;
+                contained_children.is_empty() ||
+                    (contained_children.len() == 1 &&
+                        contained_children[0].is::<HTMLBRElement>())
+            });
     // Step 18. If the local name of container is "h1", "h2", "h3", "h4", "h5", or "h6",
     // and end of line is true, let new container name be the default single-line container name.
     let container_as_element = container
@@ -351,7 +353,7 @@ pub(crate) fn execute_insert_paragraph_command(
         unreachable!("Must always be able to insert");
     }
     // Step 26. Let contained nodes be all nodes contained in new line range.
-    let Ok(contained_nodes) = new_line_range.contained_children() else {
+    let Ok(contained_nodes) = new_line_range.contained_children(cx.no_gc()) else {
         unreachable!("Must always have contained children");
     };
     // Step 27. Let frag be the result of calling extractContents() on new line range.
