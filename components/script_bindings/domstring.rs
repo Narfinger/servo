@@ -428,10 +428,9 @@ impl DOMString {
     }
 
     pub fn make_ascii_lowercase(&mut self) {
-        self.0
-            .borrow_mut()
-            .ensure_rust_string()
-            .make_ascii_lowercase();
+        let s = self.0.borrow_mut().ensure_rust_string();
+        assert!(s.is_ascii());
+        s.make_ascii_lowercase();
     }
 
     pub fn push_str(&mut self, string_to_push: &str) {
