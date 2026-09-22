@@ -18,6 +18,7 @@ use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::Serialize;
 use serde_json::{Map, Value, json};
 use servo_base::id::PipelineId;
+use uuid::Uuid;
 
 use crate::StreamId;
 use crate::protocol::{ClientRequest, DevtoolsConnection, JsonPacketStream};
@@ -196,7 +197,7 @@ impl<'a> Drop for WriteGuard<'a> {
 #[derive(Default, MallocSizeOf)]
 struct ActorRegistryInner {
     actors: HashSet<RegisteredActor>,
-    script_to_actor: HashMap<String, String>,
+    script_to_actor: HashMap<Uuid, String>,
     actor_to_script: HashMap<String, String>,
     source_actor_names: HashMap<PipelineId, Vec<String>>,
     inline_source_content: HashMap<PipelineId, String>,
@@ -297,7 +298,7 @@ impl ActorRegistry {
         Ok(())
     }
 
-    pub(crate) fn register_script_actor(&self, script_id: String, actor: String) {
+    pub(crate) fn register_script_actor(&self, script_id: Uuid, actor: String) {
         debug!("Registering {actor} ({script_id})");
         let mut lock = self.write();
         lock.script_to_actor
@@ -305,7 +306,7 @@ impl ActorRegistry {
         lock.actor_to_script.insert(actor, script_id);
     }
 
-    pub(crate) fn script_to_actor(&self, script_id: &str) -> String {
+    pub(crate) fn script_to_actor(&self, script_id: &Uuid) -> String {
         if script_id.is_empty() {
             return String::new();
         }
@@ -316,7 +317,7 @@ impl ActorRegistry {
             .clone()
     }
 
-    pub(crate) fn script_actor_registered(&self, script_id: &str) -> bool {
+    pub(crate) fn script_actor_registered(&self, script_id: &Uuid) -> bool {
         self.read().script_to_actor.contains_key(script_id)
     }
 

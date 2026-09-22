@@ -1868,15 +1868,15 @@ impl Node {
         .map(|unique_id| unique_id.simple().to_string())
     }
 
-    pub(crate) fn unique_id(&self, pipeline: PipelineId) -> String {
+    pub(crate) fn unique_id(&self, pipeline: PipelineId) -> Uuid {
         let mut rare_data = self.ensure_rare_data();
 
         if rare_data.unique_id.is_none() {
             let node_id = Uuid::new_v4();
-            ScriptThread::save_node_id(pipeline, node_id.simple().to_string());
+            ScriptThread::save_node_id(pipeline, node_id);
             rare_data.unique_id = Some(node_id);
         }
-        rare_data.unique_id.as_ref().unwrap().simple().to_string()
+        rare_data.unique_id.as_ref().unwrap().clone()
     }
 
     pub(crate) fn summarize(&self, cx: &mut JSContext) -> NodeInfo {

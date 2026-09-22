@@ -20,6 +20,7 @@ use servo_base::id::{BrowsingContextId, WebViewId};
 use servo_geometry::{DeviceIndependentIntRect, DeviceIndependentPixel};
 use style_traits::CSSPixel;
 use url::Url;
+use uuid::Uuid;
 use webdriver::command::SetPermissionState;
 use webdriver::error::ErrorStatus;
 
@@ -225,7 +226,7 @@ pub enum WebDriverScriptCommand {
     GetElementShadowRoot(String, GenericSender<Result<Option<String>, ErrorStatus>>),
     ElementClick(String, GenericSender<Result<Option<String>, ErrorStatus>>),
     GetKnownElement(String, GenericSender<Result<(), ErrorStatus>>),
-    GetKnownShadowRoot(String, GenericSender<Result<(), ErrorStatus>>),
+    GetKnownShadowRoot(Uuid, GenericSender<Result<(), ErrorStatus>>),
     GetKnownWindow(String, GenericSender<Result<(), ErrorStatus>>),
     GetActiveElement(GenericSender<Option<String>>),
     GetComputedRole(String, GenericSender<Result<Option<String>, ErrorStatus>>),
@@ -281,7 +282,7 @@ pub type WebDriverJSResult = Result<JSValue, JavaScriptEvaluationError>;
 #[derive(Debug, Deserialize, Serialize)]
 pub enum WebDriverFrameId {
     Short(u16),
-    Element(String),
+    Element(Uuid),
 }
 
 #[derive(Debug, Deserialize, Serialize)]

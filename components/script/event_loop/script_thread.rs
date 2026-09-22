@@ -112,6 +112,7 @@ use style::thread_state::{self, ThreadState};
 use stylo_atoms::Atom;
 use timers::{TimerEventRequest, TimerId, TimerScheduler};
 use url::Position;
+use uuid::Uuid;
 #[cfg(feature = "webgpu")]
 use webgpu_traits::{WebGPUDevice, WebGPUMsg};
 
@@ -187,7 +188,7 @@ pub(crate) struct IncompleteParserContexts(RefCell<Vec<(PipelineId, ParserContex
 
 unsafe_no_jsmanaged_fields!(TaskQueue<MainThreadScriptMsg>);
 
-type NodeIdSet = HashSet<String>;
+type NodeIdSet = FxHashSet<Uuid>;
 
 /// A simple guard structure that restore the user interacting state when dropped
 #[derive(Default)]
@@ -782,7 +783,7 @@ impl ScriptThread {
         })
     }
 
-    pub(crate) fn save_node_id(pipeline: PipelineId, node_id: String) {
+    pub(crate) fn save_node_id(pipeline: PipelineId, node_id: Uuid) {
         with_script_thread(|script_thread| {
             script_thread
                 .pipeline_to_node_ids
@@ -793,7 +794,7 @@ impl ScriptThread {
         })
     }
 
-    pub(crate) fn has_node_id(pipeline: PipelineId, node_id: &str) -> bool {
+    pub(crate) fn has_node_id(pipeline: PipelineId, node_id: &Uuid) -> bool {
         with_script_thread(|script_thread| {
             script_thread
                 .pipeline_to_node_ids

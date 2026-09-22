@@ -271,7 +271,7 @@ pub struct AttrInfo {
 #[derive(Debug, Deserialize, MallocSizeOf, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeInfo {
-    pub unique_id: String,
+    pub unique_id: Uuid,
     pub host: Option<String>,
     #[serde(rename = "baseURI")]
     pub base_uri: String,

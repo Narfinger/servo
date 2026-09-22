@@ -38,6 +38,7 @@ use script_bindings::reflector::DomObject;
 use script_bindings::settings_stack::run_a_script;
 use servo_base::generic_channel::{self, GenericOneshotSender, GenericSend, GenericSender};
 use servo_base::id::{BrowsingContextId, PipelineId};
+use uuid::Uuid;
 use webdriver::command::SetPermissionState;
 use webdriver::error::ErrorStatus;
 
@@ -180,7 +181,7 @@ pub(crate) fn handle_get_known_window(
 pub(crate) fn handle_get_known_shadow_root(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    shadow_root_id: String,
+    shadow_root_id: Uuid,
     reply: GenericSender<Result<(), ErrorStatus>>,
 ) {
     let result = get_known_shadow_root(documents, pipeline, shadow_root_id).map(|_| ());
@@ -193,7 +194,7 @@ pub(crate) fn handle_get_known_shadow_root(
 fn get_known_shadow_root(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
 ) -> Result<DomRoot<ShadowRoot>, ErrorStatus> {
     let doc = documents
         .find_document(pipeline)
@@ -235,7 +236,7 @@ fn get_known_shadow_root(
 pub(crate) fn handle_get_known_element(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<(), ErrorStatus>>,
 ) {
     let result = get_known_element(documents, pipeline, element_id).map(|_| ());
@@ -248,7 +249,7 @@ pub(crate) fn handle_get_known_element(
 fn get_known_element(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
 ) -> Result<DomRoot<Element>, ErrorStatus> {
     let doc = documents
         .find_document(pipeline)
@@ -285,7 +286,7 @@ fn get_known_element(
 // This is also used by `dom/window.rs`
 pub(crate) fn find_node_by_unique_id_in_document(
     document: &Document,
-    node_id: String,
+    node_id: Uuid,
 ) -> Option<DomRoot<Node>> {
     let pipeline = document.window().pipeline_id();
     document
@@ -801,7 +802,7 @@ pub(crate) fn handle_get_element_in_view_center_point(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericOneshotSender<Result<Option<(i64, i64)>, ErrorStatus>>,
 ) {
     reply
@@ -984,7 +985,7 @@ pub(crate) fn handle_find_element_elements_css_selector(
     pipeline: PipelineId,
     element_id: String,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1008,7 +1009,7 @@ pub(crate) fn handle_find_element_elements_link_text(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     selector: String,
     partial: bool,
     reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
@@ -1026,9 +1027,9 @@ pub(crate) fn handle_find_element_elements_tag_name(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1037,7 +1038,7 @@ pub(crate) fn handle_find_element_elements_tag_name(
                     .GetElementsByTagName(cx, DOMString::from(selector))
                     .elements_iter(cx.no_gc())
                     .map(|x| x.upcast::<Node>().unique_id(pipeline))
-                    .collect::<Vec<String>>()
+                    .collect::<Vec<_>>()
             }),
         )
         .unwrap();
@@ -1047,9 +1048,9 @@ pub(crate) fn handle_find_element_elements_xpath_selector(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1073,9 +1074,9 @@ pub(crate) fn handle_find_shadow_elements_css_selector(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    shadow_root_id: String,
+    shadow_root_id: Uuid,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1099,10 +1100,10 @@ pub(crate) fn handle_find_shadow_elements_link_text(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    shadow_root_id: String,
+    shadow_root_id: Uuid,
     selector: String,
     partial: bool,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1117,9 +1118,9 @@ pub(crate) fn handle_find_shadow_elements_tag_name(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    shadow_root_id: String,
+    shadow_root_id: Uuid,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     // According to spec, we should use `getElementsByTagName`. But it is wrong, as only
     // Document and Element implement this method. So we use `querySelectorAll` instead.
@@ -1148,9 +1149,9 @@ pub(crate) fn handle_find_shadow_elements_xpath_selector(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    shadow_root_id: String,
+    shadow_root_id: Uuid,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1173,8 +1174,8 @@ pub(crate) fn handle_find_shadow_elements_xpath_selector(
 pub(crate) fn handle_get_element_shadow_root(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
-    reply: GenericSender<Result<Option<String>, ErrorStatus>>,
+    element_id: Uuid,
+    reply: GenericSender<Result<Option<Uuid>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1287,7 +1288,7 @@ pub(crate) fn handle_will_send_keys(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     text: String,
     strict_file_interactability: bool,
     reply: GenericSender<Result<bool, ErrorStatus>>,
@@ -1395,7 +1396,7 @@ pub(crate) fn handle_get_active_element(
 pub(crate) fn handle_get_computed_role(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
     reply: GenericSender<Result<Option<String>, ErrorStatus>>,
 ) {
     reply
@@ -1637,7 +1638,7 @@ pub(crate) fn handle_get_rect(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<Rect<f64>, ErrorStatus>>,
 ) {
     reply
@@ -1663,7 +1664,7 @@ pub(crate) fn handle_scroll_and_get_bounding_client_rect(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<Rect<f32>, ErrorStatus>>,
 ) {
     reply
@@ -1685,7 +1686,7 @@ pub(crate) fn handle_scroll_and_get_bounding_client_rect(
 pub(crate) fn handle_get_text(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
     reply: GenericSender<Result<String, ErrorStatus>>,
 ) {
     reply
@@ -1709,7 +1710,7 @@ pub(crate) fn handle_get_text(
 pub(crate) fn handle_get_name(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
     reply: GenericSender<Result<String, ErrorStatus>>,
 ) {
     reply
@@ -1724,7 +1725,7 @@ pub(crate) fn handle_get_attribute(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
     name: String,
     reply: GenericSender<Result<Option<String>, ErrorStatus>>,
 ) {
@@ -1750,7 +1751,7 @@ pub(crate) fn handle_get_attribute(
 pub(crate) fn handle_get_property(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
     name: String,
     reply: GenericSender<Result<JSValue, ErrorStatus>>,
     cx: &mut JSContext,
@@ -1792,7 +1793,7 @@ pub(crate) fn handle_get_css(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: String,
+    node_id: Uuid,
     name: String,
     reply: GenericSender<Result<String, ErrorStatus>>,
 ) {
@@ -1907,7 +1908,7 @@ pub(crate) fn handle_element_clear(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<(), ErrorStatus>>,
 ) {
     reply
@@ -1983,7 +1984,7 @@ pub(crate) fn handle_element_click(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<Option<String>, ErrorStatus>>,
 ) {
     reply
@@ -2136,7 +2137,7 @@ fn get_element_pointer_interactable_paint_tree(
 pub(crate) fn handle_is_enabled(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<bool, ErrorStatus>>,
 ) {
     reply
@@ -2164,7 +2165,7 @@ pub(crate) fn handle_is_enabled(
 pub(crate) fn handle_is_selected(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     reply: GenericSender<Result<bool, ErrorStatus>>,
 ) {
     reply
