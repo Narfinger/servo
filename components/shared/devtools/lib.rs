@@ -24,7 +24,7 @@ use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub use embedder_traits::ConsoleLogLevel;
-use embedder_traits::Theme;
+use embedder_traits::{Theme, WebDriverNodeId};
 use http::{HeaderMap, Method};
 use malloc_size_of_derive::MallocSizeOf;
 use net_traits::TlsSecurityInfo;
@@ -155,7 +155,7 @@ pub enum ScriptToDevtoolsControlMsg {
 #[derive(Clone, Debug, Deserialize, MallocSizeOf, Serialize)]
 pub enum DomMutation {
     AttributeModified {
-        node: String,
+        node: WebDriverNodeId,
         attribute_name: String,
         new_value: Option<String>,
     },
@@ -275,7 +275,7 @@ pub struct NodeInfo {
     pub host: Option<String>,
     #[serde(rename = "baseURI")]
     pub base_uri: String,
-    pub parent: String,
+    pub parent: WebDriverNodeId,
     pub node_type: u16,
     pub node_name: String,
     pub node_value: Option<String>,
@@ -400,13 +400,17 @@ pub enum DevtoolScriptControlMsg {
     /// Retrieve the details of the document element for the given pipeline.
     GetDocumentElement(PipelineId, GenericSender<Option<NodeInfo>>),
     /// Retrieve the details of the child nodes of the given node in the given pipeline.
-    GetChildren(PipelineId, String, GenericSender<Option<Vec<NodeInfo>>>),
+    GetChildren(
+        PipelineId,
+        WebDriverNodeId,
+        GenericSender<Option<Vec<NodeInfo>>>,
+    ),
     /// Retrieve the CSS style properties defined in the attribute tag for the given node.
     GetAttributeStyle(PipelineId, String, GenericSender<Option<Vec<NodeStyle>>>),
     /// Retrieve the CSS style properties defined in an stylesheet for the given selector.
     GetStylesheetStyle(
         PipelineId,
-        String,
+        WebDriverNodeId,
         MatchedRule,
         GenericSender<Option<Vec<NodeStyle>>>,
     ),
@@ -416,30 +420,42 @@ pub enum DevtoolScriptControlMsg {
     GetStyleSheetText(PipelineId, i32, GenericSender<Option<String>>),
     /// Retrieves the CSS selectors for the given node. A selector is comprised of the text
     /// of the selector and the id of the stylesheet that contains it.
-    GetSelectors(PipelineId, String, GenericSender<Option<Vec<MatchedRule>>>),
+    GetSelectors(
+        PipelineId,
+        WebDriverNodeId,
+        GenericSender<Option<Vec<MatchedRule>>>,
+    ),
     /// Retrieve the computed CSS style properties for the given node.
-    GetComputedStyle(PipelineId, String, GenericSender<Option<Vec<NodeStyle>>>),
+    GetComputedStyle(
+        PipelineId,
+        WebDriverNodeId,
+        GenericSender<Option<Vec<NodeStyle>>>,
+    ),
     /// Get information about event listeners on a node.
-    GetEventListenerInfo(PipelineId, String, GenericSender<Vec<EventListenerInfo>>),
+    GetEventListenerInfo(
+        PipelineId,
+        WebDriverNodeId,
+        GenericSender<Vec<EventListenerInfo>>,
+    ),
     /// Retrieve the computed layout properties of the given node in the given pipeline.
     GetLayout(
         PipelineId,
-        String,
+        WebDriverNodeId,
         GenericSender<Option<(ComputedNodeLayout, AutoMargins)>>,
     ),
     /// Get a unique XPath selector for the node.
-    GetXPath(PipelineId, String, GenericSender<String>),
+    GetXPath(PipelineId, WebDriverNodeId, GenericSender<String>),
     /// Get inner/outer HTML on a node.
     GetInnerOrOuterHTML(
         PipelineId,
-        String,
+        WebDriverNodeId,
         GenericSender<Option<String>>,
         GetHTMLType,
     ),
     /// Update a given node's attributes with a list of modifications.
-    ModifyAttribute(PipelineId, String, Vec<AttrModification>),
+    ModifyAttribute(PipelineId, WebDriverNodeId, Vec<AttrModification>),
     /// Update a given node's style rules with a list of modifications.
-    ModifyRule(PipelineId, String, Vec<RuleModification>),
+    ModifyRule(PipelineId, WebDriverNodeId, Vec<RuleModification>),
     /// Request live console messages for a given pipeline (true if desired, false otherwise).
     WantsLiveNotifications(PipelineId, bool),
     /// Request live notifications for a given set of timeline events for a given pipeline.
@@ -469,7 +485,7 @@ pub enum DevtoolScriptControlMsg {
     /// Simulates a light or dark color scheme for the given pipeline
     SimulateColorScheme(PipelineId, Theme),
     /// Highlight the given DOM node
-    HighlightDomNode(PipelineId, Option<String>),
+    HighlightDomNode(PipelineId, Option<WebDriverNodeId>),
 
     Eval(
         String,

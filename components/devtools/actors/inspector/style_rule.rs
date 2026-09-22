@@ -13,6 +13,7 @@ use devtools_traits::DevtoolScriptControlMsg::{
     GetAttributeStyle, GetComputedStyle, GetDocumentElement, GetStylesheetStyle, ModifyRule,
 };
 use devtools_traits::{AncestorData, MatchedRule};
+use embedder_traits::{WebDriverCommandMsg, WebDriverNodeId};
 use malloc_size_of_derive::MallocSizeOf;
 use serde::Serialize;
 use serde_json::{Map, Value};
@@ -84,7 +85,7 @@ pub(crate) struct StyleRuleActorMsg {
 #[derive(MallocSizeOf)]
 pub(crate) struct StyleRuleActor {
     name: String,
-    node_name: String,
+    node_name: WebDriverNodeId,
     selector: Option<MatchedRule>,
 }
 

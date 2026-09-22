@@ -11,6 +11,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 
+use embedder_traits::WebDriverNodeId;
 use log::{debug, warn};
 use malloc_size_of::MallocSizeOf;
 use malloc_size_of_derive::MallocSizeOf;
@@ -18,7 +19,6 @@ use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::Serialize;
 use serde_json::{Map, Value, json};
 use servo_base::id::PipelineId;
-use uuid::Uuid;
 
 use crate::StreamId;
 use crate::protocol::{ClientRequest, DevtoolsConnection, JsonPacketStream};
@@ -197,8 +197,8 @@ impl<'a> Drop for WriteGuard<'a> {
 #[derive(Default, MallocSizeOf)]
 struct ActorRegistryInner {
     actors: HashSet<RegisteredActor>,
-    script_to_actor: HashMap<Uuid, String>,
-    actor_to_script: HashMap<String, String>,
+    script_to_actor: HashMap<WebDriverNodeId, String>,
+    actor_to_script: HashMap<String, WebDriverNodeId>,
     source_actor_names: HashMap<PipelineId, Vec<String>>,
     inline_source_content: HashMap<PipelineId, String>,
 }
@@ -298,7 +298,7 @@ impl ActorRegistry {
         Ok(())
     }
 
-    pub(crate) fn register_script_actor(&self, script_id: Uuid, actor: String) {
+    pub(crate) fn register_script_actor(&self, script_id: WebDriverNodeId, actor: String) {
         debug!("Registering {actor} ({script_id})");
         let mut lock = self.write();
         lock.script_to_actor
@@ -306,10 +306,7 @@ impl ActorRegistry {
         lock.actor_to_script.insert(actor, script_id);
     }
 
-    pub(crate) fn script_to_actor(&self, script_id: &Uuid) -> String {
-        if script_id.is_empty() {
-            return String::new();
-        }
+    pub(crate) fn script_to_actor(&self, script_id: &WebDriverNodeId) -> String {
         self.read()
             .script_to_actor
             .get(script_id)
@@ -317,11 +314,11 @@ impl ActorRegistry {
             .clone()
     }
 
-    pub(crate) fn script_actor_registered(&self, script_id: &Uuid) -> bool {
+    pub(crate) fn script_actor_registered(&self, script_id: &WebDriverNodeId) -> bool {
         self.read().script_to_actor.contains_key(script_id)
     }
 
-    pub(crate) fn actor_to_script(&self, actor: String) -> String {
+    pub(crate) fn actor_to_script(&self, actor: String) -> WebDriverNodeId {
         self.read()
             .actor_to_script
             .get(&actor)

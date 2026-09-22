@@ -87,6 +87,8 @@ pub enum NewWindowTypeHint {
     Window,
 }
 
+pub type WebDriverNodeId = Uuid;
+
 /// Messages to the constellation originating from the WebDriver server.
 #[derive(Debug)]
 pub enum WebDriverCommandMsg {
@@ -171,7 +173,7 @@ pub enum WebDriverScriptCommand {
     ),
     DeleteCookies(GenericSender<Result<(), ErrorStatus>>),
     DeleteCookie(String, GenericSender<Result<(), ErrorStatus>>),
-    ElementClear(String, GenericSender<Result<(), ErrorStatus>>),
+    ElementClear(WebDriverNodeId, GenericSender<Result<(), ErrorStatus>>),
     ExecuteScriptWithCallback(String, GenericSender<WebDriverJSResult>),
     FindElementsCSSSelector(String, GenericSender<Result<Vec<String>, ErrorStatus>>),
     FindElementsLinkText(
@@ -180,73 +182,89 @@ pub enum WebDriverScriptCommand {
         GenericSender<Result<Vec<String>, ErrorStatus>>,
     ),
     FindElementsTagName(String, GenericSender<Result<Vec<String>, ErrorStatus>>),
-    FindElementsXpathSelector(String, GenericSender<Result<Vec<String>, ErrorStatus>>),
+    FindElementsXpathSelector(
+        String,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
+    ),
     FindElementElementsCSSSelector(
         String,
-        String,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
+        WebDriverNodeId,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
     ),
     FindElementElementsLinkText(
         String,
-        String,
+        WebDriverNodeId,
         bool,
         GenericSender<Result<Vec<String>, ErrorStatus>>,
     ),
-    FindElementElementsTagName(
-        String,
-        String,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
-    ),
+    FindElementElementsTagName(String, Uuid, GenericSender<Result<Vec<Uuid>, ErrorStatus>>),
     FindElementElementsXPathSelector(
         String,
-        String,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
+        WebDriverNodeId,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
     ),
     FindShadowElementsCSSSelector(
         String,
-        String,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
+        WebDriverNodeId,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
     ),
     FindShadowElementsLinkText(
         String,
-        String,
+        WebDriverNodeId,
         bool,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
     ),
     FindShadowElementsTagName(
         String,
-        String,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
+        WebDriverNodeId,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
     ),
     FindShadowElementsXPathSelector(
         String,
-        String,
-        GenericSender<Result<Vec<String>, ErrorStatus>>,
+        WebDriverNodeId,
+        GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
     ),
-    GetElementShadowRoot(String, GenericSender<Result<Option<String>, ErrorStatus>>),
-    ElementClick(String, GenericSender<Result<Option<String>, ErrorStatus>>),
-    GetKnownElement(String, GenericSender<Result<(), ErrorStatus>>),
-    GetKnownShadowRoot(Uuid, GenericSender<Result<(), ErrorStatus>>),
+    GetElementShadowRoot(
+        WebDriverNodeId,
+        GenericSender<Result<Option<WebDriverNodeId>, ErrorStatus>>,
+    ),
+    ElementClick(
+        WebDriverNodeId,
+        GenericSender<Result<Option<String>, ErrorStatus>>,
+    ),
+    GetKnownElement(WebDriverNodeId, GenericSender<Result<(), ErrorStatus>>),
+    GetKnownShadowRoot(WebDriverNodeId, GenericSender<Result<(), ErrorStatus>>),
     GetKnownWindow(String, GenericSender<Result<(), ErrorStatus>>),
     GetActiveElement(GenericSender<Option<String>>),
-    GetComputedRole(String, GenericSender<Result<Option<String>, ErrorStatus>>),
+    GetComputedRole(
+        WebDriverNodeId,
+        GenericSender<Result<Option<String>, ErrorStatus>>,
+    ),
     GetCookie(
         String,
         GenericSender<Result<Vec<Serde<Cookie<'static>>>, ErrorStatus>>,
     ),
     GetCookies(GenericSender<Result<Vec<Serde<Cookie<'static>>>, ErrorStatus>>),
     GetElementAttribute(
-        String,
+        WebDriverNodeId,
         String,
         GenericSender<Result<Option<String>, ErrorStatus>>,
     ),
-    GetElementProperty(String, String, GenericSender<Result<JSValue, ErrorStatus>>),
-    GetElementCSS(String, String, GenericSender<Result<String, ErrorStatus>>),
-    GetElementRect(String, GenericSender<Result<UntypedRect<f64>, ErrorStatus>>),
-    GetElementTagName(String, GenericSender<Result<String, ErrorStatus>>),
-    GetElementText(String, GenericSender<Result<String, ErrorStatus>>),
-    GetElementInViewCenterPoint(
+    GetElementProperty(
+        WebDriverNodeId,
         String,
+        GenericSender<Result<JSValue, ErrorStatus>>,
+    ),
+    GetElementCSS(
+        WebDriverNodeId,
+        String,
+        GenericSender<Result<String, ErrorStatus>>,
+    ),
+    GetElementRect(String, GenericSender<Result<UntypedRect<f64>, ErrorStatus>>),
+    GetElementTagName(WebDriverNodeId, GenericSender<Result<String, ErrorStatus>>),
+    GetElementText(WebDriverNodeId, GenericSender<Result<String, ErrorStatus>>),
+    GetElementInViewCenterPoint(
+        WebDriverNodeId,
         GenericOneshotSender<Result<Option<(i64, i64)>, ErrorStatus>>,
     ),
     ScrollAndGetBoundingClientRect(String, GenericSender<Result<UntypedRect<f32>, ErrorStatus>>),
@@ -257,12 +275,12 @@ pub enum WebDriverScriptCommand {
     GetParentFrameId(GenericSender<Result<BrowsingContextId, ErrorStatus>>),
     GetUrl(GenericSender<String>),
     GetPageSource(GenericSender<Result<String, ErrorStatus>>),
-    IsEnabled(String, GenericSender<Result<bool, ErrorStatus>>),
-    IsSelected(String, GenericSender<Result<bool, ErrorStatus>>),
+    IsEnabled(WebDriverNodeId, GenericSender<Result<bool, ErrorStatus>>),
+    IsSelected(WebDriverNodeId, GenericSender<Result<bool, ErrorStatus>>),
     GetTitle(GenericSender<String>),
     /// Deal with the case of input element for Element Send Keys, which does not send keys.
     WillSendKeys(
-        String,
+        WebDriverNodeId,
         String,
         bool,
         GenericSender<Result<bool, ErrorStatus>>,

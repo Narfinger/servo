@@ -12,7 +12,7 @@ use cookie::Cookie;
 use embedder_traits::{
     CustomHandlersAutomationMode, JSValue, JavaScriptEvaluationError,
     JavaScriptEvaluationResultSerializationError, WebDriverFrameId, WebDriverJSResult,
-    WebDriverLoadStatus,
+    WebDriverLoadStatus, WebDriverNodeId,
 };
 use euclid::default::{Point2D, Rect, Size2D};
 use hyper_serde::Serde;
@@ -905,7 +905,7 @@ fn find_elements_xpath_strategy(
     start_node: &Node,
     selector: String,
     pipeline: PipelineId,
-) -> Result<Vec<String>, ErrorStatus> {
+) -> Result<Vec<Uuid>, ErrorStatus> {
     // Step 1. Let evaluateResult be the result of calling evaluate,
     // with arguments selector, start node, null, ORDERED_NODE_SNAPSHOT_TYPE, and null.
 
@@ -963,7 +963,7 @@ pub(crate) fn handle_find_elements_xpath_selector(
     documents: &DocumentCollection,
     pipeline: PipelineId,
     selector: String,
-    reply: GenericSender<Result<Vec<String>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
     match retrieve_document_and_check_root_existence(documents, pipeline) {
         Ok(document) => reply
@@ -983,7 +983,7 @@ pub(crate) fn handle_find_element_elements_css_selector(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    element_id: String,
+    element_id: Uuid,
     selector: String,
     reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
 ) {
@@ -1100,10 +1100,10 @@ pub(crate) fn handle_find_shadow_elements_link_text(
     cx: &mut JSContext,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    shadow_root_id: Uuid,
+    shadow_root_id: WebDriverNodeId,
     selector: String,
     partial: bool,
-    reply: GenericSender<Result<Vec<Uuid>, ErrorStatus>>,
+    reply: GenericSender<Result<Vec<WebDriverNodeId>, ErrorStatus>>,
 ) {
     reply
         .send(
@@ -1381,7 +1381,7 @@ pub(crate) fn handle_will_send_keys(
 pub(crate) fn handle_get_active_element(
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    reply: GenericSender<Option<String>>,
+    reply: GenericSender<Option<WebDriverNodeId>>,
 ) {
     reply
         .send(

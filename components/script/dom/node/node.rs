@@ -17,7 +17,7 @@ use app_units::Au;
 use bitflags::bitflags;
 use devtools_traits::NodeInfo;
 use dom_struct::dom_struct;
-use embedder_traits::{MouseButton, UntrustedNodeAddress};
+use embedder_traits::{MouseButton, UntrustedNodeAddress, WebDriverNodeId};
 use euclid::default::Size2D;
 use euclid::{Point2D, Rect};
 use html5ever::serialize::HtmlSerializer;
@@ -1858,17 +1858,17 @@ impl Node {
     }
 
     /// Returns the node's `unique_id` if it has been computed before and `None` otherwise.
-    pub(crate) fn unique_id_if_already_present(&self) -> Option<String> {
+    pub(crate) fn unique_id_if_already_present(&self) -> Option<WebDriverNodeId> {
         Ref::filter_map(self.rare_data.borrow(), |rare_data| {
             rare_data
                 .as_ref()
                 .and_then(|rare_data| rare_data.unique_id.as_ref())
         })
         .ok()
-        .map(|unique_id| unique_id.simple().to_string())
+        .cloned()
     }
 
-    pub(crate) fn unique_id(&self, pipeline: PipelineId) -> Uuid {
+    pub(crate) fn unique_id(&self, pipeline: PipelineId) -> WebDriverNodeId {
         let mut rare_data = self.ensure_rare_data();
 
         if rare_data.unique_id.is_none() {
@@ -1926,7 +1926,7 @@ impl Node {
             base_uri,
             parent: self
                 .GetParentNode()
-                .map_or(String::new(), |node| node.unique_id(pipeline)),
+                .map_or(WebDriverNodeId::new(), |node| node.unique_id(pipeline)),
             node_type,
             is_top_level_document: node_type == NodeConstants::DOCUMENT_NODE,
             node_name: String::from(self.NodeName()),

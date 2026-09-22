@@ -11,6 +11,7 @@ use devtools_traits::{
     EventListenerInfo, GetHTMLType, MatchedRule, NodeInfo, NodeStyle, RuleModification,
     StyleSheetInfo, TimelineMarker, TimelineMarkerType,
 };
+use embedder_traits::WebDriverNodeId;
 use js::context::JSContext;
 use markup5ever::{LocalName, ns};
 use rustc_hash::FxHashMap;
@@ -59,7 +60,7 @@ pub(crate) struct PerPipelineState {
     pipeline: PipelineId,
 
     /// Maps from a node's unique ID to the Node itself
-    known_nodes: FxHashMap<String, Dom<Node>>,
+    known_nodes: FxHashMap<WebDriverNodeId, Dom<Node>>,
 }
 
 #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
@@ -117,7 +118,11 @@ impl DevtoolsState {
             .is_some_and(|pipeline_state| pipeline_state.known_nodes.contains_key(&unique_id))
     }
 
-    fn find_node_by_unique_id(&self, pipeline: PipelineId, node_id: &str) -> Option<DomRoot<Node>> {
+    fn find_node_by_unique_id(
+        &self,
+        pipeline: PipelineId,
+        node_id: &WebDriverNodeId,
+    ) -> Option<DomRoot<Node>> {
         self.pipeline_state_for(pipeline)?
             .known_nodes
             .get(node_id)
@@ -178,7 +183,7 @@ pub(crate) fn handle_get_css_database(reply: GenericSender<HashMap<String, CssDa
 pub(crate) fn handle_get_event_listener_info(
     state: &DevtoolsState,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Vec<EventListenerInfo>>,
 ) {
     let Some(node) = state.find_node_by_unique_id(pipeline, node_id) else {
@@ -297,7 +302,7 @@ pub(crate) fn handle_get_children(
     cx: &mut JSContext,
     state: &DevtoolsState,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Option<Vec<NodeInfo>>>,
 ) {
     let Some(parent) = state.find_node_by_unique_id(pipeline, node_id) else {
@@ -354,7 +359,7 @@ pub(crate) fn handle_get_attribute_style(
     cx: &mut JSContext,
     state: &DevtoolsState,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Option<Vec<NodeStyle>>>,
 ) {
     let node = match state.find_node_by_unique_id(pipeline, node_id) {
@@ -464,7 +469,7 @@ pub(crate) fn handle_get_selectors(
     state: &DevtoolsState,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Option<Vec<MatchedRule>>>,
 ) {
     let msg = (|| {
@@ -514,7 +519,7 @@ pub(crate) fn handle_get_stylesheet_style(
     state: &DevtoolsState,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     matched_rule: MatchedRule,
     reply: GenericSender<Option<Vec<NodeStyle>>>,
 ) {
@@ -552,7 +557,7 @@ pub(crate) fn handle_get_computed_style(
     cx: &mut JSContext,
     state: &DevtoolsState,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Option<Vec<NodeStyle>>>,
 ) {
     let node = match state.find_node_by_unique_id(pipeline, node_id) {
@@ -584,7 +589,7 @@ pub(crate) fn handle_get_layout(
     cx: &mut JSContext,
     state: &DevtoolsState,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Option<(ComputedNodeLayout, AutoMargins)>>,
 ) {
     let node = match state.find_node_by_unique_id(pipeline, node_id) {
@@ -630,7 +635,7 @@ pub(crate) fn handle_get_layout(
 pub(crate) fn handle_get_xpath(
     state: &DevtoolsState,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<String>,
 ) {
     let Some(node) = state.find_node_by_unique_id(pipeline, node_id) else {
@@ -690,7 +695,7 @@ pub(crate) fn handle_get_inner_or_outer_html(
     cx: &mut JSContext,
     state: &DevtoolsState,
     pipeline_id: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     reply: GenericSender<Option<String>>,
     html_type: GetHTMLType,
 ) {
@@ -731,7 +736,7 @@ pub(crate) fn handle_modify_attribute(
     state: &DevtoolsState,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     modifications: Vec<AttrModification>,
 ) {
     let Some(document) = documents.find_document(pipeline) else {
@@ -773,7 +778,7 @@ pub(crate) fn handle_modify_rule(
     state: &DevtoolsState,
     documents: &DocumentCollection,
     pipeline: PipelineId,
-    node_id: &str,
+    node_id: &WebDriverNodeId,
     modifications: Vec<RuleModification>,
 ) {
     let Some(document) = documents.find_document(pipeline) else {
@@ -808,7 +813,7 @@ pub(crate) fn handle_highlight_dom_node(
     state: &DevtoolsState,
     documents: &DocumentCollection,
     id: PipelineId,
-    node_id: Option<&str>,
+    node_id: Option<&WebDriverNodeId>,
 ) {
     let node = node_id.and_then(|node_id| {
         let node = state.find_node_by_unique_id(id, node_id);

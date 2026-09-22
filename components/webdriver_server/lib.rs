@@ -283,8 +283,8 @@ impl Serialize for SendableJSValue {
                 }
             },
             JSValue::String(ref x) => serializer.serialize_str(x),
-            JSValue::Element(ref x) => WebElement(x.clone()).serialize(serializer),
-            JSValue::ShadowRoot(ref x) => ShadowRoot(x.clone()).serialize(serializer),
+            JSValue::Element(ref x) => WebElement(x.to_string()).serialize(serializer),
+            JSValue::ShadowRoot(ref x) => ShadowRoot(x.to_string()).serialize(serializer),
             JSValue::Frame(ref x) => WebFrame(x.clone()).serialize(serializer),
             JSValue::Window(ref x) => WebWindow(x.clone()).serialize(serializer),
             JSValue::Array(ref x) => x
