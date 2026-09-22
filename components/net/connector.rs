@@ -10,7 +10,7 @@ use std::{fmt, io};
 
 use futures::task::{Context, Poll};
 use futures::{Future, TryFutureExt};
-use http::uri::{Authority, Uri as Destination};
+use http::uri::Uri as Destination;
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use hyper::rt::Executor;
@@ -33,7 +33,6 @@ use tokio::net::TcpStream;
 use tower::Service;
 
 use crate::async_runtime::spawn_task;
-use crate::hosts::replace_host;
 
 pub const BUF_SIZE: usize = 32768;
 
