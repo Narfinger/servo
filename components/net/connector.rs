@@ -62,6 +62,13 @@ impl Service<Destination> for ServoHttpConnector {
         std::pin::Pin<Box<dyn Future<Output = Result<TokioIo<TcpStream>, ConnectionError>> + Send>>;
 
     fn call(&mut self, dest: Destination) -> Self::Future {
+        Box::pin(
+            self.inner
+                .call(dest)
+                .map_err(|e| ConnectionError::HttpError(format!("{e}"))),
+        )
+
+        /*
         // Perform host replacement when making the actual TCP connection.
         let mut new_dest = dest.clone();
         let mut parts = dest.into_parts();
@@ -89,6 +96,7 @@ impl Service<Destination> for ServoHttpConnector {
                 .call(new_dest)
                 .map_err(|e| ConnectionError::HttpError(format!("{e}"))),
         )
+         */
     }
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
