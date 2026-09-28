@@ -54,8 +54,8 @@ use crate::dom::canvasrenderingcontext2d::CanvasRenderingContext2D;
 use crate::dom::document::Document;
 use crate::dom::element::attributes::storage::AttrRef;
 use crate::dom::element::{AttributeMutation, Element};
-#[cfg(not(feature = "webgpu"))]
-use crate::dom::gpucanvascontext::GPUCanvasContext;
+//#[cfg(not(feature = "webgpu"))]
+//use crate::dom::gpucanvascontext::GPUCanvasContext;
 use crate::dom::html::htmlelement::HTMLElement;
 use crate::dom::imagebitmaprenderingcontext::ImageBitmapRenderingContext;
 use crate::dom::mediastream::MediaStream;
@@ -68,8 +68,8 @@ use crate::dom::values::UNSIGNED_LONG_MAX;
 use crate::dom::webgl::webgl2renderingcontext::WebGL2RenderingContext;
 #[cfg(feature = "webgl")]
 use crate::dom::webgl::webglrenderingcontext::WebGLRenderingContext;
-#[cfg(feature = "webgpu")]
-use crate::dom::webgpu::gpucanvascontext::GPUCanvasContext;
+//#[cfg(feature = "webgpu")]
+//use crate::dom::webgpu::gpucanvascontext::GPUCanvasContext;
 
 const DEFAULT_WIDTH: u32 = 300;
 const DEFAULT_HEIGHT: u32 = 150;

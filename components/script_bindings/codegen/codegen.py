@@ -3102,6 +3102,9 @@ def DomTypeHolder(descriptors: list[Descriptor],
     elements = [
         CGGeneric(
             "use script_bindings::reflector::DomObject;\n"
+            "use malloc_size_of::MallocSizeOf;\n"
+            "use js::rust::Trace;\n"
+            "use js::conversions::ToJSValConvertible;\n"
             "#[derive(JSTraceable, MallocSizeOf, PartialEq)]\n"
             "pub(crate) struct DomTypeHolder;\n"
             "impl crate::DomTypes for DomTypeHolder {\n"
@@ -3113,7 +3116,7 @@ def DomTypeHolder(descriptors: list[Descriptor],
         iface_name = descriptor.interface.identifier.name
         path = f"crate::dom::{iface_name.lower()}::{firstCap(iface_name)}"
         if "GPU" in descriptor.interface.identifier.name or "WGSL" in descriptor.interface.identifier.name:
-            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn DomObject>;\n"))
+            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn DomObject<ReflectorType = ()> + ToJSValConvertible + MallocSizeOf + Trace>;\n"))
         else:
             elements.append(CGGeneric(f"    type {firstCap(iface_name)} = {path};\n"))
     elements.append(CGGeneric("}\n"))
@@ -8101,7 +8104,9 @@ class CGConcreteBindingRoot(CGThing):
 
         originalBinding = f"crate::dom::bindings::codegen::{prefix.replace('/', '::').replace('Concrete', 'Generic')}"
 
+
         cgthings = []
+        cgthings += [CGGeneric(f"use script::dom::webgpu::*;")]
         if not generic:
             for e in enums:
                 enumName = e.identifier.name
