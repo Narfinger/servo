@@ -165,6 +165,15 @@ impl DomObject for Reflector<AssociatedMemory> {
     }
 }
 
+impl<T: DomObject> DomObject for Box<T> {
+    type ReflectorType = T::ReflectorType;
+
+    /// THIS IS PROBABLY UNSAFE. I DO NOT KNOW WHAT I AM DOING
+    fn reflector(&self) -> &Reflector<Self::ReflectorType> {
+        T::reflector(&*self)
+    }
+}
+
 /// A trait to initialize the `Reflector` for a DOM object.
 pub trait MutDomObject: DomObject {
     /// Initializes the Reflector
