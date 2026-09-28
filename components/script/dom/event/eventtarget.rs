@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use std::cell::{RefCell, RefMut};
+use std::cell::{Cell, RefCell, RefMut};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::default::Default;
 use std::ffi::CString;
@@ -15,7 +15,7 @@ use deny_public_fields::DenyPublicFields;
 use devtools_traits::EventListenerInfo;
 use dom_struct::dom_struct;
 use js::context::JSContext;
-use js::jsapi::{JS_GetFunctionObject, SupportUnscopables};
+use js::jsapi::{JS_GetFunctionObject, JSObject, SupportUnscopables};
 use js::jsval::JSVal;
 use js::rust::wrappers2::CompileFunction;
 use js::rust::{CompileOptionsWrapper, HandleObject, transform_u16_to_source_text};

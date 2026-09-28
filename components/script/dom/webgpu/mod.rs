@@ -12,12 +12,14 @@ use pixels::Snapshot;
 use script_bindings::DomTypes;
 use script_bindings::callback::{CallbackContainer, RootedCallback};
 use script_bindings::error::{Error, Fallible};
-use script_bindings::reflector::{DomGlobalGeneric, DomObject};
+/*
 use script_webgpu::traits::{
     EventTargetTrait, HtmlCanvasElementTrait, HtmlImageElementTrait, ImageBitmapTrait,
     ImageDataTrait, OffscreenCanvasTrait, OriginIsCleanTrait, WebGPUGlobalTrait,
     WebGPUHTMLVideoTrait, WebGPUPromiseCallbackTrait,
 };
+ */
+use script_bindings::reflector::{DomGlobalGeneric, DomObject};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use servo_base::generic_channel::GenericCallback;
@@ -33,6 +35,32 @@ use crate::dom::types::{
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::tasks::task::TaskOnce;
 
+pub(crate) mod identityhub {
+    use script_bindings::reflector::{DomGlobalGeneric, DomObject};
+    pub(crate) type IdentityHub = Box<dyn DomObject>;
+}
+
+pub(crate) mod gpudevice {
+    use script_bindings::reflector::{DomGlobalGeneric, DomObject};
+    pub(crate) type GPUDevice = Box<dyn DomObject>;
+}
+
+pub(crate) mod gpucanvascontext {
+    use script_bindings::reflector::{DomGlobalGeneric, DomObject};
+    pub(crate) type GPUCanvasContext = Box<dyn DomObject>;
+}
+
+pub(crate) mod gpu {
+    use script_bindings::reflector::{DomGlobalGeneric, DomObject};
+    pub(crate) type GPU = Box<dyn DomObject>;
+}
+
+pub(crate) mod gpuexternaltexture {
+    use script_bindings::reflector::{DomGlobalGeneric, DomObject};
+    pub(crate) type PlanarTexture = Box<dyn DomObject>;
+}
+
+/*
 pub(crate) mod gpu {
     #[expect(clippy::upper_case_acronyms)]
     pub(crate) type GPU = script_webgpu::gpu::GPU<crate::DomTypeHolder>;
@@ -328,3 +356,4 @@ impl HtmlCanvasElementTrait for HTMLCanvasElement {
         HTMLCanvasElement::get_image_data(self)
     }
 }
+ */

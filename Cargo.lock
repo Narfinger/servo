@@ -9391,7 +9391,6 @@ dependencies = [
  "servo-profile-traits",
  "servo-script-bindings",
  "servo-script-traits",
- "servo-script-webgpu",
  "servo-storage-traits",
  "servo-timers",
  "servo-tracing",
@@ -9512,32 +9511,6 @@ dependencies = [
  "stylo_atoms",
  "stylo_traits",
  "webrender_api",
-]
-
-[[package]]
-name = "servo-script-webgpu"
-version = "0.6.0"
-dependencies = [
- "arrayvec",
- "euclid",
- "indexmap 2.14.2",
- "log",
- "malloc_size_of_derive",
- "mozjs",
- "num-traits",
- "serde_core",
- "servo-base",
- "servo-constellation-traits",
- "servo-deny-public-fields",
- "servo-dom-struct",
- "servo-jstraceable-derive",
- "servo-malloc-size-of",
- "servo-pixels",
- "servo-script-bindings",
- "servo-url",
- "servo-webgpu-traits",
- "stylo_atoms",
- "trait-set",
 ]
 
 [[package]]
@@ -11075,17 +11048,6 @@ name = "tracy-rs"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce607aae8ab0ab3abf3a2723a9ab6f09bb8639ed83fdd888d857b8e556c868d8"
-
-[[package]]
-name = "trait-set"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55442dd31337ec4b06189213a6a65cc414e4ae34e4cbc7bc050fae1573d14ed5"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 3.0.4",
-]
 
 [[package]]
 name = "transpose"

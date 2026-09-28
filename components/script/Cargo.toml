@@ -72,7 +72,6 @@ webgl = [
     "servo-constellation-traits/webgl",
 ]
 webgpu = [
-    "dep:script_webgpu",
     "dep:webgpu_traits",
     "script_bindings/webgpu",
     "script_traits/webgpu",
@@ -174,7 +173,6 @@ resvg = { workspace = true }
 rsa = { workspace = true, optional = true }
 rustc-hash = { workspace = true }
 script_bindings = { workspace = true }
-script_webgpu = { workspace = true, optional = true }
 script_traits = { workspace = true }
 selectors = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

@@ -12,8 +12,8 @@ use webrender_api::ImageKey;
 use crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas as RootedHTMLCanvasElementOrOffscreenCanvas;
 use crate::dom::bindings::inheritance::Castable;
 use crate::dom::node::{Node, NodeTraits};
-#[cfg(feature = "webgpu")]
-use crate::dom::types::GPUCanvasContext;
+//#[cfg(feature = "webgpu")]
+//use crate::dom::types::GPUCanvasContext;
 use crate::dom::types::{
     CanvasRenderingContext2D, HTMLCanvasElement, ImageBitmapRenderingContext, OffscreenCanvas,
     OffscreenCanvasRenderingContext2D,
