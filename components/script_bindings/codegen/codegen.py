@@ -3584,6 +3584,7 @@ class CGDomObjectWrap(CGThing):
         ifaceName = self.descriptor.interface.identifier.name
         bindingModule = f"crate::dom::bindings::codegen::GenericBindings::{toBindingPath(self.descriptor)}"
         if self.generic:
+            return ""
             return f"""
     impl<D: DomTypes> DomObjectWrap<D> for {firstCap(ifaceName)}<D> {{
         const WRAP: unsafe fn(
