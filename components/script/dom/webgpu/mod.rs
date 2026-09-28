@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use euclid::default::Size2D;
 use js::context::NoGC;
+use malloc_size_of::MallocSizeOf;
 use pixels::Snapshot;
 use script_bindings::DomTypes;
 use script_bindings::callback::{CallbackContainer, RootedCallback};
@@ -35,323 +36,402 @@ use crate::dom::types::{
 use crate::routed_promise::{RoutedPromiseListener, callback_promise};
 use crate::tasks::task::TaskOnce;
 
+pub trait MainTrait: DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf {}
+
 pub(crate) mod gpu {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
-    use stylo_malloc_size_of::MallocSizeOf;
+
+    use crate::dom::webgpu::MainTrait;
 
     #[expect(clippy::upper_case_acronyms)]
-    pub(crate) type GPU = Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    pub(crate) type GPU = Box<dyn MainTrait>;
     //pub(crate) type GPU = script_webgpu::gpu::GPU<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuadapter {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUAdapter =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUAdapter = Box<dyn MainTrait>;
     //pub(crate) type GPUAdapter = script_webgpu::gpuadapter::GPUAdapter<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuadapterinfo {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUAdapterInfo =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    pub(crate) type GPUAdapterInfo = Box<dyn MainTrait>;
     //pub(crate) type GPUAdapterInfo =
     //    script_webgpu::gpuadapterinfo::GPUAdapterInfo<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubindgroup {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUBindGroup =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    pub(crate) type GPUBindGroup = Box<dyn MainTrait>;
     //pub(crate) type GPUBindGroup = script_webgpu::gpubindgroup::GPUBindGroup<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubindgrouplayout {
-    pub(crate) type GPUBindGroupLayout =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use malloc_size_of::MallocSizeOf;
+    use script_bindings::reflector::DomObject;
+
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUBindGroupLayout = Box<dyn MainTrait>;
     //pub(crate) type GPUBindGroupLayout =
     //    script_webgpu::gpubindgrouplayout::GPUBindGroupLayout<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubuffer {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUBuffer =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    pub(crate) type GPUBuffer = Box<dyn MainTrait>;
     //pub(crate) type GPUBuffer = script_webgpu::gpubuffer::GPUBuffer<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubufferusage {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUBufferUsage =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUBufferUsage = Box<dyn MainTrait>;
     //pub(crate) type GPUBufferUsage =
     //    script_webgpu::gpubufferusage::GPUBufferUsage<crate::DomTypeHolder>;
 }
 //pub(crate) mod gpucanvascontext;
 pub(crate) mod gpucolorwrite {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUColorWrite =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUColorWrite = Box<dyn MainTrait>;
     //pub(crate) type GPUColorWrite =
     //    script_webgpu::gpucolorwrite::GPUColorWrite<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucommandbuffer {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUCommandBuffer =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUCommandBuffer = Box<dyn MainTrait>;
     //pub(crate) type GPUCommandBuffer =
     //    script_webgpu::gpucommandbuffer::GPUCommandBuffer<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucommandencoder {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUCommandEncoder =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUCommandEncoder = Box<dyn MainTrait>;
     //pub(crate) type GPUCommandEncoder =
     //    script_webgpu::gpucommandencoder::GPUCommandEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucompilationinfo {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUCompilationInfo =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUCompilationInfo = Box<dyn MainTrait>;
     //pub(crate) type GPUCompilationInfo =
     //    script_webgpu::gpucompilationinfo::GPUCompilationInfo<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucompilationmessage {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUCompilationMessage =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUCompilationMessage = Box<dyn MainTrait>;
     //pub(crate) type GPUCompilationMessage =
     //    script_webgpu::gpucompilationmessage::GPUCompilationMessage<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucomputepassencoder {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUComputePassEncoder =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUComputePassEncoder = Box<dyn MainTrait>;
     //pub(crate) type GPUComputePassEncoder =
     //   script_webgpu::gpucomputepassencoder::GPUComputePassEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucomputepipeline {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUComputePipeline =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUComputePipeline = Box<dyn MainTrait>;
     //pub(crate) type GPUComputePipeline =
     //   script_webgpu::gpucomputepipeline::GPUComputePipeline<crate::DomTypeHolder>;
 }
 pub(crate) mod gpudevice {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUDevice =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUDevice = Box<dyn MainTrait>;
     //pub(crate) type GPUDevice = script_webgpu::gpudevice::GPUDevice<crate::DomTypeHolder>;
 }
 pub(crate) mod gpudevicelostinfo {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUDeviceLostInfo =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUDeviceLostInfo = Box<dyn MainTrait>;
     //pub(crate) type GPUDeviceLostInfo =
     //    script_webgpu::gpudevicelostinfo::GPUDeviceLostInfo<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuerror {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUError =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUError = Box<dyn MainTrait>;
     //pub(crate) type GPUError = script_webgpu::gpuerror::GPUError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuexternaltexture {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUExternalTexture =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
-    pub(crate) type PlanarTexture =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUExternalTexture = Box<dyn MainTrait>;
+    pub(crate) type PlanarTexture = Box<dyn MainTrait>;
     //pub(crate) type GPUExternalTexture =
     //    script_webgpu::gpuexternaltexture::GPUExternalTexture<crate::DomTypeHolder>;
     //pub(crate) type PlanarTexture =
     //   script_webgpu::gpuexternaltexture::PlanarTexture<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuinternalerror {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUInternalError =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUInternalError = Box<dyn MainTrait>;
     //pub(crate) type GPUInternalError =
     //   script_webgpu::gpuinternalerror::GPUInternalError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpumapmode {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUMapMode =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUMapMode = Box<dyn MainTrait>;
     //pub(crate) type GPUMapMode = script_webgpu::gpumapmode::GPUMapMode<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuoutofmemoryerror {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUOutOfmemoryError =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUOutOfmemoryError = Box<dyn MainTrait>;
     //pub(crate) type GPUOutOfMemoryError =
     //   script_webgpu::gpuoutofmemoryerror::GPUOutOfMemoryError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpupipelineerror {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUPipelineError =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUPipelineError = Box<dyn MainTrait>;
     //pub(crate) type GPUPipelineError =
     //   script_webgpu::gpupipelineerror::GPUPipelineError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpupipelinelayout {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUPipelineLayout =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUPipelineLayout = Box<dyn MainTrait>;
     //pub(crate) type GPUPipelineLayout =
     //   script_webgpu::gpupipelinelayout::GPUPipelineLayout<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuqueryset {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUQuerySet =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUQuerySet = Box<dyn MainTrait>;
     //pub(crate) type GPUQuerySet = script_webgpu::gpuqueryset::GPUQuerySet<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuqueue {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUQueue =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUQueue = Box<dyn MainTrait>;
     //pub(crate) type GPUQueue = script_webgpu::gpuqueue::GPUQueue<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderbundle {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPURenderBundle =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPURenderBundle = Box<dyn MainTrait>;
     //pub(crate) type GPURenderBundle =
     //   script_webgpu::gpurenderbundle::GPURenderBundle<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderbundleencoder {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPURenderBundleEncoder =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPURenderBundleEncoder = Box<dyn MainTrait>;
     //pub(crate) type GPURenderBundleEncoder =
     //   script_webgpu::gpurenderbundleencoder::GPURenderBundleEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderpassencoder {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPURenderPassEncoder =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPURenderPassEncoder = Box<dyn MainTrait>;
     //pub(crate) type GPURenderPassEncoder =
     //    script_webgpu::gpurenderpassencoder::GPURenderPassEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderpipeline {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPURenderPipeline =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPURenderPipeline = Box<dyn MainTrait>;
     //pub(crate) type GPURenderPipeline =
     //   script_webgpu::gpurenderpipeline::GPURenderPipeline<crate::DomTypeHolder>;
 }
 pub(crate) mod gpusampler {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUSampler =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUSampler = Box<dyn MainTrait>;
     //pub(crate) type GPUSampler = script_webgpu::gpusampler::GPUSampler<crate::DomTypeHolder>;
 }
 pub(crate) mod gpushadermodule {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUShaderModule =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUShaderModule = Box<dyn MainTrait>;
     //pub(crate) type GPUShaderModule =
     //   script_webgpu::gpushadermodule::GPUShaderModule<crate::DomTypeHolder>;
 }
 pub(crate) mod gpushaderstage {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUShaderStage =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUShaderStage = Box<dyn MainTrait>;
     //pub(crate) type GPUShaderStage =
     //   script_webgpu::gpushaderstage::GPUShaderStage<crate::DomTypeHolder>;
 }
 pub(crate) mod gpusupportedfeatures {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUSupportedFeatures =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUSupportedFeatures = Box<dyn MainTrait>;
     //pub(crate) type GPUSupportedFeatures =
     //   script_webgpu::gpusupportedfeatures::GPUSupportedFeatures<crate::DomTypeHolder>;
 }
 pub(crate) mod gpusupportedlimits {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUSupportedLimits =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUSupportedLimits = Box<dyn MainTrait>;
     //pub(crate) type GPUSupportedLimits =
     //   script_webgpu::gpusupportedlimits::GPUSupportedLimits<crate::DomTypeHolder>;
 }
 pub(crate) mod gputexture {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUTexture =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUTexture = Box<dyn MainTrait>;
     //pub(crate) type GPUTexture = script_webgpu::gputexture::GPUTexture<crate::DomTypeHolder>;
 }
 pub(crate) mod gputextureusage {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUTextureUsage =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUTextureUsage = Box<dyn MainTrait>;
     //pub(crate) type GPUTextureUsage =
     //   script_webgpu::gputextureusage::GPUTextureUsage<crate::DomTypeHolder>;
 }
 pub(crate) mod gputextureview {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUTextureView =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUTextureView = Box<dyn MainTrait>;
     //pub(crate) type GPUTextureView =
     //   script_webgpu::gputextureview::GPUTextureView<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuuncapturederrorevent {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUUncapturedErrorEvent =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUUncapturedErrorEvent = Box<dyn MainTrait>;
     //pub(crate) type GPUUncapturedErrorEvent =
     //   script_webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuvalidationerror {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type GPUValidationError =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type GPUValidationError = Box<dyn MainTrait>;
     //pub(crate) type GPUValidationError =
     //   script_webgpu::gpuvalidationerror::GPUValidationError<crate::DomTypeHolder>;
 }
 pub(crate) mod identityhub {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type IdentityHub =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type IdentityHub = Box<dyn MainTrait>;
     //pub(crate) type IdentityHub = script_webgpu::identityhub::IdentityHub;
 }
 pub(crate) mod wgsllanguagefeatures {
+    use malloc_size_of::MallocSizeOf;
     use script_bindings::reflector::DomObject;
 
-    pub(crate) type WGSLLanguageFeatures =
-        Box<dyn DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf>;
+    use crate::dom::webgpu::MainTrait;
+
+    pub(crate) type WGSLLanguageFeatures = Box<dyn MainTrait>;
     //pub(crate) type WGSLLanguageFeatures =
     //   script_webgpu::wgsllanguagefeatures::WGSLLanguageFeatures<crate::DomTypeHolder>;
 }

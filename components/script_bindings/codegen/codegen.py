@@ -3105,6 +3105,7 @@ def DomTypeHolder(descriptors: list[Descriptor],
             "use malloc_size_of::MallocSizeOf;\n"
             "use js::rust::Trace;\n"
             "use js::conversions::ToJSValConvertible;\n"
+            "use crate::dom::webgpu::MainTrait;\n"
             "#[derive(JSTraceable, MallocSizeOf, PartialEq)]\n"
             "pub(crate) struct DomTypeHolder;\n"
             "impl crate::DomTypes for DomTypeHolder {\n"
@@ -3116,7 +3117,7 @@ def DomTypeHolder(descriptors: list[Descriptor],
         iface_name = descriptor.interface.identifier.name
         path = f"crate::dom::{iface_name.lower()}::{firstCap(iface_name)}"
         if "GPU" in descriptor.interface.identifier.name or "WGSL" in descriptor.interface.identifier.name:
-            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn DomObject<ReflectorType = ()> + ToJSValConvertible + MallocSizeOf + Trace>;\n"))
+            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn MainTrait>;\n"))
         else:
             elements.append(CGGeneric(f"    type {firstCap(iface_name)} = {path};\n"))
     elements.append(CGGeneric("}\n"))
@@ -8106,7 +8107,6 @@ class CGConcreteBindingRoot(CGThing):
 
 
         cgthings = []
-        cgthings += [CGGeneric(f"use script::dom::webgpu::*;")]
         if not generic:
             for e in enums:
                 enumName = e.identifier.name
@@ -8148,14 +8148,14 @@ class CGConcreteBindingRoot(CGThing):
 
             if should_skip:
                 # Things we should generate even if the type is skipped, i.e., things that are needed in the `script` crate
-                if not generic:
-                    if d.interface.isIteratorInterface():
-                        cgthings.append(CGDomObjectIteratorWrap(d))
-                    elif d.concrete and not d.isGlobal():
-                        if d.weakReferenceable:
-                            cgthings.append(CGWeakReferenceableDomObjectWrap(d, generic=generic))
-                        else:
-                            cgthings.append(CGDomObjectWrap(d, generic=generic))
+                #if not generic:
+                #    if d.interface.isIteratorInterface():
+                #        cgthings.append(CGDomObjectIteratorWrap(d))
+                #    elif d.concrete and not d.isGlobal():
+                #        if d.weakReferenceable:
+                #            cgthings.append(CGWeakReferenceableDomObjectWrap(d, generic=generic))
+                #        else:
+                #            cgthings.append(CGDomObjectWrap(d, generic=generic))
                 continue
 
             # These are all things that will be generated in the subcrates
