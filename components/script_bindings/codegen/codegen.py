@@ -2991,6 +2991,8 @@ def DomTypes(descriptors: list[Descriptor],
     def fixupInterfaceTypeReferences(typename: str) -> str:
         return typename.replace("D::", "Self::")
 
+    just_traits = []
+
     for descriptor in descriptors:
         iface_name = descriptor.interface.identifier.name
         traits = []
@@ -3084,12 +3086,20 @@ def DomTypes(descriptors: list[Descriptor],
                 ),
                 CGGeneric(f"    type {firstCap(iface_name)}: {' + '.join(traits)};\n")
             ]
+
+        just_traits.append((iface_name, ' + '.join(traits)))
+
+
     elements += [CGGeneric("}\n")]
     imports = [
         CGGeneric("use crate::root::DomRoot;\n"),
         CGGeneric("use crate::domstring::DOMString;\n"),
     ]
-    return CGList(imports + elements)
+    other_traits = []
+    for (name, traits) in just_traits:
+        other_traits.append(CGGeneric(f"trait {name}_Trait: {traits} {{}}\n\n"))
+
+    return CGList(imports + elements + other_traits)
 
 
 def DomTypeHolder(descriptors: list[Descriptor],
