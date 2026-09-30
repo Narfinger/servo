@@ -2991,11 +2991,12 @@ def DomTypes(descriptors: list[Descriptor],
     def fixupInterfaceTypeReferences(typename: str) -> str:
         return typename.replace("D::", "Self::")
 
+    # just the traits that we need.
     just_traits = []
 
     for descriptor in descriptors:
         iface_name = descriptor.interface.identifier.name
-        traits = []
+        traits: list[str] = []
 
         traits += descriptor.additionalTraits
 
@@ -3087,7 +3088,8 @@ def DomTypes(descriptors: list[Descriptor],
                 CGGeneric(f"    type {firstCap(iface_name)}: {' + '.join(traits)};\n")
             ]
 
-        just_traits.append((iface_name, ' + '.join(traits)))
+        traits.append("crate::codegen::DomTypes::DomTypes")
+        just_traits.append((iface_name, ' + '.join([ item.replace("Self", "D") for item in traits])))
 
 
     elements += [CGGeneric("}\n")]
@@ -3097,7 +3099,7 @@ def DomTypes(descriptors: list[Descriptor],
     ]
     other_traits = []
     for (name, traits) in just_traits:
-        other_traits.append(CGGeneric(f"trait {name}_Trait: {traits} {{}}\n\n"))
+        other_traits.append(CGGeneric(f"pub trait {name}_Trait<D: DomTypes>: {traits} {{}}\n\n"))
 
     return CGList(imports + elements + other_traits)
 
@@ -3127,7 +3129,7 @@ def DomTypeHolder(descriptors: list[Descriptor],
         iface_name = descriptor.interface.identifier.name
         path = f"crate::dom::{iface_name.lower()}::{firstCap(iface_name)}"
         if "GPU" in descriptor.interface.identifier.name or "WGSL" in descriptor.interface.identifier.name:
-            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn MainTrait>;\n"))
+            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn script_bindings::codegen::DomTypes::{iface_name}_Trait<Self>>;\n"))
         else:
             elements.append(CGGeneric(f"    type {firstCap(iface_name)} = {path};\n"))
     elements.append(CGGeneric("}\n"))
