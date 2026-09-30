@@ -20,6 +20,7 @@ name = "script_bindings"
 path = "lib.rs"
 
 [dependencies]
+auto_impl = { workspace = true }
 atomic_refcell = { workspace = true }
 bitflags = { workspace = true }
 crossbeam-channel = { workspace = true }

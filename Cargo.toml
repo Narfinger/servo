@@ -29,6 +29,7 @@ publish = true
 rust-version = "1.88.0"
 
 [workspace.dependencies]
+auto_impl= { version = "1.3.0" }
 accesskit = { version = "0.24.0", features = ["serde"] }
 accesskit_consumer = "0.35.0"
 aes = { version = "0.9", features = ["zeroize"] }
@@ -140,7 +141,7 @@ inventory = "0.3.24"
 ipc-channel = "0.23"
 itertools = "0.15"
 jni = "0.22"
-js = { package = "mozjs", version = "=0.26.4", default-features = false, features = ["intl", "libz-sys"] }
+js = { package = "mozjs", version = "=0.26.6", default-features = false, features = ["intl", "libz-sys"] }
 k12 = "0.5"
 keccak = "0.2"
 keyboard-types = { version = "0.8.3", features = ["serde", "webdriver"] }
@@ -465,8 +466,8 @@ codegen-units = 1
 #
 # Or for mozjs:
 #
-# mozjs = { path = "../mozjs/mozjs" }
-# mozjs_sys = { path = "../mozjs/mozjs-sys" }
+mozjs = { path = "../mozjs/mozjs" }
+mozjs_sys = { path = "../mozjs/mozjs-sys" }
 #
 # Or for CSP crate:
 # content-security-policy = { path = "../rust-content-security-policy" }

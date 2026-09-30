@@ -165,7 +165,7 @@ impl DomObject for Reflector<AssociatedMemory> {
     }
 }
 
-impl<T: DomObject> DomObject for Box<T> {
+impl<T: DomObject + ?Sized> DomObject for Box<T> {
     type ReflectorType = T::ReflectorType;
 
     /// THIS IS PROBABLY UNSAFE. I DO NOT KNOW WHAT I AM DOING
@@ -208,6 +208,15 @@ impl MutDomObject for Reflector<()> {
         unsafe {
             self.set_jsobject(obj);
         }
+    }
+}
+
+impl<T: DomObject + ?Sized> crate::MutDomObject for Box<T> {
+    unsafe fn init_reflector<Actual>(&self, obj: *mut js::jsapi::JSObject) {
+        todo!()
+    }
+    unsafe fn init_reflector_without_associated_memory(&self, obj: *mut js::jsapi::JSObject) {
+        todo!()
     }
 }
 

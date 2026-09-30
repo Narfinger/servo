@@ -46,6 +46,12 @@ pub trait IDLInterface {
     const PROTO_LAST: u16 = u16::MAX;
 }
 
+impl<T: IDLInterface + ?Sized> IDLInterface for Box<T> {
+    fn derives(_: &'static DOMClass) -> bool {
+        todo!()
+    }
+}
+
 /// A trait to mark an IDL interface as deriving from another one.
 pub trait DerivedFrom<T: Castable>: Castable {}
 

@@ -3059,7 +3059,7 @@ def DomTypes(descriptors: list[Descriptor],
             ):
                 traits += [
                     "crate::conversions::IDLInterface",
-                    "PartialEq",
+                    #"PartialEq",
                 ]
 
             if descriptor.concrete and not descriptor.isGlobal():
@@ -3088,7 +3088,10 @@ def DomTypes(descriptors: list[Descriptor],
                 CGGeneric(f"    type {firstCap(iface_name)}: {' + '.join(traits)};\n")
             ]
 
-        traits.append("crate::codegen::DomTypes::DomTypes")
+        traits.append("crate::reflector::DomObjectWrap<D>")
+        traits.append("crate::reflector::DomGlobalGeneric<D>")
+        traits.append("crate::reflector::DomObject")
+        traits.append("crate::reflector::MutDomObject")
         just_traits.append((iface_name, ' + '.join([ item.replace("Self", "D") for item in traits])))
 
 
@@ -3129,7 +3132,7 @@ def DomTypeHolder(descriptors: list[Descriptor],
         iface_name = descriptor.interface.identifier.name
         path = f"crate::dom::{iface_name.lower()}::{firstCap(iface_name)}"
         if "GPU" in descriptor.interface.identifier.name or "WGSL" in descriptor.interface.identifier.name:
-            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn script_bindings::codegen::DomTypes::{iface_name}_Trait<Self>>;\n"))
+            elements.append(CGGeneric(f"   type {firstCap(iface_name)} = Box<dyn script_bindings::codegen::DomTypes::{iface_name}_Trait<Self, ReflectorType=()>>;\n"))
         else:
             elements.append(CGGeneric(f"    type {firstCap(iface_name)} = {path};\n"))
     elements.append(CGGeneric("}\n"))
@@ -7279,7 +7282,7 @@ class CGInterfaceTrait(CGThing):
 
         name = descriptor.interface.identifier.name
         self.cgRoot = CGWrapper(CGIndenter(CGList(methods, "")),
-                                pre=f"pub trait {name}Methods<D: DomTypes> {{\n",
+                                pre=f"use auto_impl::auto_impl;\n #[auto_impl(Box)]\npub trait {name}Methods<D: DomTypes> {{\n",
                                 post="}")
         self.empty = not methods
 
