@@ -15,6 +15,7 @@ use std::hash::{Hash, Hasher};
 use std::rc::{Rc, Weak};
 use std::{mem, ptr};
 
+use auto_impl::auto_impl;
 use js::context::NoGC;
 use js::jsapi::JSTracer;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -37,6 +38,12 @@ pub trait WeakReferenceable: DomObject + Sized {
         let weak = WeakRef(Rc::downgrade(&rc));
         mem::forget(rc);
         weak
+    }
+}
+
+impl<T: WeakReferenceable + ?Sized> WeakReferenceable for Box<T> {
+    fn downgrade(&self) -> WeakRef<Self> {
+        todo!()
     }
 }
 

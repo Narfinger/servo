@@ -3062,11 +3062,11 @@ def DomTypes(descriptors: list[Descriptor],
                     #"PartialEq",
                 ]
 
-            if descriptor.concrete and not descriptor.isGlobal():
-                if descriptor.weakReferenceable:
-                    traits += ["crate::reflector::WeakReferenceableDomObjectWrap<Self>"]
-                else:
-                    traits += ["crate::reflector::DomObjectWrap<Self>"]
+            #if descriptor.concrete and not descriptor.isGlobal():
+            #    if descriptor.weakReferenceable:
+            #        traits += ["crate::reflector::WeakReferenceableDomObjectWrap<Self>"]
+            #    else:
+            #        traits += ["crate::reflector::DomObjectWrap<Self>"]
 
         if not descriptor.interface.isCallback() and not descriptor.interface.isIteratorInterface():
             nonConstMembers = [m for m in descriptor.interface.members if not m.isConst()]
@@ -3102,7 +3102,7 @@ def DomTypes(descriptors: list[Descriptor],
     ]
     other_traits = []
     for (name, traits) in just_traits:
-        other_traits.append(CGGeneric(f"pub trait {name}_Trait<D: DomTypes>: {traits} {{}}\n\n"))
+        other_traits.append(CGGeneric(f"#[allow(non_camel_case_types)]\npub trait {name}_Trait<D: DomTypes>: {traits} {{}}\n\n"))
 
     return CGList(imports + elements + other_traits)
 

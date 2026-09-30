@@ -39,42 +39,40 @@ use crate::tasks::task::TaskOnce;
 pub trait MainTrait: DomObject<ReflectorType = ()> + js::rust::Trace + MallocSizeOf {}
 
 pub(crate) mod gpu {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
-    use crate::dom::webgpu::MainTrait;
+    use script_bindings::codegen::DomTypes::GPU_Trait;
 
     #[expect(clippy::upper_case_acronyms)]
-    pub(crate) type GPU = Box<dyn MainTrait>;
+    pub(crate) type GPU = Box<dyn GPU_Trait<crate::DomTypeHolder, ReflectorType = ()>>;
     //pub(crate) type GPU = script_webgpu::gpu::GPU<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuadapter {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
+
+    use script_bindings::codegen::DomTypes::GPUAdapter_Trait;
 
     use crate::dom::webgpu::MainTrait;
 
-    pub(crate) type GPUAdapter = Box<dyn MainTrait>;
+    pub(crate) type GPUAdapter =
+        Box<dyn GPUAdapter_Trait<crate::DomTypeHolder, ReflectorType = ()>>;
     //pub(crate) type GPUAdapter = script_webgpu::gpuadapter::GPUAdapter<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuadapterinfo {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
+    use script_bindings::codegen::DomTypes::GPUAdapterInfo_Trait;
 
-    pub(crate) type GPUAdapterInfo = Box<dyn MainTrait>;
+    use crate::dom::MainTrait;
+
+    pub(crate) type GPUAdapterInfo =
+        Box<dyn GPUAdapterInfo_Trait<crate::DomTypeHolder, ReflectorType = ()>>;
     //pub(crate) type GPUAdapterInfo =
     //    script_webgpu::gpuadapterinfo::GPUAdapterInfo<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubindgroup {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
+    use crate::dom::MainTrait;
 
     pub(crate) type GPUBindGroup = Box<dyn MainTrait>;
     //pub(crate) type GPUBindGroup = script_webgpu::gpubindgroup::GPUBindGroup<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubindgrouplayout {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -83,15 +81,12 @@ pub(crate) mod gpubindgrouplayout {
     //    script_webgpu::gpubindgrouplayout::GPUBindGroupLayout<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubuffer {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
+    use crate::dom::MainTrait;
 
     pub(crate) type GPUBuffer = Box<dyn MainTrait>;
     //pub(crate) type GPUBuffer = script_webgpu::gpubuffer::GPUBuffer<crate::DomTypeHolder>;
 }
 pub(crate) mod gpubufferusage {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -101,8 +96,6 @@ pub(crate) mod gpubufferusage {
 }
 //pub(crate) mod gpucanvascontext;
 pub(crate) mod gpucolorwrite {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -111,8 +104,6 @@ pub(crate) mod gpucolorwrite {
     //    script_webgpu::gpucolorwrite::GPUColorWrite<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucommandbuffer {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -121,8 +112,6 @@ pub(crate) mod gpucommandbuffer {
     //    script_webgpu::gpucommandbuffer::GPUCommandBuffer<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucommandencoder {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -131,8 +120,6 @@ pub(crate) mod gpucommandencoder {
     //    script_webgpu::gpucommandencoder::GPUCommandEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucompilationinfo {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -141,8 +128,6 @@ pub(crate) mod gpucompilationinfo {
     //    script_webgpu::gpucompilationinfo::GPUCompilationInfo<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucompilationmessage {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -151,8 +136,6 @@ pub(crate) mod gpucompilationmessage {
     //    script_webgpu::gpucompilationmessage::GPUCompilationMessage<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucomputepassencoder {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -161,8 +144,6 @@ pub(crate) mod gpucomputepassencoder {
     //   script_webgpu::gpucomputepassencoder::GPUComputePassEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpucomputepipeline {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -171,8 +152,6 @@ pub(crate) mod gpucomputepipeline {
     //   script_webgpu::gpucomputepipeline::GPUComputePipeline<crate::DomTypeHolder>;
 }
 pub(crate) mod gpudevice {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -180,8 +159,6 @@ pub(crate) mod gpudevice {
     //pub(crate) type GPUDevice = script_webgpu::gpudevice::GPUDevice<crate::DomTypeHolder>;
 }
 pub(crate) mod gpudevicelostinfo {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -190,8 +167,6 @@ pub(crate) mod gpudevicelostinfo {
     //    script_webgpu::gpudevicelostinfo::GPUDeviceLostInfo<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuerror {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -199,8 +174,6 @@ pub(crate) mod gpuerror {
     //pub(crate) type GPUError = script_webgpu::gpuerror::GPUError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuexternaltexture {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -212,8 +185,6 @@ pub(crate) mod gpuexternaltexture {
     //   script_webgpu::gpuexternaltexture::PlanarTexture<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuinternalerror {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -222,8 +193,6 @@ pub(crate) mod gpuinternalerror {
     //   script_webgpu::gpuinternalerror::GPUInternalError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpumapmode {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -231,8 +200,6 @@ pub(crate) mod gpumapmode {
     //pub(crate) type GPUMapMode = script_webgpu::gpumapmode::GPUMapMode<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuoutofmemoryerror {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -241,8 +208,6 @@ pub(crate) mod gpuoutofmemoryerror {
     //   script_webgpu::gpuoutofmemoryerror::GPUOutOfMemoryError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpupipelineerror {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -251,8 +216,6 @@ pub(crate) mod gpupipelineerror {
     //   script_webgpu::gpupipelineerror::GPUPipelineError<crate::DomTypeHolder>;
 }
 pub(crate) mod gpupipelinelayout {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -261,8 +224,6 @@ pub(crate) mod gpupipelinelayout {
     //   script_webgpu::gpupipelinelayout::GPUPipelineLayout<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuqueryset {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -270,8 +231,6 @@ pub(crate) mod gpuqueryset {
     //pub(crate) type GPUQuerySet = script_webgpu::gpuqueryset::GPUQuerySet<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuqueue {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -279,8 +238,6 @@ pub(crate) mod gpuqueue {
     //pub(crate) type GPUQueue = script_webgpu::gpuqueue::GPUQueue<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderbundle {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -289,8 +246,6 @@ pub(crate) mod gpurenderbundle {
     //   script_webgpu::gpurenderbundle::GPURenderBundle<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderbundleencoder {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -299,8 +254,6 @@ pub(crate) mod gpurenderbundleencoder {
     //   script_webgpu::gpurenderbundleencoder::GPURenderBundleEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderpassencoder {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -309,8 +262,6 @@ pub(crate) mod gpurenderpassencoder {
     //    script_webgpu::gpurenderpassencoder::GPURenderPassEncoder<crate::DomTypeHolder>;
 }
 pub(crate) mod gpurenderpipeline {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -319,8 +270,6 @@ pub(crate) mod gpurenderpipeline {
     //   script_webgpu::gpurenderpipeline::GPURenderPipeline<crate::DomTypeHolder>;
 }
 pub(crate) mod gpusampler {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -328,8 +277,6 @@ pub(crate) mod gpusampler {
     //pub(crate) type GPUSampler = script_webgpu::gpusampler::GPUSampler<crate::DomTypeHolder>;
 }
 pub(crate) mod gpushadermodule {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -338,8 +285,6 @@ pub(crate) mod gpushadermodule {
     //   script_webgpu::gpushadermodule::GPUShaderModule<crate::DomTypeHolder>;
 }
 pub(crate) mod gpushaderstage {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -348,8 +293,6 @@ pub(crate) mod gpushaderstage {
     //   script_webgpu::gpushaderstage::GPUShaderStage<crate::DomTypeHolder>;
 }
 pub(crate) mod gpusupportedfeatures {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -358,8 +301,6 @@ pub(crate) mod gpusupportedfeatures {
     //   script_webgpu::gpusupportedfeatures::GPUSupportedFeatures<crate::DomTypeHolder>;
 }
 pub(crate) mod gpusupportedlimits {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -368,8 +309,6 @@ pub(crate) mod gpusupportedlimits {
     //   script_webgpu::gpusupportedlimits::GPUSupportedLimits<crate::DomTypeHolder>;
 }
 pub(crate) mod gputexture {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -377,8 +316,6 @@ pub(crate) mod gputexture {
     //pub(crate) type GPUTexture = script_webgpu::gputexture::GPUTexture<crate::DomTypeHolder>;
 }
 pub(crate) mod gputextureusage {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -387,8 +324,6 @@ pub(crate) mod gputextureusage {
     //   script_webgpu::gputextureusage::GPUTextureUsage<crate::DomTypeHolder>;
 }
 pub(crate) mod gputextureview {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -397,8 +332,6 @@ pub(crate) mod gputextureview {
     //   script_webgpu::gputextureview::GPUTextureView<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuuncapturederrorevent {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -407,8 +340,6 @@ pub(crate) mod gpuuncapturederrorevent {
     //   script_webgpu::gpuuncapturederrorevent::GPUUncapturedErrorEvent<crate::DomTypeHolder>;
 }
 pub(crate) mod gpuvalidationerror {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -417,8 +348,6 @@ pub(crate) mod gpuvalidationerror {
     //   script_webgpu::gpuvalidationerror::GPUValidationError<crate::DomTypeHolder>;
 }
 pub(crate) mod identityhub {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
@@ -426,8 +355,6 @@ pub(crate) mod identityhub {
     //pub(crate) type IdentityHub = script_webgpu::identityhub::IdentityHub;
 }
 pub(crate) mod wgsllanguagefeatures {
-    use malloc_size_of::MallocSizeOf;
-    use script_bindings::reflector::DomObject;
 
     use crate::dom::webgpu::MainTrait;
 
