@@ -9,36 +9,80 @@ use std::rc::Rc;
 use arrayvec::ArrayVec;
 use dom_struct::dom_struct;
 use js::context::JSContext;
+use log::warn;
+use malloc_size_of_derive::MallocSizeOf;
 use pixels::Snapshot;
-use script_bindings::cformat;
+use script_bindings::codegen::GenericBindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
+use script_bindings::codegen::GenericBindings::WebGPUBinding::GPUTexture_Binding::GPUTextureMethods;
 use script_bindings::codegen::GenericBindings::WebGPUBinding::{
-    GPUDeviceMethods, GPUTextureFormat, GPUTextureUsageConstants,
+    GPUCanvasAlphaMode, GPUCanvasConfiguration as RootedGPUCanvasConfiguration, GPUDeviceMethods,
+    GPUExtent3D, GPUExtent3DDict, GPUObjectDescriptorBase, GPUTextureDescriptor,
+    GPUTextureDimension, GPUTextureFormat, GPUTextureUsageConstants,
 };
-use script_bindings::reflector::{Reflector, reflect_weak_referenceable_dom_object};
-use script_webgpu::gpuconvert::convert_texture_descriptor;
+use script_bindings::codegen::GenericUnionTypes::HTMLCanvasElementOrOffscreenCanvas as RootedHTMLCanvasElementOrOffscreenCanvas;
+use script_bindings::dom::MutNullableDom;
+use script_bindings::interfaces::PromiseHelpers;
+use script_bindings::reflector::{Reflector, reflect_weak_referenceable_dom_object_with_wrap};
+use script_bindings::{DomTypes, cformat};
 use servo_base::{Epoch, generic_channel};
 use webgpu_traits::{
     ContextConfiguration, PRESENTATION_BUFFER_COUNT, PendingTexture, WebGPU, WebGPUContextId,
     WebGPURequest, id,
 };
-use webrender_api::{ImageFormat, ImageKey};
 
+//use webrender_api::{ImageFormat, ImageKey};
 use super::gputexture::GPUTexture;
-use crate::canvas_context::{CanvasContext, CanvasHelpers, HTMLCanvasElementOrOffscreenCanvas};
-use crate::dom::bindings::codegen::Bindings::GPUCanvasContextBinding::GPUCanvasContextMethods;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::GPUTexture_Binding::GPUTextureMethods;
-use crate::dom::bindings::codegen::Bindings::WebGPUBinding::{
-    GPUCanvasAlphaMode, GPUCanvasConfiguration as RootedGPUCanvasConfiguration, GPUExtent3D,
-    GPUExtent3DDict, GPUObjectDescriptorBase, GPUTextureDescriptor, GPUTextureDimension,
-};
-use crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas as RootedHTMLCanvasElementOrOffscreenCanvas;
+use crate::JSTraceable;
 use crate::dom::bindings::error::{Error, Fallible};
-use crate::dom::bindings::reflector::DomGlobal;
-use crate::dom::bindings::root::{Dom, DomRoot, MutNullableDom};
+use crate::dom::bindings::root::{Dom, DomRoot};
 use crate::dom::bindings::str::USVString;
-use crate::dom::globalscope::GlobalScope;
-use crate::dom::htmlcanvaselement::HTMLCanvasElement;
-use crate::dom::webgpu::gpudevice::GPUDevice;
+use crate::gpuconvert::convert_texture_descriptor;
+use crate::gpudevice::GPUDevice;
+use crate::traits::{Equivalence, WebGPUGlobalTrait};
+
+/// Non rooted variant of [`crate::dom::bindings::codegen::UnionTypes::HTMLCanvasElementOrOffscreenCanvas`]
+#[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
+#[derive(Clone, JSTraceable, MallocSizeOf)]
+pub enum HTMLCanvasElementOrOffscreenCanvas<D: DomTypes> {
+    HTMLCanvasElement(Dom<D::HTMLCanvasElement>),
+    OffscreenCanvas(Dom<D::OffscreenCanvas>),
+}
+
+impl<D: DomTypes> From<&RootedHTMLCanvasElementOrOffscreenCanvas<D>>
+    for HTMLCanvasElementOrOffscreenCanvas<D>
+{
+    /// Returns a traced version suitable for use as member of other DOM objects.
+    fn from(
+        value: &RootedHTMLCanvasElementOrOffscreenCanvas<D>,
+    ) -> HTMLCanvasElementOrOffscreenCanvas<D> {
+        match value {
+            RootedHTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
+                HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas.as_traced())
+            },
+            RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas) => {
+                HTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas.as_traced())
+            },
+        }
+    }
+}
+
+impl<D: DomTypes> From<&HTMLCanvasElementOrOffscreenCanvas<D>>
+    for RootedHTMLCanvasElementOrOffscreenCanvas<D>
+{
+    /// Returns a rooted version suitable for use on the stack.
+    fn from(
+        value: &HTMLCanvasElementOrOffscreenCanvas<D>,
+    ) -> RootedHTMLCanvasElementOrOffscreenCanvas<D> {
+        match value {
+            HTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
+                RootedHTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas.as_rooted())
+            },
+            HTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas) => {
+                RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(canvas.as_rooted())
+            },
+        }
+    }
+}
 
 /// <https://gpuweb.github.io/gpuweb/#supported-context-formats>
 fn supported_context_format(format: GPUTextureFormat) -> bool {
@@ -72,16 +116,16 @@ impl Drop for DroppableGPUCanvasContext {
 
 #[derive(JSTraceable, MallocSizeOf)]
 #[cfg_attr(crown, crown::unrooted_must_root_lint::must_root)]
-struct GPUCanvasConfiguration {
+struct GPUCanvasConfiguration<D: DomTypes> {
     alpha_mode: GPUCanvasAlphaMode,
-    device: Dom<GPUDevice>,
+    device: Dom<GPUDevice<D>>,
     format: GPUTextureFormat,
     usage: u32,
     view_formats: Vec<GPUTextureFormat>,
 }
 
-impl From<&RootedGPUCanvasConfiguration> for GPUCanvasConfiguration {
-    fn from(value: &RootedGPUCanvasConfiguration) -> GPUCanvasConfiguration {
+impl<D: Equivalence> From<&RootedGPUCanvasConfiguration<D>> for GPUCanvasConfiguration<D> {
+    fn from(value: &RootedGPUCanvasConfiguration<D>) -> GPUCanvasConfiguration<D> {
         GPUCanvasConfiguration {
             alpha_mode: value.alphaMode,
             device: value.device.as_traced(),
@@ -92,8 +136,8 @@ impl From<&RootedGPUCanvasConfiguration> for GPUCanvasConfiguration {
     }
 }
 
-impl GPUCanvasConfiguration {
-    fn root(&self) -> RootedGPUCanvasConfiguration {
+impl<D: Equivalence> GPUCanvasConfiguration<D> {
+    fn root(&self) -> RootedGPUCanvasConfiguration<D> {
         RootedGPUCanvasConfiguration {
             alphaMode: self.alpha_mode,
             device: self.device.as_rooted(),
@@ -105,35 +149,35 @@ impl GPUCanvasConfiguration {
 }
 
 #[dom_struct]
-pub(crate) struct GPUCanvasContext {
+pub(crate) struct GPUCanvasContext<D: DomTypes> {
     reflector_: Reflector,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    canvas: HTMLCanvasElementOrOffscreenCanvas,
+    canvas: HTMLCanvasElementOrOffscreenCanvas<D>,
     #[ignore_malloc_size_of = "manual writing is hard"]
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configuration-slot>
-    configuration: RefCell<Option<GPUCanvasConfiguration>>,
+    configuration: RefCell<Option<GPUCanvasConfiguration<D>>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-texturedescriptor-slot>
     texture_descriptor: RefCell<Option<GPUTextureDescriptor>>,
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-currenttexture-slot>
-    current_texture: MutNullableDom<GPUTexture>,
+    current_texture: MutNullableDom<GPUTexture<D>>,
     /// Set if image is cleared
     /// (usually done by [`GPUCanvasContext::replace_drawing_buffer`])
     cleared: Cell<bool>,
     droppable: DroppableGPUCanvasContext,
 }
 
-impl GPUCanvasContext {
+impl<D: Equivalence> GPUCanvasContext<D> {
     #[cfg_attr(crown, expect(crown::unrooted_must_root))]
     fn new_inherited(
-        global: &GlobalScope,
-        canvas: HTMLCanvasElementOrOffscreenCanvas,
+        global: &D::GlobalScope,
+        canvas: HTMLCanvasElementOrOffscreenCanvas<D>,
         channel: WebGPU,
     ) -> Self {
         let (sender, receiver) = generic_channel::channel().unwrap();
         let size = canvas.size().cast().cast_unit();
         let mut buffer_ids = ArrayVec::<id::BufferId, PRESENTATION_BUFFER_COUNT>::new();
         for _ in 0..PRESENTATION_BUFFER_COUNT {
-            buffer_ids.push(global.wgpu_id_hub().create_buffer_id());
+            buffer_ids.push(global.global_wgpu_id_hub().create_buffer_id());
         }
         if let Err(error) = channel.0.send(WebGPURequest::CreateContext {
             buffer_ids,
@@ -160,11 +204,11 @@ impl GPUCanvasContext {
 
     pub(crate) fn new(
         cx: &mut JSContext,
-        global: &GlobalScope,
-        canvas: &HTMLCanvasElement,
+        global: &D::GlobalScope,
+        canvas: &D::HTMLCanvasElement,
         channel: WebGPU,
     ) -> DomRoot<Self> {
-        reflect_weak_referenceable_dom_object(
+        reflect_weak_referenceable_dom_object_with_wrap::<D, _, _>(
             cx,
             Rc::new(GPUCanvasContext::new_inherited(
                 global,
@@ -172,12 +216,13 @@ impl GPUCanvasContext {
                 channel,
             )),
             global,
+            GPUCanvasContextWrap::<D>,
         )
     }
 }
 
 // Abstract ops from spec
-impl GPUCanvasContext {
+impl<D: Equivalence> GPUCanvasContext<D> {
     pub(crate) fn set_image_key(&self, image_key: ImageKey) {
         if let Err(error) = self.droppable.channel.0.send(WebGPURequest::SetImageKey {
             context_id: self.context_id(),
@@ -215,7 +260,7 @@ impl GPUCanvasContext {
     /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-gputexturedescriptor-for-the-canvas-and-configuration>
     fn texture_descriptor_for_canvas_and_configuration(
         &self,
-        configuration: &RootedGPUCanvasConfiguration,
+        configuration: &RootedGPUCanvasConfiguration<D>,
     ) -> GPUTextureDescriptor {
         let size = self.size();
         GPUTextureDescriptor {
@@ -274,7 +319,7 @@ impl GPUCanvasContext {
 }
 
 // Internal helper methods
-impl GPUCanvasContext {
+impl<D: Equivalence> GPUCanvasContext<D> {
     fn context_configuration(&self) -> Option<ContextConfiguration> {
         let configuration = self.configuration.borrow();
         let configuration = configuration.as_ref()?;
@@ -303,71 +348,14 @@ impl GPUCanvasContext {
     }
 }
 
-impl CanvasContext for GPUCanvasContext {
-    type ID = WebGPUContextId;
-
-    fn context_id(&self) -> WebGPUContextId {
-        self.droppable.context_id
-    }
-
-    /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-update-the-canvas-size>
-    fn resize(&self) {
-        // 1. Replace the drawing buffer of context.
-        self.replace_drawing_buffer();
-        // 2. Let configuration be context.[[configuration]]
-        let configuration = self.configuration.borrow();
-        // 3. If configuration is not null:
-        if let Some(configuration) = configuration.as_ref() {
-            // 3.1. Set context.[[textureDescriptor]] to the
-            // GPUTextureDescriptor for the canvas and configuration(canvas, configuration).
-            self.texture_descriptor.replace(Some(
-                self.texture_descriptor_for_canvas_and_configuration(&configuration.root()),
-            ));
-        }
-    }
-
-    fn reset_bitmap(&self) {
-        warn!("The GPUCanvasContext 'reset_bitmap' is not implemented yet");
-    }
-
-    /// <https://gpuweb.github.io/gpuweb/#ref-for-abstract-opdef-get-a-copy-of-the-image-contents-of-a-context%E2%91%A5>
-    fn get_image_data(&self) -> Option<Snapshot> {
-        // 1. Return a copy of the image contents of context.
-        Some(if self.cleared.get() {
-            Snapshot::cleared(self.size())
-        } else {
-            let (sender, receiver) = generic_channel::channel().unwrap();
-            self.droppable
-                .channel
-                .0
-                .send(WebGPURequest::GetImage {
-                    context_id: self.context_id(),
-                    // We need to read from the pending texture, if one exists.
-                    pending_texture: self.pending_texture(),
-                    sender,
-                })
-                .ok()?;
-            receiver.recv().ok()?.to_owned()
-        })
-    }
-
-    fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas> {
-        Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
-    }
-
-    fn mark_as_dirty(&self) {
-        self.canvas.mark_as_dirty();
-    }
-}
-
-impl GPUCanvasContextMethods<crate::DomTypeHolder> for GPUCanvasContext {
+impl<D: Equivalence> GPUCanvasContextMethods<D> for GPUCanvasContext<D> {
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-canvas>
-    fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas {
+    fn Canvas(&self) -> RootedHTMLCanvasElementOrOffscreenCanvas<D> {
         RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas)
     }
 
     /// <https://gpuweb.github.io/gpuweb/#dom-gpucanvascontext-configure>
-    fn Configure(&self, configuration: &RootedGPUCanvasConfiguration) -> Fallible<()> {
+    fn Configure(&self, configuration: &RootedGPUCanvasConfiguration<D>) -> Fallible<()> {
         // 1. Let device be configuration.device
         let device = &configuration.device;
 
@@ -433,7 +421,7 @@ impl GPUCanvasContextMethods<crate::DomTypeHolder> for GPUCanvasContext {
     }
 
     /// <https://www.w3.org/TR/webgpu/#dom-gpucanvascontext-getconfiguration>
-    fn GetConfiguration(&self) -> Option<RootedGPUCanvasConfiguration> {
+    fn GetConfiguration(&self) -> Option<RootedGPUCanvasConfiguration<D>> {
         self.configuration
             .borrow()
             .as_ref()

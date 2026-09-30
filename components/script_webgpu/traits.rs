@@ -11,6 +11,10 @@ use js::context::NoGC;
 use pixels::Snapshot;
 use script_bindings::DomTypes;
 use script_bindings::callback::{CallbackContainer, HasCallbackHolder, RootedCallback};
+use script_bindings::codegen::GenericUnionTypes::{
+    HTMLCanvasElementOrOffscreenCanvas,
+    HTMLCanvasElementOrOffscreenCanvas as RootedHTMLCanvasElementOrOffscreenCanvas,
+};
 use script_bindings::error::{Error, Fallible};
 use script_bindings::reflector::{DomGlobalGeneric, DomObject};
 use script_bindings::tasks::TaskOnce;
@@ -30,6 +34,7 @@ use crate::gpubindgroup::GPUBindGroup;
 use crate::gpubindgrouplayout::GPUBindGroupLayout;
 use crate::gpubuffer::GPUBuffer;
 use crate::gpubufferusage::GPUBufferUsage;
+use crate::gpucanvascontext::GPUCanvasContext;
 use crate::gpucolorwrite::GPUColorWrite;
 use crate::gpucommandbuffer::GPUCommandBuffer;
 use crate::gpucommandencoder::GPUCommandEncoder;
@@ -75,6 +80,7 @@ pub trait Equivalence = DomTypes<
         GPUBindGroupLayout = GPUBindGroupLayout<Self>,
         GPUBuffer = GPUBuffer<Self>,
         GPUBufferUsage = GPUBufferUsage<Self>,
+        GPUCanvasContext = GPUCanvasContext<Self>,
         GPUColorWrite = GPUColorWrite<Self>,
         GPUCommandBuffer = GPUCommandBuffer<Self>,
         GPUCommandEncoder = GPUCommandEncoder<Self>,
@@ -201,4 +207,51 @@ pub trait OffscreenCanvasTrait: OriginIsCleanTrait {
 pub trait HtmlCanvasElementTrait: OriginIsCleanTrait {
     fn is_valid(&self) -> bool;
     fn get_image_data(&self) -> Option<Snapshot>;
+}
+
+pub trait CanvasContext<D: DomTypes> {
+    type ID;
+
+    fn context_id(&self) -> Self::ID;
+
+    fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas<D>>;
+
+    fn resize(&self);
+
+    // Resets the backing bitmap (to transparent or opaque black) without the
+    // context state reset.
+    // Used by OffscreenCanvas.transferToImageBitmap.
+    fn reset_bitmap(&self);
+
+    /// Returns none if area of canvas is zero.
+    ///
+    /// In case of other errors it returns cleared snapshot
+    fn get_image_data(&self) -> Option<Snapshot>;
+
+    fn origin_is_clean(&self) -> bool {
+        true
+    }
+
+    fn size(&self) -> Size2D<u32> {
+        self.canvas()
+            .map(|canvas| canvas.size())
+            .unwrap_or_default()
+    }
+
+    fn mark_as_dirty(&self);
+
+    fn onscreen(&self) -> bool {
+        let Some(canvas) = self.canvas() else {
+            return false;
+        };
+
+        match canvas {
+            RootedHTMLCanvasElementOrOffscreenCanvas::HTMLCanvasElement(canvas) => {
+                canvas.upcast::<Node>().is_connected()
+            },
+            // FIXME(34628): Offscreen canvases should be considered offscreen if a placeholder is set.
+            // <https://www.w3.org/TR/webgpu/#abstract-opdef-updating-the-rendering-of-a-webgpu-canvas>
+            RootedHTMLCanvasElementOrOffscreenCanvas::OffscreenCanvas(_) => false,
+        }
+    }
 }

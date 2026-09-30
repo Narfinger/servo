@@ -14,6 +14,7 @@ pub mod gpubindgroup;
 pub mod gpubindgrouplayout;
 pub mod gpubuffer;
 pub mod gpubufferusage;
+pub mod gpucanvascontext;
 pub mod gpucolorwrite;
 pub mod gpucommandbuffer;
 pub mod gpucommandencoder;

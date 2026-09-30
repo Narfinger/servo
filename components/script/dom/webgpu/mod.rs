@@ -23,6 +23,7 @@ use serde::de::DeserializeOwned;
 use servo_base::generic_channel::GenericCallback;
 use servo_url::MutableOrigin;
 
+use crate::canvas_context::CanvasContext;
 use crate::dom::GlobalScope;
 use crate::dom::bindings::reflector::DomGlobal;
 use crate::dom::promise::RootedPromise;
@@ -58,7 +59,12 @@ pub(crate) mod gpubufferusage {
     pub(crate) type GPUBufferUsage =
         script_webgpu::gpubufferusage::GPUBufferUsage<crate::DomTypeHolder>;
 }
-pub(crate) mod gpucanvascontext;
+pub(crate) mod gpucanvascontext {
+    pub(crate) type GPUCanvasContext =
+        script_webgpu::gpucanvascontext::GPUCanvasContext<crate::DomTypeHolder>;
+    pub(crate) type HTMLCanvasElementOrOffscreenCanvas =
+        script_webgpu::gpucanvascontext::HTMLCanvasElementOrOffscreenCanvas<crate::DomTypeHolder>;
+}
 pub(crate) mod gpucolorwrite {
     pub(crate) type GPUColorWrite =
         script_webgpu::gpucolorwrite::GPUColorWrite<crate::DomTypeHolder>;
@@ -326,5 +332,62 @@ impl HtmlCanvasElementTrait for HTMLCanvasElement {
     }
     fn get_image_data(&self) -> Option<Snapshot> {
         HTMLCanvasElement::get_image_data(self)
+    }
+}
+
+impl CanvasContext for GPUCanvasContext<crate::DomTypeHolder> {
+    type ID = WebGPUContextId;
+
+    fn context_id(&self) -> WebGPUContextId {
+        self.droppable.context_id
+    }
+
+    /// <https://gpuweb.github.io/gpuweb/#abstract-opdef-update-the-canvas-size>
+    fn resize(&self) {
+        // 1. Replace the drawing buffer of context.
+        self.replace_drawing_buffer();
+        // 2. Let configuration be context.[[configuration]]
+        let configuration = self.configuration.borrow();
+        // 3. If configuration is not null:
+        if let Some(configuration) = configuration.as_ref() {
+            // 3.1. Set context.[[textureDescriptor]] to the
+            // GPUTextureDescriptor for the canvas and configuration(canvas, configuration).
+            self.texture_descriptor.replace(Some(
+                self.texture_descriptor_for_canvas_and_configuration(&configuration.root()),
+            ));
+        }
+    }
+
+    fn reset_bitmap(&self) {
+        warn!("The GPUCanvasContext 'reset_bitmap' is not implemented yet");
+    }
+
+    /// <https://gpuweb.github.io/gpuweb/#ref-for-abstract-opdef-get-a-copy-of-the-image-contents-of-a-context%E2%91%A5>
+    fn get_image_data(&self) -> Option<Snapshot> {
+        // 1. Return a copy of the image contents of context.
+        Some(if self.cleared.get() {
+            Snapshot::cleared(self.size())
+        } else {
+            let (sender, receiver) = generic_channel::channel().unwrap();
+            self.droppable
+                .channel
+                .0
+                .send(WebGPURequest::GetImage {
+                    context_id: self.context_id(),
+                    // We need to read from the pending texture, if one exists.
+                    pending_texture: self.pending_texture(),
+                    sender,
+                })
+                .ok()?;
+            receiver.recv().ok()?.to_owned()
+        })
+    }
+
+    fn canvas(&self) -> Option<RootedHTMLCanvasElementOrOffscreenCanvas<D>> {
+        Some(RootedHTMLCanvasElementOrOffscreenCanvas::from(&self.canvas))
+    }
+
+    fn mark_as_dirty(&self) {
+        self.canvas.mark_as_dirty();
     }
 }
