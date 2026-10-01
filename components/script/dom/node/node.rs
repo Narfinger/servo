@@ -2795,13 +2795,13 @@ impl Node {
 
             // Step 7.7. For each shadow-including inclusive descendant inclusiveDescendant of node,
             // in shadow-including tree order:
-            for descendant in kid.traverse_preorder(ShadowIncluding::Yes) {
+            for descendant in kid.traverse_preorder_non_rooting(cx.no_gc(), ShadowIncluding::Yes) {
                 // Step 7.7.1. Run the insertion steps with inclusiveDescendant.
                 // This is done in `parent.add_child()`.
 
                 // From <https://github.com/whatwg/dom/issues/833>:
                 // try_upgrade_element fires even for disconnected elements.
-                if let Some(element) = DomRoot::downcast::<Element>(descendant.clone()) &&
+                if let Some(element) = UnrootedDom::downcast::<Element>(descendant.clone()) &&
                     !element.is_custom()
                 {
                     try_upgrade_element(cx, &element);
@@ -2813,7 +2813,7 @@ impl Node {
                 }
 
                 // Step 7.7.3. If inclusiveDescendant is an element
-                if let Some(element) = DomRoot::downcast::<Element>(descendant.clone()) {
+                if let Some(element) = UnrootedDom::downcast::<Element>(descendant.clone()) {
                     // and inclusiveDescendant’s custom element registry is non-null:
                     if let Some(registry) = element.custom_element_registry() {
                         // Step 7.7.3.1. If inclusiveDescendant’s custom element
@@ -2831,16 +2831,10 @@ impl Node {
                     // Step 7.7.3.2. If inclusiveDescendant is custom, then enqueue
                     // a custom element callback reaction with inclusiveDescendant,
                     // callback name "connectedCallback", and « ».
-                    if element.is_custom() {
-                        ScriptThread::custom_element_reaction_stack().enqueue_callback_reaction(
-                            cx,
-                            &element,
-                            CallbackReaction::Connected,
-                            None,
-                        );
-                    }
+                    // This step is made later to avoid rooting.
+
                     // Step 7.7.3.3. Otherwise, try to upgrade inclusiveDescendant.
-                    else {
+                    if !element.is_custom() {
                         try_upgrade_element(cx, &element);
                     }
                 }
@@ -2851,7 +2845,7 @@ impl Node {
                 // document to inclusiveDescendant’s custom element registry’s
                 // scoped document set.
                 else if let Some(shadow_root) =
-                    DomRoot::downcast::<ShadowRoot>(descendant.clone()) &&
+                    UnrootedDom::downcast::<ShadowRoot>(descendant.clone()) &&
                     let Some(custom_element_registry) = shadow_root.custom_element_registry() &&
                     custom_element_registry.is_scoped()
                 {
@@ -2860,7 +2854,23 @@ impl Node {
 
                 // Step 11.1 For each shadow-including inclusive descendant inclusiveDescendant of node,
                 //           in shadow-including tree order, append inclusiveDescendant to staticNodeList.
-                static_node_list.push(descendant.clone());
+                static_node_list.push(descendant.as_rooted());
+            }
+
+            // Step 7.7.3.2
+            let custom_elements: SmallVec<[_; 4]> = kid
+                .traverse_preorder_non_rooting(cx.no_gc(), ShadowIncluding::Yes)
+                .filter_map(UnrootedDom::downcast::<Element>)
+                .filter(|element| element.is_custom())
+                .map(|element| element.as_rooted())
+                .collect();
+            for element in custom_elements {
+                ScriptThread::custom_element_reaction_stack().enqueue_callback_reaction(
+                    cx,
+                    &element,
+                    CallbackReaction::Connected,
+                    None,
+                );
             }
         }
 
