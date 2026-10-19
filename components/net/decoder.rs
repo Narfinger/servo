@@ -19,13 +19,13 @@ If the response is gzip, deflate or brotli then the bytes are decompressed.
 use std::error::Error;
 use std::fmt;
 use std::io::{self};
-use std::pin::Pin;
+use std::pin::{Pin, pin};
 
 use async_compression::tokio::bufread::{BrotliDecoder, GzipDecoder, ZlibDecoder, ZstdDecoder};
 use bytes::Bytes;
 use futures::stream::Peekable;
 use futures::task::{Context, Poll};
-use futures::{Future, Stream};
+use futures::{Future, FutureExt, Stream};
 use futures_util::StreamExt;
 use headers::{ContentLength, HeaderMapExt};
 use http_body_util::BodyExt;
@@ -36,6 +36,7 @@ use tokio_util::codec::{BytesCodec, FramedRead};
 use tokio_util::io::StreamReader;
 
 use crate::connector::BoxedBody;
+use crate::disk_cache::{CacheStorage, DiskCache};
 
 pub const DECODER_BUFFER_SIZE: usize = 8192;
 
@@ -84,7 +85,7 @@ pub struct Decoder {
 }
 
 #[derive(PartialEq)]
-enum DecoderType {
+pub(crate) enum DecoderType {
     Gzip,
     Brotli,
     Deflate,
@@ -129,7 +130,12 @@ impl Decoder {
         content_length: Option<ContentLength>,
     ) -> Decoder {
         Decoder {
-            inner: Inner::PlainText(BodyStream::new(body, is_secure_scheme, content_length)),
+            inner: Inner::PlainText(BodyStream::new(
+                body,
+                is_secure_scheme,
+                content_length,
+                None,
+            )),
         }
     }
 
@@ -145,7 +151,7 @@ impl Decoder {
     ) -> Decoder {
         Decoder {
             inner: Inner::Pending(Pending {
-                body: BodyStream::new(body, is_secure_scheme, content_length).peekable(),
+                body: BodyStream::new(body, is_secure_scheme, content_length, None).peekable(),
                 type_,
             }),
         }
@@ -291,6 +297,7 @@ struct BodyStream {
     is_secure_scheme: bool,
     content_length: Option<ContentLength>,
     total_read: u64,
+    disk_cache: Option<CacheStorage>,
 }
 
 impl BodyStream {
@@ -302,15 +309,22 @@ impl BodyStream {
             is_secure_scheme: false,
             content_length: None,
             total_read: 0,
+            disk_cache: None,
         }
     }
 
-    fn new(body: BoxedBody, is_secure_scheme: bool, content_length: Option<ContentLength>) -> Self {
+    fn new(
+        body: BoxedBody,
+        is_secure_scheme: bool,
+        content_length: Option<ContentLength>,
+        disk_cache: Option<CacheStorage>,
+    ) -> Self {
         BodyStream {
             body,
             is_secure_scheme,
             content_length,
             total_read: 0,
+            disk_cache,
         }
     }
 }
@@ -324,6 +338,13 @@ impl Stream for BodyStream {
                 let Ok(bytes) = bytes.into_data() else {
                     return Poll::Ready(None);
                 };
+
+                if let Some(disk_cache) = self.disk_cache.as_mut() {
+                    match disk_cache.store_bytes(&bytes).boxed().poll_unpin(cx) {
+                        Poll::Ready(_) => {},
+                        Poll::Pending => return Poll::Pending,
+                    }
+                }
                 self.total_read += bytes.len() as u64;
                 Poll::Ready(Some(Ok(bytes)))
             },

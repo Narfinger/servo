@@ -7,18 +7,83 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use async_compression::codecs::Decode;
+use bytes::Bytes;
 use log::error;
 use malloc_size_of_derive::MallocSizeOf;
-use rusqlite::Row;
+use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
+use rusqlite::{Row, RowIndex, ToSql};
 use sea_query::{ColumnDef, Expr, ExprTrait, Iden, OnConflict, Query, SqliteQueryBuilder, Table};
 use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
 
+use crate::decoder::DecoderType;
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
 };
+
+#[derive(Debug, Clone)]
+enum InnerDecoderType {
+    Plain,
+    Gzip,
+    Brotli,
+}
+
+impl InnerDecoderType {
+    fn to_u64(&self) -> i32 {
+        match self {
+            InnerDecoderType::Plain => 0,
+            InnerDecoderType::Gzip => 1,
+            InnerDecoderType::Brotli => 2,
+        }
+    }
+
+    fn from_u64(u: u64) -> Option<Self> {
+        match u {
+            0 => Some(InnerDecoderType::Plain),
+            1 => Some(InnerDecoderType::Gzip),
+            2 => Some(InnerDecoderType::Brotli),
+            _ => None,
+        }
+    }
+}
+
+pub struct CacheStorage {
+    key: CacheKey,
+    disk_cache: Arc<TokioMutex<DiskCacheInner>>,
+    decoder_type: InnerDecoderType,
+    row_id: u32,
+}
+
+impl CacheStorage {
+    pub async fn store_bytes(&mut self, bytes: &Bytes) {
+        let disk_cache = self.disk_cache.lock().await;
+        let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
+        let (query, params) = Query::insert()
+            .into_table(DiskCacheEncodedTable::Table)
+            .columns([
+                DiskCacheEncodedTable::Key,
+                DiskCacheEncodedTable::Index,
+                DiskCacheEncodedTable::DecoderType,
+                DiskCacheEncodedTable::Data,
+            ])
+            .values_panic([
+                self.key.as_ref().into(),
+                self.row_id.into(),
+                self.decoder_type.to_u64().into(),
+                serialized_bytes.into(),
+            ])
+            .build_rusqlite(SqliteQueryBuilder);
+
+        disk_cache
+            .db
+            .execute(query.as_str(), &*params.as_params())
+            .unwrap();
+        self.row_id += 1;
+    }
+}
 
 #[derive(MallocSizeOf)]
 pub(crate) struct DiskCacheMetadata {
@@ -56,6 +121,26 @@ pub(crate) struct DiskCache {
     max_size: usize,
     // the non constant data.
     inner: TokioMutex<DiskCacheInner>,
+}
+
+enum DiskCacheEncodedTable {
+    Table,
+    Key,
+    Index,
+    DecoderType,
+    Data,
+}
+
+impl Iden for DiskCacheEncodedTable {
+    fn unquoted(&self) -> &str {
+        match self {
+            DiskCacheEncodedTable::Table => "disk_cache_encoded",
+            DiskCacheEncodedTable::Key => "key",
+            DiskCacheEncodedTable::Index => "index",
+            DiskCacheEncodedTable::DecoderType => "decoder_type",
+            DiskCacheEncodedTable::Data => "data",
+        }
+    }
 }
 
 /// Identifications for sea_query of the cache table.
@@ -141,6 +226,37 @@ impl DiskCache {
                 .col(
                     ColumnDef::new(DiskCacheTable::InsertionTimestamp)
                         .integer()
+                        .not_null(),
+                )
+                .build(SqliteQueryBuilder);
+            if let Err(e) = db.execute(query.as_str(), ()) {
+                error!("Could not create table. DB Error {:?}", e);
+                return (None, MemoryCacheLifecycle::empty());
+            }
+
+            // Making blob table
+            let query = Table::create()
+                .table(DiskCacheEncodedTable::Table)
+                .if_not_exists()
+                .col(
+                    ColumnDef::new(DiskCacheEncodedTable::Key)
+                        .text()
+                        .not_null()
+                        .primary_key(),
+                )
+                .col(
+                    ColumnDef::new(DiskCacheEncodedTable::Index)
+                        .integer()
+                        .not_null(),
+                )
+                .col(
+                    ColumnDef::new(DiskCacheEncodedTable::DecoderType)
+                        .integer()
+                        .not_null(),
+                )
+                .col(
+                    ColumnDef::new(DiskCacheEncodedTable::Data)
+                        .blob()
                         .not_null(),
                 )
                 .build(SqliteQueryBuilder);
