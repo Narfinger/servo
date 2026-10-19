@@ -15,6 +15,7 @@ use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRe
 use rusqlite::{Row, RowIndex, ToSql};
 use sea_query::{ColumnDef, Expr, ExprTrait, Iden, OnConflict, Query, SqliteQueryBuilder, Table};
 use sea_query_rusqlite::RusqliteBinder;
+use servo_arc::Arc as ServoArc;
 use servo_config::pref;
 use servo_url::ServoUrl;
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
@@ -23,12 +24,23 @@ use crate::decoder::DecoderType;
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
 };
+use crate::test::HttpState;
 
 #[derive(Debug, Clone)]
-enum InnerDecoderType {
+pub(crate) enum InnerDecoderType {
     Plain,
     Gzip,
     Brotli,
+}
+
+impl From<Option<DecoderType>> for InnerDecoderType {
+    fn from(value: Option<DecoderType>) -> Self {
+        match value {
+            Some(DecoderType::Gzip) => InnerDecoderType::Gzip,
+            None => InnerDecoderType::Plain,
+            _ => panic!("NYI"),
+        }
+    }
 }
 
 impl InnerDecoderType {
@@ -51,37 +63,39 @@ impl InnerDecoderType {
 }
 
 pub struct CacheStorage {
-    key: CacheKey,
-    disk_cache: Arc<TokioMutex<DiskCacheInner>>,
-    decoder_type: InnerDecoderType,
-    row_id: u32,
+    pub(crate) key: CacheKey,
+    pub(crate) disk_cache: Option<ServoArc<DiskCache>>,
+    pub(crate) decoder_type: InnerDecoderType,
+    pub(crate) row_id: u32,
 }
 
 impl CacheStorage {
     pub async fn store_bytes(&mut self, bytes: &Bytes) {
-        let disk_cache = self.disk_cache.lock().await;
-        let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
-        let (query, params) = Query::insert()
-            .into_table(DiskCacheEncodedTable::Table)
-            .columns([
-                DiskCacheEncodedTable::Key,
-                DiskCacheEncodedTable::Index,
-                DiskCacheEncodedTable::DecoderType,
-                DiskCacheEncodedTable::Data,
-            ])
-            .values_panic([
-                self.key.as_ref().into(),
-                self.row_id.into(),
-                self.decoder_type.to_u64().into(),
-                serialized_bytes.into(),
-            ])
-            .build_rusqlite(SqliteQueryBuilder);
+        if let Some(disk_cache) = &self.disk_cache {
+            let disk_cache = disk_cache.inner.lock().await;
+            let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
+            let (query, params) = Query::insert()
+                .into_table(DiskCacheEncodedTable::Table)
+                .columns([
+                    DiskCacheEncodedTable::Key,
+                    DiskCacheEncodedTable::Index,
+                    DiskCacheEncodedTable::DecoderType,
+                    DiskCacheEncodedTable::Data,
+                ])
+                .values_panic([
+                    self.key.as_ref().into(),
+                    self.row_id.into(),
+                    self.decoder_type.to_u64().into(),
+                    serialized_bytes.into(),
+                ])
+                .build_rusqlite(SqliteQueryBuilder);
 
-        disk_cache
-            .db
-            .execute(query.as_str(), &*params.as_params())
-            .unwrap();
-        self.row_id += 1;
+            disk_cache
+                .db
+                .execute(query.as_str(), &*params.as_params())
+                .unwrap();
+            self.row_id += 1;
+        }
     }
 }
 

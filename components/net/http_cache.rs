@@ -110,6 +110,12 @@ pub struct CacheKey {
     url: ServoUrl,
 }
 
+impl From<ServoUrl> for CacheKey {
+    fn from(url: ServoUrl) -> Self {
+        CacheKey { url }
+    }
+}
+
 impl AsRef<str> for CacheKey {
     fn as_ref(&self) -> &str {
         self.url.as_str()
@@ -347,6 +353,11 @@ impl MallocSizeOf for HttpCache {
 }
 
 impl HttpCache {
+    /// Returns and arc to the disk cache
+    pub(crate) fn disk_cache(&self) -> Option<Arc<DiskCache>> {
+        self.disk_cache().clone()
+    }
+
     /// Create a new HttpCache with [`HttpCacheAssignment`]
     pub fn new(assignment: HttpCacheAssignment) -> Self {
         let size = pref!(network_http_cache_size)

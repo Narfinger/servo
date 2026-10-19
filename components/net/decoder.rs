@@ -20,6 +20,7 @@ use std::error::Error;
 use std::fmt;
 use std::io::{self};
 use std::pin::{Pin, pin};
+use std::sync::Arc;
 
 use async_compression::tokio::bufread::{BrotliDecoder, GzipDecoder, ZlibDecoder, ZstdDecoder};
 use bytes::Bytes;
@@ -32,11 +33,14 @@ use http_body_util::BodyExt;
 use hyper::Response;
 use hyper::body::Body;
 use hyper::header::{CONTENT_ENCODING, HeaderValue, TRANSFER_ENCODING};
+use tokio::sync::Mutex;
 use tokio_util::codec::{BytesCodec, FramedRead};
 use tokio_util::io::StreamReader;
 
 use crate::connector::BoxedBody;
-use crate::disk_cache::{CacheStorage, DiskCache};
+use crate::disk_cache::{self, CacheStorage, DiskCache};
+use crate::http_cache::CacheKey;
+use crate::test::HttpState;
 
 pub const DECODER_BUFFER_SIZE: usize = 8192;
 
@@ -84,7 +88,7 @@ pub struct Decoder {
     inner: Inner,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub(crate) enum DecoderType {
     Gzip,
     Brotli,
@@ -148,10 +152,12 @@ impl Decoder {
         type_: DecoderType,
         is_secure_scheme: bool,
         content_length: Option<ContentLength>,
+        disk_cache: Option<CacheStorage>,
     ) -> Decoder {
         Decoder {
             inner: Inner::Pending(Pending {
-                body: BodyStream::new(body, is_secure_scheme, content_length, None).peekable(),
+                body: BodyStream::new(body, is_secure_scheme, content_length, disk_cache)
+                    .peekable(),
                 type_,
             }),
         }
@@ -168,7 +174,12 @@ impl Decoder {
     /// how to decode the content body of the response.
     ///
     /// Uses the correct variant by inspecting the Content-Encoding header.
-    pub fn detect(response: Response<BoxedBody>, is_secure_scheme: bool) -> Response<Decoder> {
+    pub fn detect(
+        response: Response<BoxedBody>,
+        is_secure_scheme: bool,
+        key: CacheKey,
+        state: Arc<HttpState>,
+    ) -> Response<Decoder> {
         let values = response
             .headers()
             .get_all(CONTENT_ENCODING)
@@ -190,10 +201,16 @@ impl Decoder {
             })
         });
         let content_length = response.headers().typed_get::<ContentLength>();
+        let disk_cache = CacheStorage {
+            key,
+            disk_cache: state.http_cache.disk_cache(),
+            decoder_type: decoder.into(),
+            row_id: 0,
+        };
         match decoder {
-            Some(type_) => {
-                response.map(|r| Decoder::pending(r, type_, is_secure_scheme, content_length))
-            },
+            Some(type_) => response.map(|r| {
+                Decoder::pending(r, type_, is_secure_scheme, content_length, Some(disk_cache))
+            }),
             None => response.map(|r| Decoder::plain_text(r, is_secure_scheme, content_length)),
         }
     }
