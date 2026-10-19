@@ -354,8 +354,8 @@ impl MallocSizeOf for HttpCache {
 
 impl HttpCache {
     /// Returns and arc to the disk cache
-    pub(crate) fn disk_cache(&self) -> Option<Arc<DiskCache>> {
-        self.disk_cache().clone()
+    pub(crate) fn disk_cache(&self) -> Option<std::sync::Arc<DiskCache>> {
+        self.disk_cache.clone()
     }
 
     /// Create a new HttpCache with [`HttpCacheAssignment`]

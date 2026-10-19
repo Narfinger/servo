@@ -7,15 +7,12 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use async_compression::codecs::Decode;
 use bytes::Bytes;
 use log::error;
 use malloc_size_of_derive::MallocSizeOf;
-use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
-use rusqlite::{Row, RowIndex, ToSql};
+use rusqlite::Row;
 use sea_query::{ColumnDef, Expr, ExprTrait, Iden, OnConflict, Query, SqliteQueryBuilder, Table};
 use sea_query_rusqlite::RusqliteBinder;
-use servo_arc::Arc as ServoArc;
 use servo_config::pref;
 use servo_url::ServoUrl;
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
@@ -24,21 +21,24 @@ use crate::decoder::DecoderType;
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
 };
-use crate::test::HttpState;
 
 #[derive(Debug, Clone)]
 pub(crate) enum InnerDecoderType {
     Plain,
     Gzip,
     Brotli,
+    Deflate,
+    Zstd,
 }
 
 impl From<Option<DecoderType>> for InnerDecoderType {
     fn from(value: Option<DecoderType>) -> Self {
         match value {
             Some(DecoderType::Gzip) => InnerDecoderType::Gzip,
+            Some(DecoderType::Brotli) => InnerDecoderType::Brotli,
+            Some(DecoderType::Deflate) => InnerDecoderType::Deflate,
+            Some(DecoderType::Zstd) => InnerDecoderType::Zstd,
             None => InnerDecoderType::Plain,
-            _ => panic!("NYI"),
         }
     }
 }
@@ -49,6 +49,8 @@ impl InnerDecoderType {
             InnerDecoderType::Plain => 0,
             InnerDecoderType::Gzip => 1,
             InnerDecoderType::Brotli => 2,
+            InnerDecoderType::Deflate => 3,
+            InnerDecoderType::Zstd => 4,
         }
     }
 
@@ -57,6 +59,8 @@ impl InnerDecoderType {
             0 => Some(InnerDecoderType::Plain),
             1 => Some(InnerDecoderType::Gzip),
             2 => Some(InnerDecoderType::Brotli),
+            3 => Some(InnerDecoderType::Deflate),
+            4 => Some(InnerDecoderType::Zstd),
             _ => None,
         }
     }
@@ -64,13 +68,14 @@ impl InnerDecoderType {
 
 pub struct CacheStorage {
     pub(crate) key: CacheKey,
-    pub(crate) disk_cache: Option<ServoArc<DiskCache>>,
+    pub(crate) disk_cache: Option<Arc<DiskCache>>,
     pub(crate) decoder_type: InnerDecoderType,
     pub(crate) row_id: u32,
 }
 
 impl CacheStorage {
     pub async fn store_bytes(&mut self, bytes: &Bytes) {
+        println!("STROGIN BYTES");
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
             let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
@@ -252,12 +257,7 @@ impl DiskCache {
             let query = Table::create()
                 .table(DiskCacheEncodedTable::Table)
                 .if_not_exists()
-                .col(
-                    ColumnDef::new(DiskCacheEncodedTable::Key)
-                        .text()
-                        .not_null()
-                        .primary_key(),
-                )
+                .col(ColumnDef::new(DiskCacheEncodedTable::Key).text().not_null())
                 .col(
                     ColumnDef::new(DiskCacheEncodedTable::Index)
                         .integer()

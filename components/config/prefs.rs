@@ -6,7 +6,7 @@
 
 use std::env::consts::ARCH;
 use std::sync::{RwLock, RwLockReadGuard};
-use std::time::Duration;
+use std::time::{Duration, Instant, SystemTime};
 
 use serde::{Deserialize, Serialize};
 use servo_config_macro::ServoPreferences;
@@ -622,6 +622,14 @@ impl Default for Preferences {
         if let Ok(no_proxy) = std::env::var("no_proxy").or_else(|_| std::env::var("NO_PROXY")) {
             preferences.network_http_no_proxy = no_proxy
         }
+
+        preferences.network_http_disk_cache = format!(
+            "/tmp/test-dd {}.sqlite3",
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        );
 
         preferences
     }
