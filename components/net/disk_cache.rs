@@ -350,6 +350,9 @@ impl DiskCache {
             .map(|bytes| postcard::from_bytes(bytes.unwrap()).unwrap())
             .collect();
 
+        let whole_thing = data.into_iter().flatten().collect();
+
+
         /*
         let bytes = {
             // we lock the metadata before we update the sqlite database so that
