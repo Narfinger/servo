@@ -11,7 +11,9 @@ use bytes::Bytes;
 use log::error;
 use malloc_size_of_derive::MallocSizeOf;
 use rusqlite::Row;
-use sea_query::{ColumnDef, Expr, ExprTrait, Iden, OnConflict, Query, SqliteQueryBuilder, Table};
+use sea_query::{
+    ColumnDef, Expr, ExprTrait, Iden, OnConflict, OrderExpr, Query, SqliteQueryBuilder, Table,
+};
 use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
@@ -101,6 +103,10 @@ impl CacheStorage {
                 .unwrap();
             self.row_id += 1;
         }
+    }
+
+    pub async fn finish(&self) {
+        // update disk cache metadata
     }
 }
 
@@ -325,6 +331,26 @@ impl DiskCache {
     /// Deletes the entry from the disk cache
     #[servo_tracing::instrument(skip(self))]
     pub(crate) async fn get(&self, key: CacheKey) -> Option<Arc<TokioRwLock<Vec<CachedResource>>>> {
+        let mut inner = self.inner.lock().await;
+        let (query, query_values) = Query::select()
+            .columns([
+                DiskCacheEncodedTable::Index,
+                DiskCacheEncodedTable::DecoderType,
+                DiskCacheEncodedTable::Data,
+            ])
+            .from(DiskCacheEncodedTable::Table)
+            .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(key.as_ref()))
+            //.add_order_by(DiskCacheEncodedTable::Index)
+            .build_rusqlite(SqliteQueryBuilder);
+
+        let mut st = inner.db.prepare(query.as_str()).ok()?;
+        let data: Vec<Bytes> = st
+            .query_map(&*query_values.as_params(), |row| Ok(row.get_unwrap("data")))
+            .ok()?
+            .map(|bytes| postcard::from_bytes(bytes.unwrap()).unwrap())
+            .collect();
+
+        /*
         let bytes = {
             // we lock the metadata before we update the sqlite database so that
             // the database and metadata are consistent when this lock is released.
@@ -383,6 +409,7 @@ impl DiskCache {
         let deserialized_vec_cached_response = std::sync::Arc::new(TokioRwLock::new(value));
 
         Some(deserialized_vec_cached_response)
+         */
     }
 
     /// Stores a [`CacheEntry`]` to disk.

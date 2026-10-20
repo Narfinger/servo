@@ -392,7 +392,15 @@ impl Stream for BodyStream {
                 }
                 Poll::Ready(Some(Err(io::Error::other(BodyStreamError(err.into())))))
             },
-            None => Poll::Ready(None),
+            None => {
+                if let Some(disk_cache) = self.disk_cache.as_mut() {
+                    match disk_cache.finish().boxed().poll_unpin(cx) {
+                        Poll::Ready(_) => {},
+                        Poll::Pending => return Poll::Pending,
+                    }
+                }
+                Poll::Ready(None)
+            },
         }
     }
 }
