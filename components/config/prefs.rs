@@ -624,12 +624,13 @@ impl Default for Preferences {
         }
 
         preferences.network_http_disk_cache = format!(
-            "/tmp/test-dd {}.sqlite3",
-            SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
+            "/tmp/test-http-stable-cache.sqlite3",
+            /*SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()*/
         );
+        preferences.network_http_cache_size = 20;
 
         preferences
     }

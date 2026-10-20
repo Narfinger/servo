@@ -35,7 +35,7 @@ impl AsyncRuntime for AsyncRuntimeHolder {
 
 /// A shared handle to the runtime,
 /// to be initialized on start-up.
-static ASYNC_RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
+pub static ASYNC_RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
 
 pub fn init_async_runtime() -> Box<dyn AsyncRuntime> {
     // Initialize a tokio runtime.

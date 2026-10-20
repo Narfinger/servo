@@ -11,6 +11,7 @@ use bytes::Bytes;
 use futures::io::Cursor;
 use log::error;
 use malloc_size_of_derive::MallocSizeOf;
+use net_traits::response::ResponseBody;
 use rusqlite::Row;
 use sea_query::{
     ColumnDef, Expr, ExprTrait, Iden, OnConflict, OrderExpr, Query, SqliteQueryBuilder, Table,
@@ -22,6 +23,7 @@ use tokio::io::{AsyncReadExt, BufReader};
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
 use tokio_util::io::ReaderStream;
 
+use crate::async_runtime;
 use crate::decoder::{self, DecoderType};
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
@@ -72,15 +74,55 @@ impl InnerDecoderType {
 }
 
 pub struct CacheStorage {
-    pub(crate) key: CacheKey,
-    pub(crate) disk_cache: Option<Arc<DiskCache>>,
-    pub(crate) decoder_type: InnerDecoderType,
-    pub(crate) row_id: u32,
+    key: CacheKey,
+    disk_cache: Option<Arc<DiskCache>>,
+    decoder_type: InnerDecoderType,
+    row_id: u32,
 }
 
 impl CacheStorage {
+    pub(crate) fn new(
+        key: CacheKey,
+        disk_cache: Option<Arc<DiskCache>>,
+        decoder_type: InnerDecoderType,
+    ) -> Self {
+        let storage = CacheStorage {
+            key: key.clone(),
+            disk_cache: disk_cache.clone(),
+            decoder_type,
+            row_id: 0,
+        };
+
+
+        let foo = disk_cache.unwrap().clone();
+        async_runtime::spawn_task(async move {
+            foo.inner
+                .lock()
+                .await
+                .db
+                .execute(query.as_str(), &*params.as_params());
+        });
+
+        storage
+    }
+
+    async fn delete_old_data(&self) {
+        let (query, params) = Query::delete()
+            .from_table(DiskCacheEncodedTable::Table)
+            .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
+            .build_rusqlite(SqliteQueryBuilder);
+
+        if let Some(disk_cache) = &self.disk_cache {
+            disk_cache
+                .inner
+                .lock()
+                .await
+                .db
+                .execute(query.as_str(), &*params.as_params());
+        }
+    }
+
     pub async fn store_bytes(&mut self, bytes: &Bytes) {
-        println!("STROGIN BYTES");
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
             let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
@@ -279,7 +321,7 @@ impl DiskCache {
                 )
                 .col(
                     ColumnDef::new(DiskCacheEncodedTable::Data)
-                        .blob()
+                        .text()
                         .not_null(),
                 )
                 .build(SqliteQueryBuilder);
@@ -334,62 +376,126 @@ impl DiskCache {
     /// Deletes the entry from the disk cache
     #[servo_tracing::instrument(skip(self))]
     pub(crate) async fn get(&self, key: CacheKey) -> Option<Arc<TokioRwLock<Vec<CachedResource>>>> {
-        let mut inner = self.inner.lock().await;
-        let (query, query_values) = Query::select()
-            .columns([
-                DiskCacheEncodedTable::Index,
-                DiskCacheEncodedTable::DecoderType,
-                DiskCacheEncodedTable::Data,
-            ])
-            .from(DiskCacheEncodedTable::Table)
-            .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(key.as_ref()))
-            //.add_order_by(DiskCacheEncodedTable::Index)
-            .build_rusqlite(SqliteQueryBuilder);
+        println!("RESTORING {:?}", key);
+        let decoded_data = {
+            let inner = self.inner.lock().await;
+            let mut decoder_type = InnerDecoderType::Plain;
+            let encoded_data: Vec<u8> = {
+                println!("GETTING ENCODED VALUES {key:?}");
+                let (query, query_values) = Query::select()
+                    .columns([
+                        DiskCacheEncodedTable::Index,
+                        DiskCacheEncodedTable::DecoderType,
+                        DiskCacheEncodedTable::Data,
+                    ])
+                    .from(DiskCacheEncodedTable::Table)
+                    .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(key.as_ref()))
+                    //.add_order_by(DiskCacheEncodedTable::Index)
+                    .build_rusqlite(SqliteQueryBuilder);
 
-        let mut st = inner.db.prepare(query.as_str()).ok()?;
-        let mut decoder_type = InnerDecoderType::Plain;
-        let data_iter = st
-            .query_map(&*query_values.as_params(), |row| {
-                let data: Vec<u8> = row.get_unwrap("data");
-                decoder_type = InnerDecoderType::from_u64(row.get_unwrap("decoder_type")).unwrap();
-                Ok(data)
-            })
-            .unwrap();
+                let mut st = inner.db.prepare(query.as_str()).ok()?;
+                let data_iter = st
+                    .query_map(&*query_values.as_params(), |row| {
+                        let data: Vec<u8> = row.get_unwrap("data");
+                        decoder_type =
+                            InnerDecoderType::from_u64(row.get_unwrap("decoder_type")).unwrap();
+                        Ok(data)
+                    })
+                    .unwrap();
 
-        let data: Vec<u8> = data_iter
-            .map(|bytes| postcard::from_bytes(&bytes.unwrap()).unwrap())
-            .map(|bytes: Bytes| bytes.to_vec())
-            .flatten()
-            .collect();
+                data_iter
+                    .map(|bytes| postcard::from_bytes(&bytes.unwrap()).unwrap())
+                    .map(|bytes: Bytes| bytes.to_vec())
+                    .flatten()
+                    .collect()
+            };
 
-        let decoded_data = match decoder_type {
-            InnerDecoderType::Plain => data,
-            InnerDecoderType::Gzip => {
-                let mut final_data = Vec::new();
-                async_compression::tokio::bufread::GzipDecoder::new(&*data)
-                    .read_to_end(&mut final_data);
-                final_data
-            },
-            InnerDecoderType::Brotli => {
-                let mut final_data = Vec::new();
-                async_compression::tokio::bufread::BrotliDecoder::new(&*data)
-                    .read_to_end(&mut final_data);
-                final_data
-            },
-            InnerDecoderType::Deflate => {
-                let mut final_data = Vec::new();
-                async_compression::tokio::bufread::ZlibDecoder::new(&*data)
-                    .read_to_end(&mut final_data);
-                final_data
-            },
-            InnerDecoderType::Zstd => {
-                let mut final_data = Vec::new();
-                async_compression::tokio::bufread::ZstdDecoder::new(&*data)
-                    .read_to_end(&mut final_data);
-                final_data
-            },
+            println!("DOING DECODING WITH {key:?}, {:?}", decoder_type);
+            match decoder_type {
+                InnerDecoderType::Plain => encoded_data,
+                InnerDecoderType::Gzip => {
+                    let mut final_data = Vec::new();
+                    async_compression::tokio::bufread::GzipDecoder::new(&*encoded_data)
+                        .read_to_end(&mut final_data)
+                        .await
+                        .ok()?;
+                    final_data
+                },
+                InnerDecoderType::Brotli => {
+                    let mut final_data = Vec::new();
+                    async_compression::tokio::bufread::BrotliDecoder::new(&*encoded_data)
+                        .read_to_end(&mut final_data)
+                        .await
+                        .ok()?;
+                    final_data
+                },
+                InnerDecoderType::Deflate => {
+                    let mut final_data = Vec::new();
+                    async_compression::tokio::bufread::ZlibDecoder::new(&*encoded_data)
+                        .read_to_end(&mut final_data)
+                        .await
+                        .ok()?;
+                    final_data
+                },
+                InnerDecoderType::Zstd => {
+                    let mut final_data = Vec::new();
+                    async_compression::tokio::bufread::ZstdDecoder::new(&*encoded_data)
+                        .read_to_end(&mut final_data)
+                        .await
+                        .ok()?;
+                    final_data
+                },
+            }
         };
 
+        let deserialized_vec_cached_response = {
+            println!("GETTING INNER THINGY {key:?}");
+            let inner = self.inner.lock().await;
+            let (query, query_values) = Query::select()
+                .columns([DiskCacheTable::Data])
+                .from(DiskCacheTable::Table)
+                .and_where(Expr::col(DiskCacheTable::Key).eq(key.as_ref()))
+                .build_rusqlite(SqliteQueryBuilder);
+            let (delete, delete_values) = Query::delete()
+                .from_table(DiskCacheTable::Table)
+                .and_where(Expr::col(DiskCacheTable::Key).eq(key.as_ref()))
+                .build_rusqlite(SqliteQueryBuilder);
+
+            let mut st = inner.db.prepare(query.as_str()).ok()?;
+            let Some(cached_resource_data): Option<Vec<u8>> = st
+                .query_one(&*query_values.as_params(), |row| Ok(row.get_unwrap("data")))
+                .ok()
+            else {
+                println!("NONONON {key:?}");
+                return None;
+            };
+
+            if inner
+                .db
+                .execute(delete.as_str(), &*delete_values.as_params())
+                .is_err()
+            {
+                println!("Could not delete cached data from disk");
+                return None;
+            }
+            let Ok(value) = postcard::from_bytes::<Vec<CachedResource>>(&cached_resource_data)
+            else {
+                println!("Could not deserialize cached resource");
+                return None;
+            };
+            std::sync::Arc::new(TokioRwLock::new(value))
+        };
+        {
+            let v = deserialized_vec_cached_response.read().await;
+            if v.len() != 1 {
+                panic!("NOT SUPPORTED");
+            }
+
+            println!("REPLACING BODY {key:?}");
+            *v[0].body().lock() = ResponseBody::Done(decoded_data);
+        }
+        println!("RESTORING DONE----------------------- {key:?}");
+        Some(deserialized_vec_cached_response)
 
         /*
         let bytes = {
@@ -456,11 +562,23 @@ impl DiskCache {
     /// Stores a [`CacheEntry`]` to disk.
     #[servo_tracing::instrument(skip(self))]
     pub(crate) async fn store(&self, key: CacheKey, entry: CacheEntry) {
+        println!("STORING {key:?}");
         let entry = entry.read().await;
+        if entry
+            .iter()
+            .any(|cached_resource| !cached_resource.is_done())
+        {
+            return;
+        }
         let data_to_serialize: Vec<&CachedResource> = entry
             .iter()
             .filter(|cached_resource| cached_resource.is_done())
             .collect();
+
+        // testing to set the body to empty if we can reconstruct it.
+        for i in &data_to_serialize {
+            *i.body().lock() = ResponseBody::Done(vec![]);
+        }
         let Ok(data) = postcard::to_stdvec(&*data_to_serialize) else {
             error!("Could not deserialize value");
             return;

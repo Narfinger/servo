@@ -131,13 +131,14 @@ impl Decoder {
         body: BoxedBody,
         is_secure_scheme: bool,
         content_length: Option<ContentLength>,
+        disk_cache: Option<CacheStorage>,
     ) -> Decoder {
         Decoder {
             inner: Inner::PlainText(BodyStream::new(
                 body,
                 is_secure_scheme,
                 content_length,
-                None,
+                disk_cache,
             )),
         }
     }
@@ -179,7 +180,6 @@ impl Decoder {
         key: CacheKey,
         state: Arc<HttpState>,
     ) -> Response<Decoder> {
-        println!("RUNNINGF DETECT");
         let values = response
             .headers()
             .get_all(CONTENT_ENCODING)
@@ -200,21 +200,17 @@ impl Decoder {
                 }
             })
         });
-        println!("DOING AFTER");
+
         let content_length = response.headers().typed_get::<ContentLength>();
-        println!("CREATING STORAGE");
-        let disk_cache = CacheStorage {
-            key,
-            disk_cache: state.http_cache.disk_cache(),
-            decoder_type: decoder.into(),
-            row_id: 0,
-        };
-        println!("MATCHING DECODER");
+
+        let disk_cache = CacheStorage::new(key, state.http_cache.disk_cache(), decoder.into());
         match decoder {
             Some(type_) => response.map(|r| {
                 Decoder::pending(r, type_, is_secure_scheme, content_length, Some(disk_cache))
             }),
-            None => response.map(|r| Decoder::plain_text(r, is_secure_scheme, content_length)),
+            None => response.map(|r| {
+                Decoder::plain_text(r, is_secure_scheme, content_length, Some(disk_cache))
+            }),
         }
     }
 }
@@ -223,7 +219,6 @@ impl Stream for Decoder {
     type Item = Result<Bytes, io::Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        println!("ANOTHER POLL");
         // Do a read or poll for a pending decoder value.
         match self.inner {
             Inner::Pending(ref mut future) => match futures_core::ready!(Pin::new(future).poll(cx))
@@ -271,7 +266,6 @@ impl Future for Pending {
     type Output = Result<Inner, io::Error>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        println!("DECODER THINGY");
         match futures_core::ready!(Pin::new(&mut self.body).poll_peek(cx)) {
             Some(Ok(_)) => {
                 // fallthrough
@@ -341,7 +335,6 @@ impl BodyStream {
         content_length: Option<ContentLength>,
         disk_cache: Option<CacheStorage>,
     ) -> Self {
-        println!("NEW BODY");
         BodyStream {
             body,
             is_secure_scheme,
@@ -356,7 +349,6 @@ impl Stream for BodyStream {
     type Item = Result<Bytes, io::Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-        println!("S:OJFG");
         match futures_core::ready!(Pin::new(&mut self.body).poll_frame(cx)) {
             Some(Ok(bytes)) => {
                 let Ok(bytes) = bytes.into_data() else {
@@ -364,7 +356,6 @@ impl Stream for BodyStream {
                 };
 
                 if let Some(disk_cache) = self.disk_cache.as_mut() {
-                    println!("FFOO");
                     match disk_cache.store_bytes(&bytes).boxed().poll_unpin(cx) {
                         Poll::Ready(_) => {},
                         Poll::Pending => return Poll::Pending,
@@ -393,12 +384,14 @@ impl Stream for BodyStream {
                 Poll::Ready(Some(Err(io::Error::other(BodyStreamError(err.into())))))
             },
             None => {
+                /*
                 if let Some(disk_cache) = self.disk_cache.as_mut() {
                     match disk_cache.finish().boxed().poll_unpin(cx) {
                         Poll::Ready(_) => {},
                         Poll::Pending => return Poll::Pending,
                     }
                 }
+                */
                 Poll::Ready(None)
             },
         }

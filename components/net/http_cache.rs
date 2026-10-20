@@ -165,6 +165,10 @@ impl CachedResource {
         self.body.lock().is_done()
     }
 
+    pub(crate) fn body(&self) -> &Arc<ParkingLotMutex<ResponseBody>> {
+        &self.body
+    }
+
     /// Whether this [`CachedResource`] can be used to answer the given `Request`. This
     /// is true if:
     ///
