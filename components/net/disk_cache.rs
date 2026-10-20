@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bytes::Bytes;
+use futures::io::Cursor;
 use log::error;
 use malloc_size_of_derive::MallocSizeOf;
 use rusqlite::Row;
@@ -17,9 +18,11 @@ use sea_query::{
 use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
+use tokio::io::{AsyncReadExt, BufReader};
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
+use tokio_util::io::ReaderStream;
 
-use crate::decoder::DecoderType;
+use crate::decoder::{self, DecoderType};
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
 };
@@ -344,13 +347,48 @@ impl DiskCache {
             .build_rusqlite(SqliteQueryBuilder);
 
         let mut st = inner.db.prepare(query.as_str()).ok()?;
-        let data: Vec<Bytes> = st
-            .query_map(&*query_values.as_params(), |row| Ok(row.get_unwrap("data")))
-            .ok()?
-            .map(|bytes| postcard::from_bytes(bytes.unwrap()).unwrap())
+        let mut decoder_type = InnerDecoderType::Plain;
+        let data_iter = st
+            .query_map(&*query_values.as_params(), |row| {
+                let data: Vec<u8> = row.get_unwrap("data");
+                decoder_type = InnerDecoderType::from_u64(row.get_unwrap("decoder_type")).unwrap();
+                Ok(data)
+            })
+            .unwrap();
+
+        let data: Vec<u8> = data_iter
+            .map(|bytes| postcard::from_bytes(&bytes.unwrap()).unwrap())
+            .map(|bytes: Bytes| bytes.to_vec())
+            .flatten()
             .collect();
 
-        let whole_thing = data.into_iter().flatten().collect();
+        let decoded_data = match decoder_type {
+            InnerDecoderType::Plain => data,
+            InnerDecoderType::Gzip => {
+                let mut final_data = Vec::new();
+                async_compression::tokio::bufread::GzipDecoder::new(&*data)
+                    .read_to_end(&mut final_data);
+                final_data
+            },
+            InnerDecoderType::Brotli => {
+                let mut final_data = Vec::new();
+                async_compression::tokio::bufread::BrotliDecoder::new(&*data)
+                    .read_to_end(&mut final_data);
+                final_data
+            },
+            InnerDecoderType::Deflate => {
+                let mut final_data = Vec::new();
+                async_compression::tokio::bufread::ZlibDecoder::new(&*data)
+                    .read_to_end(&mut final_data);
+                final_data
+            },
+            InnerDecoderType::Zstd => {
+                let mut final_data = Vec::new();
+                async_compression::tokio::bufread::ZstdDecoder::new(&*data)
+                    .read_to_end(&mut final_data);
+                final_data
+            },
+        };
 
 
         /*
