@@ -33,6 +33,7 @@ use http_body_util::BodyExt;
 use hyper::Response;
 use hyper::body::Body;
 use hyper::header::{CONTENT_ENCODING, HeaderValue, TRANSFER_ENCODING};
+use tokio::sync::mpsc::UnboundedSender;
 use tokio_util::codec::{BytesCodec, FramedRead};
 use tokio_util::io::StreamReader;
 
@@ -131,7 +132,7 @@ impl Decoder {
         body: BoxedBody,
         is_secure_scheme: bool,
         content_length: Option<ContentLength>,
-        disk_cache: Option<CacheStorage>,
+        disk_cache: Option<UnboundedSender<Bytes>>,
     ) -> Decoder {
         Decoder {
             inner: Inner::PlainText(BodyStream::new(
@@ -152,7 +153,7 @@ impl Decoder {
         type_: DecoderType,
         is_secure_scheme: bool,
         content_length: Option<ContentLength>,
-        disk_cache: Option<CacheStorage>,
+        disk_cache: Option<UnboundedSender<Bytes>>,
     ) -> Decoder {
         Decoder {
             inner: Inner::Pending(Pending {
@@ -313,7 +314,7 @@ struct BodyStream {
     is_secure_scheme: bool,
     content_length: Option<ContentLength>,
     total_read: u64,
-    disk_cache: Option<CacheStorage>,
+    disk_cache: Option<UnboundedSender<Bytes>>,
 }
 
 impl BodyStream {
@@ -333,7 +334,7 @@ impl BodyStream {
         body: BoxedBody,
         is_secure_scheme: bool,
         content_length: Option<ContentLength>,
-        disk_cache: Option<CacheStorage>,
+        disk_cache: Option<UnboundedSender<Bytes>>,
     ) -> Self {
         BodyStream {
             body,
@@ -356,10 +357,7 @@ impl Stream for BodyStream {
                 };
 
                 if let Some(disk_cache) = self.disk_cache.as_mut() {
-                    match disk_cache.store_bytes(&bytes).boxed().poll_unpin(cx) {
-                        Poll::Ready(_) => {},
-                        Poll::Pending => return Poll::Pending,
-                    }
+                    disk_cache.send(bytes.clone());
                 }
                 self.total_read += bytes.len() as u64;
                 Poll::Ready(Some(Ok(bytes)))

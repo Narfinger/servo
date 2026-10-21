@@ -20,6 +20,7 @@ use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
 use tokio::io::{AsyncReadExt, BufReader};
+use tokio::sync::mpsc::{Sender, UnboundedSender};
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
 use tokio_util::io::ReaderStream;
 
@@ -86,14 +87,23 @@ impl CacheStorage {
         key: CacheKey,
         disk_cache: Option<Arc<DiskCache>>,
         decoder_type: InnerDecoderType,
-    ) -> Self {
-        CacheStorage {
-            key: key.clone(),
-            disk_cache: disk_cache.clone(),
+    ) -> UnboundedSender<Bytes> {
+        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
+
+        let mut store = CacheStorage {
+            key,
+            disk_cache,
             decoder_type,
             row_id: 0,
             deleted_old_data: false,
-        }
+        };
+
+        tokio::spawn(async move {
+            while let Some(bytes) = receiver.recv().await {
+                store.store_bytes(&bytes).await;
+            }
+        });
+        sender
     }
 
     async fn delete_old_data(&self) {
@@ -115,6 +125,11 @@ impl CacheStorage {
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
             let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
+
+            let timestamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_secs())
+                .unwrap_or(0);
             let (query, params) = Query::insert()
                 .into_table(DiskCacheEncodedTable::Table)
                 .columns([
@@ -122,12 +137,14 @@ impl CacheStorage {
                     DiskCacheEncodedTable::Index,
                     DiskCacheEncodedTable::DecoderType,
                     DiskCacheEncodedTable::Data,
+                    DiskCacheEncodedTable::InsertionTimestamp,
                 ])
                 .values_panic([
                     self.key.as_ref().into(),
                     self.row_id.into(),
                     self.decoder_type.to_u64().into(),
                     serialized_bytes.into(),
+                    timestamp.into(),
                 ])
                 .build_rusqlite(SqliteQueryBuilder);
 
@@ -188,6 +205,7 @@ enum DiskCacheEncodedTable {
     Index,
     DecoderType,
     Data,
+    InsertionTimestamp,
 }
 
 impl Iden for DiskCacheEncodedTable {
@@ -198,6 +216,7 @@ impl Iden for DiskCacheEncodedTable {
             DiskCacheEncodedTable::Index => "index",
             DiskCacheEncodedTable::DecoderType => "decoder_type",
             DiskCacheEncodedTable::Data => "data",
+            DiskCacheEncodedTable::InsertionTimestamp => "insertion_timestamp",
         }
     }
 }
@@ -313,6 +332,11 @@ impl DiskCache {
                         .text()
                         .not_null(),
                 )
+                .col(
+                    ColumnDef::new(DiskCacheEncodedTable::InsertionTimestamp)
+                        .integer()
+                        .not_null(),
+                )
                 .build(SqliteQueryBuilder);
             if let Err(e) = db.execute(query.as_str(), ()) {
                 error!("Could not create table. DB Error {:?}", e);
@@ -376,6 +400,7 @@ impl DiskCache {
                         DiskCacheEncodedTable::Index,
                         DiskCacheEncodedTable::DecoderType,
                         DiskCacheEncodedTable::Data,
+                        DiskCacheEncodedTable::InsertionTimestamp,
                     ])
                     .from(DiskCacheEncodedTable::Table)
                     .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(key.as_ref()))

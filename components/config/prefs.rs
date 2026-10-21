@@ -630,7 +630,7 @@ impl Default for Preferences {
             .unwrap()
             .as_secs()*/
         );
-        preferences.network_http_cache_size = 20;
+        preferences.network_http_cache_size = 30;
 
         preferences
     }
