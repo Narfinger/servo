@@ -6,7 +6,7 @@
 
 use std::env::consts::ARCH;
 use std::sync::{RwLock, RwLockReadGuard};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use servo_config_macro::ServoPreferences;
@@ -623,13 +623,7 @@ impl Default for Preferences {
             preferences.network_http_no_proxy = no_proxy
         }
 
-        preferences.network_http_disk_cache = format!(
-            "/tmp/test-http-stable-cache.sqlite3",
-            /*SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()*/
-        );
+        preferences.network_http_disk_cache = format!("/tmp/test-http-stable-cache.sqlite3",);
         preferences.network_http_cache_size = 30;
 
         preferences

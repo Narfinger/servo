@@ -8,24 +8,19 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bytes::Bytes;
-use futures::io::Cursor;
 use log::error;
 use malloc_size_of_derive::MallocSizeOf;
 use net_traits::response::ResponseBody;
 use rusqlite::Row;
-use sea_query::{
-    ColumnDef, Expr, ExprTrait, Iden, OnConflict, OrderExpr, Query, SqliteQueryBuilder, Table,
-};
+use sea_query::{ColumnDef, Expr, ExprTrait, Iden, OnConflict, Query, SqliteQueryBuilder, Table};
 use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
-use tokio::io::{AsyncReadExt, BufReader};
-use tokio::sync::mpsc::{Sender, UnboundedSender};
+use tokio::io::AsyncReadExt;
+use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
-use tokio_util::io::ReaderStream;
 
-use crate::async_runtime;
-use crate::decoder::{self, DecoderType};
+use crate::decoder::DecoderType;
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
 };
@@ -74,12 +69,23 @@ impl InnerDecoderType {
     }
 }
 
-pub struct CacheStorage {
+enum CacheStorageMessage {
+    Data(Bytes),
+    Exit,
+}
+
+/// The main class to send encoded bytes to the CacheStorage of in progress requests.
+pub(crate) struct CacheStorage {
+    key: CacheKey,
+    sender: UnboundedSender<CacheStorageMessage>,
+}
+
+/// The other half of [`CacheStorage`], responsible for putting the bytes in the database.
+struct CacheStorageReceiver {
     key: CacheKey,
     disk_cache: Option<Arc<DiskCache>>,
     decoder_type: InnerDecoderType,
     row_id: u32,
-    deleted_old_data: bool,
 }
 
 impl CacheStorage {
@@ -87,41 +93,69 @@ impl CacheStorage {
         key: CacheKey,
         disk_cache: Option<Arc<DiskCache>>,
         decoder_type: InnerDecoderType,
-    ) -> UnboundedSender<Bytes> {
+    ) -> Self {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
 
-        let mut store = CacheStorage {
-            key,
+        let mut store = CacheStorageReceiver {
+            key: key.clone(),
             disk_cache,
             decoder_type,
             row_id: 0,
-            deleted_old_data: false,
         };
 
         tokio::spawn(async move {
-            while let Some(bytes) = receiver.recv().await {
-                store.store_bytes(&bytes).await;
+            if store.delete_old_data().await.is_err() {
+                return;
+            }
+            while let Some(msg) = receiver.recv().await {
+                match msg {
+                    CacheStorageMessage::Data(bytes) => store.store_bytes(&bytes).await,
+                    CacheStorageMessage::Exit => {
+                        println!("RECEIVING FINISH FOR {:?}", store.key);
+                        store.finish().await;
+                    },
+                }
             }
         });
-        sender
+
+        CacheStorage { key, sender }
     }
 
-    async fn delete_old_data(&self) {
+    /// Send data to the cache
+    pub(crate) fn send(&self, bytes: &Bytes) {
+        // If we have error in sending it means our channel is closed, meaning we should continue normally.
+        let _ = self.sender.send(CacheStorageMessage::Data(bytes.clone()));
+    }
+
+    /// the request finishes successful
+    pub(crate) fn finish(&self) {
+        println!("CALLING FINISH {:?}", self.key);
+
+        let _ = self.sender.send(CacheStorageMessage::Exit);
+    }
+}
+
+impl CacheStorageReceiver {
+    async fn delete_old_data(&self) -> Result<(), ()> {
         let inner = self.disk_cache.as_ref().unwrap().inner.lock().await;
         let (query, params) = Query::delete()
             .from_table(DiskCacheEncodedTable::Table)
             .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
             .build_rusqlite(SqliteQueryBuilder);
 
-        inner.db.execute(query.as_str(), &*params.as_params());
+        if let Err(e) = inner.db.execute(query.as_str(), &*params.as_params()) {
+            log::error!(
+                "Could not store partials encoded values for url {:?} with error {:?}. Ignoring.",
+                self.key,
+                e
+            );
+            Err(())
+        } else {
+            Ok(())
+        }
     }
 
-    pub async fn store_bytes(&mut self, bytes: &Bytes) {
-        if self.deleted_old_data {
-            self.delete_old_data().await;
-            self.deleted_old_data = true;
-        }
-
+    async fn store_bytes(&mut self, bytes: &Bytes) {
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
             let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
@@ -156,8 +190,23 @@ impl CacheStorage {
         }
     }
 
-    pub async fn finish(&self) {
-        // update disk cache metadata
+    async fn finish(&mut self) {
+        if let Some(disk_cache) = &self.disk_cache {
+            println!("DDD {:?}", self.key);
+            let disk_cache = disk_cache.inner.lock().await;
+            let (query, params) = Query::update()
+                .table(DiskCacheEncodedTable::Table)
+                .values([(DiskCacheEncodedTable::InProgress, false.into())])
+                .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
+                .build_rusqlite(SqliteQueryBuilder);
+
+            println!("FOOO {:?}", self.key);
+            disk_cache
+                .db
+                .execute(query.as_str(), &*params.as_params())
+                .unwrap();
+            println!("DDDD {:?}", self.key);
+        }
     }
 }
 
@@ -206,6 +255,7 @@ enum DiskCacheEncodedTable {
     DecoderType,
     Data,
     InsertionTimestamp,
+    InProgress,
 }
 
 impl Iden for DiskCacheEncodedTable {
@@ -217,6 +267,7 @@ impl Iden for DiskCacheEncodedTable {
             DiskCacheEncodedTable::DecoderType => "decoder_type",
             DiskCacheEncodedTable::Data => "data",
             DiskCacheEncodedTable::InsertionTimestamp => "insertion_timestamp",
+            DiskCacheEncodedTable::InProgress => "in_progress",
         }
     }
 }
@@ -337,6 +388,12 @@ impl DiskCache {
                         .integer()
                         .not_null(),
                 )
+                .col(
+                    ColumnDef::new(DiskCacheEncodedTable::InProgress)
+                        .boolean()
+                        .not_null()
+                        .default(true),
+                )
                 .build(SqliteQueryBuilder);
             if let Err(e) = db.execute(query.as_str(), ()) {
                 error!("Could not create table. DB Error {:?}", e);
@@ -389,12 +446,10 @@ impl DiskCache {
     /// Deletes the entry from the disk cache
     #[servo_tracing::instrument(skip(self))]
     pub(crate) async fn get(&self, key: CacheKey) -> Option<Arc<TokioRwLock<Vec<CachedResource>>>> {
-        println!("RESTORING {:?}", key);
         let decoded_data = {
             let inner = self.inner.lock().await;
             let mut decoder_type = InnerDecoderType::Plain;
             let encoded_data: Vec<u8> = {
-                println!("GETTING ENCODED VALUES {key:?}");
                 let (query, query_values) = Query::select()
                     .columns([
                         DiskCacheEncodedTable::Index,
@@ -404,6 +459,7 @@ impl DiskCache {
                     ])
                     .from(DiskCacheEncodedTable::Table)
                     .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(key.as_ref()))
+                    .and_where(Expr::col(DiskCacheEncodedTable::InProgress).eq(false))
                     //.add_order_by(DiskCacheEncodedTable::Index)
                     .build_rusqlite(SqliteQueryBuilder);
 
@@ -419,12 +475,14 @@ impl DiskCache {
 
                 data_iter
                     .map(|bytes| postcard::from_bytes(&bytes.unwrap()).unwrap())
-                    .map(|bytes: Bytes| bytes.to_vec())
-                    .flatten()
+                    .flat_map(|bytes: Bytes| bytes)
                     .collect()
             };
 
-            println!("DOING DECODING WITH {key:?}, {:?}", decoder_type);
+            if encoded_data.is_empty() {
+                return None;
+            }
+
             match decoder_type {
                 InnerDecoderType::Plain => encoded_data,
                 InnerDecoderType::Gzip => {
@@ -463,7 +521,6 @@ impl DiskCache {
         };
 
         let deserialized_vec_cached_response = {
-            println!("GETTING INNER THINGY {key:?}");
             let inner = self.inner.lock().await;
             let (query, query_values) = Query::select()
                 .columns([DiskCacheTable::Data])
@@ -505,10 +562,9 @@ impl DiskCache {
                 panic!("NOT SUPPORTED");
             }
 
-            println!("REPLACING BODY {key:?}");
             *v[0].body().lock() = ResponseBody::Done(decoded_data);
         }
-        println!("RESTORING DONE----------------------- {key:?}");
+        println!("RESTORING DONE-------------------------------------- {key:?}");
         Some(deserialized_vec_cached_response)
 
         /*
@@ -589,16 +645,13 @@ impl DiskCache {
             .filter(|cached_resource| cached_resource.is_done())
             .collect();
 
-        // testing to set the body to empty if we can reconstruct it.
-        for i in &data_to_serialize {
-            *i.body().lock() = ResponseBody::Done(vec![]);
-        }
         let Ok(data) = postcard::to_stdvec(&*data_to_serialize) else {
             error!("Could not deserialize value");
             return;
         };
 
         {
+            let data: Vec<u8> = Vec::new();
             let mut inner = self.inner.lock().await;
             let data_size = data.len();
 
