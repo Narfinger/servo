@@ -78,6 +78,7 @@ pub struct CacheStorage {
     disk_cache: Option<Arc<DiskCache>>,
     decoder_type: InnerDecoderType,
     row_id: u32,
+    deleted_old_data: bool,
 }
 
 impl CacheStorage {
@@ -86,43 +87,31 @@ impl CacheStorage {
         disk_cache: Option<Arc<DiskCache>>,
         decoder_type: InnerDecoderType,
     ) -> Self {
-        let storage = CacheStorage {
+        CacheStorage {
             key: key.clone(),
             disk_cache: disk_cache.clone(),
             decoder_type,
             row_id: 0,
-        };
-
-
-        let foo = disk_cache.unwrap().clone();
-        async_runtime::spawn_task(async move {
-            foo.inner
-                .lock()
-                .await
-                .db
-                .execute(query.as_str(), &*params.as_params());
-        });
-
-        storage
+            deleted_old_data: false,
+        }
     }
 
     async fn delete_old_data(&self) {
+        let inner = self.disk_cache.as_ref().unwrap().inner.lock().await;
         let (query, params) = Query::delete()
             .from_table(DiskCacheEncodedTable::Table)
             .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
             .build_rusqlite(SqliteQueryBuilder);
 
-        if let Some(disk_cache) = &self.disk_cache {
-            disk_cache
-                .inner
-                .lock()
-                .await
-                .db
-                .execute(query.as_str(), &*params.as_params());
-        }
+        inner.db.execute(query.as_str(), &*params.as_params());
     }
 
     pub async fn store_bytes(&mut self, bytes: &Bytes) {
+        if self.deleted_old_data {
+            self.delete_old_data().await;
+            self.deleted_old_data = true;
+        }
+
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
             let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
