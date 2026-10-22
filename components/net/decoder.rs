@@ -38,7 +38,7 @@ use tokio_util::io::StreamReader;
 
 use crate::connector::BoxedBody;
 use crate::disk_cache::CacheStorage;
-use crate::http_cache::CacheKey;
+use crate::http_cache::{CacheKey, status_and_headers_is_cacheable};
 use crate::test::HttpState;
 
 pub const DECODER_BUFFER_SIZE: usize = 8192;
@@ -180,6 +180,7 @@ impl Decoder {
         key: CacheKey,
         state: Arc<HttpState>,
     ) -> Response<Decoder> {
+        let cacheable = status_and_headers_is_cacheable(&response.status(), response.headers());
         let values = response
             .headers()
             .get_all(CONTENT_ENCODING)
@@ -203,14 +204,20 @@ impl Decoder {
 
         let content_length = response.headers().typed_get::<ContentLength>();
 
-        let disk_cache = CacheStorage::new(key, state.http_cache.disk_cache(), decoder.into());
+        let disk_cache = if cacheable {
+            Some(CacheStorage::new(
+                key,
+                state.http_cache.disk_cache(),
+                decoder.into(),
+            ))
+        } else {
+            None
+        };
         match decoder {
-            Some(type_) => response.map(|r| {
-                Decoder::pending(r, type_, is_secure_scheme, content_length, Some(disk_cache))
-            }),
-            None => response.map(|r| {
-                Decoder::plain_text(r, is_secure_scheme, content_length, Some(disk_cache))
-            }),
+            Some(type_) => response
+                .map(|r| Decoder::pending(r, type_, is_secure_scheme, content_length, disk_cache)),
+            None => response
+                .map(|r| Decoder::plain_text(r, is_secure_scheme, content_length, disk_cache)),
         }
     }
 }

@@ -169,6 +169,11 @@ impl CachedResource {
         &self.body
     }
 
+    /// Sets the body to be empty. Used for disk cache when the encoded values are stored separately
+    pub(crate) fn empty_body(&self) {
+        *self.body.lock() = ResponseBody::Empty;
+    }
+
     /// Whether this [`CachedResource`] can be used to answer the given `Request`. This
     /// is true if:
     ///
@@ -436,14 +441,22 @@ fn is_cacheable_by_default(status_code: StatusCode) -> bool {
 /// Determine if a given response is cacheable.
 /// Based on <https://tools.ietf.org/html/rfc7234#section-3>
 fn response_is_cacheable(metadata: &Metadata) -> bool {
+    status_and_headers_is_cacheable(
+        &metadata.status.code(),
+        &metadata.headers.as_ref().unwrap().0,
+    )
+}
+
+/// Determine if a given response is cacheable.
+/// Based on <https://tools.ietf.org/html/rfc7234#section-3>
+pub(crate) fn status_and_headers_is_cacheable(status: &StatusCode, headers: &HeaderMap) -> bool {
     // This kind of response does not have a body. It just freshens existing cached resources.
-    if metadata.status == StatusCode::NOT_MODIFIED {
+    if *status == StatusCode::NOT_MODIFIED {
         return false;
     }
 
     // Resources with `Vary: '*'` can never be returned as cache results, so
     // do not store them in the cache.
-    let headers = metadata.headers.as_ref().unwrap();
     if headers
         .typed_get::<Vary>()
         .is_some_and(|vary| vary.is_any())

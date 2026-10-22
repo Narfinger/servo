@@ -111,7 +111,6 @@ impl CacheStorage {
                 match msg {
                     CacheStorageMessage::Data(bytes) => store.store_bytes(&bytes).await,
                     CacheStorageMessage::Exit => {
-                        println!("RECEIVING FINISH FOR {:?}", store.key);
                         store.finish().await;
                     },
                 }
@@ -129,8 +128,6 @@ impl CacheStorage {
 
     /// the request finishes successful
     pub(crate) fn finish(&self) {
-        println!("CALLING FINISH {:?}", self.key);
-
         let _ = self.sender.send(CacheStorageMessage::Exit);
     }
 }
@@ -192,7 +189,6 @@ impl CacheStorageReceiver {
 
     async fn finish(&mut self) {
         if let Some(disk_cache) = &self.disk_cache {
-            println!("DDD {:?}", self.key);
             let disk_cache = disk_cache.inner.lock().await;
             let (query, params) = Query::update()
                 .table(DiskCacheEncodedTable::Table)
@@ -200,12 +196,10 @@ impl CacheStorageReceiver {
                 .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
                 .build_rusqlite(SqliteQueryBuilder);
 
-            println!("FOOO {:?}", self.key);
             disk_cache
                 .db
                 .execute(query.as_str(), &*params.as_params())
                 .unwrap();
-            println!("DDDD {:?}", self.key);
         }
     }
 }
@@ -537,7 +531,6 @@ impl DiskCache {
                 .query_one(&*query_values.as_params(), |row| Ok(row.get_unwrap("data")))
                 .ok()
             else {
-                println!("NONONON {key:?}");
                 return None;
             };
 
@@ -558,9 +551,7 @@ impl DiskCache {
         };
         {
             let v = deserialized_vec_cached_response.read().await;
-            if v.len() != 1 {
-                panic!("NOT SUPPORTED");
-            }
+            if v.len() != 1 {}
 
             *v[0].body().lock() = ResponseBody::Done(decoded_data);
         }
@@ -641,18 +632,20 @@ impl DiskCache {
             return;
         }
 
-        let data_to_serialize: Vec<&CachedResource> = entry
-            .iter()
-            .filter(|cached_resource| cached_resource.is_done())
-            .collect();
+        // If we have more than one `CachedResource`, our current decoding via partials does not work, so we ignore it.
+        // Otherwise, we set an empty body as we will restore it from partial.
+        if entry.len() == 1 {
+            entry[0].empty_body();
+        }
 
-        let Ok(data) = postcard::to_stdvec(&*data_to_serialize) else {
+        println!("entry.len() {:?}", entry.len());
+
+        let Ok(data) = postcard::to_stdvec(&*entry) else {
             error!("Could not deserialize value");
             return;
         };
 
         {
-            let data: Vec<u8> = Vec::new();
             let mut inner = self.inner.lock().await;
             let data_size = data.len();
 
