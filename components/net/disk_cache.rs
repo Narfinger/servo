@@ -45,6 +45,7 @@ use crate::decoder::DecoderType;
 use crate::http_cache::{
     CacheEntry, CacheKey, CachedResource, HttpCacheAssignment, MemoryCacheLifecycle,
 };
+use crate::test::HttpState;
 
 #[derive(Debug, Clone)]
 pub(crate) enum InnerDecoderType {
@@ -97,13 +98,13 @@ enum CacheStorageMessage {
 
 /// The main class to send encoded bytes to the CacheStorage of in progress requests.
 pub(crate) struct CacheStorage {
-    sender: UnboundedSender<CacheStorageMessage>,
+    sender: Option<UnboundedSender<CacheStorageMessage>>,
 }
 
 /// The other half of [`CacheStorage`], responsible for putting the bytes in the database.
 struct CacheStorageReceiver {
     key: CacheKey,
-    disk_cache: Option<Arc<DiskCache>>,
+    disk_cache: Arc<DiskCache>,
     decoder_type: InnerDecoderType,
     row_id: u32,
 }
@@ -111,51 +112,66 @@ struct CacheStorageReceiver {
 impl CacheStorage {
     pub(crate) fn new(
         key: CacheKey,
-        disk_cache: Option<Arc<DiskCache>>,
+        state: Arc<HttpState>,
         decoder_type: InnerDecoderType,
     ) -> Self {
-        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
+        let disk_cache = state.http_cache.disk_cache();
+        let cache_assignment = state.http_cache.cache_assignment();
 
-        let mut store = CacheStorageReceiver {
-            key: key.clone(),
-            disk_cache,
-            decoder_type,
-            row_id: 0,
-        };
+        if let Some(disk_cache) = disk_cache &&
+            cache_assignment == HttpCacheAssignment::Public
+        {
+            let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
 
-        tokio::spawn(async move {
-            if store.delete_old_data().await.is_err() {
-                return;
-            }
-            while let Some(msg) = receiver.recv().await {
-                match msg {
-                    CacheStorageMessage::Data(bytes) => store.store_bytes(&bytes).await,
-                    CacheStorageMessage::Exit => {
-                        store.finish().await;
-                    },
+            let mut store = CacheStorageReceiver {
+                key,
+                disk_cache,
+                decoder_type,
+                row_id: 0,
+            };
+
+            tokio::spawn(async move {
+                if store.delete_old_data().await.is_err() {
+                    return;
                 }
-            }
-        });
+                while let Some(msg) = receiver.recv().await {
+                    match msg {
+                        CacheStorageMessage::Data(bytes) => store.store_bytes(&bytes).await,
+                        CacheStorageMessage::Exit => {
+                            store.finish().await;
+                        },
+                    }
+                }
+            });
 
-        CacheStorage { sender }
+            CacheStorage {
+                sender: Some(sender),
+            }
+        } else {
+            CacheStorage { sender: None }
+        }
     }
 
     /// Send data to the cache
     pub(crate) fn send(&self, bytes: &Bytes) {
         // If we have error in sending it means our channel is closed, meaning we should continue normally.
-        let _ = self.sender.send(CacheStorageMessage::Data(bytes.clone()));
+        if let Some(sender) = &self.sender {
+            let _ = sender.send(CacheStorageMessage::Data(bytes.clone()));
+        }
     }
 
     /// the request finishes successful
     pub(crate) fn finish(&self) {
-        let _ = self.sender.send(CacheStorageMessage::Exit);
+        if let Some(sender) = &self.sender {
+            let _ = sender.send(CacheStorageMessage::Exit);
+        }
     }
 }
 
 impl CacheStorageReceiver {
     /// Delete data that is not finished for the same [`CacheKey`]
     async fn delete_old_data(&self) -> Result<(), ()> {
-        let inner = self.disk_cache.as_ref().unwrap().inner.lock().await;
+        let inner = self.disk_cache.inner.lock().await;
         let (query, params) = Query::delete()
             .from_table(DiskCacheEncodedTable::Table)
             .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
@@ -175,55 +191,51 @@ impl CacheStorageReceiver {
 
     /// Store the given bytes in the database
     async fn store_bytes(&mut self, bytes: &Bytes) {
-        if let Some(disk_cache) = &self.disk_cache {
-            let disk_cache = disk_cache.inner.lock().await;
-            let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
+        let disk_cache = self.disk_cache.inner.lock().await;
+        let serialized_bytes = postcard::to_stdvec(bytes).unwrap();
 
-            let timestamp = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map(|duration| duration.as_secs())
-                .unwrap_or(0);
-            let (query, params) = Query::insert()
-                .into_table(DiskCacheEncodedTable::Table)
-                .columns([
-                    DiskCacheEncodedTable::Key,
-                    DiskCacheEncodedTable::Index,
-                    DiskCacheEncodedTable::DecoderType,
-                    DiskCacheEncodedTable::Data,
-                    DiskCacheEncodedTable::InsertionTimestamp,
-                ])
-                .values_panic([
-                    self.key.as_ref().into(),
-                    self.row_id.into(),
-                    self.decoder_type.to_u64().into(),
-                    serialized_bytes.into(),
-                    timestamp.into(),
-                ])
-                .build_rusqlite(SqliteQueryBuilder);
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_secs())
+            .unwrap_or(0);
+        let (query, params) = Query::insert()
+            .into_table(DiskCacheEncodedTable::Table)
+            .columns([
+                DiskCacheEncodedTable::Key,
+                DiskCacheEncodedTable::Index,
+                DiskCacheEncodedTable::DecoderType,
+                DiskCacheEncodedTable::Data,
+                DiskCacheEncodedTable::InsertionTimestamp,
+            ])
+            .values_panic([
+                self.key.as_ref().into(),
+                self.row_id.into(),
+                self.decoder_type.to_u64().into(),
+                serialized_bytes.into(),
+                timestamp.into(),
+            ])
+            .build_rusqlite(SqliteQueryBuilder);
 
-            disk_cache
-                .db
-                .execute(query.as_str(), &*params.as_params())
-                .unwrap();
-            self.row_id += 1;
-        }
+        disk_cache
+            .db
+            .execute(query.as_str(), &*params.as_params())
+            .unwrap();
+        self.row_id += 1;
     }
 
     /// Mark the rows in the table as finished, i.e, ready to be restored from.
     async fn finish(&mut self) {
-        if let Some(disk_cache) = &self.disk_cache {
-            let disk_cache = disk_cache.inner.lock().await;
-            let (query, params) = Query::update()
-                .table(DiskCacheEncodedTable::Table)
-                .values([(DiskCacheEncodedTable::InProgress, false.into())])
-                .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
-                .build_rusqlite(SqliteQueryBuilder);
+        let disk_cache = self.disk_cache.inner.lock().await;
+        let (query, params) = Query::update()
+            .table(DiskCacheEncodedTable::Table)
+            .values([(DiskCacheEncodedTable::InProgress, false.into())])
+            .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(self.key.as_ref()))
+            .build_rusqlite(SqliteQueryBuilder);
 
-            disk_cache
-                .db
-                .execute(query.as_str(), &*params.as_params())
-                .unwrap();
-        }
+        disk_cache
+            .db
+            .execute(query.as_str(), &*params.as_params())
+            .unwrap();
     }
 }
 
@@ -571,11 +583,11 @@ impl DiskCache {
         };
         {
             let v = deserialized_vec_cached_response.read().await;
-            if v.len() != 1 {}
-
-            *v[0].body().lock() = ResponseBody::Done(decoded_data);
+            // The resources are more than one vector, so we stored them completely decoded.
+            if v.len() == 1 {
+                *v[0].body().lock() = ResponseBody::Done(decoded_data);
+            }
         }
-        println!("RESTORING DONE-------------------------------------- {key:?}");
         Some(deserialized_vec_cached_response)
     }
 

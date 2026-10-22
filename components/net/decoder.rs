@@ -205,11 +205,7 @@ impl Decoder {
         let content_length = response.headers().typed_get::<ContentLength>();
 
         let disk_cache = if cacheable {
-            Some(CacheStorage::new(
-                key,
-                state.http_cache.disk_cache(),
-                decoder.into(),
-            ))
+            Some(CacheStorage::new(key, state, decoder.into()))
         } else {
             None
         };

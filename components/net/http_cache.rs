@@ -323,7 +323,7 @@ type QuickCachePlaceholderGuard<'a> = PlaceholderGuard<
 >;
 
 /// Is this state assigned to the private or public side.
-#[derive(Debug, MallocSizeOf, PartialEq)]
+#[derive(Copy, Clone, Debug, MallocSizeOf, PartialEq)]
 pub enum HttpCacheAssignment {
     /// Public Cache State, possibly stored to disk.
     Public,
@@ -339,6 +339,7 @@ pub enum HttpCacheAssignment {
 pub struct HttpCache {
     /// cached responses.
     entries: QuickCache,
+    cache_assignment: HttpCacheAssignment,
     disk_cache: Option<std::sync::Arc<DiskCache>>,
 }
 
@@ -368,11 +369,11 @@ impl HttpCache {
     }
 
     /// Create a new HttpCache with [`HttpCacheAssignment`]
-    pub fn new(assignment: HttpCacheAssignment) -> Self {
+    pub fn new(cache_assignment: HttpCacheAssignment) -> Self {
         let size = pref!(network_http_cache_size)
             .try_into()
             .expect("http_cache_size needs to fit into u64");
-        let (disk_cache, lifecycle) = DiskCache::new(assignment);
+        let (disk_cache, lifecycle) = DiskCache::new(cache_assignment);
         let memory_cache = Cache::with(
             size,
             size as u64,
@@ -384,6 +385,7 @@ impl HttpCache {
         Self {
             entries: memory_cache,
             disk_cache,
+            cache_assignment,
         }
     }
 
@@ -391,6 +393,11 @@ impl HttpCache {
     /// The number of entries in the memory cache. This does not say anything about the disk cache.
     pub fn len(&self) -> usize {
         self.entries.len()
+    }
+
+    /// The cache assignment state this cache is in.
+    pub fn cache_assignment(&self) -> HttpCacheAssignment {
+        self.cache_assignment
     }
 }
 
