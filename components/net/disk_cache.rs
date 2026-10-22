@@ -22,6 +22,7 @@
 //! - The cache has an additional in memory data structure to do the bookkeeping, i.e., knowing the size of the entries useful for removing them.
 
 use std::collections::VecDeque;
+use std::ops::Sub;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -37,7 +38,9 @@ use sea_query::{
 use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
+use time::Duration;
 use tokio::io::AsyncReadExt;
+use tokio::spawn;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::{Mutex as TokioMutex, RwLock as TokioRwLock};
 
@@ -460,15 +463,35 @@ impl DiskCache {
                 max_size: max_disk_cache_size,
             });
 
+            let disk_cache_data_clone = disk_cache_data.clone();
+            spawn(async move { disk_cache_data.clean_stale_encoded_values().await });
             (
-                Some(disk_cache_data.clone()),
+                Some(disk_cache_data_clone.clone()),
                 MemoryCacheLifecycle {
-                    disk_cache: Some(disk_cache_data),
+                    disk_cache: Some(disk_cache_data_clone),
                 },
             )
         } else {
             (None, MemoryCacheLifecycle::empty())
         }
+    }
+
+    /// Removes encoded values that are not finished and older than a day
+    async fn clean_stale_encoded_values(&self) {
+        let inner = self.inner.lock().await;
+        let time_trim = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .sub(Duration::DAY);
+        let (query, params) = Query::delete()
+            .from_table(DiskCacheEncodedTable::Table)
+            .and_where(Expr::col(DiskCacheEncodedTable::InProgress).eq(true))
+            .and_where(
+                Expr::col(DiskCacheEncodedTable::InsertionTimestamp).lte(time_trim.whole_seconds()),
+            )
+            .build_rusqlite(SqliteQueryBuilder);
+
+        let _ = inner.db.execute(&query, &*params.as_params());
     }
 
     /// Restores a cache entry from the disk if it exists.
