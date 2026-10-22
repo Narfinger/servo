@@ -84,7 +84,7 @@ pub fn map_decode_error(err: io::Error) -> io::Error {
 ///
 /// The inner decoder may be constructed asynchronously.
 pub struct Decoder {
-    inner: Inner,
+    inner: DecoderInner,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -95,7 +95,7 @@ pub(crate) enum DecoderType {
     Zstd,
 }
 
-enum Inner {
+enum DecoderInner {
     /// A `PlainText` decoder just returns the response content as is.
     PlainText(BodyStream),
     /// A `Gzip` decoder will uncompress the gzipped response content before returning it.
@@ -107,11 +107,11 @@ enum Inner {
     /// A `Zstd` decoder will uncompress the zstd-encoded response content before returning it.
     Zstd(FramedRead<ZstdDecoder<StreamReader<Peekable<BodyStream>, Bytes>>, BytesCodec>),
     /// A decoder that doesn't have a value yet.
-    Pending(Pending),
+    Pending(PendingDecode),
 }
 
 /// A future attempt to poll the response body for EOF so we know whether to use gzip or not.
-struct Pending {
+struct PendingDecode {
     body: Peekable<BodyStream>,
     type_: DecoderType,
 }
@@ -134,7 +134,7 @@ impl Decoder {
         disk_cache: Option<CacheStorage>,
     ) -> Decoder {
         Decoder {
-            inner: Inner::PlainText(BodyStream::new(
+            inner: DecoderInner::PlainText(BodyStream::new(
                 body,
                 is_secure_scheme,
                 content_length,
@@ -155,7 +155,7 @@ impl Decoder {
         disk_cache: Option<CacheStorage>,
     ) -> Decoder {
         Decoder {
-            inner: Inner::Pending(Pending {
+            inner: DecoderInner::Pending(PendingDecode {
                 body: BodyStream::new(body, is_secure_scheme, content_length, disk_cache)
                     .peekable(),
                 type_,
@@ -165,7 +165,7 @@ impl Decoder {
 
     /// Returns true if the content is encoded
     pub fn is_encoded(&self) -> bool {
-        !matches!(self.inner, Inner::PlainText(_))
+        !matches!(self.inner, DecoderInner::PlainText(_))
     }
 
     /// Constructs a Decoder from a hyper response.
@@ -221,37 +221,38 @@ impl Stream for Decoder {
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         // Do a read or poll for a pending decoder value.
         match self.inner {
-            Inner::Pending(ref mut future) => match futures_core::ready!(Pin::new(future).poll(cx))
-            {
-                Ok(inner) => {
-                    self.inner = inner;
-                    self.poll_next(cx)
-                },
-                Err(e) => Poll::Ready(Some(Err(e))),
+            DecoderInner::Pending(ref mut future) => {
+                match futures_core::ready!(Pin::new(future).poll(cx)) {
+                    Ok(inner) => {
+                        self.inner = inner;
+                        self.poll_next(cx)
+                    },
+                    Err(e) => Poll::Ready(Some(Err(e))),
+                }
             },
-            Inner::PlainText(ref mut body) => Pin::new(body).poll_next(cx),
-            Inner::Gzip(ref mut decoder) => {
+            DecoderInner::PlainText(ref mut body) => Pin::new(body).poll_next(cx),
+            DecoderInner::Gzip(ref mut decoder) => {
                 match futures_core::ready!(Pin::new(decoder).poll_next(cx)) {
                     Some(Ok(bytes)) => Poll::Ready(Some(Ok(bytes.freeze()))),
                     Some(Err(err)) => Poll::Ready(Some(Err(map_decode_error(err)))),
                     None => Poll::Ready(None),
                 }
             },
-            Inner::Brotli(ref mut decoder) => {
+            DecoderInner::Brotli(ref mut decoder) => {
                 match futures_core::ready!(Pin::new(decoder).poll_next(cx)) {
                     Some(Ok(bytes)) => Poll::Ready(Some(Ok(bytes.freeze()))),
                     Some(Err(err)) => Poll::Ready(Some(Err(map_decode_error(err)))),
                     None => Poll::Ready(None),
                 }
             },
-            Inner::Deflate(ref mut decoder) => {
+            DecoderInner::Deflate(ref mut decoder) => {
                 match futures_core::ready!(Pin::new(decoder).poll_next(cx)) {
                     Some(Ok(bytes)) => Poll::Ready(Some(Ok(bytes.freeze()))),
                     Some(Err(err)) => Poll::Ready(Some(Err(map_decode_error(err)))),
                     None => Poll::Ready(None),
                 }
             },
-            Inner::Zstd(ref mut decoder) => {
+            DecoderInner::Zstd(ref mut decoder) => {
                 match futures_core::ready!(Pin::new(decoder).poll_next(cx)) {
                     Some(Ok(bytes)) => Poll::Ready(Some(Ok(bytes.freeze()))),
                     Some(Err(err)) => Poll::Ready(Some(Err(map_decode_error(err)))),
@@ -262,8 +263,54 @@ impl Stream for Decoder {
     }
 }
 
-impl Future for Pending {
-    type Output = Result<Inner, io::Error>;
+/// Construct the inner decoder type
+// These decoder all need to poll the body till it returns Ready(None), for the cache to call its finishing routine.
+// That is the reason we "expect" multiple_members.
+fn construct_inner(type_: DecoderType, body: Peekable<BodyStream>) -> DecoderInner {
+    let stream_reader = StreamReader::new(body);
+
+    match type_ {
+        DecoderType::Brotli => {
+            let mut brotli_decoder = BrotliDecoder::new(stream_reader);
+            brotli_decoder.multiple_members(true);
+            DecoderInner::Brotli(FramedRead::with_capacity(
+                brotli_decoder,
+                BytesCodec::new(),
+                DECODER_BUFFER_SIZE,
+            ))
+        },
+
+        DecoderType::Gzip => {
+            let mut gzip_decoder = GzipDecoder::new(stream_reader);
+            gzip_decoder.multiple_members(true);
+            DecoderInner::Gzip(FramedRead::with_capacity(
+                gzip_decoder,
+                BytesCodec::new(),
+                DECODER_BUFFER_SIZE,
+            ))
+        },
+        DecoderType::Deflate => {
+            let deflate_decoder = ZlibDecoder::new(stream_reader);
+            DecoderInner::Deflate(FramedRead::with_capacity(
+                deflate_decoder,
+                BytesCodec::new(),
+                DECODER_BUFFER_SIZE,
+            ))
+        },
+        DecoderType::Zstd => {
+            let mut zstd_decoder = ZstdDecoder::new(stream_reader);
+            zstd_decoder.multiple_members(true);
+            DecoderInner::Zstd(FramedRead::with_capacity(
+                zstd_decoder,
+                BytesCodec::new(),
+                DECODER_BUFFER_SIZE,
+            ))
+        },
+    }
+}
+
+impl Future for PendingDecode {
+    type Output = Result<DecoderInner, io::Error>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match futures_core::ready!(Pin::new(&mut self.body).poll_peek(cx)) {
@@ -278,33 +325,11 @@ impl Future for Pending {
                 .expect("just peeked Some")
                 .unwrap_err()));
             },
-            None => return Poll::Ready(Ok(Inner::PlainText(BodyStream::empty()))),
+            None => return Poll::Ready(Ok(DecoderInner::PlainText(BodyStream::empty()))),
         };
 
         let body = std::mem::replace(&mut self.body, BodyStream::empty().peekable());
-
-        match self.type_ {
-            DecoderType::Brotli => Poll::Ready(Ok(Inner::Brotli(FramedRead::with_capacity(
-                BrotliDecoder::new(StreamReader::new(body)),
-                BytesCodec::new(),
-                DECODER_BUFFER_SIZE,
-            )))),
-            DecoderType::Gzip => Poll::Ready(Ok(Inner::Gzip(FramedRead::with_capacity(
-                GzipDecoder::new(StreamReader::new(body)),
-                BytesCodec::new(),
-                DECODER_BUFFER_SIZE,
-            )))),
-            DecoderType::Deflate => Poll::Ready(Ok(Inner::Deflate(FramedRead::with_capacity(
-                ZlibDecoder::new(StreamReader::new(body)),
-                BytesCodec::new(),
-                DECODER_BUFFER_SIZE,
-            )))),
-            DecoderType::Zstd => Poll::Ready(Ok(Inner::Zstd(FramedRead::with_capacity(
-                ZstdDecoder::new(StreamReader::new(body)),
-                BytesCodec::new(),
-                DECODER_BUFFER_SIZE,
-            )))),
-        }
+        Poll::Ready(Ok(construct_inner(self.type_, body)))
     }
 }
 

@@ -640,6 +640,7 @@ impl DiskCache {
         {
             return;
         }
+
         let data_to_serialize: Vec<&CachedResource> = entry
             .iter()
             .filter(|cached_resource| cached_resource.is_done())
