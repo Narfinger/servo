@@ -2,6 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+//! Main Disk Cache implementation
+//! The disk cache consists of two parts
+//! 1. Storing
+//! 2. Receiving
+//!
+//! ## Storing:
+//! - For every request, construct a [`CacheStorage`] and [`CacheStorageReceiver`]. The [`CacheStorage`] is used to send encoded chunks to the sqlite cache in a special table `disk_cache_encoded`.
+//!   The [`CacheStorage`] lives on the decoder side and sends the message to the [`CacheStorageReceiver`] which just puts them into the sqlite database.
+//! - After a Request is finished, we mark all the values as valid, ready to be restored from.
+//! - When a entry is evicted from the memory cache it ends up here, where we remove the body and store the rest of it in `disk_cache` table (serialized).
+//!
+//! ## Restoring
+//! - We restore an entry by getting all the values form the `disk_cache_encoded`, concatenate them and decode the data with the same decoder.
+//! - Then we get the serialized body from `disk_cache` (which contains the headers and other values), put the decoded body in it and send it to the memory cache.
+//! - We remove the encoded values from `disk_cache_encoded` and the decoded body from `disk_cache`.
+//!
+//! ## Bookkeeping
+//! - The cache has an additional in memory data structure to do the bookkeeping, i.e., knowing the size of the entries useful for removing them.
+
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -12,7 +31,9 @@ use log::error;
 use malloc_size_of_derive::MallocSizeOf;
 use net_traits::response::ResponseBody;
 use rusqlite::Row;
-use sea_query::{ColumnDef, Expr, ExprTrait, Iden, OnConflict, Query, SqliteQueryBuilder, Table};
+use sea_query::{
+    ColumnDef, Expr, ExprTrait, Iden, OnConflict, Order, Query, SqliteQueryBuilder, Table,
+};
 use sea_query_rusqlite::RusqliteBinder;
 use servo_config::pref;
 use servo_url::ServoUrl;
@@ -76,7 +97,6 @@ enum CacheStorageMessage {
 
 /// The main class to send encoded bytes to the CacheStorage of in progress requests.
 pub(crate) struct CacheStorage {
-    key: CacheKey,
     sender: UnboundedSender<CacheStorageMessage>,
 }
 
@@ -117,7 +137,7 @@ impl CacheStorage {
             }
         });
 
-        CacheStorage { key, sender }
+        CacheStorage { sender }
     }
 
     /// Send data to the cache
@@ -133,6 +153,7 @@ impl CacheStorage {
 }
 
 impl CacheStorageReceiver {
+    /// Delete data that is not finished for the same [`CacheKey`]
     async fn delete_old_data(&self) -> Result<(), ()> {
         let inner = self.disk_cache.as_ref().unwrap().inner.lock().await;
         let (query, params) = Query::delete()
@@ -152,6 +173,7 @@ impl CacheStorageReceiver {
         }
     }
 
+    /// Store the given bytes in the database
     async fn store_bytes(&mut self, bytes: &Bytes) {
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
@@ -187,6 +209,7 @@ impl CacheStorageReceiver {
         }
     }
 
+    /// Mark the rows in the table as finished, i.e, ready to be restored from.
     async fn finish(&mut self) {
         if let Some(disk_cache) = &self.disk_cache {
             let disk_cache = disk_cache.inner.lock().await;
@@ -334,7 +357,7 @@ impl DiskCache {
                 return (None, MemoryCacheLifecycle::empty());
             };
 
-            let _ = db.execute("PRAGMA journal_mode = WAL;", ());
+            let _ = db.execute_batch("PRAGMA journal_mode = WAL;PRAGMA schema.synchronous =  OFF");
             let query = Table::create()
                 .table(DiskCacheTable::Table)
                 .if_not_exists()
@@ -454,7 +477,7 @@ impl DiskCache {
                     .from(DiskCacheEncodedTable::Table)
                     .and_where(Expr::col(DiskCacheEncodedTable::Key).eq(key.as_ref()))
                     .and_where(Expr::col(DiskCacheEncodedTable::InProgress).eq(false))
-                    //.add_order_by(DiskCacheEncodedTable::Index)
+                    .order_by_columns([(DiskCacheEncodedTable::Index, Order::Asc)])
                     .build_rusqlite(SqliteQueryBuilder);
 
                 let mut st = inner.db.prepare(query.as_str()).ok()?;
@@ -527,12 +550,9 @@ impl DiskCache {
                 .build_rusqlite(SqliteQueryBuilder);
 
             let mut st = inner.db.prepare(query.as_str()).ok()?;
-            let Some(cached_resource_data): Option<Vec<u8>> = st
+            let cached_resource_data: Vec<u8> = st
                 .query_one(&*query_values.as_params(), |row| Ok(row.get_unwrap("data")))
-                .ok()
-            else {
-                return None;
-            };
+                .ok()?;
 
             if inner
                 .db
@@ -557,67 +577,6 @@ impl DiskCache {
         }
         println!("RESTORING DONE-------------------------------------- {key:?}");
         Some(deserialized_vec_cached_response)
-
-        /*
-        let bytes = {
-            // we lock the metadata before we update the sqlite database so that
-            // the database and metadata are consistent when this lock is released.
-            let mut inner = self.inner.lock().await;
-            let (bytes, new_size) = {
-                let _span = profile_traits::trace_span!("query disk cache").entered();
-                let (query, query_values) = Query::select()
-                    .columns([DiskCacheTable::Data])
-                    .from(DiskCacheTable::Table)
-                    .and_where(Expr::col(DiskCacheTable::Key).eq(key.as_ref()))
-                    .build_rusqlite(SqliteQueryBuilder);
-                let (delete, delete_values) = Query::delete()
-                    .from_table(DiskCacheTable::Table)
-                    .and_where(Expr::col(DiskCacheTable::Key).eq(key.as_ref()))
-                    .build_rusqlite(SqliteQueryBuilder);
-
-                let mut st = inner.db.prepare(query.as_str()).ok()?;
-                let data: Vec<u8> = st
-                    .query_one(&*query_values.as_params(), |row| Ok(row.get_unwrap("data")))
-                    .ok()?;
-
-                if inner
-                    .db
-                    .execute(delete.as_str(), &*delete_values.as_params())
-                    .is_err()
-                {
-                    error!("Could not delete cached data from disk");
-                    return None;
-                }
-
-                (data, self.get_disk_cache_total_size(&inner.db))
-            };
-
-            {
-                // update the metadata
-                let entry_index = inner
-                    .entries
-                    .iter()
-                    .position(|metadata| metadata.key == key);
-                if let Some(entry_index) = entry_index {
-                    inner.entries.remove(entry_index);
-                }
-                if let Some(new_size) = new_size {
-                    inner.size = new_size;
-                } else {
-                    error!("Could not get disk cache size");
-                }
-            }
-            bytes
-        };
-        let _span = profile_traits::trace_span!("deserialize cache request").entered();
-        let Ok(value) = postcard::from_bytes(&bytes) else {
-            error!("Could not deserialize cached resource");
-            return None;
-        };
-        let deserialized_vec_cached_response = std::sync::Arc::new(TokioRwLock::new(value));
-
-        Some(deserialized_vec_cached_response)
-         */
     }
 
     /// Stores a [`CacheEntry`]` to disk.
