@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 //! DOM bindings for `CharacterData`.
-use std::cell::LazyCell;
+use std::cell::{LazyCell, Ref, RefCell};
 
 use atomic_refcell::{AtomicRef, AtomicRefCell};
 use dom_struct::dom_struct;
@@ -30,19 +30,49 @@ use crate::dom::node::{ChildrenMutation, Node, NodeDamage};
 use crate::dom::processinginstruction::ProcessingInstruction;
 use crate::dom::text::Text;
 
+#[derive(Debug, MallocSizeOf)]
+struct CharacterDataRope {
+    inner: Vec<String>,
+}
+
+impl CharacterDataRope {
+    fn new(s: String) -> Self {
+        CharacterDataRope { inner: vec![s] }
+    }
+
+    fn make_string(&mut self) -> &String {
+        if self.inner.len() == 1 {
+            &self.inner[0]
+        } else {
+            let value: String = self.inner.iter().map(|string| string.as_str()).collect();
+            self.inner = vec![value];
+            &self.inner[0]
+        }
+    }
+
+    fn push_str(&mut self, s: &str) {
+        self.inner.push(s.to_owned());
+    }
+
+    fn get_str(&self) -> &String {
+        debug_assert!(self.inner.len() == 1);
+        &self.inner[0]
+    }
+}
+
 // https://dom.spec.whatwg.org/#characterdata
 #[dom_struct]
 pub(crate) struct CharacterData {
     node: Node,
     #[no_trace]
-    data: AtomicRefCell<String>,
+    data: AtomicRefCell<CharacterDataRope>,
 }
 
 impl CharacterData {
     pub(crate) fn new_inherited(data: DOMString, document: &Document) -> CharacterData {
         CharacterData {
             node: Node::new_inherited(document),
-            data: AtomicRefCell::new(String::from(data)),
+            data: AtomicRefCell::new(CharacterDataRope::new(data.into())),
         }
     }
 
@@ -72,11 +102,20 @@ impl CharacterData {
 
     #[inline]
     pub(crate) fn data(&self) -> AtomicRef<'_, String> {
-        self.data.borrow()
+        self.data.borrow_mut().make_string();
+        AtomicRef::map(self.data.borrow(), |data| data.get_str())
     }
 
     #[inline]
     pub(crate) fn append_data(&self, cx: &mut JSContext, data: &str) {
+        /*
+        log::error!(
+            "current {:?}, cap {:?}, new {:?}",
+            self.data().len(),
+            self.data().capacity(),
+            data.len()
+        );
+        */
         self.queue_mutation_record(cx);
         self.data.safe_borrow_mut(cx.no_gc()).push_str(data);
         self.content_changed(cx);
@@ -99,10 +138,13 @@ impl CharacterData {
 
     // Queue a MutationObserver record before changing the content.
     fn queue_mutation_record(&self, cx: &mut JSContext) {
+        /*
+        self.data.safe_borrow_mut(cx.no_gc()).make_string();
         let mutation = LazyCell::new(|| Mutation::CharacterData {
-            old_value: self.data.borrow(),
+            old_value: AtomicRef::map(self.data.borrow(), |data| data.get_str()),
         });
         MutationObserver::queue_a_mutation_record(cx, self.upcast::<Node>(), mutation);
+         */
     }
 
     /// Returns whether `new_range` was successfully set on an existing text run
@@ -133,21 +175,22 @@ impl CharacterData {
 impl CharacterDataMethods<crate::DomTypeHolder> for CharacterData {
     /// <https://dom.spec.whatwg.org/#dom-characterdata-data>
     fn Data(&self) -> DOMString {
-        DOMString::from(self.data.borrow().clone())
+        self.data.borrow_mut().make_string();
+        DOMString::from(self.data.borrow().get_str().clone())
     }
 
     /// <https://dom.spec.whatwg.org/#dom-characterdata-data>
     fn SetData(&self, cx: &mut JSContext, data: DOMString) {
         self.queue_mutation_record(cx);
         let old_length = self.Length();
-        *self.data.safe_borrow_mut(cx.no_gc()) = data.into();
+        *self.data.safe_borrow_mut(cx.no_gc()) = CharacterDataRope::new(data.into());
         self.content_changed(cx);
 
         let mut utf16_length = None;
         // TODO: ensure that DOMString’s are under 4 GiB?
         let mut lazy_length = move || {
             *utf16_length.get_or_insert_with(|| {
-                Utf16CodeUnits::length_of(AssumeUnder4GB, &self.data.borrow()).0
+                Utf16CodeUnits::length_of(AssumeUnder4GB, &self.data.borrow().get_str()).0
             })
         };
 
@@ -162,14 +205,17 @@ impl CharacterDataMethods<crate::DomTypeHolder> for CharacterData {
     /// <https://dom.spec.whatwg.org/#dom-characterdata-length>
     fn Length(&self) -> u32 {
         // TODO: ensure that DOMString’s are under 4 GiB?
-        Utf16CodeUnits::length_of(AssumeUnder4GB, &self.data.borrow()).0
+        self.data.borrow_mut().make_string();
+        Utf16CodeUnits::length_of(AssumeUnder4GB, &self.data.borrow().get_str()).0
     }
 
     /// <https://dom.spec.whatwg.org/#dom-characterdata-substringdata>
     fn SubstringData(&self, offset: u32, count: u32) -> Fallible<DOMString> {
+        self.data.borrow_mut().make_string();
         let data = self.data.borrow();
         // Step 1.
         let mut substring = String::new();
+        let data = data.get_str();
         let remaining = match split_at_utf16_code_unit_offset(&data, offset) {
             Ok((_, astral, s)) => {
                 // As if we had split the UTF-16 surrogate pair in half
@@ -234,8 +280,10 @@ impl CharacterDataMethods<crate::DomTypeHolder> for CharacterData {
     ) -> ErrorResult {
         let mut new_data;
         {
+            self.data.borrow_mut().make_string();
             let data = self.data.borrow();
 
+            let data = data.get_str();
             let (prefix, replacement_before, remaining) =
                 match split_at_utf16_code_unit_offset(&data, offset) {
                     Ok((prefix, astral, remaining)) => {
@@ -283,7 +331,7 @@ impl CharacterDataMethods<crate::DomTypeHolder> for CharacterData {
             new_data.push_str(replacement_after);
             new_data.push_str(suffix);
         }
-        *self.data.safe_borrow_mut(cx.no_gc()) = new_data;
+        *self.data.safe_borrow_mut(cx.no_gc()) = CharacterDataRope::new(new_data);
         self.content_changed(cx);
 
         let node = self.upcast::<Node>();
@@ -350,7 +398,10 @@ impl CharacterDataMethods<crate::DomTypeHolder> for CharacterData {
 impl<'dom> LayoutDom<'dom, CharacterData> {
     #[inline]
     pub(crate) fn data_for_layout(self) -> AtomicRef<'dom, str> {
-        AtomicRef::map(self.unsafe_get().data.borrow(), |data| &**data)
+        self.unsafe_get().data.borrow_mut().make_string();
+        AtomicRef::map(self.unsafe_get().data.borrow(), |data| {
+            data.get_str().as_str()
+        })
     }
 }
 
