@@ -104,7 +104,7 @@ impl MutationObserver {
     pub(crate) fn queue_a_mutation_record<'a, F>(
         cx: &mut JSContext,
         target: &Node,
-        attr_type: LazyCell<Mutation<'a>, F>,
+        mut attr_type: LazyCell<Mutation<'a>, F>,
     ) where
         F: FnOnce() -> Mutation<'a>,
     {
@@ -171,7 +171,7 @@ impl MutationObserver {
                         }
                     },
                     // 3.2 "4"
-                    Mutation::CharacterData { ref old_value } => {
+                    Mutation::CharacterData { ref mut old_value } => {
                         // 3.2 "4": type is "characterData" and options["characterData"] either does not exist or is false
                         if !registered.options.character_data {
                             continue;
