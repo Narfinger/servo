@@ -44,6 +44,7 @@ impl CharacterDataRope {
         if self.inner.len() == 1 {
             &self.inner[0]
         } else {
+            log::error!("Got {:?} many strings {:?}", self.inner.len(), self.inner);
             let value: String = self.inner.iter().map(|string| string.as_str()).collect();
             self.inner = vec![value];
             &self.inner[0]
