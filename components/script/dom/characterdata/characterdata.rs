@@ -31,7 +31,7 @@ use crate::dom::processinginstruction::ProcessingInstruction;
 use crate::dom::text::Text;
 
 #[derive(Debug, MallocSizeOf)]
-struct CharacterDataRope {
+pub(crate) struct CharacterDataRope {
     inner: Vec<String>,
 }
 
@@ -40,7 +40,7 @@ impl CharacterDataRope {
         CharacterDataRope { inner: vec![s] }
     }
 
-    fn make_string(&mut self) -> &String {
+    pub(crate) fn make_string(&mut self) -> &String {
         if self.inner.len() == 1 {
             &self.inner[0]
         } else {
@@ -139,13 +139,12 @@ impl CharacterData {
 
     // Queue a MutationObserver record before changing the content.
     fn queue_mutation_record(&self, cx: &mut JSContext) {
-        /*
-        self.data.safe_borrow_mut(cx.no_gc()).make_string();
+        //self.data.safe_borrow_mut(cx.no_gc()).make_string();
         let mutation = LazyCell::new(|| Mutation::CharacterData {
-            old_value: AtomicRef::map(self.data.borrow(), |data| data.get_str()),
+            // This is ok as we do not trace this value
+            old_value: self.data.borrow_mut(),
         });
         MutationObserver::queue_a_mutation_record(cx, self.upcast::<Node>(), mutation);
-         */
     }
 
     /// Returns whether `new_range` was successfully set on an existing text run

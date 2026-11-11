@@ -14,6 +14,7 @@ use script_bindings::cell::DomRefCell;
 use script_bindings::reflector::{Reflector, reflect_dom_object_with_proto};
 use style::attr::AttrValue;
 
+use crate::dom::CharacterDataRope;
 use crate::dom::bindings::codegen::Bindings::MutationObserverBinding::MutationObserver_Binding::MutationObserverMethods;
 use crate::dom::bindings::codegen::Bindings::MutationObserverBinding::{
     MutationCallback, MutationObserverInit,
@@ -43,7 +44,7 @@ pub(crate) enum Mutation<'a> {
         old_value: Option<&'a AttrValue>,
     },
     CharacterData {
-        old_value: atomic_refcell::AtomicRef<'a, String>,
+        old_value: atomic_refcell::AtomicRefMut<'a, CharacterDataRope>,
     },
     ChildList {
         added: Option<&'a [&'a Node]>,
@@ -179,8 +180,10 @@ impl MutationObserver {
                         let mo = registered.observer.as_rooted();
                         if registered.options.character_data_old_value {
                             // 3.2.3 ... type is "characterData" and options["characterDataOldValue"] is true
-                            interested_observers
-                                .insert(mo, Some(DOMString::from(old_value.as_str())));
+                            interested_observers.insert(
+                                mo,
+                                Some(DOMString::from(old_value.make_string().to_owned())),
+                            );
                         } else {
                             // 3.2.2 If interestedObservers[mo] does not exist, then set interestedObservers[mo] to null.
                             interested_observers.entry(mo).or_insert(None);
