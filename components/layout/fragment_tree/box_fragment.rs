@@ -195,6 +195,10 @@ impl BoxFragment {
         self.style.borrow()
     }
 
+    pub(crate) fn style_unsafe(&self) -> &ServoArc<ComputedValues> {
+        unsafe { self.style.as_ptr().as_ref().unwrap() }
+    }
+
     pub(crate) fn with_style(self: &Arc<Self>) -> BoxFragmentWithStyle<'_> {
         BoxFragmentWithStyle {
             box_fragment: self,

@@ -329,7 +329,7 @@ impl Fragment {
                 layout_root_fragment.inner().hit_test(state, hit_test)
             },
             Fragment::Box(box_fragment) | Fragment::Float(box_fragment) => hit_test_fragment_inner(
-                &box_fragment.style(),
+                &box_fragment.style_unsafe(),
                 box_fragment.border_rect(),
                 box_fragment.border_radius(),
                 box_fragment.base.flags,

@@ -460,6 +460,10 @@ impl Fragment {
 }
 
 impl TextFragment {
+    pub(crate) fn style_unsafe(&self) -> &ServoArc<ComputedValues> {
+        unsafe { self.run_data.inline_styles.style.as_ptr().as_ref().unwrap() }
+    }
+
     pub(crate) fn style<'a>(&'a self) -> AtomicRef<'a, ServoArc<ComputedValues>> {
         self.run_data.inline_styles.style.borrow()
     }

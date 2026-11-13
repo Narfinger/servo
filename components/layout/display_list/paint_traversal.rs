@@ -605,7 +605,7 @@ impl Default for TraversalState {
 
 impl TraversalState {
     pub(crate) fn push_box_fragment(&self, box_fragment: &BoxFragmentWithStyle<'_>) -> Self {
-        let style = box_fragment.style();
+        let style = box_fragment.style_unsafe();
 
         // Text decorations are not propagated to atomic inline-level descendants.
         // From https://drafts.csswg.org/css2/#lining-striking-props:
@@ -694,7 +694,8 @@ impl TraversalState {
             clip_id: self.clip_id,
             text_decorations: self.text_decorations.clone(),
             accumulated_opacity: self.accumulated_opacity *
-                positioning_fragment.style.borrow().slow_clone_opacity(),
+                unsafe { positioning_fragment.style.as_ptr().as_ref().unwrap() }
+                    .slow_clone_opacity(),
             containing_element_tag: self.containing_element_tag,
             container_timing_roots: self.container_timing_roots.clone(),
         }
@@ -709,7 +710,7 @@ impl TraversalState {
             accumulated_opacity: self.accumulated_opacity *
                 stacking_context
                     .fragment()
-                    .map_or(1.0, |fragment| fragment.style().slow_clone_opacity()),
+                    .map_or(1.0, |fragment| fragment.style_unsafe().slow_clone_opacity()),
             containing_element_tag: self.containing_element_tag,
             container_timing_roots: stacking_context.container_timing_roots.clone(),
         }

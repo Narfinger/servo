@@ -536,7 +536,7 @@ impl StackingContext {
         parent_info: &StackingContextParentInfo,
     ) -> Self {
         let z_index = initializing_fragment
-            .style()
+            .style_unsafe()
             .effective_z_index(initializing_fragment.base.flags);
         Self {
             fragment: StackingContextFragments::Fragment(initializing_fragment),
@@ -602,7 +602,7 @@ impl Fragment {
                 // `Fragment::AbsoluteOrFixedPositionedPlaceholder` placeholder is
                 // processed.
                 if fragment
-                    .style()
+                    .style_unsafe()
                     .get_box()
                     .position
                     .is_absolutely_positioned()
@@ -627,7 +627,7 @@ impl Fragment {
                 // `Fragment::AbsoluteOrFixedPositionedPlaceholder` position.
             },
             Fragment::AbsoluteOrFixedPositionedPlaceholder(fragment) => {
-                let shared_fragment = fragment.borrow();
+                let shared_fragment = unsafe { fragment.as_ptr().as_ref().unwrap() };
                 let box_fragment = match shared_fragment.fragment.as_ref() {
                     Some(Fragment::Box(box_fragment)) => box_fragment,
                     _ => unreachable!("Found hoisted box with missing or non-BoxFragment."),
@@ -671,7 +671,7 @@ struct OverflowFrameData {
 impl BoxFragment {
     pub(crate) fn stacking_context_type(&self) -> Option<StackingContextType> {
         let flags = self.base.flags;
-        let style = self.style();
+        let style = self.style_unsafe();
         if style.establishes_stacking_context(flags) {
             return Some(StackingContextType::StackingContext);
         }
@@ -742,7 +742,7 @@ impl BoxFragment {
             return;
         }
 
-        let style = self.style();
+        let style = self.style_unsafe();
         let frame_origin_for_query = self
             .cumulative_border_box_rect(
                 CumulativeContentRectCalculation::AlreadyDoneWithStackingContextTree,
@@ -807,7 +807,7 @@ impl BoxFragment {
         parent_info: &StackingContextParentInfo,
     ) {
         let with_style = &self.with_style();
-        let style = with_style.style();
+        let style = with_style.style_unsafe();
         let Some(stacking_context_type) = self.stacking_context_type() else {
             with_style.build_stacking_context_tree_for_children(
                 stacking_context_tree,
@@ -908,7 +908,7 @@ impl BoxFragmentWithStyle<'_> {
         stacking_context: &mut StackingContext,
         parent_info: &StackingContextParentInfo,
     ) {
-        let style = self.style();
+        let style = self.style_unsafe();
         let establishes_containing_block_for_all_descendants =
             style.establishes_containing_block_for_all_descendants(self.base.flags);
         let establishes_containing_block_for_absolute_descendants =
@@ -1000,7 +1000,7 @@ impl BoxFragmentWithStyle<'_> {
         original_scroll_node_id: ScrollTreeNodeId,
         established_scroll_frame: bool,
     ) -> Option<ScrollTreeNodeId> {
-        if !self.style().is_transformable(self.base.flags) {
+        if !self.style_unsafe().is_transformable(self.base.flags) {
             return None;
         }
 
@@ -1049,7 +1049,7 @@ impl BoxFragmentWithStyle<'_> {
         parent_clip_id: ClipId,
         containing_block_rect: &PhysicalRect<Au>,
     ) -> Option<ClipId> {
-        let style = self.style();
+        let style = self.style_unsafe();
         let position = style.get_box().position;
         // https://drafts.csswg.org/css2/#clipping
         // The clip property applies only to absolutely positioned elements
@@ -1083,7 +1083,7 @@ impl BoxFragmentWithStyle<'_> {
         parent_clip_id: ClipId,
         containing_block_rect: &PhysicalRect<Au>,
     ) -> Option<OverflowFrameData> {
-        let style = self.style();
+        let style = self.style_unsafe();
         let overflow = style.effective_overflow(self.base.flags);
 
         if overflow.x == ComputedOverflow::Visible && overflow.y == ComputedOverflow::Visible {
@@ -1217,7 +1217,7 @@ impl BoxFragment {
         scroll_frame_size: &Option<LayoutSize>,
         established_scroll_frame: bool,
     ) -> Option<ScrollTreeNodeId> {
-        let style = self.style();
+        let style = self.style_unsafe();
         if style.get_box().position != ComputedPosition::Sticky {
             return None;
         }
@@ -1377,7 +1377,7 @@ impl BoxFragment {
         &self,
         containing_block_rect: &PhysicalRect<Au>,
     ) -> Option<ReferenceFrameData> {
-        if !self.style().has_effective_transform(self.base.flags) {
+        if !self.style_unsafe().has_effective_transform(self.base.flags) {
             return None;
         }
 
@@ -1401,7 +1401,7 @@ impl BoxFragment {
         &self,
         border_rect: &Rect<Au, CSSPixel>,
     ) -> Option<LayoutTransform> {
-        let style = self.style();
+        let style = self.style_unsafe();
         let list = &style.get_box().transform;
         let length_rect = au_rect_to_length_rect(border_rect);
         // https://drafts.csswg.org/css-transforms-2/#individual-transforms
@@ -1455,7 +1455,7 @@ impl BoxFragment {
         &self,
         border_rect: &Rect<Au, CSSPixel>,
     ) -> Option<LayoutTransform> {
-        let style = self.style();
+        let style = self.style_unsafe();
         match style.get_box().perspective {
             Perspective::Length(length) => {
                 let perspective_origin = &style.get_box().perspective_origin;
