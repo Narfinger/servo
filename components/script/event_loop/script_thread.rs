@@ -1515,6 +1515,7 @@ impl ScriptThread {
         }
 
         let category = self.categorize_msg(&message);
+        let mut should_run_checkpoint = false;
         let result = self.profile_event(category, message.pipeline_id(), || {
             match message {
                 MixedMessage::FromConstellation(ScriptThreadMessage::ExitScriptThread) => {
@@ -1524,7 +1525,9 @@ impl ScriptThread {
                 MixedMessage::FromConstellation(inner) => {
                     self.handle_msg_from_constellation(cx, inner)
                 },
-                MixedMessage::FromScript(inner) => self.handle_msg_from_script(cx, inner),
+                MixedMessage::FromScript(inner) => {
+                    should_run_checkpoint |= self.handle_msg_from_script(cx, inner)
+                },
                 #[cfg(feature = "devtools")]
                 MixedMessage::FromDevtools(inner) => self.handle_msg_from_devtools(cx, *inner),
                 MixedMessage::FromImageCache(inner) => self.handle_msg_from_image_cache(cx, inner),
@@ -1539,8 +1542,7 @@ impl ScriptThread {
         });
 
         // https://html.spec.whatwg.org/multipage/#event-loop-processing-model step 6
-        // TODO(#32003): A microtask checkpoint is only supposed to be performed after running a task.
-        if !result.is_break() {
+        if !result.is_break() && should_run_checkpoint {
             self.perform_a_microtask_checkpoint(cx);
         }
 
@@ -2105,16 +2107,19 @@ impl ScriptThread {
         }
     }
 
-    fn handle_msg_from_script(&self, cx: &mut JSContext, msg: MainThreadScriptMsg) {
+    /// Returns if a task was run.
+    fn handle_msg_from_script(&self, cx: &mut JSContext, msg: MainThreadScriptMsg) -> bool {
         match msg {
             MainThreadScriptMsg::Common(CommonScriptMsg::Task(_, task, pipeline_id, _)) => {
                 let global_scope =
                     pipeline_id.and_then(|id| self.documents.borrow().find_global(id));
                 self.task_queue
                     .run_task(cx, pipeline_id, global_scope, task);
+                true
             },
             MainThreadScriptMsg::Common(CommonScriptMsg::CollectReports(chan)) => {
-                self.collect_reports(cx, chan)
+                self.collect_reports(cx, chan);
+                false
             },
             MainThreadScriptMsg::Common(CommonScriptMsg::ReportCspViolations(
                 pipeline_id,
@@ -2125,29 +2130,36 @@ impl ScriptThread {
                     let cx = &mut realm.current_realm();
                     global.run_worker_csp_violation_report_tasks(violations, cx);
                 }
+                false
             },
             MainThreadScriptMsg::NavigationResponse {
                 pipeline_id,
                 message,
             } => {
                 self.handle_navigation_response(cx, pipeline_id, *message);
+                false
             },
             MainThreadScriptMsg::WorkletLoaded(pipeline_id) => {
-                self.handle_worklet_loaded(pipeline_id)
+                self.handle_worklet_loaded(pipeline_id);
+                false
             },
             MainThreadScriptMsg::RegisterPaintWorklet {
                 pipeline_id,
                 name,
                 properties,
                 painter,
-            } => self.handle_register_paint_worklet(pipeline_id, name, properties, painter),
-            MainThreadScriptMsg::Inactive => {},
-            MainThreadScriptMsg::WakeUp => {},
+            } => {
+                self.handle_register_paint_worklet(pipeline_id, name, properties, painter);
+                false
+            },
+            MainThreadScriptMsg::Inactive => false,
+            MainThreadScriptMsg::WakeUp => false,
             MainThreadScriptMsg::ForwardEmbedderControlResponseFromFileManager(
                 control_id,
                 response,
             ) => {
                 self.handle_embedder_control_response(cx, control_id, response);
+                false
             },
         }
     }
